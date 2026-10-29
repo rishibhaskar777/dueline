@@ -1,5 +1,5 @@
 import type { ActivityEvent, ActualPayout, Settings } from "@/types";
-import type { ClaimResult, Json, ReminderLogEntry, Store } from "./store";
+import type { ClaimResult, Json, ReminderLogEntry, Store, StoredRates } from "./store";
 
 interface IdempotencyRecord {
   bodyHash: string;
@@ -12,7 +12,7 @@ export function createMemoryStore(): Store {
   const activity = new Map<string, ActivityEvent>();
   const reminders: ReminderLogEntry[] = [];
   const rateLimits = new Map<string, { count: number; resetsAt: number }>();
-  const rates = new Map<string, number>();
+  let rates: StoredRates | null = null;
   const payouts = new Map<string, ActualPayout>();
   let settings: Settings | null = null;
 
@@ -76,12 +76,12 @@ export function createMemoryStore(): Store {
       return entry.count;
     },
 
-    async getRate(currency, onDate): Promise<number | null> {
-      return rates.get(`${currency}:${onDate}`) ?? null;
+    async getLatestRates(): Promise<StoredRates | null> {
+      return rates;
     },
 
-    async putRate(currency, onDate, rate): Promise<void> {
-      rates.set(`${currency}:${onDate}`, rate);
+    async putRates(stored): Promise<void> {
+      rates = stored;
     },
 
     async getActualPayout(invoiceId): Promise<ActualPayout | null> {

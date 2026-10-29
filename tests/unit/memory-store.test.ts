@@ -95,11 +95,15 @@ describe("settings, rates and payouts", () => {
     expect(await store.getSettings()).toEqual(settings);
   });
 
-  it("stores a rate per currency and date", async () => {
-    await store.putRate("USD", "2026-10-29", 83.1);
-    expect(await store.getRate("USD", "2026-10-29")).toBe(83.1);
-    expect(await store.getRate("USD", "2026-10-28")).toBeNull();
-    expect(await store.getRate("EUR", "2026-10-29")).toBeNull();
+  it("keeps the latest rates with the day they were fetched", async () => {
+    const rates = { USD: 85, EUR: 102, GBP: 127.5, CAD: 63.75, AUD: 56.6667 };
+    expect(await store.getLatestRates()).toBeNull();
+    await store.putRates({ rates, onDate: "2026-10-28", fetchedOn: "2026-10-29" });
+    expect(await store.getLatestRates()).toEqual({
+      rates,
+      onDate: "2026-10-28",
+      fetchedOn: "2026-10-29",
+    });
   });
 
   it("stores an actual payout per invoice", async () => {

@@ -50,11 +50,42 @@ describe("postgres store", () => {
     expect(await createPostgresStore(sql).getSettings()).toBeNull();
   });
 
-  it("converts a stored rate to a number", async () => {
-    const { sql } = fakeSql([{ rate: "83.412500" }], []);
+  it("turns the latest rate rows into one set of rates", async () => {
+    const row = (currency: string, rate: string) => ({
+      currency,
+      rate,
+      on_date: "2026-10-28",
+      fetched_on: "2026-10-29",
+    });
+    const { sql } = fakeSql(
+      [
+        row("USD", "85.000000"),
+        row("EUR", "102.000000"),
+        row("GBP", "127.500000"),
+        row("CAD", "63.750000"),
+        row("AUD", "56.666700"),
+      ],
+      [row("USD", "85.000000")],
+    );
     const store = createPostgresStore(sql);
-    expect(await store.getRate("USD", "2026-10-17")).toBe(83.4125);
-    expect(await store.getRate("EUR", "2026-10-17")).toBeNull();
+    expect(await store.getLatestRates()).toEqual({
+      rates: { USD: 85, EUR: 102, GBP: 127.5, CAD: 63.75, AUD: 56.6667 },
+      onDate: "2026-10-28",
+      fetchedOn: "2026-10-29",
+    });
+    expect(await store.getLatestRates()).toBeNull();
+  });
+
+  it("writes one row per currency when storing rates", async () => {
+    const { sql, values } = fakeSql();
+    const rates = { USD: 85, EUR: 102, GBP: 127.5, CAD: 63.75, AUD: 56.6667 };
+    await createPostgresStore(sql).putRates({
+      rates,
+      onDate: "2026-10-28",
+      fetchedOn: "2026-10-29",
+    });
+    expect(values).toHaveLength(5);
+    expect(values[0]).toEqual(["USD", "2026-10-28", "2026-10-29", 85]);
   });
 
   it("turns activity rows into events", async () => {
