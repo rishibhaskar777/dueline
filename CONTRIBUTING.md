@@ -43,25 +43,31 @@ secret with `node -e "console.log(require('crypto').randomBytes(32).toString('he
 
 ## Deploying
 
-Dueline deploys to Render's free plan from the Blueprint in `render.yaml`, with a Neon database in
-the same region (Singapore).
+Dueline deploys to Vercel's Hobby plan. `vercel.json` pins functions to `sin1` (Singapore), next to
+the Neon database.
 
-1. In Render, choose New, then Blueprint, and select this repository. Render asks for the values
-   that are not in the file: `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID` (leave a
-   placeholder for now), `GEMINI_API_KEY`, `DATABASE_URL` (Neon's pooled connection string),
-   `DEMO_PASSWORD` and `SANDBOX_BUYER_EMAIL`. `SESSION_SECRET` is generated for you.
-2. Create the tables from your computer, against the same database, before the first deploy and
-   before any deploy that adds a migration: set `DATABASE_URL` in `.env.local` and run
-   `npm run db:migrate`. The free plan has no shell and no pre-deploy command.
-3. Register the webhook: in the PayPal Developer Dashboard, open your sandbox app, add a webhook with
-   the URL `https://<your-service>.onrender.com/api/webhooks/paypal` and select the Invoicing events
-   (created, sent, paid, cancelled, refunded, updated, scheduled). Copy the webhook ID into
-   `PAYPAL_WEBHOOK_ID` in Render. Events sent from the webhook simulator are refused on purpose.
-4. Open the app, enter the demo password and run `npm run seed` locally if the demo invoices are
+1. In Vercel, choose Add New, then Project, and import the GitHub repository. Keep the detected
+   Next.js settings.
+2. Add these environment variables for the Production environment only: `PAYPAL_CLIENT_ID`,
+   `PAYPAL_CLIENT_SECRET`, `PAYPAL_ENVIRONMENT=sandbox`, `PAYPAL_WEBHOOK_ID` (a placeholder for
+   now), `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_FALLBACK_MODEL`, `DATABASE_URL` (Neon's pooled
+   connection string), `DEMO_MODE=true`, `DEMO_PASSWORD`, `SESSION_SECRET` and
+   `SANDBOX_BUYER_EMAIL`. Preview deployments get none of them, so they show the "not configured"
+   page.
+3. Create the tables from your computer, against the same database, before the first deploy and
+   before merging a change that adds a migration: set `DATABASE_URL` in `.env.local` and run
+   `npm run db:migrate`.
+4. Register the webhook: in the PayPal Developer Dashboard, open your sandbox app, add a webhook with
+   the URL `https://<project>.vercel.app/api/webhooks/paypal` and select the Invoicing events
+   (created, sent, paid, cancelled, refunded, updated, scheduled). Use the production domain, not a
+   deployment URL, because deployment protection blocks those. Copy the webhook ID into
+   `PAYPAL_WEBHOOK_ID` in Vercel, then redeploy. Events sent from the webhook simulator are refused
+   on purpose.
+5. Open the app, enter the demo password and run `npm run seed` locally if the demo invoices are
    missing.
 
-Render auto-deploys when the checks on the branch pass. A free service sleeps after 15 minutes
-without traffic, so open it a few minutes before a demo.
+Vercel deploys the main branch to production and every other branch to a protected preview. The
+service does not sleep.
 
 ## Branches
 

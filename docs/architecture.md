@@ -191,9 +191,11 @@ retries. `GET /api/activity` returns the latest 20 stored events.
 
 ## Deployment
 
-`render.yaml` describes one free Render web service in Singapore. It builds with `npm ci && npm run
-build` and starts with `npm start`; values that are secrets are asked for in the Render dashboard
-and `SESSION_SECRET` is generated. There is no health check path and no pre-deploy command.
-Migrations are run from a developer's computer with `npm run db:migrate` against the same Neon
-database. See [decision 0008](decisions/0008-demo-access-and-deployment.md) and the "Deploying"
-section of CONTRIBUTING.md.
+Dueline runs on Vercel's Hobby plan. `vercel.json` pins functions to `sin1` (Singapore), next to the
+Neon database, and Vercel detects the Next.js build itself. Secrets are set for the Production
+environment only, and preview deployments are protected by Vercel Authentication, so a preview has
+no PayPal or database access. Functions do not sleep. Migrations are run from a developer's
+computer with `npm run db:migrate` against the same Neon database. See
+[decision 0009](decisions/0009-hosting-on-vercel.md),
+[decision 0008](decisions/0008-demo-access-and-deployment.md) and the "Deploying" section of
+CONTRIBUTING.md.
