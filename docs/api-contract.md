@@ -39,7 +39,7 @@ export interface InvoiceSummary {
   paypalStatus: string; // raw PayPal status, e.g. "UNPAID", "PAID"
   dueState: DueState;
   daysLate: number; // 0 unless overdue (or paid late)
-  payoutInr: number | null; // estimated rupees after fees and conversion
+  payoutInr: number | null; // rupees expected in the bank: PayPal's netInr when reported; otherwise PayPal's net converted at the estimated PayPal rate (paid invoices); otherwise the estimate for the amount still due (unpaid invoices)
   actualPayout: ActualPayout | null; // PayPal's own figures once paid, when available
   purposeCode: string | null; // RBI purpose code chosen for this invoice
   payLink: string; // PayPal-hosted link the client pays on
@@ -110,6 +110,8 @@ export interface PayoutEstimate {
   net: Money;
   conversionRate: number; // rupees per unit after PayPal's markup
   marketRate: number; // rupees per unit before markup
+  marketRateDate: string; // date of the rate used
+  marketRateSource: "ecb" | "manual";
   netInr: number;
   lossInr: number; // market value minus netInr
   lossPercent: number; // one decimal place
@@ -153,12 +155,14 @@ export interface ActivityEvent {
 // src/types/settings.ts
 export interface Settings {
   feePercent: number; // default 4.4
-  fixedFee: string; // default "0.30" in invoice currency
-  fxMarkupPercent: number; // default 3.5
+  fixedFees: Record<CurrencyCode, string>; // default USD "0.30", EUR "0.35", GBP "0.20", CAD "0.30", AUD "0.30"
+  fxMarkupPercent: number; // default 3.0
   rateSource: "ecb" | "manual"; // ecb = daily European Central Bank rate via Frankfurter
   marketRates: Record<CurrencyCode, number>; // rupees per unit; used as-is when rateSource is "manual"
   ratesUpdatedOn: string; // date of the rates in use
 }
+// Defaults: PayPal India's published fees for international commercial payments, from
+// paypal.com/in/webapps/mpp/merchant-fees, checked on 29 Oct 2026.
 
 // src/types/api.ts
 export interface ApiError {
@@ -173,7 +177,7 @@ export interface ApiError {
 | `GET /api/health`                                   | none                                                                                             | `{ paypal: "connected" \| "error", ai: "ready" \| "missing_key", storage: "postgres" \| "memory" \| "error", mode: "sandbox", today: string, demoClock: boolean }` | Used by the sidebar status line and uptime checks. `today` is the date the app is using                                                                                   |
 | `GET /api/invoices`                                 | none                                                                                             | `{ invoices: InvoiceSummary[], totals: Totals }`                                                                                                                   | Newest first. Front end polls every 10 s on the receivables page                                                                                                          |
 | `POST /api/invoices/extract`                        | `{ chat: string }` (1 to 6,000 chars)                                                            | `{ draft: InvoiceDraft, warnings: string[], risk: ClientRisk \| null, masked: { emails: number, phones: number } }`                                                | Emails and phone numbers are masked before the AI call and restored by code. Warnings name anything not found, e.g. "No due date found"                                   |
-| `POST /api/payout-estimate`                         | `{ amount: Money }`                                                                              | `PayoutEstimate`                                                                                                                                                   | Pure calculation from settings, no AI                                                                                                                                     |
+| `POST /api/payout-estimate`                         | `{ amount: Money }`                                                                              | `PayoutEstimate`                                                                                                                                                   | Pure calculation from settings and the day's market rate, no AI                                                                                                           |
 | `POST /api/invoices`                                | `{ draft: InvoiceDraft, requestId: string, discount?: { percent: number, withinDays: number } }` | `{ invoice: InvoiceSummary, sent: boolean }`                                                                                                                       | Creates the draft, then sends it. A repeated `requestId` returns the stored result. If sending fails, returns 200 with `sent: false` and the draft, so the user can retry |
 | `POST /api/invoices/{id}/send`                      | `{ requestId: string }`                                                                          | `{ invoice: InvoiceSummary, sent: true }`                                                                                                                          | Retries sending an existing draft                                                                                                                                         |
 | `GET /api/purpose-codes`                            | none                                                                                             | `{ codes: PurposeCode[] }`                                                                                                                                         | Fixed list from `src/lib/export/purpose-codes.ts`                                                                                                                         |
@@ -192,18 +196,19 @@ export interface ApiError {
 
 Every failure returns a non-2xx status and an `ApiError`:
 
-| Status | `code`                  | When                                                                                             |
-| ------ | ----------------------- | ------------------------------------------------------------------------------------------------ |
-| 400    | `invalid_request`       | Body fails zod validation; `message` says which field                                            |
-| 401    | `unauthorized`          | Demo password missing or wrong                                                                   |
-| 403    | `recipient_not_allowed` | Demo mode and the email is not a PayPal sandbox buyer address                                    |
-| 404    | `not_found`             | Unknown invoice id                                                                               |
-| 409    | `duplicate_request`     | `requestId` already used for a different body                                                    |
-| 422    | `extraction_failed`     | AI could not produce a usable draft                                                              |
-| 429    | `rate_limited`          | Too many AI calls; `message` says when to retry                                                  |
-| 500    | `config_error`          | The server is missing or has invalid configuration; `message` names the setting, never its value |
-| 502    | `paypal_error`          | PayPal returned an error; `debugId` carries PayPal's `debug_id`                                  |
-| 503    | `ai_unavailable`        | Gemini quota or outage; the user can still fill the form by hand                                 |
+| Status | `code`                  | When                                                                                                   |
+| ------ | ----------------------- | ------------------------------------------------------------------------------------------------------ |
+| 400    | `invalid_request`       | Body fails zod validation; `message` says which field                                                  |
+| 401    | `unauthorized`          | Demo password missing or wrong                                                                         |
+| 403    | `recipient_not_allowed` | Demo mode and the email is not a PayPal sandbox buyer address                                          |
+| 404    | `not_found`             | Unknown invoice id                                                                                     |
+| 409    | `duplicate_request`     | `requestId` already used for a different body                                                          |
+| 422    | `extraction_failed`     | AI could not produce a usable draft                                                                    |
+| 429    | `rate_limited`          | Too many AI calls; `message` says when to retry                                                        |
+| 500    | `config_error`          | The server is missing or has invalid configuration; `message` names the setting, never its value       |
+| 500    | `internal_error`        | Unexpected server error; the message asks the user to try again and nothing about the cause is exposed |
+| 502    | `paypal_error`          | PayPal returned an error; `debugId` carries PayPal's `debug_id`                                        |
+| 503    | `ai_unavailable`        | Gemini quota or outage; the user can still fill the form by hand                                       |
 
 ## Dates and the demo clock
 

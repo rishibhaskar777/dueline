@@ -86,17 +86,34 @@ export const sendReminderRequestSchema = z.object({
   requestId: requestIdSchema,
 });
 
+const feeString = z
+  .string()
+  .regex(/^\d+(\.\d{1,2})?$/, "must be a number with at most 2 decimals")
+  .refine((value) => Number(value) <= 5, "must be between 0.00 and 5.00");
+
+const marketRate = z.number().gt(0).lt(1000);
+
+export const fixedFeesSchema = z.object({
+  USD: feeString,
+  EUR: feeString,
+  GBP: feeString,
+  CAD: feeString,
+  AUD: feeString,
+});
+
+export const marketRatesSchema = z.object({
+  USD: marketRate,
+  EUR: marketRate,
+  GBP: marketRate,
+  CAD: marketRate,
+  AUD: marketRate,
+});
+
 export const settingsSchema = z.object({
-  feePercent: z.number().min(0).max(100),
-  fixedFee: z.string().regex(/^\d+(\.\d{1,2})?$/, "must be a number with at most 2 decimals"),
-  fxMarkupPercent: z.number().min(0).max(100),
+  feePercent: z.number().min(0).max(10),
+  fixedFees: fixedFeesSchema,
+  fxMarkupPercent: z.number().min(0).max(10),
   rateSource: z.enum(["ecb", "manual"]),
-  marketRates: z.object({
-    USD: z.number().positive(),
-    EUR: z.number().positive(),
-    GBP: z.number().positive(),
-    CAD: z.number().positive(),
-    AUD: z.number().positive(),
-  }),
+  marketRates: marketRatesSchema,
   ratesUpdatedOn: dateString,
 });
