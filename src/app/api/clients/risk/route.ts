@@ -1,8 +1,8 @@
 import { risks } from "@/mocks/fixtures";
 import type { ClientRisk } from "@/types";
 import { clientRiskQuerySchema } from "@/types";
-import { stubOk } from "../../_lib/stub";
-import { parseQuery } from "../../_lib/validate";
+import { stubOk } from "@/app/api/_lib/stub";
+import { parseQuery } from "@/app/api/_lib/validate";
 
 export async function GET(req: Request): Promise<Response> {
   const parsed = parseQuery(req, clientRiskQuerySchema);

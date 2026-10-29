@@ -1,4 +1,4 @@
-import { ok } from "./respond";
+import { ok } from "@/app/api/_lib/respond";
 
 export const STUB_HEADER = "x-dueline-stub";
 

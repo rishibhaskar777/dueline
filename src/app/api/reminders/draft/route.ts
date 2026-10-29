@@ -1,8 +1,8 @@
 import { reminders } from "@/mocks/fixtures";
 import { draftReminderRequestSchema } from "@/types";
-import { fail } from "../../_lib/respond";
-import { stubOk } from "../../_lib/stub";
-import { parseBody } from "../../_lib/validate";
+import { fail } from "@/app/api/_lib/respond";
+import { stubOk } from "@/app/api/_lib/stub";
+import { parseBody } from "@/app/api/_lib/validate";
 
 export async function POST(req: Request): Promise<Response> {
   const parsed = await parseBody(req, draftReminderRequestSchema);

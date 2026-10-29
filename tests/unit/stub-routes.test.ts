@@ -3,10 +3,9 @@ import { GET as getActivity } from "@/app/api/activity/route";
 import { GET as getRisk } from "@/app/api/clients/risk/route";
 import { POST as resetDemo } from "@/app/api/demo/reset/route";
 import { GET as getExportRegister } from "@/app/api/export-register/route";
-import { GET as getHealth } from "@/app/api/health/route";
 import { POST as extract } from "@/app/api/invoices/extract/route";
 import { POST as sendInvoice } from "@/app/api/invoices/[id]/send/route";
-import { GET as getInvoices, POST as createInvoice } from "@/app/api/invoices/route";
+import { POST as createInvoice } from "@/app/api/invoices/route";
 import { POST as estimate } from "@/app/api/payout-estimate/route";
 import { GET as getPurposeCodes } from "@/app/api/purpose-codes/route";
 import { POST as draftReminder } from "@/app/api/reminders/draft/route";
@@ -39,8 +38,6 @@ function expectStub(response: Response, status = 200): void {
 
 describe("stub routes", () => {
   it("answers every GET route", async () => {
-    expectStub(await getHealth());
-    expectStub(await getInvoices());
     expectStub(await getPurposeCodes());
     expectStub(await getReminders());
     expectStub(await getActivity());

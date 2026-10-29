@@ -1,8 +1,8 @@
 import { exportRegister } from "@/mocks/fixtures";
 import { exportRegisterQuerySchema } from "@/types";
 import type { ExportRegister } from "@/types";
-import { stubOk, stubText } from "../_lib/stub";
-import { parseQuery } from "../_lib/validate";
+import { stubOk, stubText } from "@/app/api/_lib/stub";
+import { parseQuery } from "@/app/api/_lib/validate";
 
 const CSV_HEADER = [
   "Invoice",
