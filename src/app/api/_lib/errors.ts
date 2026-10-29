@@ -8,5 +8,11 @@ export function failFromError(error: unknown): Response {
     return fail(502, "paypal_error", `PayPal returned an error: ${error.message}`, error.debugId);
   }
   if (error instanceof PayPalTimeoutError) return fail(502, "paypal_error", error.message);
-  throw error;
+
+  // Only the name and message are logged: errors can carry request bodies or invoice data.
+  console.error("Unexpected error", {
+    name: error instanceof Error ? error.name : "unknown",
+    message: error instanceof Error ? error.message : "",
+  });
+  return fail(500, "internal_error", "Something went wrong on our side. Try again in a moment.");
 }
