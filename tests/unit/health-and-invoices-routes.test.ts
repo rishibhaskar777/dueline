@@ -2,10 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as getHealth } from "@/app/api/health/route";
 import { GET as getInvoices } from "@/app/api/invoices/route";
 import { STUB_HEADER } from "@/app/api/_lib/stub";
+import { clearInvoiceCaches } from "@/lib/paypal/summaries";
 import { clearAccessToken } from "@/lib/paypal/token";
 import type { PayPalInvoice } from "@/lib/paypal/types";
 import { stubEnv } from "../support/env";
 import { jsonResponse, mockPayPal, TOKEN_PATH } from "../support/http";
+import { ecbResponse, isRatesRequest } from "../support/rates";
 import paidFixture from "../fixtures/paypal/invoice-paid.json";
 import unpaidFixture from "../fixtures/paypal/invoice-unpaid.json";
 
@@ -25,6 +27,7 @@ const paid = paidFixture as PayPalInvoice;
 beforeEach(() => {
   stubEnv({ DEMO_TODAY: "2026-10-17" });
   clearAccessToken();
+  clearInvoiceCaches();
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });
@@ -71,6 +74,25 @@ describe("GET /api/health", () => {
   });
 });
 
+const SINGLE_INVOICE = /^\/v2\/invoicing\/invoices\/(.+)$/;
+
+// The list leaves out items and the payer link, as PayPal's does; reading one invoice has them.
+function serveInvoices(...invoices: PayPalInvoice[]): void {
+  mockPayPal((url) => {
+    if (isRatesRequest(url)) return ecbResponse();
+    const single = SINGLE_INVOICE.exec(url.pathname);
+    if (single) {
+      return jsonResponse(invoices.find((invoice) => invoice.id === single[1]) ?? {});
+    }
+    const bare = invoices.map((invoice) => ({
+      ...invoice,
+      items: undefined,
+      detail: { ...invoice.detail, metadata: undefined },
+    }));
+    return jsonResponse({ items: bare, total_items: bare.length, total_pages: 1 });
+  });
+}
+
 describe("GET /api/invoices", () => {
   it("maps, filters and sorts PayPal's invoices and totals the rupees", async () => {
     sdk.getCapturedPayment.mockResolvedValue({
@@ -84,9 +106,7 @@ describe("GET /api/invoices", () => {
       },
     });
     const draft: PayPalInvoice = { ...unpaid, id: "draft", status: "DRAFT" };
-    mockPayPal(() =>
-      jsonResponse({ items: [paid, draft, unpaid], total_items: 3, total_pages: 1 }),
-    );
+    serveInvoices(paid, draft, unpaid);
 
     const response = await getInvoices();
     expect(response.status).toBe(200);
@@ -96,12 +116,38 @@ describe("GET /api/invoices", () => {
       "INV-0101",
       "INV-0102",
     ]);
+    expect(body.invoices[0]).toMatchObject({
+      work: "Pitch deck design",
+      payLink: "https://www.sandbox.paypal.com/invoice/p/#TEST0001",
+      payoutInr: 70915,
+    });
     expect(body.invoices[1].actualPayout.netInr).toBe(35617);
+    expect(body.invoices[1].payoutInr).toBe(35617);
     expect(body.totals).toEqual({
-      outstandingInr: 0,
+      outstandingInr: 70915,
       overdueInr: 0,
       overdueCount: 0,
       paidThisMonthInr: 35617,
+    });
+  });
+
+  it("estimates the amount still due on a partly paid invoice", async () => {
+    serveInvoices({
+      ...unpaid,
+      status: "PARTIALLY_PAID",
+      detail: {
+        ...unpaid.detail,
+        payment_term: { term_type: "DUE_ON_DATE_SPECIFIED", due_date: "2026-10-10" },
+      },
+      payments: { paid_amount: { currency_code: "USD", value: "400.00" } },
+    });
+
+    const body = await (await getInvoices()).json();
+    expect(body.invoices[0].payoutInr).toBe(39386);
+    expect(body.totals).toMatchObject({
+      outstandingInr: 39386,
+      overdueInr: 39386,
+      overdueCount: 1,
     });
   });
 

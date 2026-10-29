@@ -1,5 +1,6 @@
-import { daysBetween } from "@/lib/clock";
+import { daysBetween, toKolkataDate } from "@/lib/clock";
 import { isPurposeCode } from "@/lib/export/purpose-codes";
+import { fromMinorUnits, toMinorUnits } from "@/lib/money/decimal";
 import {
   currencySchema,
   type ActualPayout,
@@ -21,6 +22,14 @@ export function toMoney(currencyCode: string, value: string): Money | null {
 export function latestPayment(invoice: PayPalInvoice): PayPalPayment | undefined {
   const dated = (invoice.payments?.transactions ?? []).filter((payment) => payment.payment_date);
   return dated.sort((a, b) => (a.payment_date ?? "").localeCompare(b.payment_date ?? "")).at(-1);
+}
+
+// A partly paid invoice owes less than its full amount, and only that part is still to arrive.
+export function amountDueOf(invoice: PayPalInvoice, amount: Money): Money {
+  const paid = invoice.payments?.paid_amount;
+  if (!paid || paid.currency_code !== amount.currency) return amount;
+  const due = Math.max(0, toMinorUnits(amount.value) - toMinorUnits(paid.value));
+  return { currency: amount.currency, value: fromMinorUnits(due) };
 }
 
 function clientOf(invoice: PayPalInvoice): InvoiceSummary["client"] {
@@ -49,8 +58,8 @@ export function toInvoiceSummary(
   const issuedOn = invoice.detail.invoice_date;
   const dueOn = invoice.detail.payment_term?.due_date ?? issuedOn;
   const dueState = dueStateOf(PAID_STATUSES.includes(invoice.status), dueOn, today);
-  const paidOn =
-    dueState === "paid" ? (latestPayment(invoice)?.payment_date?.slice(0, 10) ?? null) : null;
+  const paymentDate = latestPayment(invoice)?.payment_date;
+  const paidOn = dueState === "paid" && paymentDate ? toKolkataDate(paymentDate) : null;
   const lateUntil = dueState === "paid" ? paidOn : today;
   const reference = invoice.detail.reference ?? "";
 
