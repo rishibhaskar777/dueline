@@ -27,7 +27,9 @@ in memory. Read [docs/architecture.md](docs/architecture.md) and
 3. Check the connection with `npm run sandbox:check`. It creates and sends a USD 100.00 invoice to the
    sandbox buyer and prints the payer link. Pay it in a private window as the buyer, then run
    `npm run sandbox:check -- --invoice <id>` to see the payment and PayPal's own payout figures.
-4. Create the four demo invoices with `npm run seed`. It skips invoices that already exist, so it is
+4. Check the exchange-rate service with `npm run rates:check`. It makes one call to Frankfurter and
+   prints the ECB's date and the rupees per unit for the five currencies, or the reason it failed.
+5. Create the four demo invoices with `npm run seed`. It skips invoices that already exist, so it is
    safe to run again.
 
 These scripts run outside Next.js, so they start with `tsx --conditions=react-server`: that makes the

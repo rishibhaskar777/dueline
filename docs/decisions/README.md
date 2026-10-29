@@ -17,3 +17,4 @@ Copy [0000-template.md](0000-template.md) to start a new one.
 | [0004](0004-paypal-integration.md) | How we integrate with PayPal            |
 | [0005](0005-toolchain.md)          | Toolchain versions                      |
 | [0006](0006-storage.md)            | Storage                                 |
+| [0007](0007-fees-and-rates.md)     | Fees and rates                          |
