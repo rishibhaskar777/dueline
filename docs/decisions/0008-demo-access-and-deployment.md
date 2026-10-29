@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted.
+Accepted. The hosting section is superseded by [0009](0009-hosting-on-vercel.md).
 
 ## Context
 
