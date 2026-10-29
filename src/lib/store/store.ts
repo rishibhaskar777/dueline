@@ -14,6 +14,12 @@ export interface ReminderLogEntry {
   sentAt: string;
 }
 
+export interface StoredRates {
+  rates: Record<CurrencyCode, number>;
+  onDate: string; // date the rates are for, as published by the ECB
+  fetchedOn: string; // day Dueline fetched them
+}
+
 export interface Store {
   claim(requestId: string, bodyHash: string): Promise<ClaimResult>;
   complete(requestId: string, result: Json): Promise<void>;
@@ -31,8 +37,8 @@ export interface Store {
 
   hitRateLimit(key: string, windowSeconds: number): Promise<number>;
 
-  getRate(currency: CurrencyCode, onDate: string): Promise<number | null>;
-  putRate(currency: CurrencyCode, onDate: string, rate: number): Promise<void>;
+  getLatestRates(): Promise<StoredRates | null>;
+  putRates(stored: StoredRates): Promise<void>;
 
   getActualPayout(invoiceId: string): Promise<ActualPayout | null>;
   putActualPayout(invoiceId: string, payout: ActualPayout): Promise<void>;

@@ -7,8 +7,30 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Settings have one fixed fee per currency (`fixedFees`) instead of one `fixedFee`, and the default
+  conversion markup is 3.0%.
+- `GET /api/invoices` reads every listed invoice in full, so the work description and the payer link
+  are filled in. Full invoices are cached for 10 minutes and the finished list for 20 seconds.
+- An unexpected server error is answered with 500 `internal_error`.
+- A paid invoice's date is now read from a plain date or a timestamp and converted to Asia/Kolkata.
+
 ### Added
 
+- Payout estimate from PayPal India's published fees and the ECB's daily rate, with the date and
+  source of the rate, and `POST /api/payout-estimate` now calculates instead of returning sample
+  data.
+- Daily ECB rates through Frankfurter, fetched once a day and stored, with the latest stored rates
+  and then manual rates as fallbacks, and `npm run rates:check`.
+- `GET` and `PUT /api/settings` now store real settings: a fee percentage, a fixed fee for each
+  currency, the conversion markup, the rate source and manual rates.
+- "Fees and rates" screen with a settings form and a "What reaches your bank" calculator.
+- `payoutInr` and the rupee totals now come from PayPal's figures where they exist and from the
+  estimate otherwise.
+- `internal_error` (500) in the API contract.
+- Security headers on every response, and no `X-Powered-By` header.
+- Decision record 0007 on fees and rates.
 - Validated environment settings that refuse to start unless `PAYPAL_ENVIRONMENT=sandbox`.
 - A date module for Asia/Kolkata with the demo clock, day arithmetic and tests.
 - PayPal sandbox client: cached OAuth token, REST client for Invoicing v2 with a timeout and one

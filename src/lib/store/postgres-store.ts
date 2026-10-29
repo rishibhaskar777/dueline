@@ -1,7 +1,15 @@
 import "server-only";
 import postgres from "postgres";
-import type { ActivityEvent, ActualPayout, Money, Settings, Tone } from "@/types";
-import type { ClaimResult, Json, ReminderLogEntry, Store } from "./store";
+import {
+  currencySchema,
+  type ActivityEvent,
+  type ActualPayout,
+  type CurrencyCode,
+  type Money,
+  type Settings,
+  type Tone,
+} from "@/types";
+import type { ClaimResult, Json, ReminderLogEntry, Store, StoredRates } from "./store";
 
 type Sql = postgres.Sql;
 
@@ -14,6 +22,15 @@ interface ActivityRow {
   at: Date;
   amount: Money | null;
 }
+
+interface RateRow {
+  currency: CurrencyCode;
+  rate: string;
+  on_date: string;
+  fetched_on: string;
+}
+
+const CURRENCIES = currencySchema.options;
 
 export function createSqlClient(url: string): Sql {
   // Neon's pooled URL goes through PgBouncer, which cannot keep prepared statements.
@@ -127,16 +144,30 @@ export function createPostgresStore(sql: Sql): Store {
       return row.count;
     },
 
-    async getRate(currency, onDate): Promise<number | null> {
-      const [row] = await sql<{ rate: string }[]>`
-        select rate from exchange_rates where currency = ${currency} and on_date = ${onDate}`;
-      return row ? Number(row.rate) : null;
+    async getLatestRates(): Promise<StoredRates | null> {
+      const rows = await sql<RateRow[]>`
+        select currency, rate, to_char(on_date, 'YYYY-MM-DD') as on_date,
+          to_char(fetched_on, 'YYYY-MM-DD') as fetched_on
+        from exchange_rates
+        where on_date = (select max(on_date) from exchange_rates)`;
+      if (rows.length < CURRENCIES.length) return null;
+
+      const rates = Object.fromEntries(rows.map((row) => [row.currency, Number(row.rate)]));
+      return {
+        rates: rates as Record<CurrencyCode, number>,
+        onDate: rows[0].on_date,
+        fetchedOn: rows.map((row) => row.fetched_on).reduce((a, b) => (a > b ? a : b)),
+      };
     },
 
-    async putRate(currency, onDate, rate): Promise<void> {
-      await sql`
-        insert into exchange_rates (currency, on_date, rate) values (${currency}, ${onDate}, ${rate})
-        on conflict (currency, on_date) do update set rate = excluded.rate`;
+    async putRates(stored): Promise<void> {
+      for (const currency of CURRENCIES) {
+        await sql`
+          insert into exchange_rates (currency, on_date, fetched_on, rate)
+          values (${currency}, ${stored.onDate}, ${stored.fetchedOn}, ${stored.rates[currency]})
+          on conflict (currency, on_date) do update set
+            rate = excluded.rate, fetched_on = excluded.fetched_on`;
+      }
     },
 
     async getActualPayout(invoiceId): Promise<ActualPayout | null> {

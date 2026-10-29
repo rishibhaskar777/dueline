@@ -1,14 +1,15 @@
-import type {
-  ClientRisk,
-  ActivityEvent,
-  ExportRegister,
-  ExtractResponse,
-  HealthResponse,
-  InvoiceSummary,
-  PayoutEstimate,
-  ReminderDraft,
-  Settings,
-  Totals,
+import {
+  DEFAULT_SETTINGS,
+  type ClientRisk,
+  type ActivityEvent,
+  type ExportRegister,
+  type ExtractResponse,
+  type HealthResponse,
+  type InvoiceSummary,
+  type PayoutEstimate,
+  type ReminderDraft,
+  type Settings,
+  type Totals,
 } from "@/types";
 import { PURPOSE_CODES } from "@/lib/export/purpose-codes";
 
@@ -30,7 +31,7 @@ export const brightwellInvoice: InvoiceSummary = {
   paypalStatus: "UNPAID",
   dueState: "overdue",
   daysLate: 5,
-  payoutInr: 60965,
+  payoutInr: 64519,
   actualPayout: null,
   purposeCode: "P1099",
   payLink: "https://www.sandbox.paypal.com/invoice/p/#BRTW0043",
@@ -52,7 +53,7 @@ export const okaforInvoice: InvoiceSummary = {
   paypalStatus: "UNPAID",
   dueState: "overdue",
   daysLate: 7,
-  payoutInr: 62011,
+  payoutInr: 68068,
   actualPayout: null,
   purposeCode: "P1099",
   payLink: "https://www.sandbox.paypal.com/invoice/p/#OKRZ0044",
@@ -74,7 +75,7 @@ export const northpineInvoice: InvoiceSummary = {
   paypalStatus: "UNPAID",
   dueState: "due_soon",
   daysLate: 0,
-  payoutInr: 21964,
+  payoutInr: 22182,
   actualPayout: null,
   purposeCode: "P1007",
   payLink: "https://www.sandbox.paypal.com/invoice/p/#NPST0045",
@@ -96,7 +97,7 @@ export const tandemInvoice: InvoiceSummary = {
   paypalStatus: "UNPAID",
   dueState: "on_time",
   daysLate: 0,
-  payoutInr: 71474,
+  payoutInr: 73418,
   actualPayout: null,
   purposeCode: "P1099",
   payLink: "https://www.sandbox.paypal.com/invoice/p/#TNDM0046",
@@ -118,7 +119,7 @@ export const haldenLabelsInvoice: InvoiceSummary = {
   paypalStatus: "PAID",
   dueState: "paid",
   daysLate: 0,
-  payoutInr: 35725,
+  payoutInr: 35617,
   actualPayout: {
     fee: { currency: "USD", value: "20.10" },
     net: { currency: "USD", value: "429.90" },
@@ -146,7 +147,7 @@ export const haldenMenuInvoice: InvoiceSummary = {
   paypalStatus: "PAID",
   dueState: "paid",
   daysLate: 0,
-  payoutInr: 22219,
+  payoutInr: 22824,
   actualPayout: null,
   purposeCode: "P1099",
   payLink: "https://www.sandbox.paypal.com/invoice/p/#HLDN0041",
@@ -162,18 +163,15 @@ export const invoices: InvoiceSummary[] = [
 ];
 
 export const totals: Totals = {
-  outstandingInr: 216414,
-  overdueInr: 122976,
+  outstandingInr: 228187,
+  overdueInr: 132587,
   overdueCount: 2,
-  paidThisMonthInr: 57836,
+  paidThisMonthInr: 58441,
 };
 
 export const settings: Settings = {
-  feePercent: 4.4,
-  fixedFee: "0.30",
-  fxMarkupPercent: 3.5,
-  rateSource: "ecb",
-  marketRates: { USD: 86.1, EUR: 93.4, GBP: 110.2, CAD: 62.7, AUD: 56.9 },
+  ...DEFAULT_SETTINGS,
+  marketRates: { USD: 88, EUR: 102, GBP: 116, CAD: 63, AUD: 57.5 },
   ratesUpdatedOn: "2026-10-16",
 };
 
@@ -181,11 +179,13 @@ export const payoutEstimate: PayoutEstimate = {
   gross: { currency: "USD", value: "450.00" },
   fee: { currency: "USD", value: "20.10" },
   net: { currency: "USD", value: "429.90" },
-  marketRate: 86.1,
-  conversionRate: 83.1,
-  netInr: 35725,
-  lossInr: 3020,
-  lossPercent: 7.8,
+  marketRate: 88,
+  marketRateDate: "2026-10-16",
+  marketRateSource: "ecb",
+  conversionRate: 85.36,
+  netInr: 36696,
+  lossInr: 2904,
+  lossPercent: 7.3,
 };
 
 export const haldenRisk: ClientRisk = {
@@ -321,12 +321,12 @@ export const exportRegister: ExportRegister = {
       clientCountry: "United States",
       paidOn: "2026-10-07",
       foreign: { currency: "USD", value: "280.00" },
-      inrReceived: 22219,
+      inrReceived: 22824,
       inrSource: "estimate",
       purposeCode: "P1099",
     },
   ],
-  totalInr: 57836,
+  totalInr: 58441,
 };
 
 export const health: HealthResponse = {

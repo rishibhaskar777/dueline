@@ -1,14 +1,23 @@
-import { settings } from "@/mocks/fixtures";
+import { getSettings, saveSettings } from "@/lib/settings";
 import { settingsSchema } from "@/types";
-import { stubOk } from "@/app/api/_lib/stub";
+import { failFromError } from "@/app/api/_lib/errors";
+import { ok } from "@/app/api/_lib/respond";
 import { parseBody } from "@/app/api/_lib/validate";
 
 export async function GET(): Promise<Response> {
-  return stubOk(settings);
+  try {
+    return ok(await getSettings());
+  } catch (error) {
+    return failFromError(error);
+  }
 }
 
 export async function PUT(req: Request): Promise<Response> {
   const parsed = await parseBody(req, settingsSchema);
   if (!parsed.ok) return parsed.response;
-  return stubOk(parsed.data);
+  try {
+    return ok(await saveSettings(parsed.data));
+  } catch (error) {
+    return failFromError(error);
+  }
 }

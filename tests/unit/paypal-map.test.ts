@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toInvoiceSummary } from "@/lib/paypal/map";
+import { amountDueOf, toInvoiceSummary } from "@/lib/paypal/map";
 import type { PayPalInvoice } from "@/lib/paypal/types";
 import type { ActualPayout } from "@/types";
 import paidFixture from "../fixtures/paypal/invoice-paid.json";
@@ -51,6 +51,38 @@ describe("toInvoiceSummary", () => {
     const summary = toInvoiceSummary(paid, TODAY, null);
     expect(summary).toMatchObject({ dueState: "paid", paidOn: "2026-10-15", daysLate: 0 });
     expect(summary?.client.name).toBe("Mike Halden");
+  });
+
+  it("converts a payment timestamp to the Asia/Kolkata date", () => {
+    expect(toInvoiceSummary(paidOn("2026-10-15T20:30:00Z"), TODAY, null)?.paidOn).toBe(
+      "2026-10-16",
+    );
+    expect(toInvoiceSummary(paidOn("2026-10-15 11:42:00 +0000"), TODAY, null)?.paidOn).toBe(
+      "2026-10-15",
+    );
+  });
+
+  it("works out the amount still due", () => {
+    const partly: PayPalInvoice = {
+      ...unpaid,
+      status: "PARTIALLY_PAID",
+      payments: { paid_amount: { currency_code: "USD", value: "400.50" } },
+    };
+    const amount = { currency: "USD" as const, value: "900.00" };
+    expect(amountDueOf(partly, amount)).toEqual({ currency: "USD", value: "499.50" });
+    expect(amountDueOf(unpaid, amount)).toEqual(amount);
+    expect(
+      amountDueOf(
+        { ...partly, payments: { paid_amount: { currency_code: "EUR", value: "1.00" } } },
+        amount,
+      ),
+    ).toEqual(amount);
+    expect(
+      amountDueOf(
+        { ...partly, payments: { paid_amount: { currency_code: "USD", value: "950.00" } } },
+        amount,
+      ).value,
+    ).toBe("0.00");
   });
 
   it("counts the days a paid invoice was late", () => {

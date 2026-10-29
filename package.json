@@ -17,6 +17,7 @@
     "format:check": "prettier --check .",
     "db:migrate": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/migrate.ts",
     "sandbox:check": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/sandbox-check.ts",
+    "rates:check": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/rates-check.ts",
     "seed": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/seed-sandbox.ts"
   },
   "dependencies": {

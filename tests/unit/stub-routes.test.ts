@@ -6,15 +6,13 @@ import { GET as getExportRegister } from "@/app/api/export-register/route";
 import { POST as extract } from "@/app/api/invoices/extract/route";
 import { POST as sendInvoice } from "@/app/api/invoices/[id]/send/route";
 import { POST as createInvoice } from "@/app/api/invoices/route";
-import { POST as estimate } from "@/app/api/payout-estimate/route";
 import { GET as getPurposeCodes } from "@/app/api/purpose-codes/route";
 import { POST as draftReminder } from "@/app/api/reminders/draft/route";
 import { GET as getReminders } from "@/app/api/reminders/route";
 import { POST as sendReminder } from "@/app/api/reminders/send/route";
-import { GET as getSettings, PUT as putSettings } from "@/app/api/settings/route";
 import { POST as webhook } from "@/app/api/webhooks/paypal/route";
 import { STUB_HEADER } from "@/app/api/_lib/stub";
-import { extraction, invoices, settings } from "@/mocks/fixtures";
+import { extraction, invoices } from "@/mocks/fixtures";
 
 const requestId = "3f2b8c1e-6a4d-4e8b-9c1a-2d5e7f9a0b1c";
 const origin = "http://localhost:3000";
@@ -41,18 +39,12 @@ describe("stub routes", () => {
     expectStub(await getPurposeCodes());
     expectStub(await getReminders());
     expectStub(await getActivity());
-    expectStub(await getSettings());
     expectStub(await getRisk(get("/api/clients/risk?email=mike@haldencoffee.example")));
     expectStub(await getExportRegister(get("/api/export-register?month=2026-10")));
   });
 
-  it("answers every POST and PUT route", async () => {
+  it("answers every POST route", async () => {
     expectStub(await extract(json("POST", "/api/invoices/extract", { chat: "hello" })));
-    expectStub(
-      await estimate(
-        json("POST", "/api/payout-estimate", { amount: { currency: "USD", value: "450.00" } }),
-      ),
-    );
     expectStub(
       await createInvoice(json("POST", "/api/invoices", { draft: extraction.draft, requestId })),
     );
@@ -71,7 +63,6 @@ describe("stub routes", () => {
         }),
       ),
     );
-    expectStub(await putSettings(json("PUT", "/api/settings", settings)));
   });
 
   it("sends a known draft and reports an unknown one", async () => {

@@ -1,19 +1,15 @@
 import type { InvoiceSummary, Totals } from "@/types";
 
-function rupeesOf(invoice: InvoiceSummary): number | null {
-  return invoice.actualPayout?.netInr ?? invoice.payoutInr;
-}
-
 function sumInPaise(invoices: InvoiceSummary[]): number {
   const paise = invoices.reduce(
-    (sum, invoice) => sum + Math.round((rupeesOf(invoice) ?? 0) * 100),
+    (sum, invoice) => sum + Math.round((invoice.payoutInr ?? 0) * 100),
     0,
   );
   return paise / 100;
 }
 
 export function computeTotals(invoices: InvoiceSummary[], today: string): Totals {
-  const withRupees = invoices.filter((invoice) => rupeesOf(invoice) !== null);
+  const withRupees = invoices.filter((invoice) => invoice.payoutInr !== null);
   const unpaid = withRupees.filter((invoice) => invoice.dueState !== "paid");
   const overdue = unpaid.filter((invoice) => invoice.dueState === "overdue");
   const paidThisMonth = withRupees.filter(
