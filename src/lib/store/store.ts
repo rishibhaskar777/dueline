@@ -24,6 +24,7 @@ export interface Store {
   claim(requestId: string, bodyHash: string): Promise<ClaimResult>;
   complete(requestId: string, result: Json): Promise<void>;
 
+  isProcessed(eventId: string): Promise<boolean>;
   markProcessed(eventId: string): Promise<boolean>;
 
   addActivity(event: ActivityEvent): Promise<void>;

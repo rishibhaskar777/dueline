@@ -65,6 +65,8 @@ export const createInvoiceRequestSchema = z.object({
 
 export const sendInvoiceRequestSchema = z.object({ requestId: requestIdSchema });
 
+export const demoSessionRequestSchema = z.object({ password: z.string().min(1).max(200) });
+
 export const monthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "must be YYYY-MM");
 
 export const exportRegisterQuerySchema = z.object({

@@ -6,6 +6,8 @@ import { clearAccessToken, getAccessToken } from "./token";
 interface PayPalRequest {
   method?: "GET" | "POST";
   body?: unknown;
+  // Sent as is, for a body that embeds text which must reach PayPal byte for byte.
+  rawBody?: string;
   headers?: Record<string, string>;
   requestId?: string;
 }
@@ -20,7 +22,8 @@ async function send(path: string, request: PayPalRequest): Promise<Response> {
       ...(request.requestId ? { "PayPal-Request-Id": request.requestId } : {}),
       ...request.headers,
     },
-    body: request.body === undefined ? undefined : JSON.stringify(request.body),
+    body:
+      request.rawBody ?? (request.body === undefined ? undefined : JSON.stringify(request.body)),
   });
 }
 
