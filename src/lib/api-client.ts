@@ -52,10 +52,26 @@ async function toError(response: Response): Promise<ApiClientError> {
   }
 }
 
+const SESSION_PATH = "/api/demo/session";
+
+function signInUrl(): string {
+  const { pathname, search } = window.location;
+  return `/demo?next=${encodeURIComponent(`${pathname}${search}`)}`;
+}
+
+// A full page load, because this runs outside React and the page's data is no longer allowed.
+function sendToSignIn(): void {
+  if (typeof window === "undefined" || window.location.pathname === "/demo") return;
+  window.location.assign(signInUrl());
+}
+
 async function request(path: string, init?: RequestInit): Promise<Response> {
   const response = await fetch(path, init);
-  if (!response.ok) throw await toError(response);
-  return response;
+  if (response.ok) return response;
+
+  const error = await toError(response);
+  if (error.code === "unauthorized" && path !== SESSION_PATH) sendToSignIn();
+  throw error;
 }
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
@@ -143,4 +159,12 @@ export function exportRegisterCsvUrl(month: string): string {
 
 export async function resetDemo(): Promise<void> {
   await request("/api/demo/reset", { method: "POST" });
+}
+
+export async function signIn(password: string): Promise<void> {
+  await request(SESSION_PATH, jsonInit("POST", { password }));
+}
+
+export async function signOut(): Promise<void> {
+  await request(SESSION_PATH, { method: "DELETE" });
 }
