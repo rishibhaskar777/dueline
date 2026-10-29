@@ -16,3 +16,4 @@ Copy [0000-template.md](0000-template.md) to start a new one.
 | [0003](0003-free-tier-hosting.md)  | Free-tier hosting                       |
 | [0004](0004-paypal-integration.md) | How we integrate with PayPal            |
 | [0005](0005-toolchain.md)          | Toolchain versions                      |
+| [0006](0006-storage.md)            | Storage                                 |
