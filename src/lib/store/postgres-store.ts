@@ -80,6 +80,11 @@ export function createPostgresStore(sql: Sql): Store {
         where request_id = ${requestId}`;
     },
 
+    async isProcessed(eventId): Promise<boolean> {
+      const rows = await sql`select 1 from webhook_events where event_id = ${eventId}`;
+      return rows.length > 0;
+    },
+
     async markProcessed(eventId): Promise<boolean> {
       const inserted = await sql`
         insert into webhook_events (event_id) values (${eventId})

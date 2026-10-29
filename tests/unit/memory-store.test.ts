@@ -33,7 +33,9 @@ describe("idempotency", () => {
 
 describe("webhook events", () => {
   it("processes each event once", async () => {
+    expect(await store.isProcessed("WH-1")).toBe(false);
     expect(await store.markProcessed("WH-1")).toBe(true);
+    expect(await store.isProcessed("WH-1")).toBe(true);
     expect(await store.markProcessed("WH-1")).toBe(false);
     expect(await store.markProcessed("WH-2")).toBe(true);
   });

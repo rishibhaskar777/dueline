@@ -45,6 +45,13 @@ describe("postgres store", () => {
     expect(await store.markProcessed("WH-1")).toBe(false);
   });
 
+  it("tells whether a webhook event was processed", async () => {
+    const { sql } = fakeSql([], [{ "?column?": 1 }]);
+    const store = createPostgresStore(sql);
+    expect(await store.isProcessed("WH-1")).toBe(false);
+    expect(await store.isProcessed("WH-1")).toBe(true);
+  });
+
   it("returns no settings before any are saved", async () => {
     const { sql } = fakeSql([]);
     expect(await createPostgresStore(sql).getSettings()).toBeNull();

@@ -34,6 +34,10 @@ export function createMemoryStore(): Store {
       if (existing) existing.result = result;
     },
 
+    async isProcessed(eventId): Promise<boolean> {
+      return events.has(eventId);
+    },
+
     async markProcessed(eventId): Promise<boolean> {
       if (events.has(eventId)) return false;
       events.add(eventId);

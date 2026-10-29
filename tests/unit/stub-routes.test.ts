@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { GET as getActivity } from "@/app/api/activity/route";
 import { GET as getRisk } from "@/app/api/clients/risk/route";
 import { POST as resetDemo } from "@/app/api/demo/reset/route";
 import { GET as getExportRegister } from "@/app/api/export-register/route";
@@ -10,7 +9,6 @@ import { GET as getPurposeCodes } from "@/app/api/purpose-codes/route";
 import { POST as draftReminder } from "@/app/api/reminders/draft/route";
 import { GET as getReminders } from "@/app/api/reminders/route";
 import { POST as sendReminder } from "@/app/api/reminders/send/route";
-import { POST as webhook } from "@/app/api/webhooks/paypal/route";
 import { STUB_HEADER } from "@/app/api/_lib/stub";
 import { extraction, invoices } from "@/mocks/fixtures";
 
@@ -38,7 +36,6 @@ describe("stub routes", () => {
   it("answers every GET route", async () => {
     expectStub(await getPurposeCodes());
     expectStub(await getReminders());
-    expectStub(await getActivity());
     expectStub(await getRisk(get("/api/clients/risk?email=mike@haldencoffee.example")));
     expectStub(await getExportRegister(get("/api/export-register?month=2026-10")));
   });
@@ -76,8 +73,7 @@ describe("stub routes", () => {
     expect(unknown.status).toBe(404);
   });
 
-  it("returns 204 for the webhook and the demo reset", async () => {
-    expectStub(await webhook(), 204);
+  it("returns 204 for the demo reset", async () => {
     expectStub(await resetDemo(), 204);
   });
 
