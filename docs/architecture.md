@@ -4,9 +4,10 @@ Dueline is a Next.js app. Screens are client components that call typed function
 `src/lib/api-client.ts`. Those functions call route handlers under `src/app/api`, and the route
 handlers talk to PayPal, Gemini, Postgres and the exchange-rate service.
 
-`GET /api/health`, `GET /api/invoices`, `GET` and `PUT /api/settings` and `POST /api/payout-estimate`
-are built. Every other route handler still returns sample data and the header `x-dueline-stub: true`. Parts
-that are not built yet are marked **planned**.
+`GET /api/health`, `GET /api/invoices`, `GET` and `PUT /api/settings`, `POST /api/payout-estimate`,
+`GET /api/activity`, `POST /api/webhooks/paypal` and the demo sign-in routes are built. Every other
+route handler still returns sample data and the header `x-dueline-stub: true`. Parts that are not
+built yet are marked **planned**.
 
 ```mermaid
 flowchart LR
@@ -34,7 +35,13 @@ arithmetic on plain `YYYY-MM-DD` strings. Every due-state and risk calculation u
 
 **`paypal/`** holds the OAuth token, a small typed REST client for Invoicing v2, the Server SDK
 wrappers for payments and transaction search, the actual-payout lookup and the mapping to our
-types. Built. Webhook verification is planned.
+types. Built. `webhooks.ts` verifies webhook signatures and `webhook-events.ts` processes verified
+events (see Webhooks below).
+
+**`demo-access/`** holds the signed session token, the password comparison, the cookie settings, the
+safe `next` path and the rule that decides whether access is open, required or misconfigured. It
+uses only Web Crypto, so `src/proxy.ts` can use it. Built. See
+[decision 0008](decisions/0008-demo-access-and-deployment.md).
 
 **`ai/`** holds prompts and Gemini calls for extracting a draft from a chat, drafting reminders and
 writing short explanations. Output is validated by code. Planned.
@@ -148,8 +155,45 @@ A repeated `requestId` returns the stored result, so a double click never create
 If sending fails, the draft ID is already saved, and the retry sends that draft instead of creating
 a new one.
 
+## Demo access
+
+`src/proxy.ts` runs before every route in its matcher (the API and the five app screens). The
+landing page, the sign-in page and static files are not in the matcher. It lets `GET /api/health`,
+`POST /api/webhooks/paypal` and `/api/demo/session` through, and otherwise checks the
+`dueline_demo` cookie against `SESSION_SECRET`. It makes no database or PayPal call. Without a valid
+cookie an API route gets 401 `unauthorized` and a screen is redirected to `/demo?next=<path>`.
+
+Access is on when `DEMO_PASSWORD` is set. In production `DEMO_PASSWORD` and `SESSION_SECRET` are
+both required; if one is missing, API routes answer 500 `config_error` and screens are rewritten to
+`/not-configured`. In development an unset `DEMO_PASSWORD` leaves access open.
+
+`/demo` renders `DemoSignIn`, which calls `signIn` in `api-client.ts` and then opens the `next`
+path, checked by `safeNextPath`. `api-client.ts` sends the browser to `/demo` when any other call
+answers 401. The sidebar's "Lock demo" button calls `signOut`.
+
 ## Webhooks
 
-Planned. The webhook route verifies the signature with PayPal using the exact received headers and
-raw body, and processes each event ID once. It does not trust the event body. It triggers a fresh
-read of the invoice from PayPal, and PayPal's current state is the truth.
+`POST /api/webhooks/paypal` is public, because PayPal calls it, and protects itself instead:
+
+1. It reads the raw body (at most 100 KB) and sends it to PayPal's verify-webhook-signature API with
+   the five `paypal-*` headers and `PAYPAL_WEBHOOK_ID`. The body is embedded as the received text,
+   never parsed and written out again. Anything but `SUCCESS` (including simulator events) is
+   answered with 400 `invalid_webhook`.
+2. A verified event whose ID was already processed is answered with 204 and nothing else happens.
+3. For `INVOICING.INVOICE.*` events it reads the invoice from PayPal with `getInvoice` and clears
+   the invoice caches. The event body is not used for anything else. PayPal's state is the truth.
+4. For `PAID` it also looks up PayPal's actual payout and stores it. For `PAID` and `SENT` it records
+   an activity event whose ID is the PayPal event ID.
+5. It marks the event ID as processed and answers 204. Other event types are only marked.
+
+If a step after verification fails, the route logs PayPal's `debug_id` and answers 500, so PayPal
+retries. `GET /api/activity` returns the latest 20 stored events.
+
+## Deployment
+
+`render.yaml` describes one free Render web service in Singapore. It builds with `npm ci && npm run
+build` and starts with `npm start`; values that are secrets are asked for in the Render dashboard
+and `SESSION_SECRET` is generated. There is no health check path and no pre-deploy command.
+Migrations are run from a developer's computer with `npm run db:migrate` against the same Neon
+database. See [decision 0008](decisions/0008-demo-access-and-deployment.md) and the "Deploying"
+section of CONTRIBUTING.md.

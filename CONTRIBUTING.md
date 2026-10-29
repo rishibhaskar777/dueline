@@ -35,6 +35,34 @@ in memory. Read [docs/architecture.md](docs/architecture.md) and
 These scripts run outside Next.js, so they start with `tsx --conditions=react-server`: that makes the
 `server-only` import resolve to an empty module instead of throwing.
 
+### Demo password
+
+Set `DEMO_PASSWORD` and `SESSION_SECRET` in `.env.local` to try the sign-in screen locally. Make a
+secret with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. With no
+`DEMO_PASSWORD` the app is open in development. Both are required in production.
+
+## Deploying
+
+Dueline deploys to Render's free plan from the Blueprint in `render.yaml`, with a Neon database in
+the same region (Singapore).
+
+1. In Render, choose New, then Blueprint, and select this repository. Render asks for the values
+   that are not in the file: `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID` (leave a
+   placeholder for now), `GEMINI_API_KEY`, `DATABASE_URL` (Neon's pooled connection string),
+   `DEMO_PASSWORD` and `SANDBOX_BUYER_EMAIL`. `SESSION_SECRET` is generated for you.
+2. Create the tables from your computer, against the same database, before the first deploy and
+   before any deploy that adds a migration: set `DATABASE_URL` in `.env.local` and run
+   `npm run db:migrate`. The free plan has no shell and no pre-deploy command.
+3. Register the webhook: in the PayPal Developer Dashboard, open your sandbox app, add a webhook with
+   the URL `https://<your-service>.onrender.com/api/webhooks/paypal` and select the Invoicing events
+   (created, sent, paid, cancelled, refunded, updated, scheduled). Copy the webhook ID into
+   `PAYPAL_WEBHOOK_ID` in Render. Events sent from the webhook simulator are refused on purpose.
+4. Open the app, enter the demo password and run `npm run seed` locally if the demo invoices are
+   missing.
+
+Render auto-deploys when the checks on the branch pass. A free service sleeps after 15 minutes
+without traffic, so open it a few minutes before a demo.
+
 ## Branches
 
 Use a prefix that says what the branch does:

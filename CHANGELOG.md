@@ -18,6 +18,16 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Demo password: a shared password with a signed cookie protects the app screens and every API
+  route except `GET /api/health`, `POST /api/webhooks/paypal` and `/api/demo/session`. Includes the
+  `/demo` sign-in screen, a "Lock demo" button, `POST` and `DELETE /api/demo/session`, a limit of
+  10 attempts in 15 minutes and `SESSION_SECRET`. In production both settings are required.
+- PayPal webhooks: signatures are verified with PayPal, each event is processed once, and a paid or
+  sent invoice event re-reads the invoice, stores the payout and records activity.
+  `GET /api/activity` now returns the latest 20 stored events.
+- `invalid_webhook` (400) in the API contract.
+- `render.yaml` Blueprint for Render's free plan, a "Deploying" section in CONTRIBUTING.md and
+  decision record 0008.
 - Payout estimate from PayPal India's published fees and the ECB's daily rate, with the date and
   source of the rate, and `POST /api/payout-estimate` now calculates instead of returning sample
   data.
