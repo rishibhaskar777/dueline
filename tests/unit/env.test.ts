@@ -48,6 +48,15 @@ describe("getEnv", () => {
     expect(messageOf(getEnv)).toBe("Dueline only runs against the PayPal sandbox.");
   });
 
+  it("reads the demo password and a session secret of at least 32 characters", () => {
+    stubEnv({ DEMO_PASSWORD: "open sesame", SESSION_SECRET: "s".repeat(32) });
+    expect(getEnv().DEMO_PASSWORD).toBe("open sesame");
+    expect(getEnv().SESSION_SECRET).toBe("s".repeat(32));
+    stubEnv({ SESSION_SECRET: "too-short" });
+    const message = messageOf(getEnv);
+    expect(message).toBe("Missing or invalid settings: SESSION_SECRET.");
+  });
+
   it("accepts only sandbox buyer addresses", () => {
     stubEnv({ SANDBOX_BUYER_EMAIL: "buyer@personal.example.com" });
     expect(getEnv().SANDBOX_BUYER_EMAIL).toBe("buyer@personal.example.com");

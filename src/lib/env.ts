@@ -25,6 +25,7 @@ const envSchema = z.object({
     .transform((value) => value === "true"),
   DEMO_TODAY: z.iso.date().optional(),
   DEMO_PASSWORD: z.string().min(1).optional(),
+  SESSION_SECRET: z.string().min(32).optional(),
   SANDBOX_BUYER_EMAIL: z
     .email()
     .refine((email) => email.endsWith(SANDBOX_BUYER_DOMAIN), `must end in ${SANDBOX_BUYER_DOMAIN}`)
