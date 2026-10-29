@@ -35,7 +35,7 @@ export function StatusLine() {
     return <p className="text-sm text-sidebar-foreground/80">Checking connection…</p>;
   }
   if (state.kind === "error") {
-    return <p className="text-sm text-[#ffb4ab]">Cannot reach the Dueline server</p>;
+    return <p className="text-sm text-late-on-dark">Cannot reach the Dueline server</p>;
   }
 
   const { health } = state;
@@ -48,7 +48,7 @@ export function StatusLine() {
         <span
           aria-hidden="true"
           className={
-            connected ? "size-2 rounded-full bg-emerald-400" : "size-2 rounded-full bg-[#ffb4ab]"
+            connected ? "size-2 rounded-full bg-emerald-400" : "size-2 rounded-full bg-late-on-dark"
           }
         />
         {connected ? "PayPal sandbox connected" : "PayPal sandbox not connected"}
@@ -56,7 +56,7 @@ export function StatusLine() {
       {problems
         .filter((problem) => connected || !problem.startsWith("PayPal"))
         .map((problem) => (
-          <p key={problem} className="text-[#ffb4ab]">
+          <p key={problem} className="text-late-on-dark">
             {problem}
           </p>
         ))}
