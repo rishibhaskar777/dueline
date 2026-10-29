@@ -1,0 +1,60 @@
+import type { CurrencyCode, Money } from "./money";
+
+export type DueState = "paid" | "on_time" | "due_soon" | "overdue";
+
+export interface Client {
+  name: string;
+  email: string;
+  location?: string;
+}
+
+export interface ActualPayout {
+  fee: Money;
+  net: Money;
+  exchangeRate: number | null;
+  netInr: number | null;
+  source: "paypal_capture" | "invoice_payment";
+}
+
+export interface InvoiceSummary {
+  id: string;
+  number: string;
+  client: Client;
+  work: string;
+  amount: Money;
+  issuedOn: string;
+  dueOn: string;
+  paidOn: string | null;
+  paypalStatus: string;
+  dueState: DueState;
+  daysLate: number;
+  payoutInr: number | null;
+  actualPayout: ActualPayout | null;
+  purposeCode: string | null;
+  payLink: string;
+}
+
+export interface Totals {
+  outstandingInr: number;
+  overdueInr: number;
+  overdueCount: number;
+  paidThisMonthInr: number;
+}
+
+export interface LineItem {
+  name: string;
+  quantity: number;
+  unitAmount: string;
+  sourceQuote?: string;
+}
+
+export interface InvoiceDraft {
+  client: Client;
+  currency: CurrencyCode;
+  dueOn: string | null;
+  items: LineItem[];
+  note?: string;
+  purposeCode: string | null;
+  purposeReason?: string;
+  includeLutNote: boolean;
+}
