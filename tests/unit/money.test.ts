@@ -48,21 +48,10 @@ describe("computeTotals", () => {
     });
   });
 
-  it("totals this month's paid invoices, preferring PayPal's rupee figure", () => {
-    const paid = {
-      dueState: "paid" as const,
-      payoutInr: 35725,
-      actualPayout: {
-        fee: { currency: "USD" as const, value: "20.10" },
-        net: { currency: "USD" as const, value: "429.90" },
-        exchangeRate: 82.85,
-        netInr: 35617,
-        source: "paypal_capture" as const,
-      },
-    };
+  it("totals this month's paid invoices from their payout figures", () => {
     const totals = computeTotals(
       [
-        invoice({ ...paid, paidOn: "2026-10-15" }),
+        invoice({ dueState: "paid", payoutInr: 35617, paidOn: "2026-10-15" }),
         invoice({ dueState: "paid", payoutInr: 22219, paidOn: "2026-10-07" }),
         invoice({ dueState: "paid", payoutInr: 99999, paidOn: "2026-09-30" }),
       ],

@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { isPurposeCode } from "@/lib/export/purpose-codes";
+import { payoutInrFor } from "@/lib/money/invoice-payout";
+import { estimatePayout } from "@/lib/money/payout";
 import {
   activity,
   exportRegister,
   extraction,
+  FIXTURE_TODAY,
   haldenLabelsInvoice,
   invoices,
   payoutEstimate,
@@ -39,6 +42,29 @@ describe("fixtures", () => {
       true,
     );
     expect(settingsSchema.safeParse(settings).success).toBe(true);
+  });
+
+  it("has a payout estimate that the calculation produces", () => {
+    const rate = {
+      value: settings.marketRates[payoutEstimate.gross.currency],
+      onDate: settings.ratesUpdatedOn,
+      source: settings.rateSource,
+    };
+    expect(estimatePayout(payoutEstimate.gross, settings, rate)).toEqual(payoutEstimate);
+    expect(payoutEstimate.marketRateDate <= FIXTURE_TODAY).toBe(true);
+  });
+
+  it("has rupee figures that the calculation produces", () => {
+    const market = {
+      rates: settings.marketRates,
+      onDate: settings.ratesUpdatedOn,
+      source: settings.rateSource,
+    };
+    for (const invoice of invoices) {
+      expect(payoutInrFor(invoice, invoice.amount, settings, market), invoice.number).toBe(
+        invoice.payoutInr,
+      );
+    }
   });
 
   it("uses only listed purpose codes", () => {
