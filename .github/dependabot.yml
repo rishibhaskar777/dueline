@@ -15,6 +15,9 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: eslint
         update-types: ["version-update:semver-major"]
+      # The major version of @types/node must match the Node.js runtime in .nvmrc (24).
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /

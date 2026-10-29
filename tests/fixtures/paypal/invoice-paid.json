@@ -1,0 +1,43 @@
+{
+  "id": "INV2-TEST-0002-CCCC-DDDD",
+  "status": "PAID",
+  "detail": {
+    "invoice_number": "INV-0102",
+    "reference": "P1099",
+    "invoice_date": "2026-10-02",
+    "currency_code": "USD",
+    "payment_term": { "term_type": "DUE_ON_DATE_SPECIFIED", "due_date": "2026-10-16" },
+    "metadata": {
+      "create_time": "2026-10-02T09:00:00Z",
+      "recipient_view_url": "https://www.sandbox.paypal.com/invoice/p/#TEST0002"
+    }
+  },
+  "invoicer": { "email_address": "seller@business.example.com" },
+  "primary_recipients": [
+    {
+      "billing_info": {
+        "email_address": "buyer@personal.example.com",
+        "name": { "given_name": "Mike", "surname": "Halden" }
+      }
+    }
+  ],
+  "items": [
+    {
+      "name": "Coffee bag labels",
+      "quantity": "1",
+      "unit_amount": { "currency_code": "USD", "value": "450.00" }
+    }
+  ],
+  "amount": { "currency_code": "USD", "value": "450.00" },
+  "payments": {
+    "paid_amount": { "currency_code": "USD", "value": "450.00" },
+    "transactions": [
+      {
+        "payment_id": "5GX12345AB6789012",
+        "payment_date": "2026-10-15",
+        "method": "PAYPAL",
+        "amount": { "currency_code": "USD", "value": "450.00" }
+      }
+    ]
+  }
+}

@@ -17,6 +17,22 @@ Fill in `.env.local` using the comments in `.env.example`. Leave `DATABASE_URL` 
 in memory. Read [docs/architecture.md](docs/architecture.md) and
 [docs/api-contract.md](docs/api-contract.md) before writing code.
 
+### Connect to the sandbox and the database
+
+1. Fill in `.env.local` using the comments in `.env.example`. `PAYPAL_CLIENT_ID`,
+   `PAYPAL_CLIENT_SECRET` and `PAYPAL_ENVIRONMENT=sandbox` are required. Set `SANDBOX_BUYER_EMAIL`
+   to the US Personal sandbox account that pays demo invoices.
+2. If you set `DATABASE_URL` to Neon's pooled connection string, create the tables with
+   `npm run db:migrate`. It applies each file in `src/lib/store/migrations` once.
+3. Check the connection with `npm run sandbox:check`. It creates and sends a USD 100.00 invoice to the
+   sandbox buyer and prints the payer link. Pay it in a private window as the buyer, then run
+   `npm run sandbox:check -- --invoice <id>` to see the payment and PayPal's own payout figures.
+4. Create the four demo invoices with `npm run seed`. It skips invoices that already exist, so it is
+   safe to run again.
+
+These scripts run outside Next.js, so they start with `tsx --conditions=react-server`: that makes the
+`server-only` import resolve to an empty module instead of throwing.
+
 ## Branches
 
 Use a prefix that says what the branch does:

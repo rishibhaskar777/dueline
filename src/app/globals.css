@@ -15,6 +15,7 @@
   --color-paid: var(--paid);
   --color-due-soon: var(--due-soon);
   --color-late: var(--late);
+  --color-late-on-dark: var(--late-on-dark);
   --color-ground: var(--ground);
   --color-line: var(--line);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -62,6 +63,7 @@
   --paid: #0b7a5c;
   --due-soon: #a35c00;
   --late: #b3261e;
+  --late-on-dark: #ffb4ab;
   --ground: #f3f5f8;
   --line: #dce1e8;
   --muted-text: #4f5b6e;

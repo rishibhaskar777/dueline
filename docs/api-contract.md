@@ -192,17 +192,18 @@ export interface ApiError {
 
 Every failure returns a non-2xx status and an `ApiError`:
 
-| Status | `code`                  | When                                                             |
-| ------ | ----------------------- | ---------------------------------------------------------------- |
-| 400    | `invalid_request`       | Body fails zod validation; `message` says which field            |
-| 401    | `unauthorized`          | Demo password missing or wrong                                   |
-| 403    | `recipient_not_allowed` | Demo mode and the email is not a PayPal sandbox buyer address    |
-| 404    | `not_found`             | Unknown invoice id                                               |
-| 409    | `duplicate_request`     | `requestId` already used for a different body                    |
-| 422    | `extraction_failed`     | AI could not produce a usable draft                              |
-| 429    | `rate_limited`          | Too many AI calls; `message` says when to retry                  |
-| 502    | `paypal_error`          | PayPal returned an error; `debugId` carries PayPal's `debug_id`  |
-| 503    | `ai_unavailable`        | Gemini quota or outage; the user can still fill the form by hand |
+| Status | `code`                  | When                                                                                             |
+| ------ | ----------------------- | ------------------------------------------------------------------------------------------------ |
+| 400    | `invalid_request`       | Body fails zod validation; `message` says which field                                            |
+| 401    | `unauthorized`          | Demo password missing or wrong                                                                   |
+| 403    | `recipient_not_allowed` | Demo mode and the email is not a PayPal sandbox buyer address                                    |
+| 404    | `not_found`             | Unknown invoice id                                                                               |
+| 409    | `duplicate_request`     | `requestId` already used for a different body                                                    |
+| 422    | `extraction_failed`     | AI could not produce a usable draft                                                              |
+| 429    | `rate_limited`          | Too many AI calls; `message` says when to retry                                                  |
+| 500    | `config_error`          | The server is missing or has invalid configuration; `message` names the setting, never its value |
+| 502    | `paypal_error`          | PayPal returned an error; `debugId` carries PayPal's `debug_id`                                  |
+| 503    | `ai_unavailable`        | Gemini quota or outage; the user can still fill the form by hand                                 |
 
 ## Dates and the demo clock
 

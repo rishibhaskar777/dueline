@@ -1,7 +1,7 @@
 import { settings } from "@/mocks/fixtures";
 import { settingsSchema } from "@/types";
-import { stubOk } from "../_lib/stub";
-import { parseBody } from "../_lib/validate";
+import { stubOk } from "@/app/api/_lib/stub";
+import { parseBody } from "@/app/api/_lib/validate";
 
 export async function GET(): Promise<Response> {
   return stubOk(settings);

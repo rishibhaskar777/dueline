@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import { fail } from "./respond";
+import { fail } from "@/app/api/_lib/respond";
 
 type Parsed<T> = { ok: true; data: T } | { ok: false; response: Response };
 
