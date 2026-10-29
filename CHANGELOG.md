@@ -9,6 +9,7 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Hosting moves from Render to Vercel (functions in Singapore next to the database).
 - Settings have one fixed fee per currency (`fixedFees`) instead of one `fixedFee`, and the default
   conversion markup is 3.0%.
 - `GET /api/invoices` reads every listed invoice in full, so the work description and the payer link

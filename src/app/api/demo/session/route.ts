@@ -11,6 +11,7 @@ import { parseBody } from "@/app/api/_lib/validate";
 const MAX_ATTEMPTS = 10;
 const ATTEMPT_WINDOW_SECONDS = 15 * 60;
 
+// Vercel overwrites x-forwarded-for with the client's real address, so a client cannot choose it.
 function addressOf(req: Request): string {
   return req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
 }
