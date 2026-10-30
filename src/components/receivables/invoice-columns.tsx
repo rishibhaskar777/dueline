@@ -1,8 +1,9 @@
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
+import { SourceTag } from "@/components/shared/SourceTag";
 import { formatDate } from "@/lib/format-date";
 import { formatMoney, formatRupees } from "@/lib/money/format";
 import type { InvoiceSummary } from "@/types";
-import { statusLabel } from "./invoice-status";
+import { rupeesFromPayPal, statusLabel } from "./invoice-status";
 import { StatusBadge } from "./StatusBadge";
 
 type Params = ICellRendererParams<InvoiceSummary>;
@@ -19,10 +20,7 @@ function PayoutCell({ data }: Params) {
   if (!data || data.payoutInr === null) return <span className="text-muted-foreground">–</span>;
   return (
     <span className="tabular-nums">
-      {formatRupees(data.payoutInr)}{" "}
-      <span className="ml-1 rounded bg-ground px-1.5 py-0.5 text-xs text-muted-foreground">
-        {data.actualPayout ? "PayPal" : "est."}
-      </span>
+      {formatRupees(data.payoutInr)} <SourceTag reportedByPayPal={rupeesFromPayPal(data)} />
     </span>
   );
 }

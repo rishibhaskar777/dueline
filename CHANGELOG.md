@@ -9,6 +9,17 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- The export register: for any month, the invoices paid in it (India time) with the foreign amount,
+  PayPal's fee and net, the rupees received, the purpose code, whether the invoice was under LUT and
+  PayPal's transaction ID (from the invoice's own latest payment when PayPal reported no payout
+  figures), to match line by line with PayPal's monthly FIRA. `GET /api/export-register`
+  is built and no longer a stub, and "Download CSV for your CA" gives the accountant a spreadsheet-safe
+  file. Rupees are PayPal's figures when reported, otherwise an estimate at the ECB rate of the payment
+  date, and each row says which.
+- A payout records when it was paid (`paidAt`) and PayPal's transaction ID. Payouts stored earlier are
+  read from PayPal once more to gain them.
+- ECB rates for a past date, fetched once per date.
+
 - The receivables screen: totals in rupees, the due line for every invoice, a sortable and
   searchable invoice table, an invoice panel that sets the estimate against PayPal's own figures
   for a paid invoice, and a live activity feed. It refreshes every 10 seconds while the tab is open, and re-checks today's date every 5 minutes.
@@ -18,6 +29,11 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Receivables labels rupees "PayPal" only when PayPal reported them; rupees worked out from
+  PayPal's net at the ECB rate are labelled as an estimate.
+- A paid invoice's paid date, days late and "paid this month" use the India date of the payment's
+  timestamp, not PayPal's `payment_date`, which is in PayPal's time zone. A payment at 01:06 IST on
+  30 Oct is now paid on 30 Oct.
 - The AI draft names the business being billed as the client and writes item names as invoice lines.
   Stored answers written under the old prompt are no longer reused.
 - A delivery date in a chat is no longer taken as the payment due date: with no payment terms the due date is 14 days from today, with a warning. The discount note now names the same date as the due date.

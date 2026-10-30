@@ -23,3 +23,4 @@ Copy [0000-template.md](0000-template.md) to start a new one.
 | [0010](0010-ai-invoice-drafting.md)           | AI invoice drafting                     |
 | [0011](0011-creating-and-sending-invoices.md) | Creating and sending invoices           |
 | [0012](0012-hand-built-due-line.md)           | A hand-built due line                   |
+| [0013](0013-export-register.md)               | The export register                     |

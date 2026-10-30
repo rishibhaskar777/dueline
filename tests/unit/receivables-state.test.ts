@@ -4,7 +4,6 @@ import {
   applyFailure,
   applyRefresh,
   INITIAL_STATE,
-  toLoadError,
   type ReceivablesData,
 } from "@/components/receivables/receivables-state";
 import { activity, health, invoices, totals } from "@/mocks/fixtures";
@@ -45,9 +44,5 @@ describe("receivables state", () => {
     const state = applyFailure(INITIAL_STATE, new Error("offline"));
     expect(state.data).toBeNull();
     expect(state.error).toEqual({ message: "offline" });
-  });
-
-  it("gives a plain message for something that is not an error", () => {
-    expect(toLoadError("boom").message).toBe("Could not load your receivables.");
   });
 });

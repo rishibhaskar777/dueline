@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { addDays, daysBetween, todayInKolkata } from "@/lib/date-math";
-import { formatDayMonth, formatTimestamp } from "@/lib/format-date";
+import { addDays, addMonths, daysBetween, todayInKolkata } from "@/lib/date-math";
+import { formatDayMonth, formatMonth, formatTimestamp } from "@/lib/format-date";
 
 describe("date math", () => {
   it("adds and counts days across a month end", () => {
@@ -20,5 +20,18 @@ describe("date formats", () => {
 
   it("formats an exact time in Asia/Kolkata", () => {
     expect(formatTimestamp("2026-10-15T11:42:00Z")).toMatch(/^15 Oct 2026.*5:12.*IST$/i);
+  });
+});
+
+describe("months", () => {
+  it("moves a month forwards and backwards across a year end", () => {
+    expect(addMonths("2026-10", 1)).toBe("2026-11");
+    expect(addMonths("2026-12", 1)).toBe("2027-01");
+    expect(addMonths("2026-01", -1)).toBe("2025-12");
+    expect(addMonths("2026-10", 0)).toBe("2026-10");
+  });
+
+  it("names a month", () => {
+    expect(formatMonth("2026-10")).toBe("October 2026");
   });
 });

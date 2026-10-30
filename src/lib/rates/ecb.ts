@@ -23,10 +23,13 @@ export interface EcbRates {
   rates: Record<CurrencyCode, number>;
 }
 
-async function fetchBody(): Promise<unknown> {
+// With a date, the answer is that date's rates, or those of the latest working day before it.
+async function fetchBody(date?: string): Promise<unknown> {
   let response: Response;
   try {
-    response = await fetch(RATES_URL, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+    response = await fetch(date ? `${RATES_URL}&date=${date}` : RATES_URL, {
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
   } catch {
     throw new RatesUnavailableError("The exchange-rate service did not answer in time.");
   }
@@ -40,8 +43,8 @@ async function fetchBody(): Promise<unknown> {
   }
 }
 
-export async function fetchEcbRates(): Promise<EcbRates> {
-  const parsed = responseSchema.safeParse(await fetchBody());
+export async function fetchEcbRates(date?: string): Promise<EcbRates> {
+  const parsed = responseSchema.safeParse(await fetchBody(date));
   if (!parsed.success) {
     throw new RatesUnavailableError("The exchange-rate service sent rates in an unexpected shape.");
   }

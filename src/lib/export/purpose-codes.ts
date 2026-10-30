@@ -64,6 +64,10 @@ export const PURPOSE_CODES: readonly PurposeCode[] = [
   },
 ];
 
+export function findPurposeCode(value: string): PurposeCode | undefined {
+  return PURPOSE_CODES.find((entry) => entry.code === value);
+}
+
 export function isPurposeCode(value: string): boolean {
-  return PURPOSE_CODES.some((entry) => entry.code === value);
+  return findPurposeCode(value) !== undefined;
 }

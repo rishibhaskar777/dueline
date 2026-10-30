@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { SourceTag } from "@/components/shared/SourceTag";
 import { estimatePayout } from "@/lib/api-client";
 import { formatMoney, formatRupees } from "@/lib/money/format";
 import type { InvoiceSummary, PayoutEstimate } from "@/types";
@@ -11,7 +12,7 @@ type Outcome = { estimate: PayoutEstimate } | { message: string } | null;
 interface RowProps {
   label: string;
   estimate: string;
-  actual: string;
+  actual: ReactNode;
 }
 
 function Row({ label, estimate, actual }: RowProps) {
@@ -61,7 +62,7 @@ export function EstimateComparison({ invoice }: { invoice: InvoiceSummary }) {
   if ("message" in outcome) return <p className="text-sm text-late">{outcome.message}</p>;
 
   const { estimate } = outcome;
-  const actualInr = actualPayout.netInr ?? invoice.payoutInr;
+  const reportedInr = actualPayout.netInr;
 
   return (
     <div>
@@ -93,18 +94,27 @@ export function EstimateComparison({ invoice }: { invoice: InvoiceSummary }) {
           <Row
             label="Rupees"
             estimate={formatRupees(estimate.netInr)}
-            actual={actualInr === null ? "–" : formatRupees(actualInr)}
+            actual={
+              invoice.payoutInr === null ? (
+                "–"
+              ) : (
+                <>
+                  {formatRupees(invoice.payoutInr)}{" "}
+                  <SourceTag reportedByPayPal={reportedInr !== null} />
+                </>
+              )
+            }
           />
         </tbody>
       </table>
       <p className="mt-3 text-sm">{describeFeeDifference(estimate.fee, actualPayout.fee)}</p>
-      {actualInr !== null && (
-        <p className="text-sm">{describeRupeeDifference(estimate.netInr, actualInr)}</p>
+      {reportedInr !== null && (
+        <p className="text-sm">{describeRupeeDifference(estimate.netInr, reportedInr)}</p>
       )}
-      {actualPayout.exchangeRate === null && (
+      {reportedInr === null && (
         <p className="mt-2 text-sm text-muted-foreground">
-          PayPal reports the conversion when you withdraw. Rupees use today&apos;s ECB rate less
-          PayPal&apos;s markup.
+          PayPal reports the conversion when you withdraw. Until then the rupees are an estimate
+          from PayPal&apos;s net at the ECB rate less PayPal&apos;s markup.
         </p>
       )}
     </div>

@@ -2,11 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
+import { gridTheme } from "@/components/grid/ag-grid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { InvoiceSummary } from "@/types";
-import { invoiceGridTheme } from "./ag-grid";
 import { type GridContext, invoiceColumns } from "./invoice-columns";
 import {
   countByStatus,
@@ -64,7 +64,7 @@ export function InvoiceTable({ invoices, today, onOpen }: InvoiceTableProps) {
         ))}
       </div>
       <AgGridReact<InvoiceSummary>
-        theme={invoiceGridTheme}
+        theme={gridTheme}
         rowData={rows}
         columnDefs={invoiceColumns}
         context={context}

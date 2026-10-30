@@ -189,6 +189,8 @@ describe("settings, rates and payouts", () => {
       exchangeRate: 82.85,
       netInr: 35617,
       source: "paypal_capture",
+      paidAt: "2026-10-15T11:42:00Z",
+      transactionId: "5GX12345AB6789012",
     };
     expect(await store.getActualPayout("INV2-1")).toBeNull();
     await store.putActualPayout("INV2-1", payout);

@@ -22,6 +22,7 @@ const searchResult = {
     transactionDetails: [
       {
         transactionInfo: {
+          transactionInitiationDate: "2026-10-15T11:42:00+0000",
           feeAmount: { currencyCode: "USD", value: "-20.10" },
           transactionAmount: { currencyCode: "USD", value: "450.00" },
         },
@@ -42,6 +43,7 @@ describe("getActualPayout", () => {
   it("maps the capture's seller receivable breakdown", async () => {
     sdk.getCapturedPayment.mockResolvedValue({
       result: {
+        createTime: "2026-10-15T11:42:00Z",
         sellerReceivableBreakdown: {
           grossAmount: { currencyCode: "USD", value: "450.00" },
           paypalFee: { currencyCode: "USD", value: "20.10" },
@@ -58,9 +60,26 @@ describe("getActualPayout", () => {
       exchangeRate: 82.85,
       netInr: 35617,
       source: "paypal_capture",
+      paidAt: "2026-10-15T11:42:00Z",
+      transactionId: "5GX12345AB6789012",
     });
     expect(sdk.getCapturedPayment).toHaveBeenCalledWith({ captureId: "5GX12345AB6789012" });
     expect(sdk.searchTransactions).not.toHaveBeenCalled();
+  });
+
+  it("leaves the paid time empty when PayPal gives none", async () => {
+    sdk.getCapturedPayment.mockResolvedValue({
+      result: {
+        sellerReceivableBreakdown: {
+          paypalFee: { currencyCode: "USD", value: "20.10" },
+          netAmount: { currencyCode: "USD", value: "429.90" },
+        },
+      },
+    });
+    expect(await getActualPayout(paid)).toMatchObject({
+      paidAt: null,
+      transactionId: "5GX12345AB6789012",
+    });
   });
 
   it("falls back to transaction search when the capture has no breakdown", async () => {
@@ -73,6 +92,8 @@ describe("getActualPayout", () => {
       exchangeRate: null,
       netInr: null,
       source: "invoice_payment",
+      paidAt: "2026-10-15T11:42:00+0000",
+      transactionId: "5GX12345AB6789012",
     });
     expect(sdk.searchTransactions).toHaveBeenCalledWith(
       expect.objectContaining({

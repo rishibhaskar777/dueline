@@ -18,7 +18,7 @@ interface EarlyPayment {
 }
 
 const MEMO_PREFIX = "dueline-request:";
-const LUT_NOTE = "Export of services under LUT, without payment of IGST";
+export const LUT_NOTE = "Export of services under LUT, without payment of IGST";
 
 // The memo is visible only to the invoicer. It lets a created invoice be found again by request.
 export function requestMemo(requestId: string): string {

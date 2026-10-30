@@ -8,6 +8,7 @@ import {
   type InvoiceSummary,
   type Money,
 } from "@/types";
+import { LUT_NOTE } from "./invoice-body";
 import type { PayPalInvoice, PayPalPayment } from "./types";
 
 const DUE_SOON_DAYS = 3;
@@ -39,6 +40,17 @@ function clientOf(invoice: PayPalInvoice): InvoiceSummary["client"] {
   return { name: billing?.business_name || person || email, email };
 }
 
+// PayPal's payment_date is a plain date in PayPal's own time zone, so the payment's timestamp is
+// preferred: a payment at 01:06 IST on 30 Oct is 29 Oct for PayPal but belongs to 30 Oct here.
+function paidOnOf(invoice: PayPalInvoice, actualPayout: ActualPayout | null): string | null {
+  const paidAt = actualPayout?.paidAt ?? latestPayment(invoice)?.payment_date;
+  return paidAt ? toKolkataDate(paidAt) : null;
+}
+
+export function isUnderLut(invoice: PayPalInvoice): boolean {
+  return invoice.detail.note?.includes(LUT_NOTE) ?? false;
+}
+
 function dueStateOf(paid: boolean, dueOn: string, today: string): DueState {
   if (paid) return "paid";
   if (today > dueOn) return "overdue";
@@ -58,8 +70,7 @@ export function toInvoiceSummary(
   const issuedOn = invoice.detail.invoice_date;
   const dueOn = invoice.detail.payment_term?.due_date ?? issuedOn;
   const dueState = dueStateOf(PAID_STATUSES.includes(invoice.status), dueOn, today);
-  const paymentDate = latestPayment(invoice)?.payment_date;
-  const paidOn = dueState === "paid" && paymentDate ? toKolkataDate(paymentDate) : null;
+  const paidOn = dueState === "paid" ? paidOnOf(invoice, actualPayout) : null;
   const lateUntil = dueState === "paid" ? paidOn : today;
   const reference = invoice.detail.reference ?? "";
 

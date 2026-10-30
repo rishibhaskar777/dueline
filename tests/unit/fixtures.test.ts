@@ -98,7 +98,10 @@ describe("fixtures", () => {
     expect(exportRegister.rows.reduce((total, row) => total + row.inrReceived, 0)).toBe(
       exportRegister.totalInr,
     );
-    expect(exportRegister.rows[0].inrReceived).toBe(haldenLabelsInvoice.actualPayout?.netInr);
+    const labels = exportRegister.rows.find((row) => row.invoiceId === haldenLabelsInvoice.id);
+    expect(labels?.inrReceived).toBe(haldenLabelsInvoice.actualPayout?.netInr);
+    expect(labels?.transactionId).toBe(haldenLabelsInvoice.actualPayout?.transactionId);
+    expect(exportRegister.paypalInr + exportRegister.estimatedInr).toBe(exportRegister.totalInr);
   });
 
   it("has activity events that point at known invoices", () => {

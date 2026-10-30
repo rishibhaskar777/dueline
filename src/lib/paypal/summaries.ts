@@ -3,13 +3,16 @@ import { today } from "@/lib/clock";
 import { getStore } from "@/lib/store";
 import type { ActualPayout, InvoiceSummary, Money } from "@/types";
 import { getInvoice, listInvoices } from "./invoices";
-import { amountDueOf, PAYOUT_STATUSES, toInvoiceSummary } from "./map";
+import { amountDueOf, isUnderLut, latestPayment, PAYOUT_STATUSES, toInvoiceSummary } from "./map";
 import { getActualPayout } from "./payments";
 import type { PayPalInvoice } from "./types";
 
-interface LoadedInvoice {
+export interface LoadedInvoice {
   summary: InvoiceSummary;
   amountDue: Money;
+  underLut: boolean;
+  // The invoice's own latest payment, for a payout PayPal has not reported figures for.
+  paymentId: string | null;
 }
 
 const HIDDEN_STATUSES = ["DRAFT", "CANCELLED"];
@@ -58,18 +61,24 @@ async function readInFull(listed: PayPalInvoice): Promise<PayPalInvoice> {
   return invoice;
 }
 
+// Payouts stored before paid times were recorded have no paidAt key at all. They are read from
+// PayPal once more; a payout PayPal gave no time for keeps `paidAt: null` and is not stale.
+function hasPaidTime(payout: ActualPayout): boolean {
+  return "paidAt" in payout;
+}
+
 async function findPayout(invoice: PayPalInvoice): Promise<ActualPayout | null> {
   const store = getStore();
   const stored = await store.getActualPayout(invoice.id);
-  if (stored) return stored;
+  if (stored && hasPaidTime(stored)) return stored;
 
   const previous = lastLookup.get(invoice.id);
-  if (previous !== undefined && Date.now() - previous < RETRY_AFTER_MS) return null;
+  if (previous !== undefined && Date.now() - previous < RETRY_AFTER_MS) return stored;
   lastLookup.set(invoice.id, Date.now());
 
   const fetched = await getActualPayout(invoice);
   if (fetched) await store.putActualPayout(invoice.id, fetched);
-  return fetched;
+  return fetched ?? stored;
 }
 
 async function findPayouts(invoices: PayPalInvoice[]): Promise<Map<string, ActualPayout | null>> {
@@ -89,7 +98,16 @@ async function loadFresh(): Promise<LoadedInvoice[]> {
   return invoices
     .flatMap((invoice) => {
       const summary = toInvoiceSummary(invoice, date, payouts.get(invoice.id) ?? null);
-      return summary ? [{ summary, amountDue: amountDueOf(invoice, summary.amount) }] : [];
+      return summary
+        ? [
+            {
+              summary,
+              amountDue: amountDueOf(invoice, summary.amount),
+              underLut: isUnderLut(invoice),
+              paymentId: latestPayment(invoice)?.payment_id ?? null,
+            },
+          ]
+        : [];
     })
     .sort((a, b) => b.summary.issuedOn.localeCompare(a.summary.issuedOn));
 }

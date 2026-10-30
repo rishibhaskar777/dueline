@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { statusLabel } from "@/components/receivables/invoice-status";
+import { rupeesFromPayPal, statusLabel } from "@/components/receivables/invoice-status";
 import { tandemInvoice } from "@/mocks/fixtures";
 import type { InvoiceSummary } from "@/types";
 
@@ -32,5 +32,20 @@ describe("statusLabel", () => {
     expect(statusLabel(invoice({ dueState: "paid", dueOn: "2026-10-30" }), "2026-10-30")).toBe(
       "Paid",
     );
+  });
+});
+
+describe("rupeesFromPayPal", () => {
+  const payout = { ...tandemInvoice.actualPayout, netInr: 35617 } as NonNullable<
+    InvoiceSummary["actualPayout"]
+  >;
+
+  it("is true only when PayPal reported the rupees", () => {
+    expect(rupeesFromPayPal(invoice({ actualPayout: payout }))).toBe(true);
+  });
+
+  it("is false when PayPal gave its net but no rupees, or no figures at all", () => {
+    expect(rupeesFromPayPal(invoice({ actualPayout: { ...payout, netInr: null } }))).toBe(false);
+    expect(rupeesFromPayPal(invoice({ actualPayout: null }))).toBe(false);
   });
 });

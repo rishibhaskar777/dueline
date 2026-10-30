@@ -13,13 +13,23 @@ export interface ExportRegisterRow {
   clientCountry: string | null;
   paidOn: string;
   foreign: Money;
+  fee: Money | null;
+  net: Money | null;
   inrReceived: number;
   inrSource: "paypal" | "estimate";
+  rateUsed: number | null;
+  rateDate: string | null;
   purposeCode: string | null;
+  underLut: boolean;
+  transactionId: string | null;
 }
 
 export interface ExportRegister {
   month: string;
   rows: ExportRegisterRow[];
   totalInr: number;
+  totalsByCurrency: Money[];
+  paypalInr: number;
+  estimatedInr: number;
+  missingPurposeCodes: number;
 }
