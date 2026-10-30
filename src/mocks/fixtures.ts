@@ -11,7 +11,6 @@ import {
   type Settings,
   type Totals,
 } from "@/types";
-import { PURPOSE_CODES } from "@/lib/export/purpose-codes";
 
 export const FIXTURE_TODAY = "2026-10-17";
 
@@ -218,7 +217,7 @@ export const extraction: ExtractResponse = {
       location: "Austin, United States",
     },
     currency: "USD",
-    dueOn: "2026-10-30",
+    dueOn: "2026-11-13",
     items: [
       {
         name: "Logo concept",
@@ -237,7 +236,9 @@ export const extraction: ExtractResponse = {
     purposeReason: "Logo design has no closer match on the list, so it falls under other services.",
     includeLutNote: true,
   },
-  warnings: [],
+  warnings: [
+    "No payment terms in the chat; due date set to 14 days from today. Change it if needed.",
+  ],
   risk: haldenRisk,
   masked: { emails: 1, phones: 0 },
 };
@@ -337,5 +338,3 @@ export const health: HealthResponse = {
   today: FIXTURE_TODAY,
   demoClock: false,
 };
-
-export const purposeCodes = PURPOSE_CODES;

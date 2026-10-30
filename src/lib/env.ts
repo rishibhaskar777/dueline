@@ -8,7 +8,7 @@ export class ConfigError extends Error {
   }
 }
 
-const SANDBOX_BUYER_DOMAIN = "@personal.example.com";
+export const SANDBOX_BUYER_DOMAIN = "@personal.example.com";
 
 const envSchema = z.object({
   PAYPAL_CLIENT_ID: z.string().min(1),
