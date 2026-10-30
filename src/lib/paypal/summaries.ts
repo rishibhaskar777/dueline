@@ -94,6 +94,13 @@ async function loadFresh(): Promise<LoadedInvoice[]> {
     .sort((a, b) => b.summary.issuedOn.localeCompare(a.summary.issuedOn));
 }
 
+// The list leaves out the memo, so every invoice is read in full, drafts and cancelled ones too.
+// It skips the finished list on purpose: an invoice created a moment ago must be found.
+export async function findInvoiceByMemo(memo: string): Promise<PayPalInvoice | undefined> {
+  const invoices = await inBatches(await listInvoices(), readInFull);
+  return invoices.find((invoice) => invoice.detail.memo === memo);
+}
+
 // Rupee figures are filled in later, so a settings change shows up without waiting for PayPal.
 export function loadInvoices(): Promise<LoadedInvoice[]> {
   if (finished && Date.now() - finished.loadedAt < RESULT_TTL_MS) {

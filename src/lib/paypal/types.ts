@@ -81,6 +81,7 @@ export interface PayPalInvoiceInput {
   };
   primary_recipients: PayPalRecipient[];
   items: PayPalItem[];
+  amount?: { breakdown: { discount: { invoice_discount: { percent: string } } } };
 }
 
 export interface PayPalInvoiceList {
