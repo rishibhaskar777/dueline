@@ -1,0 +1,39 @@
+{
+  "id": "WH-2KX81234AB567890C-3DE45678F9012345G",
+  "create_time": "2026-10-29T19:36:37.988Z",
+  "resource_type": "invoices",
+  "event_type": "INVOICING.INVOICE.PAID",
+  "summary": "Invoice paid",
+  "resource": {
+    "invoice": {
+      "id": "INV2-UADS-A9WN-A3E8-7XYH",
+      "status": "PAID",
+      "detail": {
+        "reference": "P1099",
+        "currency_code": "USD",
+        "invoice_number": "0005",
+        "invoice_date": "2026-10-09"
+      },
+      "invoicer": {
+        "name": { "given_name": "Dueline", "surname": "Sandbox" },
+        "email_address": "seller@example.com"
+      },
+      "primary_recipients": [
+        {
+          "billing_info": {
+            "name": { "given_name": "Mike", "surname": "Halden" },
+            "email_address": "buyer@example.com"
+          }
+        }
+      ],
+      "amount": { "currency_code": "USD", "value": "450.00" }
+    }
+  },
+  "links": [
+    {
+      "href": "https://api.sandbox.paypal.com/v1/notifications/webhooks-events/WH-2KX81234AB567890C-3DE45678F9012345G",
+      "rel": "self",
+      "method": "GET"
+    }
+  ]
+}

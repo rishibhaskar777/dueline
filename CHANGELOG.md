@@ -17,6 +17,10 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - An unexpected server error is answered with 500 `internal_error`.
 - A paid invoice's date is now read from a plain date or a timestamp and converted to Asia/Kolkata.
 
+### Fixed
+
+- PayPal invoicing webhooks are read from resource.invoice, as PayPal sends them.
+
 ### Added
 
 - Demo password: a shared password with a signed cookie protects the app screens and every API
