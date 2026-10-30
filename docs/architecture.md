@@ -32,8 +32,12 @@ server, and it turns error responses into `ApiClientError`. Built.
 `PAYPAL_ENVIRONMENT=sandbox`. `getEnv()` is called inside functions, never at the top of a module,
 so the production build works without secrets. Built.
 
-**`clock.ts`** returns today's date in Asia/Kolkata, or `DEMO_TODAY` when it is set, and does day
-arithmetic on plain `YYYY-MM-DD` strings. Every due-state and risk calculation uses it. Built.
+**`clock.ts`** returns today's date in Asia/Kolkata, or `DEMO_TODAY` when it is set. Every
+due-state and risk calculation uses it. It is server only. Built.
+
+**`date-math.ts`** does day arithmetic on plain `YYYY-MM-DD` strings (`addDays`, `daysBetween`) and
+reads the Asia/Kolkata date. It has no server dependencies, so screens can use it; `clock.ts`
+re-exports it. Built.
 
 **`paypal/`** holds the OAuth token, a small typed REST client for Invoicing v2, the Server SDK
 wrappers for payments and transaction search, the actual-payout lookup and the mapping to our
@@ -229,6 +233,44 @@ estimate 300 ms after typing stops, and sends the request with one request ID fo
 life. If the server holds a request (`duplicate_request`, `paypal_timeout`) and the user then edits
 the form, a `duplicate_request` answer is replaced by "These details changed after the invoice was
 submitted…" with a "Create another" button that starts over with a new request ID. The result panel offers "Retry sending" with its own request ID for a draft that was not sent.
+
+## Receivables screen
+
+`/receivables` renders a server component with the header and a "New invoice" link, and one client
+component, `Receivables`. It shows, top to bottom: the totals strip, the due line, and the invoice
+table beside the activity feed (stacked on narrow screens). A loading skeleton of the same size,
+an empty panel with "Create your first invoice" and an error panel with "Try again" stand in for
+them. When data is already on screen and a refresh fails, the old data stays with a "Couldn't
+refresh" note.
+
+**Polling.** `use-receivables.ts` loads invoices, activity and health together. Health (today's
+date and `demoClock`) is re-read every 5 minutes, so the date stays right if the tab is left open
+past midnight. `poll-scheduler.ts` refreshes invoices and activity every
+10 seconds while the tab is visible, refreshes at once when the tab becomes visible again, and
+never starts a refresh while one is still running. `receivables-state.ts` holds the last good
+data, keeps it when a refresh fails (the error and PayPal's `debugId` are kept apart from it), and
+finds events that arrived since the previous refresh. Those are highlighted in the feed and
+announced in an `aria-live` region.
+
+**The due line.** `DueLineChart` draws one row per invoice, newest issued first, 12 rows until
+"Show all" is chosen, as hand-built SVG (see [decision 0012](decisions/0012-hand-built-due-line.md)).
+`due-line-layout.ts` holds the maths and no React: the axis runs from the earliest date shown to the
+latest of the due, paid and today dates plus 3 days, with a tick every 7 days, and every position
+is a fraction of the axis. A paid invoice is a line from issued to paid in the paid colour, with
+the part after the due date in the late colour when it was paid late. An unpaid invoice runs to
+today: blue up to the due date and late after it, or the due-soon colour when it is due within 3
+days. A tick marks the due date; a filled dot ends a paid line and an open dot marks today. Every
+row says its state in words, is focusable, and opens the invoice panel on Enter or click.
+
+**The table.** `InvoiceTable` is an AG Grid (modules registered once in `ag-grid.ts`, themed with
+the Theming API). `invoice-table-model.ts` holds the status filters and counts and the default order
+(overdue by most days late, then due soon, then other unpaid by due date, then paid, latest first). The search box is AG Grid's quick filter.
+
+**The invoice panel.** A row opens a dialog. An unpaid invoice shows the estimate in rupees and the
+payer link. A paid invoice with PayPal's figures calls `POST /api/payout-estimate` for the invoice
+amount and sets the estimate (published fees) beside PayPal's actual fee, amount after fee and
+rupees, with the difference in words. When PayPal reported no exchange rate, the panel says the
+conversion is reported at withdrawal and the rupees use the ECB rate less PayPal's markup.
 
 ## Demo access
 

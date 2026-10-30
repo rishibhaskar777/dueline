@@ -7,6 +7,15 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- The receivables screen: totals in rupees, the due line for every invoice, a sortable and
+  searchable invoice table, an invoice panel that sets the estimate against PayPal's own figures
+  for a paid invoice, and a live activity feed. It refreshes every 10 seconds while the tab is open, and re-checks today's date every 5 minutes.
+  The table starts with the most overdue invoices and ends with the paid ones.
+  An invoice due today reads "Due today" in the table, the panel and the due line, and every unpaid
+  line on the due line is at least 8 px long.
+
 ### Changed
 
 - The AI draft names the business being billed as the client and writes item names as invoice lines.
