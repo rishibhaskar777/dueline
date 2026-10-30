@@ -149,6 +149,20 @@ export function createPostgresStore(sql: Sql): Store {
       return row.count;
     },
 
+    async getCached(key): Promise<Json | null> {
+      const [row] = await sql<{ value: Json }[]>`
+        select value from cache_entries where key = ${key} and expires_at > now()`;
+      return row?.value ?? null;
+    },
+
+    async putCached(key, value, ttlSeconds): Promise<void> {
+      await sql`delete from cache_entries where expires_at <= now()`;
+      await sql`
+        insert into cache_entries (key, value, expires_at)
+        values (${key}, ${sql.json(value)}, now() + make_interval(secs => ${ttlSeconds}))
+        on conflict (key) do update set value = excluded.value, expires_at = excluded.expires_at`;
+    },
+
     async getLatestRates(): Promise<StoredRates | null> {
       const rows = await sql<RateRow[]>`
         select currency, rate, to_char(on_date, 'YYYY-MM-DD') as on_date,

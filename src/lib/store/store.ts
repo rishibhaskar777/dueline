@@ -38,6 +38,9 @@ export interface Store {
 
   hitRateLimit(key: string, windowSeconds: number): Promise<number>;
 
+  getCached(key: string): Promise<Json | null>;
+  putCached(key: string, value: Json, ttlSeconds: number): Promise<void>;
+
   getLatestRates(): Promise<StoredRates | null>;
   putRates(stored: StoredRates): Promise<void>;
 

@@ -59,6 +59,33 @@ describe("rate limits", () => {
   });
 });
 
+describe("cache", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-29T00:00:00Z"));
+  });
+
+  afterEach(() => vi.useRealTimers());
+
+  it("returns a stored value until it expires", async () => {
+    expect(await store.getCached("extract:a")).toBeNull();
+    await store.putCached("extract:a", { items: [1, 2] }, 60);
+    expect(await store.getCached("extract:a")).toEqual({ items: [1, 2] });
+    expect(await store.getCached("extract:b")).toBeNull();
+
+    vi.advanceTimersByTime(60_000);
+    expect(await store.getCached("extract:a")).toBeNull();
+  });
+
+  it("replaces the value and the expiry when a key is stored again", async () => {
+    await store.putCached("extract:a", "old", 60);
+    vi.advanceTimersByTime(50_000);
+    await store.putCached("extract:a", "new", 60);
+    vi.advanceTimersByTime(50_000);
+    expect(await store.getCached("extract:a")).toBe("new");
+  });
+});
+
 describe("activity and reminders", () => {
   const event = (id: string, at: string): ActivityEvent => ({
     id,

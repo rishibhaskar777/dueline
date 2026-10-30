@@ -12,6 +12,7 @@ export function createMemoryStore(): Store {
   const activity = new Map<string, ActivityEvent>();
   const reminders: ReminderLogEntry[] = [];
   const rateLimits = new Map<string, { count: number; resetsAt: number }>();
+  const cache = new Map<string, { value: Json; expiresAt: number }>();
   let rates: StoredRates | null = null;
   const payouts = new Map<string, ActualPayout>();
   let settings: Settings | null = null;
@@ -78,6 +79,20 @@ export function createMemoryStore(): Store {
       entry.count += 1;
       rateLimits.set(key, entry);
       return entry.count;
+    },
+
+    async getCached(key): Promise<Json | null> {
+      const entry = cache.get(key);
+      if (!entry) return null;
+      if (Date.now() >= entry.expiresAt) {
+        cache.delete(key);
+        return null;
+      }
+      return entry.value;
+    },
+
+    async putCached(key, value, ttlSeconds): Promise<void> {
+      cache.set(key, { value, expiresAt: Date.now() + ttlSeconds * 1000 });
     },
 
     async getLatestRates(): Promise<StoredRates | null> {
