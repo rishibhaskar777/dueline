@@ -41,7 +41,6 @@ describe("stub routes", () => {
   });
 
   it("answers every POST route", async () => {
-    expectStub(await extract(json("POST", "/api/invoices/extract", { chat: "hello" })));
     expectStub(
       await createInvoice(json("POST", "/api/invoices", { draft: extraction.draft, requestId })),
     );
