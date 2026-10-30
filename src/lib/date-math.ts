@@ -28,3 +28,10 @@ export function addDays(date: string, days: number): string {
 export function daysBetween(from: string, to: string): number {
   return Math.round((parseDate(to) - parseDate(from)) / MS_PER_DAY);
 }
+
+// Months are "YYYY-MM" strings.
+export function addMonths(month: string, count: number): string {
+  const [year, number] = month.split("-").map(Number);
+  const index = year * 12 + (number - 1) + count;
+  return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`;
+}

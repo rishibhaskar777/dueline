@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { LoadFailure } from "@/components/shared/LoadFailure";
 import { formatDate } from "@/lib/format-date";
 import { ActivityFeed } from "./ActivityFeed";
 import { DueLineChart } from "./DueLineChart";
 import { InvoicePanel } from "./InvoicePanel";
 import { InvoiceTable } from "./InvoiceTable";
 import { ReceivablesSkeleton } from "./ReceivablesSkeleton";
-import { EmptyReceivables, LoadFailure, RefreshNote } from "./ReceivablesStates";
+import { EmptyReceivables, RefreshNote } from "./ReceivablesStates";
 import { TotalsStrip } from "./TotalsStrip";
 import { useReceivables } from "./use-receivables";
 
@@ -16,7 +17,11 @@ export function Receivables() {
   const [openId, setOpenId] = useState<string | null>(null);
 
   if (!data) {
-    return error ? <LoadFailure error={error} onRetry={retry} /> : <ReceivablesSkeleton />;
+    return error ? (
+      <LoadFailure title="Couldn't load your receivables" error={error} onRetry={retry} />
+    ) : (
+      <ReceivablesSkeleton />
+    );
   }
   if (data.invoices.length === 0) return <EmptyReceivables />;
 

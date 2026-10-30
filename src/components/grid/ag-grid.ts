@@ -2,7 +2,7 @@ import { AllCommunityModule, ModuleRegistry, themeQuartz } from "ag-grid-communi
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-export const invoiceGridTheme = themeQuartz.withParams({
+export const gridTheme = themeQuartz.withParams({
   fontFamily: "var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif",
   fontSize: 14,
   foregroundColor: "#0D1B2E",

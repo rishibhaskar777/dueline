@@ -31,3 +31,13 @@ const dateTime = new Intl.DateTimeFormat("en-IN", {
 export function formatTimestamp(timestamp: string): string {
   return `${dateTime.format(new Date(timestamp))} IST`;
 }
+
+const monthYear = new Intl.DateTimeFormat("en-IN", {
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+export function formatMonth(month: string): string {
+  return monthYear.format(new Date(`${month}-01T00:00:00Z`));
+}

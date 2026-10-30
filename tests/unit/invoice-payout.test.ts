@@ -27,6 +27,8 @@ const sandboxPayout: ActualPayout = {
   exchangeRate: null,
   netInr: null,
   source: "paypal_capture",
+  paidAt: "2026-10-15T11:42:00Z",
+  transactionId: "5GX12345AB6789012",
 };
 
 describe("payoutInrFor", () => {

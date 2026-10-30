@@ -1,6 +1,7 @@
 import { formatDate } from "@/lib/format-date";
 import { formatMoney, formatRupees } from "@/lib/money/format";
 import type { DueLineRow } from "./due-line-layout";
+import { rupeesFromPayPal } from "./invoice-status";
 
 export interface TooltipTarget {
   row: DueLineRow;
@@ -51,7 +52,8 @@ export function DueLineTooltip({ target }: { target: TooltipTarget }) {
           <>
             <dt className="text-muted-foreground">To your bank</dt>
             <dd>
-              {formatRupees(invoice.payoutInr)} {invoice.actualPayout ? "(PayPal)" : "(estimate)"}
+              {formatRupees(invoice.payoutInr)}{" "}
+              {rupeesFromPayPal(invoice) ? "(PayPal)" : "(estimate)"}
             </dd>
           </>
         )}

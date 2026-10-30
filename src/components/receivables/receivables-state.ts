@@ -1,4 +1,4 @@
-import { ApiClientError } from "@/lib/api-client";
+import { toLoadError, type LoadError } from "@/components/shared/load-error";
 import type { ActivityEvent, HealthResponse, InvoiceSummary, Totals } from "@/types";
 import { findNewEvents } from "./activity-text";
 
@@ -9,11 +9,6 @@ export interface ReceivablesData {
   health: HealthResponse;
 }
 
-export interface LoadError {
-  message: string;
-  debugId?: string;
-}
-
 export interface ReceivablesState {
   data: ReceivablesData | null;
   error: LoadError | null;
@@ -22,15 +17,6 @@ export interface ReceivablesState {
 }
 
 export const INITIAL_STATE: ReceivablesState = { data: null, error: null, freshEvents: [] };
-
-export function toLoadError(error: unknown): LoadError {
-  if (error instanceof ApiClientError) {
-    return { message: error.message, debugId: error.debugId };
-  }
-  return {
-    message: error instanceof Error ? error.message : "Could not load your receivables.",
-  };
-}
 
 export function applyRefresh(
   state: ReceivablesState,

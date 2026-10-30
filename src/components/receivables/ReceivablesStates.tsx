@@ -1,21 +1,6 @@
 import Link from "next/link";
-import { Button, buttonVariants } from "@/components/ui/button";
-import type { LoadError } from "./receivables-state";
-
-export function LoadFailure({ error, onRetry }: { error: LoadError; onRetry: () => void }) {
-  return (
-    <div role="alert" className="max-w-xl rounded-xl border border-line bg-white p-6">
-      <h2 className="text-xl font-semibold">Couldn&apos;t load your receivables</h2>
-      <p className="mt-2 text-sm">{error.message}</p>
-      {error.debugId && (
-        <p className="mt-1 text-sm text-muted-foreground">PayPal debug ID: {error.debugId}</p>
-      )}
-      <Button type="button" variant="outline" className="mt-4" onClick={onRetry}>
-        Try again
-      </Button>
-    </div>
-  );
-}
+import { buttonVariants } from "@/components/ui/button";
+import type { LoadError } from "@/components/shared/load-error";
 
 export function RefreshNote({ error }: { error: LoadError }) {
   return (
