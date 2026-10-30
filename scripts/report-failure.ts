@@ -1,3 +1,5 @@
+import { ExtractionFailedError } from "@/lib/ai/extract-invoice";
+import { AiUnavailableError } from "@/lib/ai/model";
 import { ConfigError } from "@/lib/env";
 import { RatesUnavailableError } from "@/lib/rates/ecb";
 import { PayPalApiError, PayPalTimeoutError } from "@/lib/paypal/errors";
@@ -9,6 +11,8 @@ export function reportFailure(error: unknown): never {
   } else if (
     error instanceof PayPalTimeoutError ||
     error instanceof ConfigError ||
+    error instanceof AiUnavailableError ||
+    error instanceof ExtractionFailedError ||
     error instanceof RatesUnavailableError
   ) {
     console.error(error.message);

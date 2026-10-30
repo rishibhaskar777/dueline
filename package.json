@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=24"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "next dev",
@@ -17,6 +17,8 @@
     "format:check": "prettier --check .",
     "db:migrate": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/migrate.ts",
     "sandbox:check": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/sandbox-check.ts",
+    "ai:check": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/ai-check.ts",
+    "extract:check": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/extract-check.ts",
     "rates:check": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/rates-check.ts",
     "seed": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/seed-sandbox.ts"
   },
