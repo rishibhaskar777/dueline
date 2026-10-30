@@ -95,6 +95,19 @@ describe("postgres store", () => {
     expect(values[0]).toEqual(["USD", "2026-10-28", "2026-10-29", 85]);
   });
 
+  it("reads a cached value that has not expired and nothing otherwise", async () => {
+    const { sql } = fakeSql([{ value: { items: [] } }], []);
+    const store = createPostgresStore(sql);
+    expect(await store.getCached("extract:a")).toEqual({ items: [] });
+    expect(await store.getCached("extract:a")).toBeNull();
+  });
+
+  it("clears expired entries, then stores the value with its lifetime", async () => {
+    const { sql, values } = fakeSql();
+    await createPostgresStore(sql).putCached("extract:a", { items: [] }, 86_400);
+    expect(values).toEqual([[], ["extract:a", { items: [] }, 86_400]]);
+  });
+
   it("turns activity rows into events", async () => {
     const at = new Date("2026-10-17T08:30:00Z");
     const { sql } = fakeSql([

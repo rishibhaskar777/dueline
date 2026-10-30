@@ -4,17 +4,13 @@ import { passwordMatches } from "@/lib/demo-access/password";
 import { createSessionToken } from "@/lib/demo-access/session";
 import { getStore } from "@/lib/store";
 import { demoSessionRequestSchema } from "@/types";
+import { addressOf } from "@/app/api/_lib/address";
 import { failFromError } from "@/app/api/_lib/errors";
 import { fail, noContent } from "@/app/api/_lib/respond";
 import { parseBody } from "@/app/api/_lib/validate";
 
 const MAX_ATTEMPTS = 10;
 const ATTEMPT_WINDOW_SECONDS = 15 * 60;
-
-// Vercel overwrites x-forwarded-for with the client's real address, so a client cannot choose it.
-function addressOf(req: Request): string {
-  return req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
-}
 
 export async function POST(req: Request): Promise<Response> {
   const parsed = await parseBody(req, demoSessionRequestSchema);

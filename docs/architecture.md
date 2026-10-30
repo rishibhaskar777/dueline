@@ -5,7 +5,8 @@ Dueline is a Next.js app. Screens are client components that call typed function
 handlers talk to PayPal, Gemini, Postgres and the exchange-rate service.
 
 `GET /api/health`, `GET /api/invoices`, `GET` and `PUT /api/settings`, `POST /api/payout-estimate`,
-`GET /api/activity`, `POST /api/webhooks/paypal` and the demo sign-in routes are built. Every other
+`GET /api/activity`, `POST /api/invoices/extract`, `POST /api/webhooks/paypal` and the demo sign-in
+routes are built. Every other
 route handler still returns sample data and the header `x-dueline-stub: true`. Parts that are not
 built yet are marked **planned**.
 
@@ -43,8 +44,12 @@ safe `next` path and the rule that decides whether access is open, required or m
 uses only Web Crypto, so `src/proxy.ts` can use it. Built. See
 [decision 0008](decisions/0008-demo-access-and-deployment.md).
 
-**`ai/`** holds prompts and Gemini calls for extracting a draft from a chat, drafting reminders and
-writing short explanations. Output is validated by code. Planned.
+**`ai/`** holds the Gemini calls. `model.ts` builds the primary and fallback models from the
+environment and runs a task on the fallback when the primary hits a quota, server, timeout or network
+failure. `extract-invoice.ts` builds the prompt, reads or fills the cache and calls the model, and
+`check-draft.ts` turns the model's loose answer into an `InvoiceDraft` with warnings. `quota.ts`
+counts the hourly and daily limits. Reminder drafting and short explanations are planned. Output is
+always validated by code. See [decision 0010](decisions/0010-ai-invoice-drafting.md).
 
 **`money/`** is pure decimal arithmetic in integer minor units, plus the payout estimate, the
 rupees expected for an invoice, number formatting and totals. Built. `estimatePayout` takes the
@@ -63,14 +68,16 @@ loads, and puts the rates in use into `marketRates` when the source is "ecb". Bu
 **`risk/`** scores late payers from payment history and suggests an early-payment discount. Pure
 functions. Planned.
 
-**`export/`** holds the fixed RBI purpose-code list (built), validation of AI suggestions and the
-monthly export register (planned).
+**`export/`** holds the fixed RBI purpose-code list (built, checked against the RBI's list on 30 Oct
+2026), and the monthly export register (planned). `isPurposeCode` rejects any AI suggestion that is
+not on the list.
 
-**`privacy/`** masks emails and phone numbers before any AI call and restores them afterwards.
-Planned.
+**`privacy/`** masks emails and phone numbers as `[EMAIL_n]` and `[PHONE_n]` before any AI call and
+restores them afterwards. Pure functions. Built.
 
 **`store/`** defines a `Store` interface with Postgres and in-memory implementations and the SQL
-migrations. Built. See [decision 0006](decisions/0006-storage.md).
+migrations. Besides requests, events, settings, rates and payouts, it keeps rate-limit counters and a
+small cache of JSON values with an expiry. Built. See [decision 0006](decisions/0006-storage.md).
 
 ## Reading invoices
 
@@ -120,6 +127,27 @@ because the receivables page polls every 10 seconds.
 shows `PayoutCalculator` beside it. The calculator calls `POST /api/payout-estimate` 300 ms after
 typing stops and shows the fee, the market rate and the date it is from, PayPal's rate, what
 reaches the bank and what is lost to fees and conversion. Built.
+
+## Drafting an invoice from a chat
+
+`POST /api/invoices/extract` takes a pasted chat of up to 6,000 characters and returns a draft. The
+AI only fills it; nothing is created or sent.
+
+1. `maskContacts` replaces emails and phone numbers with placeholders.
+2. The SHA-256 of the masked text and today's date is the cache key. A stored model answer for it is
+   used without a model call and counts towards no limit.
+3. Otherwise the route reserves a call: 10 an hour for the address (first `x-forwarded-for` entry),
+   then 400 a day for the app under a key that includes today's date. Over the first is 429
+   `rate_limited`, over the second 503 `ai_unavailable`.
+4. `runWithFallback` asks `GEMINI_MODEL` for a structured answer from the masked chat, in `<chat>`
+   tags, with a 20 second timeout. A 429, a 5xx, a timeout or a network failure moves to
+   `GEMINI_FALLBACK_MODEL` once; both failing is 503 `ai_unavailable`.
+5. `checkModelDraft` checks every field against the original chat and today's date, restores the
+   placeholders, and collects warnings. An item whose price does not appear as a number in its own
+   quote is kept with a warning, and a chat with phrases such as "ignore previous instructions" gets
+   one warning to check every item. No usable item is 422 `extraction_failed`.
+6. The model's answer is stored for 24 hours and the draft is returned with `risk: null` and the
+   count of masked emails and phone numbers.
 
 ## Create and send an invoice
 

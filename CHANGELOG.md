@@ -9,6 +9,10 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The purpose-code list uses the RBI's official labels and adds P1015 and P1017 (checked on 30 Oct
+  2026).
+- `engines.node` is `24.x`, so Vercel no longer moves the project to a newer Node.js major version by
+  itself.
 - Hosting moves from Render to Vercel (functions in Singapore next to the database).
 - Settings have one fixed fee per currency (`fixedFees`) instead of one `fixedFee`, and the default
   conversion markup is 3.0%.
@@ -23,6 +27,15 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Invoice drafting from a pasted chat: `POST /api/invoices/extract` hides emails and phone numbers,
+  asks Gemini for a draft, checks every field in code and returns warnings for anything it could not
+  confirm. Limits of 10 extractions an hour per address and 400 model calls a day, a fallback model,
+  and a 24-hour cache for identical chats. `risk` stays `null` until the late-payer radar is built.
+- A draft item is flagged when its price does not appear as a number in the words quoted from the
+  chat.
+- A chat with phrases that look like instructions to the AI gets a warning to check every item.
+- `npm run ai:check` and `npm run extract:check`, and migration `003_cache_entries.sql`.
+- Decision record 0010 on AI invoice drafting.
 - Demo password: a shared password with a signed cookie protects the app screens and every API
   route except `GET /api/health`, `POST /api/webhooks/paypal` and `/api/demo/session`. Includes the
   `/demo` sign-in screen, a "Lock demo" button, `POST` and `DELETE /api/demo/session`, a limit of

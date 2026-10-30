@@ -29,7 +29,15 @@ in memory. Read [docs/architecture.md](docs/architecture.md) and
    `npm run sandbox:check -- --invoice <id>` to see the payment and PayPal's own payout figures.
 4. Check the exchange-rate service with `npm run rates:check`. It makes one call to Frankfurter and
    prints the ECB's date and the rupees per unit for the five currencies, or the reason it failed.
-5. Create the four demo invoices with `npm run seed`. It skips invoices that already exist, so it is
+5. Check Gemini with `npm run ai:check`. It makes one tiny structured call to `GEMINI_MODEL` and to
+   `GEMINI_FALLBACK_MODEL` and prints each model id with "ok", or the error name and status. It never
+   prints the key. Each call uses one of the model's 500 free requests for the day.
+6. Try the invoice drafting with `npm run extract:check`. It reads the chat in
+   `tests/fixtures/chats/halden-logos.txt` (or the file path you give after `--`, for example
+   `npm run extract:check -- my-chat.txt`) and prints the checked draft and its warnings. It calls the
+   real model unless the same chat was already answered today. Migration 003 adds the table for that
+   cache, so run `npm run db:migrate` first if you use a database.
+7. Create the four demo invoices with `npm run seed`. It skips invoices that already exist, so it is
    safe to run again.
 
 These scripts run outside Next.js, so they start with `tsx --conditions=react-server`: that makes the
