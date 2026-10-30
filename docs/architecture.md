@@ -5,7 +5,7 @@ Dueline is a Next.js app. Screens are client components that call typed function
 handlers talk to PayPal, Gemini, Postgres and the exchange-rate service.
 
 `GET /api/health`, `GET /api/invoices`, `POST /api/invoices`, `POST /api/invoices/{id}/send`,
-`GET /api/settings`, `PUT /api/settings`, `POST /api/payout-estimate`, `GET /api/activity`,
+`GET /api/export-register`, `GET /api/settings`, `PUT /api/settings`, `POST /api/payout-estimate`, `GET /api/activity`,
 `POST /api/invoices/extract`, `GET /api/purpose-codes`, `GET /api/demo/recipient`,
 `POST /api/webhooks/paypal` and the demo sign-in routes are built. Every other route handler still
 returns sample data and the header `x-dueline-stub: true`. Parts that are not built yet are marked
@@ -70,7 +70,10 @@ ten-thousandths, rounding halves up.
 in use (`rates.ts`). With the source "ecb" it uses the rates fetched today, otherwise fetches once
 (callers that arrive together share one request) and stores them with the day fetched and the ECB's
 own date. If the fetch fails it uses the latest stored rates, then the rates saved in settings. With
-the source "manual" it makes no request. Built. See [decision 0007](decisions/0007-fees-and-rates.md).
+the source "manual" it makes no request. `getRatesOn(date)` gives the ECB's rates for a past date: it
+reads them from the store's cache, fetches them once with Frankfurter's `date` parameter when they are
+not there, and falls back to the rates in use. Built. See
+[decision 0007](decisions/0007-fees-and-rates.md) and [decision 0013](decisions/0013-export-register.md).
 
 **`settings.ts`** merges the saved settings over the defaults, so a row from an older version still
 loads, and puts the rates in use into `marketRates` when the source is "ecb". Built.
@@ -78,9 +81,10 @@ loads, and puts the rates in use into `marketRates` when the source is "ecb". Bu
 **`risk/`** scores late payers from payment history and suggests an early-payment discount. Pure
 functions. Planned.
 
-**`export/`** holds the fixed RBI purpose-code list (built, checked against the RBI's list on 30 Oct
-2026), and the monthly export register (planned). `isPurposeCode` rejects any AI suggestion that is
-not on the list.
+**`export/`** holds the fixed RBI purpose-code list (checked against the RBI's list on 30 Oct 2026;
+`isPurposeCode` rejects any AI suggestion that is not on it), `register.ts`, which builds the monthly
+export register, and `csv.ts`, which writes it as a CSV. Built. See
+[decision 0013](decisions/0013-export-register.md).
 
 **`privacy/`** masks emails and phone numbers as `[EMAIL_n]` and `[PHONE_n]` before any AI call and
 restores them afterwards. Pure functions. Built.
@@ -128,8 +132,42 @@ payment's ID and tries, in this order:
    take up to three hours to appear.
 3. Nothing. The invoice shows no actual payout until a later request finds one.
 
+Both also record `paidAt`, the payment's own timestamp (the capture's `create_time` or the
+transaction's initiation date), and `transactionId`, the payment ID. A paid invoice's `paidOn` is the
+Asia/Kolkata date of `paidAt`, because PayPal's `payment_date` is a plain date in PayPal's time zone.
+
 Figures that are found are stored. A lookup that finds nothing is not repeated for five minutes,
-because the receivables page polls every 10 seconds.
+because the receivables page polls every 10 seconds. A stored payout with no `paidAt` key (written
+before paid times were recorded) is read from PayPal once more, and the old one is kept if that
+fails.
+
+## Export register
+
+`GET /api/export-register?month=YYYY-MM` rejects a month after the current one (400), then
+`buildExportRegister` takes the loaded invoices (the same cached list as receivables) and keeps those
+that are paid or marked as paid and whose `paidOn`, the India date, is in the month. A partly paid
+invoice is left out. Each becomes a row: the foreign amount, PayPal's fee, net and transaction ID when
+PayPal's figures were found, and the rupees. The rupees are PayPal's `netInr` rounded to whole rupees
+when it reports one. Otherwise they are worked out at the ECB rate of the paid date from `getRatesOn`
+(PayPal's net when known, the estimate from the published fees when not) less the settings' markup,
+and the row carries the rate and its date. One rate is asked for per distinct date. Rows are sorted by
+paid date then invoice number, and the totals (rupees, PayPal's share, the estimated share, foreign
+totals per currency, rows without a purpose code) are summed in integer units. `underLut` is true
+when the invoice note contains `LUT_NOTE` from `invoice-body.ts`.
+
+With `format=csv`, `toCsv` writes the same register as an RFC 4180 CSV with a UTF-8 byte order mark,
+CRLF line ends and a leading quote on any text cell that starts with `=`, `+`, `-`, `@`, a tab or a
+carriage return. See [decision 0013](decisions/0013-export-register.md).
+
+`/export` renders a server component with the header and one client component,
+`ExportRegisterView`. `use-export-register.ts` reads today's date from `GET /api/health` to pick the
+current month, then loads the register for the chosen month. The month picker has previous and next
+buttons (next is disabled for the current month) and a month input. The screen shows summary tiles
+(invoices paid, rupees with PayPal's and the estimated share, foreign totals, and a warning tile when
+purpose codes are missing), an AG Grid table in the receivables theme (the theme lives in
+`components/grid/ag-grid.ts`, and `SourceTag` in `components/shared/` marks "PayPal" or "est." rupees), a "Download CSV for
+your CA" link, and a short explainer. A loading skeleton, an empty-month panel and an error panel
+with PayPal's debug ID stand in for the content.
 
 ## Fees and rates screen
 
@@ -262,7 +300,13 @@ today: blue up to the due date and late after it, or the due-soon colour when it
 days. A tick marks the due date; a filled dot ends a paid line and an open dot marks today. Every
 row says its state in words, is focusable, and opens the invoice panel on Enter or click.
 
-**The table.** `InvoiceTable` is an AG Grid (modules registered once in `ag-grid.ts`, themed with
+**Shared pieces.** `components/shared/` holds what both data screens use: `LoadFailure` and
+`toLoadError` (the error panel and the error shape), `SkeletonBlock`, `StatTile` and `SourceTag`.
+`components/grid/` holds only the AG Grid theme. A rupee figure is tagged "PayPal" only when PayPal
+reported the rupees (`rupeesFromPayPal`); a figure worked out from PayPal's net at the ECB rate is
+tagged "est.".
+
+**The table.** `InvoiceTable` is an AG Grid (modules registered once in `components/grid/ag-grid.ts`, themed with
 the Theming API). `invoice-table-model.ts` holds the status filters and counts and the default order
 (overdue by most days late, then due soon, then other unpaid by due date, then paid, latest first). The search box is AG Grid's quick filter.
 
