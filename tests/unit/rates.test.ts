@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getMarketRates } from "@/lib/rates/rates";
+import { getMarketRates, getRatesOn } from "@/lib/rates/rates";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
 import { DEFAULT_SETTINGS, type Settings } from "@/types";
@@ -102,5 +102,56 @@ describe("getMarketRates", () => {
       },
     };
     expect((await getMarketRates(ecbSettings)).rates).toEqual(ECB_RATES);
+  });
+});
+
+describe("getRatesOn", () => {
+  it("fetches the rates of a past date once and then reads them from the store", async () => {
+    const fetch = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async () => ecbResponse("2026-10-23"));
+    const first = await getRatesOn("2026-10-24", ecbSettings);
+    const second = await getRatesOn("2026-10-24", ecbSettings);
+
+    expect(first).toEqual({ rates: ECB_RATES, onDate: "2026-10-23", source: "ecb" });
+    expect(second).toEqual(first);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(new URL(String(fetch.mock.calls[0][0])).searchParams.get("date")).toBe("2026-10-24");
+  });
+
+  it("does not disturb the rates in use today", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(async () => ecbResponse("2026-10-23"));
+    await getRatesOn("2026-10-24", ecbSettings);
+    expect(await holder.store?.getLatestRates()).toBeNull();
+  });
+
+  it("falls back to the rates in use when the past date cannot be fetched", async () => {
+    await holder.store?.putRates({ ...stored, fetchedOn: "2026-10-29" });
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse({}, { status: 500 }));
+    expect(await getRatesOn("2026-10-20", ecbSettings)).toEqual({ ...stored, source: "ecb" });
+  });
+
+  it("uses the rates in use for today and later without asking for a date", async () => {
+    await holder.store?.putRates({ ...stored, fetchedOn: "2026-10-29" });
+    const fetch = vi.spyOn(globalThis, "fetch");
+    expect(await getRatesOn("2026-10-29", ecbSettings)).toEqual({ ...stored, source: "ecb" });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("uses the saved rates without any network call when the source is manual", async () => {
+    const fetch = vi.spyOn(globalThis, "fetch");
+    expect(await getRatesOn("2026-10-20", manualSettings)).toMatchObject({ source: "manual" });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("still returns fetched rates when storing them fails", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(async () => ecbResponse("2026-10-23"));
+    holder.store = {
+      ...createMemoryStore(),
+      putCached: async () => {
+        throw new Error("database down");
+      },
+    };
+    expect((await getRatesOn("2026-10-24", ecbSettings)).rates).toEqual(ECB_RATES);
   });
 });

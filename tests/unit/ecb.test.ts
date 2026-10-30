@@ -15,6 +15,14 @@ describe("fetchEcbRates", () => {
     expect(url.searchParams.get("providers")).toBe("ECB");
   });
 
+  it("asks for the rates of a given date", async () => {
+    const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(ecbResponse("2026-10-23"));
+    expect((await fetchEcbRates("2026-10-24")).onDate).toBe("2026-10-23");
+    const url = new URL(String(fetch.mock.calls[0][0]));
+    expect(url.searchParams.get("date")).toBe("2026-10-24");
+    expect(url.searchParams.get("providers")).toBe("ECB");
+  });
+
   it("reports the oldest date when the rows disagree", async () => {
     const rows = ecbRows("2026-10-28") as { date: string }[];
     rows[1].date = "2026-10-27";
