@@ -182,6 +182,9 @@ answers 401. The sidebar's "Lock demo" button calls `signOut`.
 2. A verified event whose ID was already processed is answered with 204 and nothing else happens.
 3. For `INVOICING.INVOICE.*` events it reads the invoice from PayPal with `getInvoice` and clears
    the invoice caches. The event body is not used for anything else. PayPal's state is the truth.
+   PayPal's real `INVOICING.INVOICE.*` events carry the invoice at `resource.invoice` (the `resource`
+   is not the invoice itself); the documented flat `resource.id` is accepted too. A verified invoice
+   event with no invoice ID is logged as `missing_invoice_id`, marked processed and answered 204.
 4. For `PAID` it also looks up PayPal's actual payout and stores it. For `PAID` and `SENT` it records
    an activity event whose ID is the PayPal event ID.
 5. It marks the event ID as processed and answers 204. Other event types are only marked.

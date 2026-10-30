@@ -9,6 +9,7 @@ import { activity } from "@/mocks/fixtures";
 import { stubEnv } from "../support/env";
 import { jsonResponse, mockPayPal, callsTo } from "../support/http";
 import paidFixture from "../fixtures/paypal/invoice-paid.json";
+import nestedPaidFixture from "../fixtures/paypal/webhook-invoice-paid.json";
 
 const sdk = vi.hoisted(() => ({ getCapturedPayment: vi.fn(), searchTransactions: vi.fn() }));
 
@@ -20,6 +21,7 @@ vi.mock("@/lib/paypal/sdk", () => ({
 vi.mock("@/lib/paypal/summaries", () => ({ clearInvoiceCaches: vi.fn() }));
 
 const paid = paidFixture as PayPalInvoice;
+const nestedPaid = nestedPaidFixture;
 const VERIFY_PATH = "/v1/notifications/verify-webhook-signature";
 const INVOICE_PATH = `/v2/invoicing/invoices/${paid.id}`;
 
@@ -167,6 +169,44 @@ describe("POST /api/webhooks/paypal processing", () => {
         amount: { currency: "USD", value: "450.00" },
       },
     ]);
+  });
+
+  it("reads the invoice from resource.invoice, as PayPal sends it, and records one paid activity", async () => {
+    capturedPayout();
+    const nestedId = nestedPaid.resource.invoice.id;
+    const fetchSpy = servePayPal("SUCCESS", (url) =>
+      url.pathname === `/v2/invoicing/invoices/${nestedId}`
+        ? jsonResponse({ ...paid, id: nestedId })
+        : jsonResponse({ name: "RESOURCE_NOT_FOUND" }, { status: 404 }),
+    );
+
+    expect((await webhook(delivery(JSON.stringify(nestedPaid)))).status).toBe(204);
+
+    expect(nestedId).toBe("INV2-UADS-A9WN-A3E8-7XYH");
+    expect(callsTo(fetchSpy, `/v2/invoicing/invoices/${nestedId}`)).toBe(1);
+    const events = (await getStore().latestActivity(50)).filter(
+      (event) => event.id === nestedPaid.id,
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ kind: "paid", invoiceId: nestedId });
+    expect(await getStore().isProcessed(nestedPaid.id)).toBe(true);
+  });
+
+  it("marks an invoicing event with no invoice id as processed without calling PayPal", async () => {
+    const fetchSpy = servePayPal("SUCCESS");
+    const raw = '{"id":"WH-B7","event_type":"INVOICING.INVOICE.PAID","resource":{"invoice":{}}}';
+
+    expect((await webhook(delivery(raw))).status).toBe(204);
+
+    const invoiceCalls = fetchSpy.mock.calls.filter(([input]) =>
+      String(input).includes("/v2/invoicing/"),
+    );
+    expect(invoiceCalls).toHaveLength(0);
+    expect(await getStore().isProcessed("WH-B7")).toBe(true);
+    expect(console.warn).toHaveBeenCalledWith("Verified webhook ignored", {
+      eventType: "INVOICING.INVOICE.PAID",
+      reason: "missing_invoice_id",
+    });
   });
 
   it("does the work once when the same event arrives twice", async () => {

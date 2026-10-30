@@ -12,10 +12,20 @@ const webhookEventSchema = z.object({
   id: z.string().min(1),
   event_type: z.string().min(1),
   create_time: z.string().optional(),
-  resource: z.object({ id: z.string().min(1) }).optional(),
+  resource: z
+    .object({
+      id: z.string().min(1).optional(),
+      invoice: z.object({ id: z.string().min(1).optional() }).optional(),
+    })
+    .optional(),
 });
 
 type WebhookEvent = z.infer<typeof webhookEventSchema>;
+
+// PayPal nests the invoice under resource.invoice today; its documentation shows it at resource.
+export function invoiceIdOf(event: WebhookEvent): string | null {
+  return event.resource?.invoice?.id ?? event.resource?.id ?? null;
+}
 
 export function parseWebhookEvent(rawBody: string): WebhookEvent | null {
   try {
@@ -65,8 +75,16 @@ export async function processWebhookEvent(event: WebhookEvent): Promise<void> {
   const store = getStore();
   if (await store.isProcessed(event.id)) return;
 
-  if (event.event_type.startsWith(INVOICE_EVENT_PREFIX) && event.resource) {
-    await refreshInvoice(event, event.resource.id);
+  if (event.event_type.startsWith(INVOICE_EVENT_PREFIX)) {
+    const invoiceId = invoiceIdOf(event);
+    if (invoiceId) {
+      await refreshInvoice(event, invoiceId);
+    } else {
+      console.warn("Verified webhook ignored", {
+        eventType: event.event_type,
+        reason: "missing_invoice_id",
+      });
+    }
   }
   await store.markProcessed(event.id);
 }
