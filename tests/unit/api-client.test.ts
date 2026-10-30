@@ -1,12 +1,17 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   ApiClientError,
+  createInvoice,
   exportRegisterCsvUrl,
+  getDemoRecipient,
   getInvoices,
+  getPurposeCodes,
   getReminders,
+  sendInvoiceDraft,
   signIn,
   signOut,
 } from "@/lib/api-client";
+import { extraction } from "@/mocks/fixtures";
 
 const unauthorized = { error: { code: "unauthorized", message: "Enter the demo password." } };
 
@@ -95,6 +100,54 @@ describe("api client", () => {
       }),
     );
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/demo/session", { method: "DELETE" });
+  });
+
+  it("posts a new invoice and a retry of its send", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockImplementation(async () => Response.json({ invoice: { id: "INV2-1" }, sent: true }));
+    vi.stubGlobal("fetch", fetchMock);
+    const requestId = "3f2b8c1e-6a4d-4e8b-9c1a-2d5e7f9a0b1c";
+
+    const draft = { ...extraction.draft, dueOn: "2026-10-30" };
+    await createInvoice({ draft, requestId });
+    await sendInvoiceDraft("INV2-1", requestId);
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/api/invoices",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ draft, requestId }),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/invoices/INV2-1/send",
+      expect.objectContaining({ method: "POST", body: JSON.stringify({ requestId }) }),
+    );
+  });
+
+  it("unwraps the purpose codes and the demo buyer's address", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockImplementation(async (path: string) =>
+          path === "/api/purpose-codes"
+            ? Response.json({ codes: [{ code: "P1099", label: "Other", examples: "" }] })
+            : Response.json({ email: "buyer@personal.example.com" }),
+        ),
+    );
+
+    expect(await getPurposeCodes()).toEqual([{ code: "P1099", label: "Other", examples: "" }]);
+    expect(await getDemoRecipient()).toBe("buyer@personal.example.com");
+  });
+
+  it("reports a missing demo buyer as an error", async () => {
+    const body = { error: { code: "not_found", message: "No demo buyer is set up." } };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json(body, { status: 404 })));
+    await expect(getDemoRecipient()).rejects.toMatchObject({ status: 404, code: "not_found" });
   });
 
   it("builds the CSV download URL", () => {

@@ -3,7 +3,9 @@ import type {
   ActivityResponse,
   ApiError,
   ClientRisk,
+  CreateInvoiceRequest,
   CreateInvoiceResponse,
+  DemoRecipientResponse,
   ExportRegister,
   ExtractResponse,
   HealthResponse,
@@ -17,11 +19,9 @@ import type {
   SendReminderResponse,
   Settings,
   Tone,
-  createInvoiceRequestSchema,
   sendReminderRequestSchema,
 } from "@/types";
 
-export type CreateInvoiceInput = z.infer<typeof createInvoiceRequestSchema>;
 export type SendReminderInput = z.infer<typeof sendReminderRequestSchema>;
 
 export class ApiClientError extends Error {
@@ -103,7 +103,7 @@ export function estimatePayout(amount: Money): Promise<PayoutEstimate> {
   return requestJson("/api/payout-estimate", jsonInit("POST", { amount }));
 }
 
-export function createInvoice(input: CreateInvoiceInput): Promise<CreateInvoiceResponse> {
+export function createInvoice(input: CreateInvoiceRequest): Promise<CreateInvoiceResponse> {
   return requestJson("/api/invoices", jsonInit("POST", input));
 }
 
@@ -147,6 +147,11 @@ export function saveSettings(settings: Settings): Promise<Settings> {
 export async function getPurposeCodes(): Promise<PurposeCodesResponse["codes"]> {
   const { codes } = await requestJson<PurposeCodesResponse>("/api/purpose-codes");
   return codes;
+}
+
+export async function getDemoRecipient(): Promise<DemoRecipientResponse["email"]> {
+  const { email } = await requestJson<DemoRecipientResponse>("/api/demo/recipient");
+  return email;
 }
 
 export function getExportRegister(month: string): Promise<ExportRegister> {
