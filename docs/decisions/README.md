@@ -20,3 +20,4 @@ Copy [0000-template.md](0000-template.md) to start a new one.
 | [0007](0007-fees-and-rates.md)             | Fees and rates                          |
 | [0008](0008-demo-access-and-deployment.md) | Demo access and deployment              |
 | [0009](0009-hosting-on-vercel.md)          | Hosting on Vercel                       |
+| [0010](0010-ai-invoice-drafting.md)        | AI invoice drafting                     |
