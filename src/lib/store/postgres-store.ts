@@ -80,6 +80,16 @@ export function createPostgresStore(sql: Sql): Store {
         where request_id = ${requestId}`;
     },
 
+    async release(requestId, olderThanMs = 0): Promise<boolean> {
+      const released = await sql`
+        delete from idempotency_requests
+        where request_id = ${requestId}
+          and status = 'in_progress'
+          and created_at <= now() - make_interval(secs => ${olderThanMs / 1000})
+        returning request_id`;
+      return released.length > 0;
+    },
+
     async isProcessed(eventId): Promise<boolean> {
       const rows = await sql`select 1 from webhook_events where event_id = ${eventId}`;
       return rows.length > 0;
