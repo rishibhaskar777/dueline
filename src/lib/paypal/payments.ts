@@ -43,6 +43,8 @@ async function fromCapture(captureId: string): Promise<ActualPayout | null> {
     netInr:
       inRupees && breakdown?.receivableAmount ? Number(breakdown.receivableAmount.value) : null,
     source: "paypal_capture",
+    paidAt: result.createTime ?? null,
+    transactionId: captureId,
   };
 }
 
@@ -71,6 +73,8 @@ async function fromTransactionSearch(
     exchangeRate: null,
     netInr: null,
     source: "invoice_payment",
+    paidAt: info?.transactionInitiationDate ?? null,
+    transactionId,
   };
 }
 

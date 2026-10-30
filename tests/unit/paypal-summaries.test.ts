@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { clearInvoiceCaches, findInvoiceByMemo, loadInvoices } from "@/lib/paypal/summaries";
+import { getStore } from "@/lib/store";
 import type { PayPalInvoice } from "@/lib/paypal/types";
 import type { ActualPayout } from "@/types";
 import { stubEnv } from "../support/env";
@@ -27,7 +28,16 @@ const payout: ActualPayout = {
   exchangeRate: 82.85,
   netInr: 35617,
   source: "paypal_capture",
+  paidAt: "2026-10-15T11:42:00Z",
+  transactionId: "5GX12345AB6789012",
 };
+
+// A payout stored before paid times were recorded has no paidAt key.
+function legacyPayout(): ActualPayout {
+  const legacy: Partial<ActualPayout> = { ...payout };
+  delete legacy.paidAt;
+  return legacy as ActualPayout;
+}
 
 function withId(invoice: PayPalInvoice, id: string): PayPalInvoice {
   return { ...invoice, id };
@@ -75,6 +85,14 @@ describe("loadInvoices", () => {
     const [summary] = await summaries();
     expect(summary.work).toBe("Pitch deck design");
     expect(summary.payLink).toBe("https://www.sandbox.paypal.com/invoice/p/#TEST0001");
+  });
+
+  it("carries the invoice's latest payment ID, or none for an unpaid invoice", async () => {
+    serve(withId(paid, "paid"), withId(unpaid, "open"));
+    paypal.getActualPayout.mockResolvedValue(null);
+    const byId = new Map((await loadInvoices()).map((loaded) => [loaded.summary.id, loaded]));
+    expect(byId.get("paid")?.paymentId).toBe("5GX12345AB6789012");
+    expect(byId.get("open")?.paymentId).toBeNull();
   });
 
   it("works out what is still due on a partly paid invoice", async () => {
@@ -182,6 +200,26 @@ describe("loadInvoices", () => {
     expect(first[0].actualPayout).toEqual(payout);
     expect(second[0].actualPayout).toEqual(payout);
     expect(paypal.getActualPayout).toHaveBeenCalledTimes(1);
+  });
+
+  it("reads a stored payout without a paid time from PayPal once more", async () => {
+    serve(withId(paid, "legacy-payout"));
+    await getStore().putActualPayout("legacy-payout", legacyPayout());
+    paypal.getActualPayout.mockResolvedValue(payout);
+
+    expect((await summaries())[0].actualPayout).toEqual(payout);
+    clearInvoiceCaches();
+    serve(withId(paid, "legacy-payout"));
+    expect((await summaries())[0].actualPayout).toEqual(payout);
+    expect(paypal.getActualPayout).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a stored payout without a paid time when PayPal cannot be read again", async () => {
+    serve(withId(paid, "legacy-offline"));
+    await getStore().putActualPayout("legacy-offline", legacyPayout());
+    paypal.getActualPayout.mockResolvedValue(null);
+
+    expect((await summaries())[0].actualPayout).toEqual(legacyPayout());
   });
 
   it("does not ask PayPal again straight away when no payout is available", async () => {

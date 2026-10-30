@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { amountDueOf, toInvoiceSummary } from "@/lib/paypal/map";
+import { LUT_NOTE } from "@/lib/paypal/invoice-body";
+import { amountDueOf, isUnderLut, toInvoiceSummary } from "@/lib/paypal/map";
 import type { PayPalInvoice } from "@/lib/paypal/types";
 import type { ActualPayout } from "@/types";
 import paidFixture from "../fixtures/paypal/invoice-paid.json";
@@ -60,6 +61,41 @@ describe("toInvoiceSummary", () => {
     expect(toInvoiceSummary(paidOn("2026-10-15 11:42:00 +0000"), TODAY, null)?.paidOn).toBe(
       "2026-10-15",
     );
+  });
+
+  it("takes the paid date from the payout's timestamp in India time", () => {
+    // Paid at 01:06 IST on 30 Oct. PayPal's own payment_date says 29 Oct.
+    const payout: ActualPayout = {
+      fee: { currency: "USD", value: "20.10" },
+      net: { currency: "USD", value: "429.90" },
+      exchangeRate: null,
+      netInr: null,
+      source: "paypal_capture",
+      paidAt: "2026-10-29T19:36:37Z",
+      transactionId: "5GX12345AB6789012",
+    };
+    const summary = toInvoiceSummary(paidOn("2026-10-29"), TODAY, payout);
+    expect(summary?.paidOn).toBe("2026-10-30");
+  });
+
+  it("falls back to PayPal's payment date when the payout has no timestamp", () => {
+    const payout: ActualPayout = {
+      fee: { currency: "USD", value: "20.10" },
+      net: { currency: "USD", value: "429.90" },
+      exchangeRate: null,
+      netInr: null,
+      source: "invoice_payment",
+      paidAt: null,
+      transactionId: "5GX12345AB6789012",
+    };
+    expect(toInvoiceSummary(paidOn("2026-10-29"), TODAY, payout)?.paidOn).toBe("2026-10-29");
+  });
+
+  it("finds the LUT line in the invoice note", () => {
+    const note = `Thank you\n${LUT_NOTE}`;
+    expect(isUnderLut({ ...paid, detail: { ...paid.detail, note } })).toBe(true);
+    expect(isUnderLut({ ...paid, detail: { ...paid.detail, note: "Thank you" } })).toBe(false);
+    expect(isUnderLut(paid)).toBe(false);
   });
 
   it("works out the amount still due", () => {
@@ -149,6 +185,8 @@ describe("toInvoiceSummary", () => {
       exchangeRate: null,
       netInr: null,
       source: "invoice_payment",
+      paidAt: null,
+      transactionId: "5GX12345AB6789012",
     };
     expect(toInvoiceSummary(paid, TODAY, payout)?.actualPayout).toBe(payout);
   });

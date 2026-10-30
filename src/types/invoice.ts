@@ -14,6 +14,8 @@ export interface ActualPayout {
   exchangeRate: number | null;
   netInr: number | null;
   source: "paypal_capture" | "invoice_payment";
+  paidAt: string | null;
+  transactionId: string;
 }
 
 export interface InvoiceSummary {
