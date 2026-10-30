@@ -128,3 +128,29 @@
     }
   }
 }
+
+@keyframes due-line-grow {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 -8rem 0 0);
+  }
+}
+
+@keyframes event-arrived {
+  from {
+    background-color: color-mix(in srgb, var(--blue) 14%, transparent);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.due-line-grow {
+  animation: due-line-grow 400ms ease-out;
+}
+
+.event-arrived {
+  animation: event-arrived 2.4s ease-out;
+}

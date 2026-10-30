@@ -22,3 +22,4 @@ Copy [0000-template.md](0000-template.md) to start a new one.
 | [0009](0009-hosting-on-vercel.md)             | Hosting on Vercel                       |
 | [0010](0010-ai-invoice-drafting.md)           | AI invoice drafting                     |
 | [0011](0011-creating-and-sending-invoices.md) | Creating and sending invoices           |
+| [0012](0012-hand-built-due-line.md)           | A hand-built due line                   |
