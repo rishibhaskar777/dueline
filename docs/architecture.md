@@ -4,11 +4,12 @@ Dueline is a Next.js app. Screens are client components that call typed function
 `src/lib/api-client.ts`. Those functions call route handlers under `src/app/api`, and the route
 handlers talk to PayPal, Gemini, Postgres and the exchange-rate service.
 
-`GET /api/health`, `GET /api/invoices`, `GET` and `PUT /api/settings`, `POST /api/payout-estimate`,
-`GET /api/activity`, `POST /api/invoices/extract`, `POST /api/webhooks/paypal` and the demo sign-in
-routes are built. Every other
-route handler still returns sample data and the header `x-dueline-stub: true`. Parts that are not
-built yet are marked **planned**.
+`GET /api/health`, `GET /api/invoices`, `POST /api/invoices`, `POST /api/invoices/{id}/send`,
+`GET /api/settings`, `PUT /api/settings`, `POST /api/payout-estimate`, `GET /api/activity`,
+`POST /api/invoices/extract`, `GET /api/purpose-codes`, `GET /api/demo/recipient`,
+`POST /api/webhooks/paypal` and the demo sign-in routes are built. Every other route handler still
+returns sample data and the header `x-dueline-stub: true`. Parts that are not built yet are marked
+**planned**.
 
 ```mermaid
 flowchart LR
@@ -36,8 +37,13 @@ arithmetic on plain `YYYY-MM-DD` strings. Every due-state and risk calculation u
 
 **`paypal/`** holds the OAuth token, a small typed REST client for Invoicing v2, the Server SDK
 wrappers for payments and transaction search, the actual-payout lookup and the mapping to our
-types. Built. `webhooks.ts` verifies webhook signatures and `webhook-events.ts` processes verified
-events (see Webhooks below).
+types. Built. `invoice-body.ts` is the one place that turns a draft into PayPal's create body.
+`webhooks.ts` verifies webhook signatures and `webhook-events.ts` processes verified events (see
+Webhooks below).
+
+**`invoices/`** holds `createAndSendInvoice` and `sendExistingDraft`, the claim and recovery logic
+around them, the request hash and the errors the routes map. Built. See "Create and send an
+invoice" below and [decision 0011](decisions/0011-creating-and-sending-invoices.md).
 
 **`demo-access/`** holds the signed session token, the password comparison, the cookie settings, the
 safe `next` path and the rule that decides whether access is open, required or misconfigured. It
@@ -134,8 +140,9 @@ reaches the bank and what is lost to fees and conversion. Built.
 AI only fills it; nothing is created or sent.
 
 1. `maskContacts` replaces emails and phone numbers with placeholders.
-2. The SHA-256 of the masked text and today's date is the cache key. A stored model answer for it is
-   used without a model call and counts towards no limit.
+2. The SHA-256 of the system prompt (which holds today's date) and the masked text is the cache key.
+   A stored model answer for it is used without a model call and counts towards no limit, and a
+   change to the prompt makes older answers unusable.
 3. Otherwise the route reserves a call: 10 an hour for the address (first `x-forwarded-for` entry),
    then 400 a day for the app under a key that includes today's date. Over the first is 429
    `rate_limited`, over the second 503 `ai_unavailable`.
@@ -151,7 +158,8 @@ AI only fills it; nothing is created or sent.
 
 ## Create and send an invoice
 
-Planned. Creating and sending are separate steps, and the request ID is ours.
+Creating and sending are separate steps, and the request ID is ours. See
+[decision 0011](decisions/0011-creating-and-sending-invoices.md).
 
 ```mermaid
 sequenceDiagram
@@ -160,28 +168,67 @@ sequenceDiagram
   participant S as Store
   participant P as PayPal
   U->>R: Create invoice (draft, requestId)
-  R->>S: Insert requestId (unique)
-  alt requestId already stored
+  R->>R: Demo guard on the recipient
+  R->>S: Claim requestId with the body hash
+  alt requestId already completed
     S-->>R: Stored result
     R-->>U: Same result, nothing sent to PayPal
+  else claimed by an earlier request
+    R-->>U: 409 duplicate_request (or recovery, see below)
   else new request
-    R->>P: Create draft invoice
+    R->>P: Create draft invoice (memo dueline-request:requestId)
     P-->>R: Draft ID
-    R->>S: Save draft ID
     R->>P: Send invoice
     alt send succeeds
+      R->>P: Read the invoice again
+      R->>S: Store the result
       R-->>U: invoice, sent: true
     else send fails
+      R->>S: Store the result
       R-->>U: invoice, sent: false ("Draft created, not sent")
-      U->>R: Retry send (same draft ID, new requestId)
-      R->>P: Send the same draft
+      U->>R: Retry send (same draft ID, own requestId)
+      R->>P: Send the same draft if it is still a draft
     end
   end
 ```
 
-A repeated `requestId` returns the stored result, so a double click never creates a second invoice.
-If sending fails, the draft ID is already saved, and the retry sends that draft instead of creating
-a new one.
+1. `POST /api/invoices` checks the body with zod, then the due date against `today()` from
+   `clock.ts`, and calls `createAndSendInvoice`.
+2. The claim is keyed on the request ID and carries the SHA-256 of the body with sorted keys. The
+   same ID with another body, or an ID still in progress, is 409 `duplicate_request`.
+3. In demo mode the recipient must end in `@personal.example.com`, otherwise 403
+   `recipient_not_allowed`, before any claim is made. `POST /api/invoices/{id}/send` applies the same
+   check to the draft's recipients before it sends.
+4. `toPayPalInvoice` builds the create body: the purpose code as the reference, the note with the
+   optional LUT line and discount line, the memo `dueline-request:<requestId>`, and PayPal's invoice
+   discount with the earlier due date when a discount is chosen.
+5. A PayPal 4xx on create releases the claim and is 502 `paypal_error`. A timeout keeps the claim and
+   is 504 `paypal_timeout`. A PayPal 5xx also keeps it.
+6. A failed send (a PayPal error or a timeout) returns the draft with `sent: false` and stores that
+   result. A successful send is followed by a fresh read of the invoice, the invoice caches are
+   cleared and the result is stored.
+7. A claim in progress for more than two minutes is taken over by one caller: it finds the invoice
+   by its memo and finishes with it (no second send for an invoice that is already sent), or creates
+   one when there is none.
+
+`POST /api/invoices/{id}/send` claims its own request ID (hashed with the invoice ID), reads the
+invoice, sends it only if it is still a draft, reads it again and stores the result. Any failure
+releases the claim, so the retry starts from PayPal's current state. An unknown ID is 404
+`not_found`.
+
+PayPal has no per-invoice switch for automatic reminders, so they are turned off in the sandbox
+business account's invoicing settings.
+
+## New invoice screen
+
+`/invoices/new` renders `NewInvoice`, which shows the paste step and then the review step. The paste
+step calls `POST /api/invoices/extract`, or opens a blank form. The review step holds the form as
+text fields (`invoice-form.ts` turns them into a request with the same zod schema the server uses),
+loads the purpose codes, today's date and the demo buyer's address, shows the totals and a payout
+estimate 300 ms after typing stops, and sends the request with one request ID for the form's whole
+life. If the server holds a request (`duplicate_request`, `paypal_timeout`) and the user then edits
+the form, a `duplicate_request` answer is replaced by "These details changed after the invoice was
+submitted…" with a "Create another" button that starts over with a new request ID. The result panel offers "Retry sending" with its own request ID for a draft that was not sent.
 
 ## Demo access
 
