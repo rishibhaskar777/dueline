@@ -3,14 +3,11 @@ import { GET as getRisk } from "@/app/api/clients/risk/route";
 import { POST as resetDemo } from "@/app/api/demo/reset/route";
 import { GET as getExportRegister } from "@/app/api/export-register/route";
 import { POST as extract } from "@/app/api/invoices/extract/route";
-import { POST as sendInvoice } from "@/app/api/invoices/[id]/send/route";
-import { POST as createInvoice } from "@/app/api/invoices/route";
-import { GET as getPurposeCodes } from "@/app/api/purpose-codes/route";
 import { POST as draftReminder } from "@/app/api/reminders/draft/route";
 import { GET as getReminders } from "@/app/api/reminders/route";
 import { POST as sendReminder } from "@/app/api/reminders/send/route";
 import { STUB_HEADER } from "@/app/api/_lib/stub";
-import { extraction, invoices } from "@/mocks/fixtures";
+import { invoices } from "@/mocks/fixtures";
 
 const requestId = "3f2b8c1e-6a4d-4e8b-9c1a-2d5e7f9a0b1c";
 const origin = "http://localhost:3000";
@@ -34,16 +31,12 @@ function expectStub(response: Response, status = 200): void {
 
 describe("stub routes", () => {
   it("answers every GET route", async () => {
-    expectStub(await getPurposeCodes());
     expectStub(await getReminders());
     expectStub(await getRisk(get("/api/clients/risk?email=mike@haldencoffee.example")));
     expectStub(await getExportRegister(get("/api/export-register?month=2026-10")));
   });
 
   it("answers every POST route", async () => {
-    expectStub(
-      await createInvoice(json("POST", "/api/invoices", { draft: extraction.draft, requestId })),
-    );
     expectStub(
       await draftReminder(
         json("POST", "/api/reminders/draft", { invoiceId: invoices[1].id, tone: "final" }),
@@ -59,17 +52,6 @@ describe("stub routes", () => {
         }),
       ),
     );
-  });
-
-  it("sends a known draft and reports an unknown one", async () => {
-    const request = () => json("POST", "/api/invoices/x/send", { requestId });
-    const known = await sendInvoice(request(), {
-      params: Promise.resolve({ id: invoices[0].id }),
-    });
-    expectStub(known);
-
-    const unknown = await sendInvoice(request(), { params: Promise.resolve({ id: "missing" }) });
-    expect(unknown.status).toBe(404);
   });
 
   it("returns 204 for the demo reset", async () => {

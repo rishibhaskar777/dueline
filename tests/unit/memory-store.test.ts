@@ -29,6 +29,53 @@ describe("idempotency", () => {
     await store.claim("req-1", "hash-a");
     expect(await store.claim("req-1", "hash-b")).toEqual({ kind: "conflict" });
   });
+
+  describe("releasing a claim", () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(new Date("2026-10-30T00:00:00Z"));
+    });
+
+    afterEach(() => vi.useRealTimers());
+
+    it("frees a request in progress so it can be claimed again, even with another body", async () => {
+      await store.claim("req-1", "hash-a");
+      expect(await store.release("req-1")).toBe(true);
+      expect(await store.claim("req-1", "hash-b")).toEqual({ kind: "new" });
+    });
+
+    it("never releases a completed request", async () => {
+      await store.claim("req-1", "hash-a");
+      await store.complete("req-1", { sent: true });
+      expect(await store.release("req-1")).toBe(false);
+      expect(await store.claim("req-1", "hash-a")).toEqual({
+        kind: "replay",
+        result: { sent: true },
+      });
+    });
+
+    it("releases nothing for an unknown request", async () => {
+      expect(await store.release("req-1")).toBe(false);
+    });
+
+    it("releases a claim only once it is old enough", async () => {
+      await store.claim("req-1", "hash-a");
+      vi.advanceTimersByTime(119_000);
+      expect(await store.release("req-1", 120_000)).toBe(false);
+      expect(await store.claim("req-1", "hash-a")).toEqual({ kind: "in_progress" });
+
+      vi.advanceTimersByTime(1_000);
+      expect(await store.release("req-1", 120_000)).toBe(true);
+    });
+
+    it("lets a released claim be taken over once, by a fresh claim", async () => {
+      await store.claim("req-1", "hash-a");
+      vi.advanceTimersByTime(121_000);
+      expect(await store.release("req-1", 120_000)).toBe(true);
+      expect(await store.claim("req-1", "hash-a")).toEqual({ kind: "new" });
+      expect(await store.release("req-1", 120_000)).toBe(false);
+    });
+  });
 });
 
 describe("webhook events", () => {

@@ -1,6 +1,7 @@
-import { purposeCodes } from "@/mocks/fixtures";
-import { stubOk } from "@/app/api/_lib/stub";
+import { PURPOSE_CODES } from "@/lib/export/purpose-codes";
+import type { PurposeCodesResponse } from "@/types";
+import { ok } from "@/app/api/_lib/respond";
 
 export async function GET(): Promise<Response> {
-  return stubOk({ codes: purposeCodes });
+  return ok<PurposeCodesResponse>({ codes: [...PURPOSE_CODES] });
 }

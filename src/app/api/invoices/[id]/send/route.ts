@@ -1,7 +1,7 @@
-import { invoices } from "@/mocks/fixtures";
-import { sendInvoiceRequestSchema } from "@/types";
-import { fail } from "@/app/api/_lib/respond";
-import { stubOk } from "@/app/api/_lib/stub";
+import { sendExistingDraft } from "@/lib/invoices/create-invoice";
+import { sendInvoiceRequestSchema, type SendInvoiceResponse } from "@/types";
+import { failFromError } from "@/app/api/_lib/errors";
+import { ok } from "@/app/api/_lib/respond";
 import { parseBody } from "@/app/api/_lib/validate";
 
 export async function POST(
@@ -12,7 +12,9 @@ export async function POST(
   const parsed = await parseBody(req, sendInvoiceRequestSchema);
   if (!parsed.ok) return parsed.response;
 
-  const invoice = invoices.find((candidate) => candidate.id === id);
-  if (!invoice) return fail(404, "not_found", "No invoice with that ID exists.");
-  return stubOk({ invoice, sent: true });
+  try {
+    return ok<SendInvoiceResponse>(await sendExistingDraft(id, parsed.data.requestId));
+  } catch (error) {
+    return failFromError(error);
+  }
 }

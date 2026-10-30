@@ -23,6 +23,10 @@ export interface StoredRates {
 export interface Store {
   claim(requestId: string, bodyHash: string): Promise<ClaimResult>;
   complete(requestId: string, result: Json): Promise<void>;
+  // Gives up a claim that is still in progress, so the request ID can be claimed again. With
+  // `olderThanMs` it only does so for a claim at least that old, which lets one caller take over a
+  // request that was abandoned. A completed request is never released. Returns whether it released.
+  release(requestId: string, olderThanMs?: number): Promise<boolean>;
 
   isProcessed(eventId: string): Promise<boolean>;
   markProcessed(eventId: string): Promise<boolean>;

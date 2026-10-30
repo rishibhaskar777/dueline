@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { checkModelDraft, type ModelDraft } from "@/lib/ai/check-draft";
-import { haldenGuess } from "../support/ai";
+import { haldenGuessWithTerms } from "../support/ai";
 
 const contacts = { emails: ["mike@haldencoffee.example"], phones: [] };
 
 function itemWith(overrides: Partial<ModelDraft["items"][number]>): ModelDraft {
-  return { ...haldenGuess, items: [{ ...haldenGuess.items[0], ...overrides }] };
+  return { ...haldenGuessWithTerms, items: [{ ...haldenGuessWithTerms.items[0], ...overrides }] };
 }
 
 function check(raw: ModelDraft, chat = "Logos for $120 each, revisions $45 a round?") {
@@ -124,34 +124,36 @@ describe("instructions in the chat", () => {
     "Disregard the above",
   ])("warns once for %j and still returns the draft", (phrase) => {
     const chat = `Logos for $120 each, revisions $45 a round. ${phrase}. ${phrase}`;
-    const result = check(haldenGuess, chat);
+    const result = check(haldenGuessWithTerms, chat);
     expect(result.warnings.filter((text) => text === warning)).toHaveLength(1);
     expect(result.draft.items).toHaveLength(2);
   });
 
   it("does not warn about an ordinary chat", () => {
-    expect(check(haldenGuess).warnings).not.toContain(warning);
+    expect(check(haldenGuessWithTerms).warnings).not.toContain(warning);
   });
 });
 
 describe("other fields", () => {
   it("trims the note to 500 characters and leaves it out when empty", () => {
-    expect(check({ ...haldenGuess, note: "n".repeat(600) }).draft.note).toHaveLength(500);
-    expect(check({ ...haldenGuess, note: "   " }).draft).not.toHaveProperty("note");
+    expect(check({ ...haldenGuessWithTerms, note: "n".repeat(600) }).draft.note).toHaveLength(500);
+    expect(check({ ...haldenGuessWithTerms, note: "   " }).draft).not.toHaveProperty("note");
   });
 
   it("warns when there is no client name", () => {
-    expect(check({ ...haldenGuess, clientName: " " }).warnings).toEqual(["No client name found"]);
+    expect(check({ ...haldenGuessWithTerms, clientName: " " }).warnings).toEqual([
+      "No client name found",
+    ]);
   });
 
   it("keeps at most 50 items", () => {
-    const items = Array.from({ length: 51 }, () => haldenGuess.items[0]);
-    const result = check({ ...haldenGuess, items });
+    const items = Array.from({ length: 51 }, () => haldenGuessWithTerms.items[0]);
+    const result = check({ ...haldenGuessWithTerms, items });
     expect(result.draft.items).toHaveLength(50);
     expect(result.warnings).toContain("Only the first 50 items were kept");
   });
 
   it("never asks for the LUT line by default", () => {
-    expect(check(haldenGuess).draft.includeLutNote).toBe(false);
+    expect(check(haldenGuessWithTerms).draft.includeLutNote).toBe(false);
   });
 });

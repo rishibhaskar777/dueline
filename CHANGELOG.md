@@ -9,6 +9,11 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The AI draft names the business being billed as the client and writes item names as invoice lines.
+  Stored answers written under the old prompt are no longer reused.
+- A delivery date in a chat is no longer taken as the payment due date: with no payment terms the due date is 14 days from today, with a warning. The discount note now names the same date as the due date.
+- A discount is limited to 1 to 20 percent over 3 to 30 days, and a due date in the past is refused.
+- The store can release a request that is still in progress.
 - The purpose-code list uses the RBI's official labels and adds P1015 and P1017 (checked on 30 Oct
   2026).
 - `engines.node` is `24.x`, so Vercel no longer moves the project to a newer Node.js major version by
@@ -27,6 +32,22 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- New invoice screen: paste a client chat (or start blank), review and correct the draft, see what
+  reaches your bank in rupees, and click "Create and send invoice". A sample chat and a "Send to the
+  demo buyer" button are included. If a held request is edited and sent again, the screen explains
+  that the details changed and offers "Create another".
+- `POST /api/invoices` creates the PayPal draft and sends it, and `POST /api/invoices/{id}/send`
+  retries sending a draft. A repeated request returns the stored result, so a double click or a
+  timeout never creates a second invoice. A send that fails answers "Draft created, not sent". A
+  request left in progress for more than two minutes is resolved by finding the invoice again from
+  its memo.
+- An early-payment discount through PayPal's own invoice discount, with the due date moved to the
+  earlier of the chosen date and the end of the discount window.
+- `GET /api/purpose-codes` returns the real list, and `GET /api/demo/recipient` returns the sandbox
+  buyer's address in demo mode.
+- In demo mode, sending an existing draft is refused unless it is addressed to a sandbox buyer.
+- `paypal_timeout` (504) in the API contract, and decision record 0011.
+- Setup steps for turning off automatic reminders in the sandbox business account.
 - Invoice drafting from a pasted chat: `POST /api/invoices/extract` hides emails and phone numbers,
   asks Gemini for a draft, checks every field in code and returns warnings for anything it could not
   confirm. Limits of 10 extractions an hour per address and 400 model calls a day, a fallback model,

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { clearInvoiceCaches, loadInvoices } from "@/lib/paypal/summaries";
+import { clearInvoiceCaches, findInvoiceByMemo, loadInvoices } from "@/lib/paypal/summaries";
 import type { PayPalInvoice } from "@/lib/paypal/types";
 import type { ActualPayout } from "@/types";
 import { stubEnv } from "../support/env";
@@ -204,5 +204,40 @@ describe("loadInvoices", () => {
     serve(withId(unpaid, "open"));
     await loadInvoices();
     expect(paypal.getActualPayout).not.toHaveBeenCalled();
+  });
+});
+
+describe("findInvoiceByMemo", () => {
+  function withMemo(invoice: PayPalInvoice, id: string, memo: string): PayPalInvoice {
+    return { ...withId(invoice, id), detail: { ...invoice.detail, memo } };
+  }
+
+  beforeEach(() => {
+    stubEnv({ DEMO_TODAY: "2026-10-17" });
+    vi.resetAllMocks();
+    clearInvoiceCaches();
+  });
+
+  it("finds an invoice by the memo only a full read shows, drafts included", async () => {
+    serve(withMemo(unpaid, "other", "dueline-request:aaa"), {
+      ...withMemo(unpaid, "wanted", "dueline-request:bbb"),
+      status: "DRAFT",
+    });
+    expect((await findInvoiceByMemo("dueline-request:bbb"))?.id).toBe("wanted");
+  });
+
+  it("finds nothing when no invoice carries the memo", async () => {
+    serve(withMemo(unpaid, "other", "dueline-request:aaa"));
+    expect(await findInvoiceByMemo("dueline-request:bbb")).toBeUndefined();
+  });
+
+  it("is not answered from the finished list", async () => {
+    serve(withMemo(unpaid, "first", "dueline-request:aaa"));
+    await loadInvoices();
+    serve(
+      withMemo(unpaid, "first", "dueline-request:aaa"),
+      withMemo(unpaid, "second", "dueline-request:bbb"),
+    );
+    expect((await findInvoiceByMemo("dueline-request:bbb"))?.id).toBe("second");
   });
 });

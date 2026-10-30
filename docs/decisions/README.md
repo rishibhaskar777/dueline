@@ -9,15 +9,16 @@ accepted record. If a decision changes, add a new record and mark the old one as
 
 Copy [0000-template.md](0000-template.md) to start a new one.
 
-| Record                                     | Title                                   |
-| ------------------------------------------ | --------------------------------------- |
-| [0001](0001-own-idempotency.md)            | Our own idempotency for create and send |
-| [0002](0002-demo-clock.md)                 | A demo clock                            |
-| [0003](0003-free-tier-hosting.md)          | Free-tier hosting                       |
-| [0004](0004-paypal-integration.md)         | How we integrate with PayPal            |
-| [0005](0005-toolchain.md)                  | Toolchain versions                      |
-| [0006](0006-storage.md)                    | Storage                                 |
-| [0007](0007-fees-and-rates.md)             | Fees and rates                          |
-| [0008](0008-demo-access-and-deployment.md) | Demo access and deployment              |
-| [0009](0009-hosting-on-vercel.md)          | Hosting on Vercel                       |
-| [0010](0010-ai-invoice-drafting.md)        | AI invoice drafting                     |
+| Record                                        | Title                                   |
+| --------------------------------------------- | --------------------------------------- |
+| [0001](0001-own-idempotency.md)               | Our own idempotency for create and send |
+| [0002](0002-demo-clock.md)                    | A demo clock                            |
+| [0003](0003-free-tier-hosting.md)             | Free-tier hosting                       |
+| [0004](0004-paypal-integration.md)            | How we integrate with PayPal            |
+| [0005](0005-toolchain.md)                     | Toolchain versions                      |
+| [0006](0006-storage.md)                       | Storage                                 |
+| [0007](0007-fees-and-rates.md)                | Fees and rates                          |
+| [0008](0008-demo-access-and-deployment.md)    | Demo access and deployment              |
+| [0009](0009-hosting-on-vercel.md)             | Hosting on Vercel                       |
+| [0010](0010-ai-invoice-drafting.md)           | AI invoice drafting                     |
+| [0011](0011-creating-and-sending-invoices.md) | Creating and sending invoices           |

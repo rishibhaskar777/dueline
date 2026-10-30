@@ -38,6 +38,17 @@ describe("postgres store", () => {
     expect(await createPostgresStore(sql).claim("req-1", "hash")).toEqual({ kind: "in_progress" });
   });
 
+  it("releases a request in progress, optionally only once it is old enough", async () => {
+    const { sql, values } = fakeSql([{ request_id: "req-1" }], []);
+    const store = createPostgresStore(sql);
+    expect(await store.release("req-1", 120_000)).toBe(true);
+    expect(await store.release("req-1")).toBe(false);
+    expect(values).toEqual([
+      ["req-1", 120],
+      ["req-1", 0],
+    ]);
+  });
+
   it("processes a webhook event once", async () => {
     const { sql } = fakeSql([{ event_id: "WH-1" }], []);
     const store = createPostgresStore(sql);

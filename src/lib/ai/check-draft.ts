@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { addDays } from "@/lib/clock";
 import { isPurposeCode } from "@/lib/export/purpose-codes";
 import { fromMinorUnits, toMinorUnits } from "@/lib/money/decimal";
 import { unmask, type ContactMap } from "@/lib/privacy/mask";
@@ -36,6 +37,7 @@ interface CheckedDraft {
 }
 
 const DEFAULT_CURRENCY: CurrencyCode = "USD";
+const DEFAULT_TERMS_DAYS = 14;
 const MAX_ITEMS = 50;
 const MAX_NAME_LENGTH = 200;
 const MAX_QUOTE_LENGTH = 500;
@@ -139,8 +141,10 @@ function checkCurrency(raw: string | null, warnings: string[]): CurrencyCode {
 function checkDueOn(raw: string | null, today: string, warnings: string[]): string | null {
   const parsed = z.iso.date().safeParse((raw ?? "").trim());
   if (!parsed.success) {
-    warnings.push("No due date found");
-    return null;
+    warnings.push(
+      `No payment terms in the chat; due date set to ${DEFAULT_TERMS_DAYS} days from today. Change it if needed.`,
+    );
+    return addDays(today, DEFAULT_TERMS_DAYS);
   }
   if (parsed.data < today) {
     warnings.push("Due date is in the past");

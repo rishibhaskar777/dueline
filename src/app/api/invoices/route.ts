@@ -1,13 +1,16 @@
 import { today } from "@/lib/clock";
+import { createAndSendInvoice } from "@/lib/invoices/create-invoice";
 import { payoutInrFor } from "@/lib/money/invoice-payout";
 import { computeTotals } from "@/lib/money/totals";
 import { loadInvoices } from "@/lib/paypal/summaries";
 import { getSettingsAndRates } from "@/lib/settings";
-import { brightwellInvoice } from "@/mocks/fixtures";
-import { createInvoiceRequestSchema, type InvoicesResponse } from "@/types";
+import {
+  createInvoiceRequestSchema,
+  type CreateInvoiceResponse,
+  type InvoicesResponse,
+} from "@/types";
 import { failFromError } from "@/app/api/_lib/errors";
-import { ok } from "@/app/api/_lib/respond";
-import { stubOk } from "@/app/api/_lib/stub";
+import { fail, ok } from "@/app/api/_lib/respond";
 import { parseBody } from "@/app/api/_lib/validate";
 
 export async function GET(): Promise<Response> {
@@ -29,5 +32,14 @@ export async function GET(): Promise<Response> {
 export async function POST(req: Request): Promise<Response> {
   const parsed = await parseBody(req, createInvoiceRequestSchema);
   if (!parsed.ok) return parsed.response;
-  return stubOk({ invoice: brightwellInvoice, sent: true });
+
+  try {
+    const { requestId, ...input } = parsed.data;
+    if (input.draft.dueOn < today()) {
+      return fail(400, "invalid_request", "dueOn must be today or later");
+    }
+    return ok<CreateInvoiceResponse>(await createAndSendInvoice(input, requestId));
+  } catch (error) {
+    return failFromError(error);
+  }
 }

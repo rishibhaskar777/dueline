@@ -1,12 +1,14 @@
 import { addDays, today } from "@/lib/clock";
 import { PayPalApiError } from "@/lib/paypal/errors";
 import { createDraftInvoice, nextInvoiceNumber, sendInvoice } from "@/lib/paypal/invoices";
-import type { PayPalInvoice, PayPalInvoiceInput } from "@/lib/paypal/types";
+import { toPayPalInvoice } from "@/lib/paypal/invoice-body";
+import type { PayPalInvoice } from "@/lib/paypal/types";
+import type { CurrencyCode } from "@/types";
 
 interface SandboxInvoiceSpec {
   clientName: string;
   email: string;
-  currency: string;
+  currency: CurrencyCode;
   amount: string;
   itemName: string;
   reference: string;
@@ -20,38 +22,24 @@ interface SandboxInvoiceResult {
   pastDatesAccepted: boolean;
 }
 
-function buildInvoice(
-  spec: SandboxInvoiceSpec,
-  invoiceNumber: string,
-  dates: { invoiceDate: string; dueDate: string },
-): PayPalInvoiceInput {
-  return {
-    detail: {
-      invoice_number: invoiceNumber,
-      reference: spec.reference,
-      invoice_date: dates.invoiceDate,
-      currency_code: spec.currency,
-      payment_term: { term_type: "DUE_ON_DATE_SPECIFIED", due_date: dates.dueDate },
-    },
-    primary_recipients: [
-      { billing_info: { email_address: spec.email, business_name: spec.clientName } },
-    ],
-    items: [
-      {
-        name: spec.itemName,
-        quantity: "1",
-        unit_amount: { currency_code: spec.currency, value: spec.amount },
-      },
-    ],
-  };
-}
-
 async function createDraft(
   spec: SandboxInvoiceSpec,
   invoiceNumber: string,
   dates: { invoiceDate: string; dueDate: string },
 ): Promise<PayPalInvoice> {
-  return createDraftInvoice(buildInvoice(spec, invoiceNumber, dates), crypto.randomUUID());
+  const requestId = crypto.randomUUID();
+  const body = toPayPalInvoice(
+    {
+      client: { name: spec.clientName, email: spec.email },
+      currency: spec.currency,
+      dueOn: dates.dueDate,
+      items: [{ name: spec.itemName, quantity: 1, unitAmount: spec.amount }],
+      purposeCode: spec.reference || null,
+      includeLutNote: false,
+    },
+    { invoiceNumber, invoiceDate: dates.invoiceDate, requestId },
+  );
+  return createDraftInvoice(body, requestId);
 }
 
 export async function createAndSendSandboxInvoice(

@@ -30,6 +30,10 @@ export interface PurposeCodesResponse {
   codes: PurposeCode[];
 }
 
+export interface DemoRecipientResponse {
+  email: string;
+}
+
 export interface RemindersResponse {
   drafts: ReminderDraft[];
 }

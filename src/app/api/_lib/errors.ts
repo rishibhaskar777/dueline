@@ -1,9 +1,25 @@
 import { ConfigError } from "@/lib/env";
+import {
+  CreateOutcomeUnknownError,
+  DuplicateRequestError,
+  InvoiceNotFoundError,
+  RecipientNotAllowedError,
+} from "@/lib/invoices/errors";
 import { PayPalApiError, PayPalTimeoutError } from "@/lib/paypal/errors";
 import { fail } from "@/app/api/_lib/respond";
 
 export function failFromError(error: unknown): Response {
   if (error instanceof ConfigError) return fail(500, "config_error", error.message);
+  if (error instanceof RecipientNotAllowedError) {
+    return fail(403, "recipient_not_allowed", error.message);
+  }
+  if (error instanceof InvoiceNotFoundError) return fail(404, "not_found", error.message);
+  if (error instanceof DuplicateRequestError) {
+    return fail(409, "duplicate_request", error.message);
+  }
+  if (error instanceof CreateOutcomeUnknownError) {
+    return fail(504, "paypal_timeout", error.message);
+  }
   if (error instanceof PayPalApiError) {
     return fail(502, "paypal_error", `PayPal returned an error: ${error.message}`, error.debugId);
   }

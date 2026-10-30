@@ -3,6 +3,7 @@ import type { ClaimResult, Json, ReminderLogEntry, Store, StoredRates } from "./
 
 interface IdempotencyRecord {
   bodyHash: string;
+  claimedAt: number;
   result?: Json;
 }
 
@@ -21,7 +22,7 @@ export function createMemoryStore(): Store {
     async claim(requestId, bodyHash): Promise<ClaimResult> {
       const existing = requests.get(requestId);
       if (!existing) {
-        requests.set(requestId, { bodyHash });
+        requests.set(requestId, { bodyHash, claimedAt: Date.now() });
         return { kind: "new" };
       }
       if (existing.bodyHash !== bodyHash) return { kind: "conflict" };
@@ -33,6 +34,14 @@ export function createMemoryStore(): Store {
     async complete(requestId, result): Promise<void> {
       const existing = requests.get(requestId);
       if (existing) existing.result = result;
+    },
+
+    async release(requestId, olderThanMs = 0): Promise<boolean> {
+      const existing = requests.get(requestId);
+      if (!existing || existing.result !== undefined) return false;
+      if (Date.now() - existing.claimedAt < olderThanMs) return false;
+      requests.delete(requestId);
+      return true;
     },
 
     async isProcessed(eventId): Promise<boolean> {

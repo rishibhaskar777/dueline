@@ -57,11 +57,13 @@ export const createInvoiceRequestSchema = z.object({
   requestId: requestIdSchema,
   discount: z
     .object({
-      percent: z.number().gt(0).max(100),
-      withinDays: z.number().int().min(1).max(365),
+      percent: z.number().min(1).max(20),
+      withinDays: z.number().int().min(3).max(30),
     })
     .optional(),
 });
+
+export type CreateInvoiceRequest = z.infer<typeof createInvoiceRequestSchema>;
 
 export const sendInvoiceRequestSchema = z.object({ requestId: requestIdSchema });
 
