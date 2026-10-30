@@ -5,7 +5,7 @@ import type { ModelDraft } from "@/lib/ai/check-draft";
 import { ExtractionFailedError, extractInvoiceDraft } from "@/lib/ai/extract-invoice";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
-import { haldenGuess, noObjectError } from "../support/ai";
+import { haldenGuess, haldenGuessWithTerms, noObjectError } from "../support/ai";
 import { stubEnv } from "../support/env";
 
 vi.mock("ai", async (importOriginal) => ({
@@ -16,6 +16,8 @@ vi.mock("ai", async (importOriginal) => ({
 let store: Store;
 vi.mock("@/lib/store", () => ({ getStore: () => store }));
 
+const NO_TERMS_WARNING =
+  "No payment terms in the chat; due date set to 14 days from today. Change it if needed.";
 const haldenChat = readFileSync("tests/fixtures/chats/halden-logos.txt", "utf8");
 
 function modelAnswers(output: ModelDraft): void {
@@ -43,16 +45,16 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe("extractInvoiceDraft", () => {
-  it("turns the Halden chat into a checked draft with no warnings", async () => {
+  it("turns the Halden chat into a checked draft with the 14-day default due date", async () => {
     modelAnswers(haldenGuess);
     const result = await extractInvoiceDraft(haldenChat);
 
-    expect(result.warnings).toEqual([]);
+    expect(result.warnings).toEqual([NO_TERMS_WARNING]);
     expect(result.masked).toEqual({ emails: 1, phones: 0 });
     expect(result.draft).toEqual({
       client: { name: "Halden Coffee Co.", email: "mike@haldencoffee.example" },
       currency: "USD",
-      dueOn: "2026-10-30",
+      dueOn: "2026-11-11",
       items: [
         {
           name: "Logo option",
@@ -75,7 +77,7 @@ describe("extractInvoiceDraft", () => {
 
   it("keeps an item whose quote is not in the chat and warns", async () => {
     modelAnswers({
-      ...haldenGuess,
+      ...haldenGuessWithTerms,
       items: [{ ...haldenGuess.items[0], sourceQuote: "a quote nobody wrote" }],
     });
     const result = await extractInvoiceDraft(haldenChat);
@@ -88,7 +90,7 @@ describe("extractInvoiceDraft", () => {
 
   it("drops an item with quantity 0 and says which", async () => {
     modelAnswers({
-      ...haldenGuess,
+      ...haldenGuessWithTerms,
       items: [{ ...haldenGuess.items[0], quantity: 0 }, haldenGuess.items[1]],
     });
     const result = await extractInvoiceDraft(haldenChat);
@@ -99,7 +101,7 @@ describe("extractInvoiceDraft", () => {
   });
 
   it("sets an unknown currency to USD and warns", async () => {
-    modelAnswers({ ...haldenGuess, currency: "XYZ" });
+    modelAnswers({ ...haldenGuessWithTerms, currency: "XYZ" });
     const result = await extractInvoiceDraft(haldenChat);
     expect(result.draft.currency).toBe("USD");
     expect(result.warnings).toEqual(["Currency not found, set to USD; check it"]);
@@ -112,7 +114,7 @@ describe("extractInvoiceDraft", () => {
     expect(result.draft.purposeReason).toBeUndefined();
   });
 
-  it("clears a due date in the past and one that was not found", async () => {
+  it("clears a due date in the past and defaults one that was not found", async () => {
     modelAnswers({ ...haldenGuess, dueOn: "2026-10-27" });
     const past = await extractInvoiceDraft(haldenChat);
     expect(past.draft.dueOn).toBeNull();
@@ -121,8 +123,8 @@ describe("extractInvoiceDraft", () => {
     store = createMemoryStore();
     modelAnswers({ ...haldenGuess, dueOn: null });
     const missing = await extractInvoiceDraft(haldenChat);
-    expect(missing.draft.dueOn).toBeNull();
-    expect(missing.warnings).toEqual(["No due date found"]);
+    expect(missing.draft.dueOn).toBe("2026-11-11");
+    expect(missing.warnings).toEqual([NO_TERMS_WARNING]);
   });
 
   it("accepts a due date of today", async () => {
@@ -131,7 +133,7 @@ describe("extractInvoiceDraft", () => {
   });
 
   it("ignores an email address the model made up", async () => {
-    modelAnswers({ ...haldenGuess, clientEmail: "billing@invented.example" });
+    modelAnswers({ ...haldenGuessWithTerms, clientEmail: "billing@invented.example" });
     const result = await extractInvoiceDraft(haldenChat);
     expect(result.draft.client.email).toBe("");
     expect(result.warnings).toEqual(["No client email found"]);
@@ -200,6 +202,14 @@ describe("extractInvoiceDraft", () => {
     const { system } = sentToModel();
     expect(system).toContain("2026-10-28");
     expect(system).toContain("P1099 Other services not included elsewhere");
+  });
+
+  it("asks for the billed business as the client and for invoice-style item names", async () => {
+    modelAnswers(haldenGuess);
+    await extractInvoiceDraft(haldenChat);
+    const { system } = sentToModel();
+    expect(system).toContain('For "Mike (Halden Coffee Co.)" write "Halden Coffee Co."');
+    expect(system).toContain('"Logo design (3 options)" or "Revision round"');
   });
 
   it("reuses an identical chat without calling the model or the limit check again", async () => {

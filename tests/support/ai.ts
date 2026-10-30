@@ -23,7 +23,7 @@ export const haldenGuess: ModelDraft = {
   clientName: "Halden Coffee Co.",
   clientEmail: "[EMAIL_1]",
   currency: "USD",
-  dueOn: "2026-10-30",
+  dueOn: null,
   items: [
     {
       name: "Logo option",
@@ -42,3 +42,7 @@ export const haldenGuess: ModelDraft = {
   purposeCode: "P1099",
   purposeReason: "Logo design has no closer match, so it is other services.",
 };
+
+// The Halden chat gives only a delivery date, so the model rightly returns no payment due date.
+// Tests that look at other warnings use this answer, which states payment terms.
+export const haldenGuessWithTerms: ModelDraft = { ...haldenGuess, dueOn: "2026-11-30" };
