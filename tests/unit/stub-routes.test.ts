@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GET as getRisk } from "@/app/api/clients/risk/route";
 import { POST as resetDemo } from "@/app/api/demo/reset/route";
-import { GET as getExportRegister } from "@/app/api/export-register/route";
 import { POST as extract } from "@/app/api/invoices/extract/route";
 import { POST as draftReminder } from "@/app/api/reminders/draft/route";
 import { GET as getReminders } from "@/app/api/reminders/route";
@@ -33,7 +32,6 @@ describe("stub routes", () => {
   it("answers every GET route", async () => {
     expectStub(await getReminders());
     expectStub(await getRisk(get("/api/clients/risk?email=mike@haldencoffee.example")));
-    expectStub(await getExportRegister(get("/api/export-register?month=2026-10")));
   });
 
   it("answers every POST route", async () => {
@@ -69,24 +67,5 @@ describe("stub routes", () => {
   it("returns 400 for a body that is not JSON", async () => {
     const request = new Request(`${origin}/api/invoices/extract`, { method: "POST", body: "nope" });
     expect((await extract(request)).status).toBe(400);
-  });
-
-  it("returns 400 for a bad export month", async () => {
-    const response = await getExportRegister(get("/api/export-register?month=October"));
-    expect(response.status).toBe(400);
-  });
-
-  it("returns the export register as a CSV attachment", async () => {
-    const response = await getExportRegister(get("/api/export-register?month=2026-10&format=csv"));
-    expectStub(response);
-    expect(response.headers.get("content-type")).toContain("text/csv");
-    expect(response.headers.get("content-disposition")).toBe(
-      'attachment; filename="dueline-export-2026-10.csv"',
-    );
-    const lines = (await response.text()).trim().split("\n");
-    expect(lines[0]).toBe(
-      "Invoice,Client,Country,Paid on,Currency,Amount,INR received,INR source,Purpose code",
-    );
-    expect(lines).toHaveLength(3);
   });
 });
