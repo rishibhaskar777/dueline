@@ -1,3 +1,4 @@
+import { engagements } from "@/lib/demo/story";
 import {
   DEFAULT_SETTINGS,
   type ClientRisk,
@@ -17,12 +18,12 @@ export const brightwellInvoice: InvoiceSummary = {
   id: "INV2-BRTW-0043-A1B2-C3D4",
   number: "INV-0043",
   client: {
-    name: "Brightwell Labs",
+    name: engagements.brightwellLanding.clientName,
     email: "accounts@brightwell.example.com",
     location: "London, United Kingdom",
   },
-  work: "Landing page UI",
-  amount: { currency: "GBP", value: "600.00" },
+  work: engagements.brightwellLanding.work,
+  amount: engagements.brightwellLanding.amount,
   issuedOn: "2026-09-28",
   dueOn: "2026-10-12",
   paidOn: null,
@@ -31,7 +32,7 @@ export const brightwellInvoice: InvoiceSummary = {
   daysLate: 5,
   payoutInr: 64519,
   actualPayout: null,
-  purposeCode: "P1099",
+  purposeCode: engagements.brightwellLanding.purposeCode,
   payLink: "https://www.sandbox.paypal.com/invoice/p/#BRTW0043",
   riskLevel: "watch",
 };
@@ -40,12 +41,12 @@ export const okaforInvoice: InvoiceSummary = {
   id: "INV2-OKRZ-0044-E5F6-G7H8",
   number: "INV-0044",
   client: {
-    name: "Okafor & Reyes",
+    name: engagements.okaforGuidelines.clientName,
     email: "accounts@okaforreyes.example.com",
     location: "Lisbon, Portugal",
   },
-  work: "Brand guidelines",
-  amount: { currency: "EUR", value: "720.00" },
+  work: engagements.okaforGuidelines.work,
+  amount: engagements.okaforGuidelines.amount,
   issuedOn: "2026-10-01",
   dueOn: "2026-10-10",
   paidOn: null,
@@ -54,7 +55,7 @@ export const okaforInvoice: InvoiceSummary = {
   daysLate: 7,
   payoutInr: 68068,
   actualPayout: null,
-  purposeCode: "P1099",
+  purposeCode: engagements.okaforGuidelines.purposeCode,
   payLink: "https://www.sandbox.paypal.com/invoice/p/#OKRZ0044",
   riskLevel: "late_payer",
 };
@@ -63,12 +64,12 @@ export const northpineInvoice: InvoiceSummary = {
   id: "INV2-NPST-0045-J9K1-L2M3",
   number: "INV-0045",
   client: {
-    name: "Northpine Studio",
+    name: engagements.northpineKit.clientName,
     email: "billing@northpine.example.com",
     location: "Toronto, Canada",
   },
-  work: "Social media kit",
-  amount: { currency: "CAD", value: "380.00" },
+  work: engagements.northpineKit.work,
+  amount: engagements.northpineKit.amount,
   issuedOn: "2026-10-06",
   dueOn: "2026-10-20",
   paidOn: null,
@@ -77,7 +78,7 @@ export const northpineInvoice: InvoiceSummary = {
   daysLate: 0,
   payoutInr: 22182,
   actualPayout: null,
-  purposeCode: "P1007",
+  purposeCode: engagements.northpineKit.purposeCode,
   payLink: "https://www.sandbox.paypal.com/invoice/p/#NPST0045",
   riskLevel: "watch",
 };
@@ -86,12 +87,12 @@ export const tandemInvoice: InvoiceSummary = {
   id: "INV2-TNDM-0046-N4P5-Q6R7",
   number: "INV-0046",
   client: {
-    name: "Tandem Health",
+    name: engagements.tandemDeck.clientName,
     email: "finance@tandemhealth.example.com",
     location: "Boston, United States",
   },
-  work: "Pitch deck design",
-  amount: { currency: "USD", value: "900.00" },
+  work: engagements.tandemDeck.work,
+  amount: engagements.tandemDeck.amount,
   issuedOn: "2026-10-09",
   dueOn: "2026-10-30",
   paidOn: null,
@@ -100,7 +101,7 @@ export const tandemInvoice: InvoiceSummary = {
   daysLate: 0,
   payoutInr: 73418,
   actualPayout: null,
-  purposeCode: "P1099",
+  purposeCode: engagements.tandemDeck.purposeCode,
   payLink: "https://www.sandbox.paypal.com/invoice/p/#TNDM0046",
   riskLevel: null,
 };
@@ -140,12 +141,12 @@ export const haldenMenuInvoice: InvoiceSummary = {
   id: "INV2-HLDN-0041-W3X4-Y5Z6",
   number: "INV-0041",
   client: {
-    name: "Halden Coffee Co.",
+    name: engagements.haldenMenu.clientName,
     email: "mike@haldencoffee.example",
     location: "Austin, United States",
   },
-  work: "Menu redesign",
-  amount: { currency: "USD", value: "280.00" },
+  work: engagements.haldenMenu.work,
+  amount: engagements.haldenMenu.amount,
   issuedOn: "2026-09-29",
   dueOn: "2026-10-08",
   paidOn: "2026-10-07",
@@ -154,7 +155,7 @@ export const haldenMenuInvoice: InvoiceSummary = {
   daysLate: 0,
   payoutInr: 22824,
   actualPayout: null,
-  purposeCode: "P1099",
+  purposeCode: engagements.haldenMenu.purposeCode,
   payLink: "https://www.sandbox.paypal.com/invoice/p/#HLDN0041",
   riskLevel: "reliable",
 };
@@ -319,6 +320,7 @@ export const exportRegister: ExportRegister = {
   paypalInr: 35617,
   estimatedInr: 22824,
   missingPurposeCodes: 0,
+  recordedOutsidePayPal: [],
 };
 
 export const health: HealthResponse = {
