@@ -52,3 +52,22 @@ The story needs `SANDBOX_BUYER_EMAIL`. A sandbox seeded by the earlier `npm run 
 invoices without memos: reset cancels the open ones as "not part of the story" and creates the new
 set, while running `npm run seed` alone would add the story beside them. Seeding is sequential
 (PayPal hands out invoice numbers in order), so a full first run takes tens of seconds.
+
+## Update: the 30-minute rule and the demo tools page
+
+**Reset leaves a new invoice alone.** Judges share one sandbox, and a reset by one of them would
+cancel an invoice another is creating. A reset now skips any invoice or draft whose PayPal
+`create_time` is less than 30 minutes old, or missing, and says how many it kept. A stale invoice from an earlier
+session is still cleared; an invoice made within the window waits for the next reset.
+
+**The reset button has its own page.** The Demo card moves from Fees and rates to `/demo-tools`,
+linked from the sidebar only in demo mode and protected by the demo cookie like the other screens.
+Outside demo mode the page explains that the tools are for demo mode only.
+
+**The story's activity is dated by the story.** Webhooks for the seeded invoices arrive when they are
+seeded, but the invoices stand for older work, so their "sent" and "paid" events take the invoice
+date and the payment date (never later than the time PayPal reported).
+
+**Reminders and the shared account.** PayPal allows two reminders a day for the whole sandbox
+account. Dueline reports `remindersLeftToday` from its own log and from the last PayPal 429, and
+Nudges disables sending with a banner until the India day changes; drafting keeps working.

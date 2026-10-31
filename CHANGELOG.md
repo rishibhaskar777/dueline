@@ -7,6 +7,41 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- One rupee figure per payment. A paid invoice's rupees are PayPal's own figure when reported,
+  otherwise PayPal's net at the ECB rate of the payment date less the markup, in Receivables, the
+  invoice panel, the due line tooltip and the export register alike. The panel names the rate
+  ("ECB rate of 30 Oct 2026"). `InvoiceSummary` gains `payoutSource` and `rateDate`.
+- A payment recorded outside PayPal has no PayPal fee or markup: its rupees are its amount at the ECB
+  rate of the payment date, tagged "outside PayPal", and the table and panel say "Paid outside
+  PayPal". `Totals.paidThisMonthInr` is replaced by `paidThisMonthPayPalInr` and
+  `paidThisMonthOutsideInr`; the "Paid this month" tile adds "plus ₹X recorded outside PayPal".
+- The export register hides a rupee part that is zero, cites PayPal's monthly digital FIRA with a
+  "Learn more" link, and puts the CA's columns first (purpose code shows the code, with its
+  description in a tooltip).
+- The receivables table fits a laptop: work, issue date and purpose code moved into the invoice panel
+  (still searchable), and the activity feed sits beside the table only on very wide screens.
+- Reminder tone follows the client's record: a late payer is chased one step firmer, and the card
+  says why. Risk readings based on fewer than 4 invoices say so.
+- Invoices belong to one client when the business name matches or, outside demo mode, the email does,
+  so a client with a new email keeps their history.
+- The purpose code is kept in the invoice's private memo instead of the reference field the client
+  sees as "Reference no."; older invoices are still read.
+- The activity feed dates the demo story by its own dates, and shows a date for anything a week old.
+- The due line shows the last 60 days and the next 21 with "Show older", keeps the "Today" label and
+  status text clear of other labels, says "Paid N days late" in the late colour, and uses 12 px text
+  at least.
+- Demo safety: reset leaves invoices created in the last 30 minutes alone and says how many; when
+  PayPal's two reminders a day are used up Nudges says so and disables sending; the reset button
+  moved from Fees and rates to a "Demo tools" page that appears in the sidebar in demo mode only.
+- `GET /api/reminders` returns `remindersLeftToday`, and `POST /api/demo/reset` returns `kept`.
+
+### Fixed
+
+- The new invoice review screen no longer builds its purpose code list and client reading anew on
+  every render.
+
 ### Added
 
 - A rich, repeatable demo story. `npm run seed` now builds eight sandbox invoices for five clients,

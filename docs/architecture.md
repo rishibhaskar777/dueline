@@ -112,11 +112,22 @@ small cache of JSON values with an expiry. Built. See [decision 0006](decisions/
 
 `GET /api/invoices` lists the invoices in PayPal, drops drafts and cancelled invoices, reads each
 one in full (PayPal's list leaves out items and the payer link), adds PayPal's own payout figures
-for paid ones and maps each to an `InvoiceSummary`. The route then fills `payoutInr` from the
-settings and the rates in use: PayPal's rupees when reported, PayPal's net converted at the
-estimated rate for a paid invoice, and the estimate for the amount still due for an unpaid one. It
-sorts newest first and totals the rupees. PayPal is the source of truth; the store only caches
-payout figures.
+for paid ones and maps each to an `InvoiceSummary`. The route then fills `payoutInr`,
+`payoutSource` and `rateDate` through `resolvePayouts` (`payouts/resolve-payouts.ts`), which the
+export register calls as well, so one payment has one rupee figure. `payoutFor` in
+`money/invoice-payout.ts` holds the rule: a paid invoice is PayPal's `netInr` when reported, else
+PayPal's net (or the estimate when PayPal gave no figures) converted at the ECB rate of the payment
+date less the markup; an invoice marked as paid outside PayPal is its amount at the ECB rate of the
+payment date with no fee and no markup; an unpaid invoice is the estimate for the amount still due
+at today's rate. Rates for past dates come from `getRatesOn`, one request per distinct date. The
+route sorts newest first and totals the rupees, keeping what was paid outside PayPal apart from
+what PayPal paid. PayPal is the source of truth; the store only caches payout figures. See
+[decision 0013](decisions/0013-export-register.md).
+
+The purpose code is kept in the invoice's private memo, next to the marker that finds the invoice
+again (`dueline-request:<id> purpose:P1007`, `paypal/memo.ts`), so the client does not see it as
+"Reference no.". `toInvoiceSummary` reads the memo first and falls back to the reference field of
+older invoices.
 
 Two caches keep the receivables page, which polls every 10 seconds, from calling PayPal each time.
 Both are per process:
@@ -164,10 +175,9 @@ that are paid or marked as paid and whose `paidOn`, the India date, is in the mo
 invoice is left out. An invoice marked as paid outside PayPal is not a row and not in any total; its
 number goes into `recordedOutsidePayPal`, which the screen shows under the table and the CSV adds
 after the rows. Each becomes a row: the foreign amount, PayPal's fee, net and transaction ID when
-PayPal's figures were found, and the rupees. The rupees are PayPal's `netInr` rounded to whole rupees
-when it reports one. Otherwise they are worked out at the ECB rate of the paid date from `getRatesOn`
-(PayPal's net when known, the estimate from the published fees when not) less the settings' markup,
-and the row carries the rate and its date. One rate is asked for per distinct date. Rows are sorted by
+PayPal's figures were found, and the rupees, which come from `resolvePayouts` like the receivables
+screen's (PayPal's `netInr` rounded to whole rupees, else the rate of the paid date less the
+markup; the row carries the rate and its date). Rows are sorted by
 paid date then invoice number, and the totals (rupees, PayPal's share, the estimated share, foreign
 totals per currency, rows without a purpose code) are summed in integer units. `underLut` is true
 when the invoice note contains `LUT_NOTE` from `invoice-body.ts`.
@@ -181,9 +191,12 @@ carriage return. See [decision 0013](decisions/0013-export-register.md).
 current month, then loads the register for the chosen month. The month picker has previous and next
 buttons (next is disabled for the current month) and a month input. The screen shows summary tiles
 (invoices paid, rupees with PayPal's and the estimated share, foreign totals, and a warning tile when
-purpose codes are missing), an AG Grid table in the receivables theme (the theme lives in
-`components/grid/ag-grid.ts`, and `SourceTag` in `components/shared/` marks "PayPal" or "est." rupees), a "Download CSV for
-your CA" link, and a short explainer. A loading skeleton, an empty-month panel and an error panel
+purpose codes are missing; a part of the rupee split that is zero is not named), an AG Grid table
+in the receivables theme (the theme lives in `components/grid/ag-grid.ts`, and `SourceTag` in
+`components/shared/` marks "PayPal" or "est." rupees) with the CA's columns first (paid on, invoice,
+client, amount, rupees, purpose code, LUT, transaction ID) and the fee and net after them, a
+"Download CSV for your CA" link, and an explainer that cites PayPal's monthly digital FIRA with a
+"Learn more" link. A loading skeleton, an empty-month panel and an error panel
 with PayPal's debug ID stand in for the content.
 
 ## Fees and rates screen
@@ -260,8 +273,8 @@ sequenceDiagram
 3. In demo mode the recipient must end in `@personal.example.com`, otherwise 403
    `recipient_not_allowed`, before any claim is made. `POST /api/invoices/{id}/send` applies the same
    check to the draft's recipients before it sends.
-4. `toPayPalInvoice` builds the create body: the purpose code as the reference, the note with the
-   optional LUT line and discount line, the memo `dueline-request:<requestId>`, and PayPal's invoice
+4. `toPayPalInvoice` builds the create body: the note with the optional LUT line and discount
+   line, the memo `dueline-request:<requestId>` with the purpose code after it, and PayPal's invoice
    discount with the earlier due date when a discount is chosen.
 5. A PayPal 4xx on create releases the claim and is 502 `paypal_error`. A timeout keeps the claim and
    is 504 `paypal_timeout`. A PayPal 5xx also keeps it.
@@ -295,7 +308,7 @@ submitted…" with a "Create another" button that starts over with a new request
 
 `/receivables` renders a server component with the header and a "New invoice" link, and one client
 component, `Receivables`. It shows, top to bottom: the totals strip, the due line, and the invoice
-table beside the activity feed (stacked on narrow screens). A loading skeleton of the same size,
+table beside the activity feed (stacked below 1536 px, so the table has the full width at laptop sizes). A loading skeleton of the same size,
 an empty panel with "Create your first invoice" and an error panel with "Try again" stand in for
 them. When data is already on screen and a refresh fails, the old data stays with a "Couldn't
 refresh" note.
@@ -309,11 +322,16 @@ data, keeps it when a refresh fails (the error and PayPal's `debugId` are kept a
 finds events that arrived since the previous refresh. Those are highlighted in the feed and
 announced in an `aria-live` region.
 
-**The due line.** `DueLineChart` draws one row per invoice, newest issued first, 12 rows until
-"Show all" is chosen, as hand-built SVG (see [decision 0012](decisions/0012-hand-built-due-line.md)).
-`due-line-layout.ts` holds the maths and no React: the axis runs from the earliest date shown to the
-latest of the due, paid and today dates plus 3 days, with a tick every 7 days, and every position
-is a fraction of the axis. A paid invoice is a line from issued to paid in the paid colour, with
+**The due line.** `DueLineChart` draws one row per invoice, newest issued first, as hand-built SVG
+(see [decision 0012](decisions/0012-hand-built-due-line.md)). The default view shows the last 60
+days and up to 21 days ahead; a paid invoice that ended before that is behind "Show older", and an
+unpaid invoice is always shown. `due-line-layout.ts` holds the maths and no React: the axis runs
+from the earliest date shown (not before the window) to the latest of the due, paid and today dates
+plus 3 days (not beyond 21 days ahead), with a tick every 7 days, and every position is a fraction
+of the axis. A week label within 24 px of the "Today" label is left out, the status text starts
+after whichever is further right, the line's end or its due tick, and a paid-late line says "Paid N
+days late" in the late colour. A row whose client name appears twice shows the invoice number
+under it. Chart text is at least 12 px. A paid invoice is a line from issued to paid in the paid colour, with
 the part after the due date in the late colour when it was paid late. An unpaid invoice runs to
 today: blue up to the due date and late after it, or the due-soon colour when it is due within 3
 days. A tick marks the due date; a filled dot ends a paid line and an open dot marks today. Every
@@ -321,26 +339,31 @@ row says its state in words, is focusable, and opens the invoice panel on Enter 
 
 **Shared pieces.** `components/shared/` holds what both data screens use: `LoadFailure` and
 `toLoadError` (the error panel and the error shape), `SkeletonBlock`, `StatTile` and `SourceTag`.
-`components/grid/` holds only the AG Grid theme. A rupee figure is tagged "PayPal" only when PayPal
-reported the rupees (`rupeesFromPayPal`); a figure worked out from PayPal's net at the ECB rate is
-tagged "est.".
+`components/grid/` holds only the AG Grid theme. A rupee figure is tagged by its `payoutSource`:
+"PayPal" when PayPal reported the rupees, "est." when they were worked out at an ECB rate, and
+"outside PayPal" for a payment recorded elsewhere. `RiskReason` adds "Based on N invoices." to a
+risk reason when N is below 4.
 
 **The table.** `InvoiceTable` is an AG Grid (modules registered once in `components/grid/ag-grid.ts`, themed with
 the Theming API). `invoice-table-model.ts` holds the status filters and counts and the default order
-(overdue by most days late, then due soon, then other unpaid by due date, then paid, latest first). The search box is AG Grid's quick filter.
+(overdue by most days late, then due soon, then other unpaid by due date, then paid, latest first). The search box is AG Grid's quick filter, which also reads the hidden work, issue date and purpose code columns. At 1366 px and wider the visible columns (invoice, client, amount, to your bank, due, status, days late, the open link) fit without scrolling; below that the grid scrolls with the invoice column pinned.
 
-**The invoice panel.** A row opens a dialog. An unpaid invoice shows the estimate in rupees and the
-payer link. A paid invoice with PayPal's figures calls `POST /api/payout-estimate` for the invoice
+**The invoice panel.** A row opens a dialog with the work, the dates and the purpose code. An unpaid
+invoice shows the estimate in rupees and the payer link. An invoice paid outside PayPal shows its
+rupees at the ECB rate of the payment date and says no PayPal fee or markup applies. A paid invoice with PayPal's figures calls `POST /api/payout-estimate` for the invoice
 amount and sets the estimate (published fees) beside PayPal's actual fee, amount after fee and
 rupees, with the difference in words. When PayPal reported no exchange rate, the panel says the
-conversion is reported at withdrawal and the rupees use the ECB rate less PayPal's markup.
+conversion is reported at withdrawal and the rupees use the ECB rate of the payment date (shown as
+"ECB rate of 30 Oct 2026", from `rateDate`) less PayPal's markup.
 
 ## Late-payer radar
 
 `GET /api/clients/risk?email=&name=` filters the cached invoice list (`loadInvoices`) to the client
-(email, and name when given, compared after trimming, collapsing spaces and ignoring case) and calls
+(`isSameClient`: the business name, compared after trimming, collapsing spaces and ignoring case, or
+outside demo mode the email as well; in demo mode the shared sandbox email is ignored) and calls
 `scoreClient`. Only paid and overdue invoices are considered. `GET /api/invoices` also tags each
-invoice with `riskLevel` from `riskByClient`, which is `null` for a client with nothing to judge. The
+invoice with `riskLevel` from `riskLevelsById`, which has no entry for a client with nothing to judge.
+See [decision 0014](decisions/0014-late-payer-radar-and-nudges.md). The
 reason sentence is built by code from the numbers.
 
 On the review screen `RiskRadar` shows the reading above the discount section: for a client on watch
@@ -383,7 +406,11 @@ sequenceDiagram
 
 1. `GET /api/reminders` takes the invoices with PayPal status SENT, UNPAID or PARTIALLY_PAID that
    are overdue, most days late first (at most 10), and drafts each in its suggested tone
-   (`suggestTone` from the days late and the reminders already sent), two model calls at a time.
+   (`suggestTone` from the days late and the reminders already sent, one step firmer for a client
+   who is a late payer), two model calls at a time. The response also carries `remindersLeftToday`
+   (`reminders/daily-limit.ts`): PayPal's two a day less the reminders in the store's log since
+   India midnight, and 0 for the rest of that day once PayPal has answered 429 (the answer is
+   remembered in the store's cache). The send route applies the same count before calling PayPal.
 2. `draftReminderText` first looks in the store's cache (24 hours, keyed by invoice, tone, days late
    and the prompt version). Otherwise it reserves a call (the app's 400 a day; for
    `POST /api/reminders/draft` also 20 an hour per address) and asks `runWithFallback` for a
@@ -413,7 +440,8 @@ sequenceDiagram
 (`NudgeCard`) shows the client with a risk badge and reason, the invoice, the amount, the due date,
 the days late and the reminders already sent; a tone switch with the suggested tone marked; the
 editable subject and message with a note saying whether the AI or a template wrote it; and "Send
-reminder through PayPal". Switching tone calls `POST /api/reminders/draft`; when the subject or message was edited, the card
+reminder through PayPal" (disabled with a calm banner when no PayPal reminders are left today; drafting still works).
+When a late payer's record made the suggestion firmer, the card says "Suggested firm because Okafor & Reyes is a late payer." Switching tone calls `POST /api/reminders/draft`; when the subject or message was edited, the card
 first asks "Replace your edits with a Firm draft?" with "Replace" and "Keep editing", and nothing is
 drafted until the user chooses. Each draft gets its own request ID, so a retry never sends twice. After a send the card is closed for the day. Without
 overdue invoices the screen reads "No late invoices. Nothing to chase today." The sidebar shows no
@@ -433,13 +461,21 @@ outside PayPal has no actual payout (`getActualPayout` skips it), so its rupees 
 
 `POST /api/demo/reset` calls `resetDemo` in `reset.ts`: in demo mode only, it claims the single
 ten-minute slot in the store, cancels the sent or unpaid invoices that are not in the story, deletes
-drafts, runs `seedDemo`, clears the invoice caches and returns the counts. The Settings screen's
-"Demo" card (`DemoCard`) shows only when `GET /api/demo/recipient` succeeds, asks for confirmation
-inline and shows the result line. See [decision 0015](decisions/0015-demo-story-and-reset.md).
+drafts, runs `seedDemo`, clears the invoice caches and returns the counts. An invoice created in
+the last 30 minutes (PayPal's `create_time`) (or one whose creation time PayPal did not report) is never cancelled or deleted and is counted in `kept`,
+so a judge in the middle of an invoice does not lose it to another judge's reset. The "Demo" card
+(`DemoCard`) lives on its own page, `/demo-tools`, which the sidebar links to only when `GET
+/api/demo/recipient` succeeds (`useDemoMode`); it asks for confirmation inline and shows the result
+line.
+
+The story invoices' webhook events are dated by the story: a "sent" event at the invoice date and a
+"paid" event at the payment date (09:00 India time, never after the time PayPal reported), so the
+activity feed does not show eight months of history as having happened at the moment of seeding.
+The feed shows a date instead of "N days ago" for anything a week old or more. See [decision 0015](decisions/0015-demo-story-and-reset.md).
 
 ## Demo access
 
-`src/proxy.ts` runs before every route in its matcher (the API and the five app screens). The
+`src/proxy.ts` runs before every route in its matcher (the API and the six app screens). The
 landing page, the sign-in page and static files are not in the matcher. It lets `GET /api/health`,
 `POST /api/webhooks/paypal` and `/api/demo/session` through, and otherwise checks the
 `dueline_demo` cookie against `SESSION_SECRET`. It makes no database or PayPal call. Without a valid

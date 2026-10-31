@@ -69,3 +69,20 @@ client invoiced under two spellings is two clients. Every nudges screen load rea
 (cached for 20 seconds) and may call the model up to ten times, two at a time; repeat loads are
 served from the cache. A reminder that PayPal refuses for its daily limit can be sent again the next
 day.
+
+## Update: tone follows the client's record, and clients are matched by name or email
+
+**A late payer is chased one step firmer.** `suggestTone` takes the client's risk level: `late_payer`
+moves the suggestion up one step (gentle to firm, firm to final); `watch` and `reliable` leave it.
+The user can still pick any tone, and the card says why the suggestion is firmer ("Suggested firm
+because Okafor & Reyes is a late payer.") so the rule is never hidden.
+
+**Few invoices say little.** The screens add "Based on N invoices." to the reason when N is below 4,
+because one more late payment could change the reading.
+
+**Who is the same client.** Matching on the pair (name, email) split a client who changed their
+billing email into two, so a pasted chat for "Brightwell Labs" with a new address showed no history.
+Invoices now belong to one client when the normalised business name matches **or** the email
+matches. In demo mode every client shares one sandbox buyer email, so only the name counts there.
+Without a `name` in the query the email decides, as before. This also means the same business under
+two spellings is still two clients; the email joins them outside the demo.
