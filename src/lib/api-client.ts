@@ -2,7 +2,13 @@ import type {
   ActivityResponse,
   AnnualSummary,
   ApiError,
+  CancelInvoiceResponse,
+  ClientDetail,
+  ClientNotesResponse,
   ClientRisk,
+  ClientSummary,
+  ClientsResponse,
+  DashboardResponse,
   CreateInvoiceRequest,
   CreateInvoiceResponse,
   DemoRecipientResponse,
@@ -10,12 +16,15 @@ import type {
   ExportRegister,
   ExtractResponse,
   HealthResponse,
+  InvoiceDetailResponse,
   InvoicesResponse,
   Money,
+  PaymentMethod,
   PayoutEstimate,
   Profile,
   PurposeCodesResponse,
   ReminderDraft,
+  RecordPaymentResponse,
   RemindersResponse,
   SendInvoiceResponse,
   SendReminderRequest,
@@ -112,6 +121,51 @@ export function sendInvoiceDraft(id: string, requestId: string): Promise<SendInv
     `/api/invoices/${encodeURIComponent(id)}/send`,
     jsonInit("POST", { requestId }),
   );
+}
+
+export function getInvoiceDetail(id: string): Promise<InvoiceDetailResponse> {
+  return requestJson(`/api/invoices/${encodeURIComponent(id)}`);
+}
+
+export function cancelInvoice(
+  id: string,
+  input: { requestId: string; notifyClient: boolean },
+): Promise<CancelInvoiceResponse> {
+  return requestJson(`/api/invoices/${encodeURIComponent(id)}/cancel`, jsonInit("POST", input));
+}
+
+export function recordPayment(
+  id: string,
+  input: { requestId: string; method: PaymentMethod; paidOn: string; note?: string },
+): Promise<RecordPaymentResponse> {
+  return requestJson(
+    `/api/invoices/${encodeURIComponent(id)}/record-payment`,
+    jsonInit("POST", input),
+  );
+}
+
+export function getDashboard(): Promise<DashboardResponse> {
+  return requestJson("/api/dashboard");
+}
+
+export async function getClients(): Promise<ClientSummary[]> {
+  const { clients } = await requestJson<ClientsResponse>("/api/clients");
+  return clients;
+}
+
+export function getClientDetail(key: string): Promise<ClientDetail> {
+  return requestJson(`/api/clients/by-key/${encodeURIComponent(key)}`);
+}
+
+export async function saveClientNotes(
+  key: string,
+  notes: string,
+): Promise<ClientNotesResponse["notes"]> {
+  const saved = await requestJson<ClientNotesResponse>(
+    `/api/clients/by-key/${encodeURIComponent(key)}/notes`,
+    jsonInit("PUT", { notes }),
+  );
+  return saved.notes;
 }
 
 export function getClientRisk(email: string, name?: string): Promise<ClientRisk> {

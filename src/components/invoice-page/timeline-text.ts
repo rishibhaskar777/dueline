@@ -1,0 +1,24 @@
+import { formatDate, formatTimestamp } from "@/lib/format-date";
+import type { TimelineEvent } from "@/types";
+
+export function describeTimelineEvent(event: TimelineEvent): string {
+  switch (event.kind) {
+    case "created":
+      return "Invoice created";
+    case "sent":
+      return "Sent to your client";
+    case "viewed":
+      return "Your client viewed the invoice";
+    case "reminder":
+      return event.tone ? `Reminder sent (${event.tone} tone)` : "Reminder sent";
+    case "paid":
+      return event.via === "outside_paypal" ? "Paid outside PayPal" : "Paid through PayPal";
+    case "cancelled":
+      return "Invoice cancelled";
+  }
+}
+
+// PayPal sometimes gives only a date, and then no time is shown.
+export function timelineWhen(at: string): string {
+  return /^\d{4}-\d{2}-\d{2}$/.test(at) ? formatDate(at) : formatTimestamp(at);
+}

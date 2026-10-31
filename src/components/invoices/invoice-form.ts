@@ -3,6 +3,7 @@ import {
   createInvoiceRequestSchema,
   type CreateInvoiceRequest,
   type CurrencyCode,
+  type InvoiceDetailResponse,
   type InvoiceDraft,
   type Money,
   type Profile,
@@ -239,4 +240,27 @@ export function toRequest(form: InvoiceForm, requestId: string, today?: string):
   return parsed.success && Object.keys(errors).length === 0
     ? { ok: true, request: parsed.data }
     : { ok: false, errors };
+}
+
+// A new invoice made from an earlier one keeps the client and the items. The due date, the note and
+// any discount are chosen again, so nothing from the earlier invoice is sent twice.
+export function formFromInvoice(
+  { invoice, details }: Pick<InvoiceDetailResponse, "invoice" | "details">,
+  defaultSac = "",
+): InvoiceForm {
+  return {
+    ...blankForm(defaultSac),
+    clientName: invoice.client.name,
+    clientEmail: invoice.client.email,
+    currency: invoice.amount.currency,
+    items: details.items.map((item) => ({
+      key: crypto.randomUUID(),
+      name: item.name,
+      quantity: String(item.quantity),
+      unitAmount: item.unitAmount.value,
+      sac: item.sac ?? defaultSac,
+    })),
+    purposeCode: invoice.purposeCode,
+    includeLutNote: details.underLut,
+  };
 }

@@ -28,7 +28,10 @@ export function NudgeCard({ draft: initial, invoice, limitReached, onSent }: Nud
   const locked = drafting || sending || closed;
 
   return (
-    <li className="rounded-xl border border-line bg-white p-6">
+    <li
+      id={`invoice-${encodeURIComponent(invoice.id)}`}
+      className="scroll-mt-6 rounded-xl border border-line bg-white p-6"
+    >
       <NudgeHeader invoice={invoice} history={nudge.history} />
 
       <div className="mt-5 grid gap-4">

@@ -1,4 +1,4 @@
-import { basisNote } from "@/components/shared/risk-basis";
+import { basisNote } from "@/lib/risk/basis-note";
 import type { ClientRisk } from "@/types";
 
 // The reason is written by code from the numbers; the note says how few numbers there are.

@@ -1,7 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { NO_CODE, purposeCodeItems } from "@/components/invoices/purpose-code-items";
 import { eventWhen } from "@/components/receivables/activity-text";
-import { basisNote } from "@/components/shared/risk-basis";
+import { basisNote, reasonWithBasis } from "@/lib/risk/basis-note";
+
+describe("reasonWithBasis", () => {
+  it("adds the basis to the reason when few invoices stand behind it", () => {
+    expect(reasonWithBasis("Acme paid 1 of 2 invoices late.", 2)).toBe(
+      "Acme paid 1 of 2 invoices late. Based on 2 invoices.",
+    );
+  });
+
+  it("leaves the reason alone from four invoices up", () => {
+    expect(reasonWithBasis("Acme always paid on time.", 4)).toBe("Acme always paid on time.");
+  });
+});
 
 describe("basisNote", () => {
   it("says how few invoices a rating rests on", () => {

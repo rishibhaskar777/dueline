@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { FileUp, Inbox, Landmark, MailWarning, Plus, UserRound } from "lucide-react";
+import { Suspense } from "react";
+import { FileUp, Inbox, Landmark, MailWarning, Plus, UserRound, Users } from "lucide-react";
 import { DemoToolsLink } from "./DemoToolsLink";
 import { LockDemoButton } from "./LockDemoButton";
 import { NavLink } from "./NavLink";
@@ -18,39 +19,46 @@ export function Sidebar() {
         <Wordmark />
       </Link>
       <nav aria-label="Main" className="md:flex-1">
-        <ul className="flex flex-wrap gap-1 md:flex-col">
-          <li>
-            <NavLink href="/receivables" icon={<Inbox {...iconProps} />}>
-              Receivables
-            </NavLink>
-          </li>
-          <li>
-            <NavLink href="/invoices/new" icon={<Plus {...iconProps} />}>
-              New invoice
-            </NavLink>
-          </li>
-          <li>
-            <NavLink href="/nudges" icon={<MailWarning {...iconProps} />}>
-              Nudges
-            </NavLink>
-          </li>
-          <li>
-            <NavLink href="/export" icon={<FileUp {...iconProps} />}>
-              Export register
-            </NavLink>
-          </li>
-          <li>
-            <NavLink href="/profile" icon={<UserRound {...iconProps} />}>
-              Profile
-            </NavLink>
-          </li>
-          <li>
-            <NavLink href="/settings" icon={<Landmark {...iconProps} />}>
-              Fees and rates
-            </NavLink>
-          </li>
-          <DemoToolsLink />
-        </ul>
+        <Suspense>
+          <ul className="flex flex-wrap gap-1 md:flex-col">
+            <li>
+              <NavLink href="/receivables" icon={<Inbox {...iconProps} />}>
+                Receivables
+              </NavLink>
+            </li>
+            <li>
+              <NavLink href="/clients" icon={<Users {...iconProps} />}>
+                Clients
+              </NavLink>
+            </li>
+            <li>
+              <NavLink href="/invoices/new" icon={<Plus {...iconProps} />}>
+                New invoice
+              </NavLink>
+            </li>
+            <li>
+              <NavLink href="/nudges" icon={<MailWarning {...iconProps} />}>
+                Nudges
+              </NavLink>
+            </li>
+            <li>
+              <NavLink href="/export" icon={<FileUp {...iconProps} />}>
+                Export register
+              </NavLink>
+            </li>
+            <li>
+              <NavLink href="/profile" icon={<UserRound {...iconProps} />}>
+                Profile
+              </NavLink>
+            </li>
+            <li>
+              <NavLink href="/settings" icon={<Landmark {...iconProps} />}>
+                Fees and rates
+              </NavLink>
+            </li>
+            <DemoToolsLink />
+          </ul>
+        </Suspense>
       </nav>
       <StatusLine />
       <LockDemoButton />
