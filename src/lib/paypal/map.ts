@@ -90,5 +90,6 @@ export function toInvoiceSummary(
     actualPayout,
     purposeCode: isPurposeCode(reference) ? reference : null,
     payLink: invoice.detail.metadata?.recipient_view_url ?? "",
+    riskLevel: null,
   };
 }

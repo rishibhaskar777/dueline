@@ -37,6 +37,16 @@ export async function sendInvoice(
   });
 }
 
+export async function remindInvoice(
+  id: string,
+  message: { subject: string; note: string },
+): Promise<void> {
+  await paypalFetch<void>(`/v2/invoicing/invoices/${encodeURIComponent(id)}/remind`, {
+    method: "POST",
+    body: { send_to_invoicer: false, send_to_recipient: true, ...message },
+  });
+}
+
 export function getInvoice(id: string): Promise<PayPalInvoice> {
   return paypalFetch<PayPalInvoice>(`/v2/invoicing/invoices/${encodeURIComponent(id)}`);
 }

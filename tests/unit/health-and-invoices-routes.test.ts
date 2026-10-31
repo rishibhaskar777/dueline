@@ -121,6 +121,10 @@ describe("GET /api/invoices", () => {
       payLink: "https://www.sandbox.paypal.com/invoice/p/#TEST0001",
       payoutInr: 70915,
     });
+    expect(body.invoices.map((invoice: { riskLevel: unknown }) => invoice.riskLevel)).toEqual([
+      null,
+      "reliable",
+    ]);
     expect(body.invoices[1].actualPayout.netInr).toBe(35617);
     expect(body.invoices[1].payoutInr).toBe(35617);
     expect(body.totals).toEqual({
@@ -144,6 +148,7 @@ describe("GET /api/invoices", () => {
 
     const body = await (await getInvoices()).json();
     expect(body.invoices[0].payoutInr).toBe(39386);
+    expect(body.invoices[0].riskLevel).toBe("watch");
     expect(body.totals).toMatchObject({
       outstandingInr: 39386,
       overdueInr: 39386,

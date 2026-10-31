@@ -3,6 +3,8 @@ import { createAndSendInvoice } from "@/lib/invoices/create-invoice";
 import { payoutInrFor } from "@/lib/money/invoice-payout";
 import { computeTotals } from "@/lib/money/totals";
 import { loadInvoices } from "@/lib/paypal/summaries";
+import { clientKeyOf } from "@/lib/risk/client-key";
+import { riskByClient } from "@/lib/risk/client-risk";
 import { getSettingsAndRates } from "@/lib/settings";
 import {
   createInvoiceRequestSchema,
@@ -19,9 +21,11 @@ export async function GET(): Promise<Response> {
       loadInvoices(),
       getSettingsAndRates(),
     ]);
+    const levels = riskByClient(loaded.map(({ summary }) => summary));
     const invoices = loaded.map(({ summary, amountDue }) => ({
       ...summary,
       payoutInr: payoutInrFor(summary, amountDue, settings, market),
+      riskLevel: levels.get(clientKeyOf(summary.client)) ?? null,
     }));
     return ok<InvoicesResponse>({ invoices, totals: computeTotals(invoices, today()) });
   } catch (error) {
