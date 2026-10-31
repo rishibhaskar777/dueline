@@ -57,6 +57,7 @@ export interface LineItem {
   quantity: number;
   unitAmount: string;
   sourceQuote?: string;
+  sac: string | null;
 }
 
 export interface InvoiceDraft {
