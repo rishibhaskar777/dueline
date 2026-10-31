@@ -1,10 +1,4 @@
-import { ok } from "@/app/api/_lib/respond";
-
 export const STUB_HEADER = "x-dueline-stub";
-
-export function stubOk<T>(data: T): Response {
-  return ok(data, { headers: { [STUB_HEADER]: "true" } });
-}
 
 export function stubNoContent(): Response {
   return new Response(null, { status: 204, headers: { [STUB_HEADER]: "true" } });

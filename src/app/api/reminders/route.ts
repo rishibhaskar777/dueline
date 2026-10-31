@@ -1,6 +1,12 @@
-import { reminders } from "@/mocks/fixtures";
-import { stubOk } from "@/app/api/_lib/stub";
+import { listReminderDrafts } from "@/lib/reminders/reminder-drafts";
+import type { RemindersResponse } from "@/types";
+import { failFromError } from "@/app/api/_lib/errors";
+import { ok } from "@/app/api/_lib/respond";
 
 export async function GET(): Promise<Response> {
-  return stubOk({ drafts: reminders });
+  try {
+    return ok<RemindersResponse>({ drafts: await listReminderDrafts() });
+  } catch (error) {
+    return failFromError(error);
+  }
 }
