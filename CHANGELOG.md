@@ -9,6 +9,16 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- A rich, repeatable demo story. `npm run seed` now builds eight sandbox invoices for five clients,
+  with older invoices recorded as paid outside PayPal, so the late-payer radar shows Reliable
+  (Halden Coffee Co.), Watch (Brightwell Labs) and Late payer (Okafor & Reyes) for real reasons.
+  `POST /api/demo/reset` is built and no longer a stub: in demo mode it cancels open invoices outside
+  the story, deletes drafts and restores the story, once every ten minutes. Settings has a "Demo"
+  card with a "Reset the demo" button. The response changes from `204` to the counts of what changed.
+- The export register lists invoices recorded as paid outside PayPal after the table, with their
+  numbers, and leaves them out of the rupee totals, because they are not on PayPal's FIRA.
+- A landing page that explains Dueline on one screen and leads into the demo.
+
 - The late-payer radar. Dueline scores each client from their paid and overdue invoices, by name and
   email together, as reliable, on watch or a late payer, with a one-sentence reason worked out from
   the numbers. For a client on watch or a late payer the new invoice screen offers a 1% or 2%

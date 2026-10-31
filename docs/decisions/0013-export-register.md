@@ -64,6 +64,10 @@ invoice, and Dueline would have to guess how to split the amount between months.
 invoices that are paid or marked as paid; a partly paid one appears in the month it is paid in full.
 An invoice with no dated payment has no paid date and is left out as well.
 
+**An invoice marked as paid outside PayPal is listed, not counted.** It has no capture, fee or FIRA
+line, so it is not a row and is left out of the rupee totals; the register lists its number under
+"Recorded outside PayPal (not on PayPal's FIRA)" (see [0015](0015-demo-story-and-reset.md)).
+
 ## Consequences
 
 The register's rupees can differ from the FIRA for estimated rows, and the screen says which rows
