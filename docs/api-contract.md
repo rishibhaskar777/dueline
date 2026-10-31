@@ -218,6 +218,103 @@ export interface AnnualSummary {
   clientCount: number; // clients behind them
 }
 
+// src/types/insights.ts, the dashboard widgets of Receivables
+export interface ForecastBucket {
+  label: string; // "Next 30 days", "31 to 60 days", "61 to 90 days"
+  expectedInr: number; // whole rupees, weighted by each client's payment history
+  bestCaseInr: number; // whole rupees, every invoice due in the window paid in full on its due date
+  invoices: number; // unpaid invoices expected to arrive in the window
+}
+export interface Forecast {
+  buckets: ForecastBucket[]; // always three, in order
+  basis: string; // plain-language line for the screen
+}
+export interface FeesLost {
+  financialYear: string; // "2026-27", the year to date
+  feesInr: number; // PayPal's fees on payments received through PayPal
+  conversionLossInr: number; // what PayPal's conversion rate took beyond the fees
+  lostInr: number; // the two above added up
+  receivedInr: number; // rupees PayPal paid out in the year
+  lostPer100: number; // rupees lost per 100 rupees a client paid through PayPal, one decimal
+}
+export interface UpcomingDue {
+  invoiceId: string;
+  invoiceNumber: string;
+  clientName: string;
+  amount: Money;
+  dueOn: string;
+  payoutInr: number | null;
+}
+export interface LateClient {
+  key: string; // client key, as in ClientSummary
+  name: string;
+  daysLate: number; // the client's most overdue unpaid invoice
+  overdueInr: number; // estimated rupees on the client's overdue invoices
+  riskLevel: RiskLevel | null;
+  reason: string; // the radar's reason, with "Based on N invoices." when N is below 4
+}
+export interface RateLine {
+  currency: CurrencyCode;
+  rate: number; // rupees per unit, ECB, on onDate
+  percentVsAverage: number | null; // one decimal; null when there is no 30-day average
+}
+export interface RatesWidget {
+  onDate: string; // date of the rates
+  source: "ecb" | "manual";
+  hasAverage: boolean; // false when only today's rates were available
+  lines: RateLine[];
+}
+export interface DashboardResponse {
+  forecast: Forecast;
+  feesLost: FeesLost;
+  upcomingDue: UpcomingDue[];
+  lateClients: LateClient[];
+  rates: RatesWidget;
+}
+
+// src/types/clients.ts
+export interface ClientSummary {
+  key: string; // URL-safe key from the client's name, the one grouping rule of the late-payer radar
+  name: string;
+  riskLevel: RiskLevel | null; // null when there is no history to judge
+  riskReason: string; // the radar's reason, with "Based on N invoices." when N is below 4
+  invoices: number; // all of the client's invoices that are not drafts or cancelled
+  billedInr: number; // whole rupees: paid invoices at their payout, unpaid ones as estimated
+  outstandingInr: number; // whole rupees on unpaid invoices, estimated after fees
+  averageDaysLate: number;
+  lastPaidOn: string | null;
+}
+export interface ClientDetail {
+  client: ClientSummary;
+  invoices: InvoiceSummary[]; // newest first
+  risk: ClientRisk;
+  notes: string; // "" until saved
+}
+
+// src/types/invoice-detail.ts
+export type TimelineKind = "created" | "sent" | "reminder" | "viewed" | "paid" | "cancelled";
+export interface TimelineEvent {
+  id: string;
+  kind: TimelineKind;
+  at: string; // ISO timestamp, or a YYYY-MM-DD date when PayPal gave no time
+  tone?: Tone; // reminders
+  via?: "paypal" | "outside_paypal"; // paid
+}
+export interface InvoiceItem {
+  name: string;
+  quantity: number;
+  unitAmount: Money;
+  sac: string | null;
+}
+export interface InvoiceDetails {
+  clientKey: string;
+  items: InvoiceItem[];
+  note: string; // the invoice note, "" when there is none
+  underLut: boolean;
+  actions: { remind: boolean; recordPayment: boolean; cancel: boolean }; // valid for the status
+}
+export type PaymentMethod = "BANK_TRANSFER" | "WIRE_TRANSFER" | "OTHER";
+
 // src/types/api.ts
 export interface ApiError {
   error: { code: string; message: string; debugId?: string };
@@ -248,6 +345,13 @@ export interface ApiError {
 | `GET /api/reminders`                                | none                                                                                             | `{ drafts: ReminderDraft[], remindersLeftToday: number }`                                                                                                          | One draft per overdue invoice (sent, unpaid or partly paid), in its suggested tone, most days late first, at most 10. `remindersLeftToday` is PayPal's two a day less the reminders in Dueline's log since India midnight, and 0 for the rest of the India day once PayPal has answered 429. See "Reminders"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `POST /api/reminders/draft`                         | `{ invoiceId: string, tone: Tone }`                                                              | `ReminderDraft`                                                                                                                                                    | Re-drafts one overdue invoice in another tone. `404 not_found` for an unknown invoice, `400 invalid_request` when it is paid or not overdue. 20 drafts an hour per address (`429 rate_limited`). See "Reminders"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `POST /api/reminders/send`                          | `{ invoiceId: string, subject: string, message: string, tone: Tone, requestId: string }`         | `{ sentAt: string }`                                                                                                                                               | Sends through PayPal's invoice reminder, which carries the invoice and its Pay now link. `subject` is 5 to 120 and `message` 20 to 900 characters, with no links or email addresses, not counting the client's business name or the work description (`400 invalid_request`: "The subject must not contain links or email addresses." or the same for the message; a length error names the field). A repeated `requestId` returns the stored `sentAt`. See "Reminders"                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `GET /api/dashboard`                                | none                                                                                             | `DashboardResponse`                                                                                                                                                | Every widget of Receivables beyond the totals and the invoice list. See "Money views"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `GET /api/clients`                                  | none                                                                                             | `{ clients: ClientSummary[] }`                                                                                                                                     | One row per client, most outstanding first. Grouping is the late-payer radar's. See "Money views"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `GET /api/clients/by-key/{key}`                     | none                                                                                             | `ClientDetail`                                                                                                                                                     | `404 not_found` for a key no invoice maps to                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `PUT /api/clients/by-key/{key}/notes`               | `{ notes: string }` (0 to 1,000 chars)                                                           | `{ notes: string }`                                                                                                                                                | Private notes, stored in Postgres (memory without a database). `404 not_found` for an unknown key                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `GET /api/invoices/{id}`                            | none                                                                                             | `{ invoice: InvoiceSummary, timeline: TimelineEvent[], reminders: { tone: Tone, sentAt: string }[], details: InvoiceDetails }`                                     | Newest timeline event first. Works for cancelled invoices too. `404 not_found` for an unknown id                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `POST /api/invoices/{id}/cancel`                    | `{ requestId: string, notifyClient?: boolean }`                                                  | `{ cancelled: true, notified: boolean }`                                                                                                                           | Cancels a sent, unpaid invoice in PayPal. The client is emailed only when `notifyClient` is true, and then the demo guard applies. `409 invalid_state` for a paid, cancelled or unsent invoice. A repeated `requestId` returns the stored result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `POST /api/invoices/{id}/record-payment`            | `{ requestId: string, method: PaymentMethod, paidOn: string, note?: string }`                    | `{ recorded: true, paidOn: string }`                                                                                                                               | Records a payment made outside PayPal (type `EXTERNAL`). `paidOn` must not be in the future or before the invoice date (`400 invalid_request`); `note` is up to 200 characters. `409 invalid_state` for a paid, cancelled or unsent invoice. The invoice then counts as paid outside PayPal                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `GET /api/activity`                                 | none                                                                                             | `{ events: ActivityEvent[] }`                                                                                                                                      | Latest 20 from the store, newest first. Fed by webhooks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `GET /api/settings` / `PUT /api/settings`           | PUT: `Settings`                                                                                  | `Settings`                                                                                                                                                         | Stored in Postgres (memory when no database is configured)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `POST /api/webhooks/paypal`                         | PayPal event, raw body up to 100 KB                                                              | `204`                                                                                                                                                              | Back end only, public. Signature verified by PayPal's postback, event ID de-duplicated. An invoice event re-reads the invoice from PayPal; paid and sent events record activity. `400 invalid_webhook` when headers are missing or verification fails; `500` when processing fails, so PayPal retries                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
@@ -264,6 +368,7 @@ Every failure returns a non-2xx status and an `ApiError`:
 | 403    | `recipient_not_allowed` | Demo mode and the email is not a PayPal sandbox buyer address                                          |
 | 404    | `not_found`             | Unknown invoice id                                                                                     |
 | 409    | `duplicate_request`     | `requestId` already used for a different body, or its request is still in progress                     |
+| 409    | `invalid_state`         | The invoice's status does not allow the action, e.g. cancelling a paid invoice                         |
 | 422    | `extraction_failed`     | AI could not produce a usable draft                                                                    |
 | 429    | `rate_limited`          | Too many AI calls, sign-in attempts or demo resets; `message` says when to retry                       |
 | 500    | `config_error`          | The server is missing or has invalid configuration; `message` names the setting, never its value       |
@@ -280,7 +385,7 @@ signed cookie named `dueline_demo` (HttpOnly, SameSite=Lax, Path=/, 7 days, Secu
 - Every `/api` route needs the cookie, except `GET /api/health`, `POST /api/webhooks/paypal` and
   `/api/demo/session`. Without it the route answers `401 unauthorized` with "Enter the demo password
   to continue."
-- The screens `/receivables`, `/invoices/new`, `/nudges`, `/export`, `/profile`, `/settings` and `/demo-tools` redirect to
+- The screens `/receivables`, `/clients`, `/invoices`, `/nudges`, `/export`, `/profile`, `/settings` and `/demo-tools` redirect to
   `/demo?next=<path>`. The landing page stays public.
 - Access is on when `DEMO_PASSWORD` is set. In production `DEMO_PASSWORD` and `SESSION_SECRET` are
   both required: without them protected routes answer `500 config_error` and protected screens show
@@ -372,6 +477,37 @@ invoice that is open and not yet due says nothing yet.
   without calling PayPal; with another body it is `409 duplicate_request`.
 - **Activity.** A sent reminder records an `ActivityEvent` of kind `reminder_sent` with the id
   `reminder:<requestId>`, and is kept in the invoice's reminder history.
+
+## Money views
+
+- **Forecast.** Each unpaid invoice is expected on its due date plus its client's average days late
+  (none for a `reliable` client). An overdue invoice is expected today plus the days the client is
+  usually late beyond the days already late, and at least 3 days from today. Its rupees (`payoutInr`)
+  are weighted by risk: `reliable` 0.95, `watch` 0.85, `late_payer` 0.7, and 0.5 for any invoice more
+  than 30 days overdue. A client with no history counts as `watch` with no delay. Buckets are the
+  next 30, 31 to 60 and 61 to 90 days; later invoices are left out. The best case counts the full
+  rupees of every invoice by its due date (today when overdue). The screen says "Weighted by each
+  client's payment history. Best case assumes everyone pays on time."
+- **Fees lost.** The current Indian financial year to date, from the annual summary: PayPal's fees
+  plus the conversion loss, over invoices paid through PayPal. Fees and rupees are PayPal's where it
+  reported them and estimated otherwise, and the widget says so. Payments recorded outside PayPal pay
+  no fee and are not counted. `lostPer100` is the loss over the market value of those payments.
+- **Upcoming due.** Unpaid invoices due from today to 14 days ahead, soonest first.
+- **Late clients.** The three clients with the most days late on an unpaid invoice.
+- **Rates.** Today's ECB rate of each currency against the average of the last 30 days from
+  Frankfurter, fetched once a day and kept in the store. When the history cannot be read, or the
+  settings use manual rates, only today's rates are shown and `hasAverage` is false.
+- **Clients.** A client is a group of invoices under the late-payer radar's rule. The `key` is the
+  client's name in lower case with runs of other characters turned into `-`. The client routes
+  and the screen sit under `by-key` (`/api/clients/by-key/{key}`, `/clients/by-key/{key}`), so a client
+  called "risk" cannot collide with `GET /api/clients/risk`.
+- **Invoice page.** The timeline comes from PayPal's invoice metadata, Dueline's reminder log and the
+  activity feed. Paid through PayPal and paid outside PayPal are told apart.
+- **Cancel and record payment.** Each carries a `requestId` claimed like every other write, and clears
+  the invoice caches. Neither can be undone from Dueline. Cancel does not email the client unless
+  `notifyClient` is set.
+- **Layout.** Which widgets Receivables shows, and in what order, is kept in the browser
+  (`localStorage`), not on the server.
 
 ## Demo tools
 

@@ -1,3 +1,4 @@
+import type { ClientSummary } from "./clients";
 import type { ActivityEvent } from "./activity";
 import type { InvoiceDraft, InvoiceSummary, Totals } from "./invoice";
 import type { PurposeCode } from "./export";
@@ -54,4 +55,12 @@ export interface SendReminderResponse {
 
 export interface ActivityResponse {
   events: ActivityEvent[];
+}
+
+export interface ClientsResponse {
+  clients: ClientSummary[];
+}
+
+export interface ClientNotesResponse {
+  notes: string;
 }
