@@ -31,6 +31,7 @@ describe("proxy matcher", () => {
       "/invoices/:path*",
       "/nudges",
       "/export",
+      "/profile",
       "/settings",
       "/demo-tools",
     ]);

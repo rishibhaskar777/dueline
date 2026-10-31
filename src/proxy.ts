@@ -12,6 +12,7 @@ export const config = {
     "/invoices/:path*",
     "/nudges",
     "/export",
+    "/profile",
     "/settings",
     "/demo-tools",
   ],

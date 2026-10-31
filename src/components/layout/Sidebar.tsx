@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileUp, Inbox, Landmark, MailWarning, Plus } from "lucide-react";
+import { FileUp, Inbox, Landmark, MailWarning, Plus, UserRound } from "lucide-react";
 import { DemoToolsLink } from "./DemoToolsLink";
 import { LockDemoButton } from "./LockDemoButton";
 import { NavLink } from "./NavLink";
@@ -37,6 +37,11 @@ export function Sidebar() {
           <li>
             <NavLink href="/export" icon={<FileUp {...iconProps} />}>
               Export register
+            </NavLink>
+          </li>
+          <li>
+            <NavLink href="/profile" icon={<UserRound {...iconProps} />}>
+              Profile
             </NavLink>
           </li>
           <li>
