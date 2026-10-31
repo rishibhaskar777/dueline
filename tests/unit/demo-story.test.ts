@@ -22,6 +22,8 @@ function summaryOf(invoice: DemoInvoice): InvoiceSummary {
     dueState,
     daysLate: 0,
     payoutInr: null,
+    payoutSource: null,
+    rateDate: null,
     actualPayout: null,
     purposeCode: invoice.purposeCode,
     payLink: "",
@@ -38,7 +40,7 @@ describe("buildDemoStory", () => {
   it("gives every invoice its own key and memo", () => {
     const keys = story.map((invoice) => invoice.key);
     expect(new Set(keys).size).toBe(keys.length);
-    expect(new Set(keys.map(demoMemo)).size).toBe(keys.length);
+    expect(new Set(keys.map((key) => demoMemo(key))).size).toBe(keys.length);
     expect(isDemoMemo(demoMemo(keys[0]))).toBe(true);
     expect(isDemoMemo("dueline-request:abc")).toBe(false);
     expect(isDemoMemo(undefined)).toBe(false);

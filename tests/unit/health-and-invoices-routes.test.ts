@@ -128,7 +128,8 @@ describe("GET /api/invoices", () => {
       outstandingInr: 70915,
       overdueInr: 0,
       overdueCount: 0,
-      paidThisMonthInr: 35617,
+      paidThisMonthPayPalInr: 35617,
+      paidThisMonthOutsideInr: 0,
     });
   });
 

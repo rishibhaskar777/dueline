@@ -70,6 +70,10 @@ export function createMemoryStore(): Store {
       return reminders.filter((entry) => entry.invoiceId === invoiceId);
     },
 
+    async countRemindersSince(since): Promise<number> {
+      return reminders.filter((entry) => Date.parse(entry.sentAt) >= Date.parse(since)).length;
+    },
+
     async getSettings(): Promise<Settings | null> {
       return settings;
     },

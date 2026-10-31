@@ -132,6 +132,12 @@ export function createPostgresStore(sql: Sql): Store {
       return rows.map((row) => ({ invoiceId, tone: row.tone, sentAt: row.sent_at.toISOString() }));
     },
 
+    async countRemindersSince(since): Promise<number> {
+      const [row] = await sql<{ count: string }[]>`
+        select count(*) from reminder_log where sent_at >= ${since}`;
+      return Number(row?.count ?? 0);
+    },
+
     async getSettings(): Promise<Settings | null> {
       const [row] = await sql<{ value: Settings }[]>`select value from settings where id = 1`;
       return row?.value ?? null;

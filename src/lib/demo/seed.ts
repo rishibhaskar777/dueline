@@ -10,6 +10,7 @@ import {
   recordExternalPayment,
   sendInvoice,
 } from "@/lib/paypal/invoices";
+import { markerOf } from "@/lib/paypal/memo";
 import { listInvoicesInFull } from "@/lib/paypal/summaries";
 import type { PayPalInvoice } from "@/lib/paypal/types";
 import { buildDemoStory, demoMemo, type DemoInvoice } from "./story";
@@ -52,7 +53,10 @@ async function createDraft(story: DemoInvoice, email: string): Promise<PayPalInv
     },
     { invoiceNumber: await nextInvoiceNumber(), invoiceDate: story.issuedOn, requestId },
   );
-  const marked = { ...body, detail: { ...body.detail, memo: demoMemo(story.key) } };
+  const marked = {
+    ...body,
+    detail: { ...body.detail, memo: demoMemo(story.key, story.purposeCode) },
+  };
   return createDraftInvoice(marked, requestId);
 }
 
@@ -106,7 +110,8 @@ export async function seedDemo(): Promise<SeedRow[]> {
   for (const story of buildDemoStory(today())) {
     const base = { key: story.key, client: story.clientName };
     const found = listed.find(
-      (invoice) => invoice.detail.memo === demoMemo(story.key) && invoice.status !== "CANCELLED",
+      (invoice) =>
+        markerOf(invoice.detail.memo) === demoMemo(story.key) && invoice.status !== "CANCELLED",
     );
     try {
       rows.push({ ...base, ...(await finish(story, found, email)) });

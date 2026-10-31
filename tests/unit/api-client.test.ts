@@ -49,10 +49,11 @@ describe("api client", () => {
     await expect(getInvoices()).rejects.toMatchObject({ status: 500, code: "unexpected_response" });
   });
 
-  it("unwraps list responses", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ drafts: [] })));
+  it("returns the drafts with how many reminders PayPal still allows today", async () => {
+    const body = { drafts: [], remindersLeftToday: 1 };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json(body)));
 
-    await expect(getReminders()).resolves.toEqual([]);
+    await expect(getReminders()).resolves.toEqual(body);
   });
 
   it("asks for a client's risk by email and, when known, name", async () => {

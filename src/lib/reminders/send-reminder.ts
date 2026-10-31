@@ -12,6 +12,7 @@ import type { Json, Store } from "@/lib/store/store";
 import type { InvoiceSummary, SendReminderRequest, SendReminderResponse } from "@/types";
 import { hasLinkOrAddress } from "./check-reminder";
 import { InvalidReminderError, ReminderLimitError } from "./errors";
+import { recordPayPalLimit, remindersLeftToday } from "./daily-limit";
 import { assertRemindable } from "./overdue";
 
 const PAYPAL_LIMIT_MESSAGE =
@@ -59,11 +60,18 @@ async function assertNotSentToday(store: Store, invoiceId: string): Promise<void
   }
 }
 
-async function remind(request: SendReminderRequest): Promise<void> {
+// The screen disables sending once the limit is used up; this keeps a direct call from asking
+// PayPal for a reminder it will refuse.
+async function assertUnderDailyLimit(store: Store): Promise<void> {
+  if ((await remindersLeftToday(store)) === 0) throw new ReminderLimitError(PAYPAL_LIMIT_MESSAGE);
+}
+
+async function remind(store: Store, request: SendReminderRequest): Promise<void> {
   try {
     await remindInvoice(request.invoiceId, { subject: request.subject, note: request.message });
   } catch (error) {
     if (error instanceof PayPalApiError && error.status === 429) {
+      await recordPayPalLimit(store);
       throw new ReminderLimitError(PAYPAL_LIMIT_MESSAGE);
     }
     throw error;
@@ -91,7 +99,8 @@ export async function sendReminder(request: SendReminderRequest): Promise<SendRe
     invoice = await readRemindable(request.invoiceId);
     assertNoLinks(invoice, request);
     await assertNotSentToday(store, request.invoiceId);
-    await remind(request);
+    await assertUnderDailyLimit(store);
+    await remind(store, request);
   } catch (error) {
     await store.release(requestId);
     throw error;

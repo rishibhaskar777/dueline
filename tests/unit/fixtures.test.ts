@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { isPurposeCode } from "@/lib/export/purpose-codes";
-import { payoutInrFor } from "@/lib/money/invoice-payout";
+import { payoutFor } from "@/lib/money/invoice-payout";
 import { estimatePayout } from "@/lib/money/payout";
 import {
   activity,
@@ -61,9 +61,11 @@ describe("fixtures", () => {
       source: settings.rateSource,
     };
     for (const invoice of invoices) {
-      expect(payoutInrFor(invoice, invoice.amount, settings, market), invoice.number).toBe(
-        invoice.payoutInr,
-      );
+      const rates = { ...market, onDate: invoice.rateDate ?? market.onDate };
+      const payout = payoutFor(invoice, invoice.amount, settings, rates);
+      expect(payout.inr, invoice.number).toBe(invoice.payoutInr);
+      expect(payout.source, invoice.number).toBe(invoice.payoutSource);
+      expect(payout.rateDate, invoice.number).toBe(invoice.rateDate);
     }
   });
 
@@ -87,7 +89,8 @@ describe("fixtures", () => {
     expect(totals.outstandingInr).toBe(sum(unpaid));
     expect(totals.overdueInr).toBe(sum(overdue));
     expect(totals.overdueCount).toBe(overdue.length);
-    expect(totals.paidThisMonthInr).toBe(exportRegister.totalInr);
+    expect(totals.paidThisMonthPayPalInr).toBe(exportRegister.totalInr);
+    expect(totals.paidThisMonthOutsideInr).toBe(0);
   });
 
   it("has an export register that matches the paid invoices", () => {

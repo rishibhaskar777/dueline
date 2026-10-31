@@ -20,6 +20,8 @@ function base(client: Client, dueOn: string): InvoiceSummary {
     dueState: "on_time",
     daysLate: 0,
     payoutInr: null,
+    payoutSource: null,
+    rateDate: null,
     actualPayout: null,
     purposeCode: "P1099",
     payLink: "https://www.sandbox.paypal.com/invoice/p/#TEST",

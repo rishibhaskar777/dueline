@@ -1,4 +1,5 @@
 import { addDays } from "@/lib/date-math";
+import { memoOf } from "@/lib/paypal/memo";
 import type { Money } from "@/types";
 
 export interface DemoInvoice {
@@ -69,9 +70,9 @@ export const engagements = {
 
 const MEMO_PREFIX = "dueline-demo:";
 
-// The memo is visible only to the invoicer. It marks the invoices that belong to the story.
-export function demoMemo(key: string): string {
-  return `${MEMO_PREFIX}${key}`;
+// The memo marks the invoices that belong to the story.
+export function demoMemo(key: string, purposeCode: string | null = null): string {
+  return memoOf(`${MEMO_PREFIX}${key}`, purposeCode);
 }
 
 export function isDemoMemo(memo: string | undefined): boolean {

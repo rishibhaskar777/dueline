@@ -233,6 +233,44 @@ describe("POST /api/webhooks/paypal processing", () => {
     expect(sent?.kind).toBe("sent");
   });
 
+  it("dates a demo-story invoice's sent event by its invoice date and its paid event by its payment date", async () => {
+    capturedPayout();
+    const story = { ...paid, detail: { ...paid.detail, memo: "dueline-demo:okafor-logo-refresh" } };
+    servePayPal("SUCCESS", () => jsonResponse(story));
+
+    await webhook(delivery(rawEvent("WH-S1", "INVOICING.INVOICE.SENT")));
+    await webhook(delivery(rawEvent("WH-S2", "INVOICING.INVOICE.PAID")));
+
+    const events = await getStore().latestActivity(50);
+    const at = (id: string) => events.find((event) => event.id === id)?.at;
+    // The invoice is dated 2 Oct and paid on 15 Oct; both events happen at 09:00 India time.
+    expect(at("WH-S1")).toBe("2026-10-02T03:30:00.000Z");
+    expect(at("WH-S2")).toBe("2026-10-15T03:30:00.000Z");
+  });
+
+  it("never places a demo-story event after the moment PayPal reported it", async () => {
+    const story = {
+      ...paid,
+      status: "SENT",
+      detail: { ...paid.detail, invoice_date: "2026-10-29", memo: "dueline-demo:tandem" },
+    };
+    servePayPal("SUCCESS", () => jsonResponse(story));
+
+    await webhook(delivery(rawEvent("WH-S3", "INVOICING.INVOICE.SENT")));
+
+    const sent = (await getStore().latestActivity(50)).find((event) => event.id === "WH-S3");
+    expect(sent?.at).toBe("2026-10-29T03:30:00.000Z");
+  });
+
+  it("keeps the reported time for an invoice that is not part of the story", async () => {
+    servePayPal("SUCCESS", () => jsonResponse({ ...paid, status: "SENT" }));
+
+    await webhook(delivery(rawEvent("WH-S4", "INVOICING.INVOICE.SENT")));
+
+    const sent = (await getStore().latestActivity(50)).find((event) => event.id === "WH-S4");
+    expect(sent?.at).toBe("2026-10-29T10:00:00.000Z");
+  });
+
   it("refreshes the invoice for other invoice events but records nothing", async () => {
     const fetchSpy = servePayPal("SUCCESS");
 

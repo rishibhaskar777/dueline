@@ -117,9 +117,8 @@ export function getClientRisk(email: string, name?: string): Promise<ClientRisk>
   return requestJson(`/api/clients/risk?${query}`);
 }
 
-export async function getReminders(): Promise<ReminderDraft[]> {
-  const { drafts } = await requestJson<RemindersResponse>("/api/reminders");
-  return drafts;
+export function getReminders(): Promise<RemindersResponse> {
+  return requestJson("/api/reminders");
 }
 
 export function draftReminder(invoiceId: string, tone: Tone): Promise<ReminderDraft> {

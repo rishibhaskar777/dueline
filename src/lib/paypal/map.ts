@@ -9,6 +9,7 @@ import {
   type Money,
 } from "@/types";
 import { LUT_NOTE } from "./invoice-body";
+import { purposeCodeOf } from "./memo";
 import type { PayPalInvoice, PayPalPayment } from "./types";
 
 const DUE_SOON_DAYS = 3;
@@ -63,6 +64,12 @@ function dueStateOf(paid: boolean, dueOn: string, today: string): DueState {
   return daysBetween(today, dueOn) <= DUE_SOON_DAYS ? "due_soon" : "on_time";
 }
 
+// Invoices made before the purpose code moved into the memo carry it in the reference field.
+function legacyPurposeCode(invoice: PayPalInvoice): string | null {
+  const reference = invoice.detail.reference ?? "";
+  return isPurposeCode(reference) ? reference : null;
+}
+
 export function toInvoiceSummary(
   invoice: PayPalInvoice,
   today: string,
@@ -78,7 +85,6 @@ export function toInvoiceSummary(
   const dueState = dueStateOf(PAID_STATUSES.includes(invoice.status), dueOn, today);
   const paidOn = dueState === "paid" ? paidOnOf(invoice, actualPayout) : null;
   const lateUntil = dueState === "paid" ? paidOn : today;
-  const reference = invoice.detail.reference ?? "";
 
   return {
     id: invoice.id,
@@ -93,8 +99,10 @@ export function toInvoiceSummary(
     dueState,
     daysLate: lateUntil ? Math.max(0, daysBetween(dueOn, lateUntil)) : 0,
     payoutInr: null,
+    payoutSource: null,
+    rateDate: null,
     actualPayout,
-    purposeCode: isPurposeCode(reference) ? reference : null,
+    purposeCode: purposeCodeOf(invoice.detail.memo) ?? legacyPurposeCode(invoice),
     payLink: invoice.detail.metadata?.recipient_view_url ?? "",
     riskLevel: null,
   };

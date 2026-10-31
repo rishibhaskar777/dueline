@@ -6,7 +6,15 @@ import { verifySessionToken } from "@/lib/demo-access/session";
 import { ConfigError } from "@/lib/env";
 
 export const config = {
-  matcher: ["/api/:path*", "/receivables", "/invoices/:path*", "/nudges", "/export", "/settings"],
+  matcher: [
+    "/api/:path*",
+    "/receivables",
+    "/invoices/:path*",
+    "/nudges",
+    "/export",
+    "/settings",
+    "/demo-tools",
+  ],
 };
 
 function isPublic(method: string, pathname: string): boolean {

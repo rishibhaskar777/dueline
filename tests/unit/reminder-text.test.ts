@@ -30,20 +30,33 @@ const sent = (tone: Tone) => ({ tone, sentAt: "2026-10-25T05:00:00Z" });
 
 describe("suggestTone", () => {
   it("is gentle for 1 to 7 days late with no reminder sent", () => {
-    expect(suggestTone(1, [])).toBe("gentle");
-    expect(suggestTone(7, [])).toBe("gentle");
+    expect(suggestTone(1, [], null)).toBe("gentle");
+    expect(suggestTone(7, [], null)).toBe("gentle");
   });
 
   it("is firm from 8 days late or after one reminder", () => {
-    expect(suggestTone(8, [])).toBe("firm");
-    expect(suggestTone(20, [])).toBe("firm");
-    expect(suggestTone(3, [sent("gentle")])).toBe("firm");
+    expect(suggestTone(8, [], null)).toBe("firm");
+    expect(suggestTone(20, [], null)).toBe("firm");
+    expect(suggestTone(3, [sent("gentle")], null)).toBe("firm");
   });
 
   it("is final beyond 20 days late or after two reminders", () => {
-    expect(suggestTone(21, [])).toBe("final");
-    expect(suggestTone(3, [sent("gentle"), sent("firm")])).toBe("final");
-    expect(suggestTone(25, [sent("gentle")])).toBe("final");
+    expect(suggestTone(21, [], null)).toBe("final");
+    expect(suggestTone(3, [sent("gentle"), sent("firm")], null)).toBe("final");
+    expect(suggestTone(25, [sent("gentle")], null)).toBe("final");
+  });
+
+  it("moves a late payer one step firmer and stops at final", () => {
+    expect(suggestTone(3, [], "late_payer")).toBe("firm");
+    expect(suggestTone(10, [], "late_payer")).toBe("final");
+    expect(suggestTone(25, [], "late_payer")).toBe("final");
+  });
+
+  it("keeps the tone for a client to watch, a reliable client or no history", () => {
+    for (const risk of ["watch", "reliable", null] as const) {
+      expect(suggestTone(3, [], risk)).toBe("gentle");
+      expect(suggestTone(10, [], risk)).toBe("firm");
+    }
   });
 });
 
