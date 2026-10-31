@@ -32,8 +32,9 @@ function loaded(
   summary: InvoiceSummary,
   underLut = false,
   paymentId: string | null = null,
+  sac: string | null = null,
 ): LoadedInvoice {
-  return { summary, amountDue: summary.amount, underLut, paymentId };
+  return { summary, amountDue: summary.amount, underLut, sac, paymentId };
 }
 
 function serve(...invoices: LoadedInvoice[]): void {
@@ -118,7 +119,7 @@ describe("buildExportRegister", () => {
 
   it("shows PayPal's own figures and does not ask for a rate", async () => {
     const fetch = vi.mocked(globalThis.fetch);
-    serve(loaded(haldenLabelsInvoice, true));
+    serve(loaded(haldenLabelsInvoice, true, null, "998391"));
 
     const [row] = (await buildExportRegister("2026-10")).rows;
     expect(row).toEqual({
@@ -135,6 +136,7 @@ describe("buildExportRegister", () => {
       rateUsed: null,
       rateDate: null,
       purposeCode: "P1099",
+      sac: "998391",
       underLut: true,
       transactionId: "5GX12345AB6789012",
     });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { convertToInr, estimatePayout, paypalRateFor } from "@/lib/money/payout";
+import { convertToInr, convertToPaise, estimatePayout, paypalRateFor } from "@/lib/money/payout";
 import { DEFAULT_SETTINGS, type CurrencyCode, type MarketRate, type Settings } from "@/types";
 
 const rate = (value: number): MarketRate => ({ value, onDate: "2026-10-28", source: "ecb" });
@@ -23,6 +23,7 @@ describe("estimatePayout", () => {
 
   it("converts PayPal's own net at the same rate", () => {
     expect(convertToInr(usd("95.04"), 85.36)).toBe(8113);
+    expect(convertToPaise(usd("95.04"), 85.36)).toBe(811_261);
   });
 
   it.each<[CurrencyCode, string]>([

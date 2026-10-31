@@ -7,6 +7,8 @@ import type { MarketRates, Settings } from "@/types";
 interface InvoiceWithPayout {
   loaded: LoadedInvoice;
   payout: InvoicePayout;
+  // The ECB rates behind the payout: those of the payment date for a paid invoice.
+  rates: MarketRates;
 }
 
 // Receivables and the export register both read their rupees from here, so one payment never has
@@ -29,7 +31,7 @@ export async function resolvePayouts(
     invoices.map(async (loaded) => {
       const { summary, amountDue } = loaded;
       const rates = await ratesOn(rateDateFor(summary));
-      return { loaded, payout: payoutFor(summary, amountDue, settings, rates) };
+      return { loaded, payout: payoutFor(summary, amountDue, settings, rates), rates };
     }),
   );
 }

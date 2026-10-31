@@ -19,7 +19,7 @@ function rupeesOf(payout: InvoicePayout): Rupees {
 }
 
 function toRow(
-  { summary, underLut, paymentId }: LoadedInvoice,
+  { summary, underLut, sac, paymentId }: LoadedInvoice,
   paidOn: string,
   payout: InvoicePayout,
 ): ExportRegisterRow {
@@ -35,6 +35,7 @@ function toRow(
     net: actual?.net ?? null,
     ...rupeesOf(payout),
     purposeCode: summary.purposeCode,
+    sac,
     underLut,
     transactionId: actual?.transactionId ?? paymentId,
   };

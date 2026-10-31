@@ -35,3 +35,22 @@ export function addMonths(month: string, count: number): string {
   const index = year * 12 + (number - 1) + count;
   return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`;
 }
+
+const FINANCIAL_YEAR = /^(\d{4})-(\d{2})$/;
+
+// The Indian financial year runs from 1 April to 31 March and is named by both years: "2026-27".
+export function financialYearOf(month: string): string {
+  const [year, number] = month.split("-").map(Number);
+  const start = number >= 4 ? year : year - 1;
+  return `${start}-${String((start + 1) % 100).padStart(2, "0")}`;
+}
+
+export function isFinancialYear(value: string): boolean {
+  const match = FINANCIAL_YEAR.exec(value);
+  return match !== null && (Number(match[1]) + 1) % 100 === Number(match[2]);
+}
+
+export function financialYearRange(fy: string): { from: string; to: string } {
+  const start = Number(fy.slice(0, 4));
+  return { from: `${start}-04-01`, to: `${start + 1}-03-31` };
+}

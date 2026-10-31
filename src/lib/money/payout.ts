@@ -37,6 +37,14 @@ export function convertToInr(net: Money, conversionRate: number): number {
   return Number(toRupees(BigInt(Math.max(0, toMinorUnits(net.value))), conversionRate));
 }
 
+// Rupees to the paisa, for figures a tax return takes with two decimals.
+export function convertToPaise(amount: Money, conversionRate: number): number {
+  const minorUnits = BigInt(Math.max(0, toMinorUnits(amount.value)));
+  return Number(
+    divideRoundingHalfUp(minorUnits * scaled(conversionRate, RATE_SCALE), RATE_DENOMINATOR),
+  );
+}
+
 export function estimatePayout(
   amount: Money,
   settings: Settings,
