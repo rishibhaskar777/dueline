@@ -5,7 +5,8 @@ Dueline is a Next.js app. Screens are client components that call typed function
 handlers talk to PayPal, Gemini, Postgres and the exchange-rate service.
 
 `GET /api/health`, `GET /api/invoices`, `POST /api/invoices`, `POST /api/invoices/{id}/send`,
-`GET /api/export-register`, `GET /api/settings`, `PUT /api/settings`, `POST /api/payout-estimate`, `GET /api/activity`,
+`GET /api/export-register`, `GET /api/exports/gstr1`, `GET /api/exports/annual`,
+`GET /api/profile`, `PUT /api/profile`, `GET /api/settings`, `PUT /api/settings`, `POST /api/payout-estimate`, `GET /api/activity`,
 `POST /api/invoices/extract`, `GET /api/purpose-codes`, `GET /api/demo/recipient`,
 `GET /api/clients/risk`, `GET /api/reminders`, `POST /api/reminders/draft`,
 `POST /api/reminders/send`, `POST /api/demo/reset`, `POST /api/webhooks/paypal` and the demo sign-in
@@ -98,8 +99,15 @@ asks Gemini and caches the answer, `reminder-drafts.ts` builds the drafts for th
 
 **`export/`** holds the fixed RBI purpose-code list (checked against the RBI's list on 30 Oct 2026;
 `isPurposeCode` rejects any AI suggestion that is not on it), `register.ts`, which builds the monthly
-export register, and `csv.ts`, which writes it as a CSV. Built. See
-[decision 0013](decisions/0013-export-register.md).
+export register, and `csv.ts`, which writes it as a CSV. `gstr1.ts` and `annual.ts` build the GSTR-1
+rows and the year summary, with `gstr1-csv.ts` and `annual-csv.ts` writing them; `csv-text.ts` holds
+the cell quoting and formula protection all three CSV writers share. Built. See
+[decision 0013](decisions/0013-export-register.md) and
+[decision 0016](decisions/0016-business-profile-and-gst.md).
+
+**`profile.ts`** merges the saved business profile over the empty one, like `settings.ts`, so a row
+from an older version still reads. Invoice creation, the demo seed, reminder drafts and the draft
+extraction read it; nothing sends it to the AI. Built.
 
 **`privacy/`** masks emails and phone numbers as `[EMAIL_n]` and `[PHONE_n]` before any AI call and
 restores them afterwards. Pure functions. Built.
@@ -180,7 +188,8 @@ screen's (PayPal's `netInr` rounded to whole rupees, else the rate of the paid d
 markup; the row carries the rate and its date). Rows are sorted by
 paid date then invoice number, and the totals (rupees, PayPal's share, the estimated share, foreign
 totals per currency, rows without a purpose code) are summed in integer units. `underLut` is true
-when the invoice note contains `LUT_NOTE` from `invoice-body.ts`.
+when `mentionsLut` from `invoice-body.ts` finds the LUT declaration (or the shorter line older
+invoices carry) in the invoice note. `sac` is the first item's SAC from the private memo.
 
 With `format=csv`, `toCsv` writes the same register as an RFC 4180 CSV with a UTF-8 byte order mark,
 CRLF line ends and a leading quote on any text cell that starts with `=`, `+`, `-`, `@`, a tab or a
@@ -198,6 +207,27 @@ client, amount, rupees, purpose code, LUT, transaction ID) and the fee and net a
 "Download CSV for your CA" link, and an explainer that cites PayPal's monthly digital FIRA with a
 "Learn more" link. A loading skeleton, an empty-month panel and an error panel
 with PayPal's debug ID stand in for the content.
+
+## Business profile and GST exports
+
+The profile is one row (migration 004). `toPayPalInvoice` takes it with the draft: the `invoicer`
+block (business name, name split at the last space, GSTIN as `tax_id`, website), `SAC <code>` as an
+item description, and, when the LUT box is ticked, the declaration, `LUT ARN:` and the place of
+supply in the note. The memo carries `sac:<code>` for the first item. `PUT /api/profile` checks the
+formats with the one `profileSchema`, which the profile form runs too for its inline errors.
+
+`GET /api/exports/gstr1` loads the invoices, keeps those whose `issuedOn` is in the month, and
+converts each at the ECB rate of its invoice date to the paisa (`convertToPaise`), one rate request
+per date. `GET /api/exports/annual` takes the invoices paid in the financial year, runs them through
+`resolvePayouts` (which now also returns the rates behind each payout) and splits what did not
+reach the bank into PayPal's fee and the conversion loss. Both are estimates and say so; see
+[decision 0016](decisions/0016-business-profile-and-gst.md).
+
+`/profile` loads the profile through `useProfile` and renders `ProfileForm` (validation shown once a
+field is left, or after a save attempt) and a preview of the invoice header. The new invoice review
+step reads the profile through the same hook to default each item's SAC, warn about a missing or ended LUT, and say when the name
+and business name are empty. The export screen adds a GSTR-1 download and a year-summary dialog for
+the financial year of the month shown.
 
 ## Fees and rates screen
 
@@ -404,6 +434,8 @@ sequenceDiagram
   R-->>U: sentAt
 ```
 
+0. Whoever wrote the body, code ends every draft with the profile's sign-off and name (`withSignOff`),
+   leaving room for it in the 900 characters; the model is told to write no sign-off.
 1. `GET /api/reminders` takes the invoices with PayPal status SENT, UNPAID or PARTIALLY_PAID that
    are overdue, most days late first (at most 10), and drafts each in its suggested tone
    (`suggestTone` from the days late and the reminders already sent, one step firmer for a client

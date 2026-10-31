@@ -43,14 +43,18 @@ in memory. Read [docs/architecture.md](docs/architecture.md) and
    skips invoices that already exist, so it is safe to run again. On a sandbox that already has
    invoices from before the demo story, do not run `npm run seed`: press "Reset the demo" on the
    Settings screen instead, which cancels those invoices and then builds the story.
-8. Turn off automatic reminders in the sandbox business account: sign in at
+8. Set your profile at `/profile`: your name, business name, GSTIN, LUT ARN and default SAC. They are
+   printed on every invoice and reminder, and the business name replaces PayPal's "Test Store". Run
+   `npm run db:migrate` first if you use a database: migration 004 adds the profile table. In demo
+   mode `npm run seed` and the reset fill in a profile for Riya Sharma if none is saved.
+9. Turn off automatic reminders in the sandbox business account: sign in at
    sandbox.paypal.com as the business account, open Account settings, then Invoicing, and switch
    off automatic reminders. PayPal's create-invoice call has no per-invoice switch for them, and
    Dueline sends its own reminders after a click, so the client should hear from one voice.
-9. Create an invoice from the app at `/invoices/new`. While `DEMO_MODE` is on, the review screen's
-   "Send to the demo buyer" button fills in `SANDBOX_BUYER_EMAIL` (served by
-   `GET /api/demo/recipient`), because PayPal's sandbox can only email sandbox accounts. Any other
-   address is refused with `recipient_not_allowed`.
+10. Create an invoice from the app at `/invoices/new`. While `DEMO_MODE` is on, the review screen's
+    "Send to the demo buyer" button fills in `SANDBOX_BUYER_EMAIL` (served by
+    `GET /api/demo/recipient`), because PayPal's sandbox can only email sandbox accounts. Any other
+    address is refused with `recipient_not_allowed`.
 
 These scripts run outside Next.js, so they start with `tsx --conditions=react-server`: that makes the
 `server-only` import resolve to an empty module instead of throwing.

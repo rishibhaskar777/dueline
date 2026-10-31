@@ -9,6 +9,9 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Reminder drafts are cached under a new prompt version, because they no longer end in "Thank you".
+- The LUT line on an invoice is now the declaration; invoices with the earlier line still count as
+  under LUT.
 - One rupee figure per payment. A paid invoice's rupees are PayPal's own figure when reported,
   otherwise PayPal's net at the ECB rate of the payment date less the markup, in Receivables, the
   invoice panel, the due line tooltip and the export register alike. The panel names the rate
@@ -44,6 +47,21 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- A business profile (`/profile`, "Profile" in the sidebar): your name, business name, GSTIN, LUT
+  ARN and end date, default SAC, website and reminder sign-off, with a preview of the invoice
+  header. `GET` and `PUT /api/profile`, migration 004.
+- Invoices carry the profile: the business name replaces PayPal's sandbox name, with your name,
+  GSTIN and website; items show `SAC <code>`; "Export under LUT (no IGST)" writes the declaration,
+  the LUT ARN and the place of supply. The review screen warns when the ARN is missing or the LUT
+  has ended, and when your name or business name is empty. `LineItem` gains `sac`.
+- Reminders end with your sign-off and name; none is invented when the name is empty.
+- Export register: a SAC column, and your GSTIN in a comment line above the headers.
+- GSTR-1 export (`GET /api/exports/gstr1`): the export-of-services rows for invoices issued in a
+  month, in rupees at the ECB rate of the invoice date. Estimate; confirm with your CA.
+- Year summary (`GET /api/exports/annual`, JSON or CSV): receipts through PayPal and outside it,
+  PayPal fees and conversion loss, section 44ADA income and its limit, for a financial year. Estimate;
+  confirm with your CA.
+- The demo seeds a profile for Riya Sharma only when none is saved.
 - A rich, repeatable demo story. `npm run seed` now builds eight sandbox invoices for five clients,
   with older invoices recorded as paid outside PayPal, so the late-payer radar shows Reliable
   (Halden Coffee Co.), Watch (Brightwell Labs) and Late payer (Okafor & Reyes) for real reasons.
