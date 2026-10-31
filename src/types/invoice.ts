@@ -1,4 +1,5 @@
 import type { CurrencyCode, Money } from "./money";
+import type { RiskLevel } from "./risk";
 
 export type DueState = "paid" | "on_time" | "due_soon" | "overdue";
 
@@ -34,6 +35,7 @@ export interface InvoiceSummary {
   actualPayout: ActualPayout | null;
   purposeCode: string | null;
   payLink: string;
+  riskLevel: RiskLevel | null;
 }
 
 export interface Totals {
