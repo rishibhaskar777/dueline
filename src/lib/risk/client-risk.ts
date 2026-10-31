@@ -7,7 +7,7 @@ import { isSameClient } from "./client-key";
 import { scoreClient } from "./score";
 
 // The demo's clients share one sandbox email, so only outside the demo does an email say who pays.
-const emailIdentifiesClient = (): boolean => !getEnv().DEMO_MODE;
+export const emailIdentifiesClient = (): boolean => !getEnv().DEMO_MODE;
 
 export async function getClientRisk(email: string, name?: string): Promise<ClientRisk> {
   const identifies = emailIdentifiesClient();

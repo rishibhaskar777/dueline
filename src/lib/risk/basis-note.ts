@@ -9,3 +9,8 @@ export function basisNote({
   if (invoicesConsidered === 0 || invoicesConsidered >= FEW_INVOICES) return null;
   return `Based on ${invoicesConsidered} ${invoicesConsidered === 1 ? "invoice" : "invoices"}.`;
 }
+
+export function reasonWithBasis(reason: string, invoicesConsidered: number): string {
+  const basis = basisNote({ invoicesConsidered });
+  return basis ? `${reason} ${basis}` : reason;
+}
