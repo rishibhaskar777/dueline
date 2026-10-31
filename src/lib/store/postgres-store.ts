@@ -161,6 +161,18 @@ export function createPostgresStore(sql: Sql): Store {
         on conflict (id) do update set value = excluded.value, updated_at = now()`;
     },
 
+    async getClientNotes(clientKey): Promise<string> {
+      const [row] = await sql<{ notes: string }[]>`
+        select notes from client_notes where client_key = ${clientKey}`;
+      return row?.notes ?? "";
+    },
+
+    async saveClientNotes(clientKey, notes): Promise<void> {
+      await sql`
+        insert into client_notes (client_key, notes) values (${clientKey}, ${notes})
+        on conflict (client_key) do update set notes = excluded.notes, updated_at = now()`;
+    },
+
     async hitRateLimit(key, windowSeconds): Promise<number> {
       const [row] = await sql<{ count: number }[]>`
         insert into rate_limits (key, window_start, count) values (${key}, now(), 1)
