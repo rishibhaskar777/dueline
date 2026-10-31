@@ -1,4 +1,5 @@
 import { ConfigError } from "@/lib/env";
+import { DemoResetLimitError, DemoUnavailableError } from "@/lib/demo/errors";
 import { RecipientNotAllowedError } from "@/lib/demo-guard";
 import { CreateOutcomeUnknownError, InvoiceNotFoundError } from "@/lib/invoices/errors";
 import { PayPalApiError, PayPalTimeoutError } from "@/lib/paypal/errors";
@@ -11,6 +12,8 @@ export function failFromError(error: unknown): Response {
   if (error instanceof RecipientNotAllowedError) {
     return fail(403, "recipient_not_allowed", error.message);
   }
+  if (error instanceof DemoUnavailableError) return fail(404, "not_found", error.message);
+  if (error instanceof DemoResetLimitError) return fail(429, "rate_limited", error.message);
   if (error instanceof InvalidReminderError) return fail(400, "invalid_request", error.message);
   if (error instanceof ReminderLimitError) return fail(429, "rate_limited", error.message);
   if (error instanceof InvoiceNotFoundError) return fail(404, "not_found", error.message);

@@ -8,6 +8,7 @@ import {
   getClientRisk,
   getPurposeCodes,
   getReminders,
+  resetDemo,
   sendInvoiceDraft,
   signIn,
   signOut,
@@ -114,6 +115,15 @@ describe("api client", () => {
       }),
     );
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/demo/session", { method: "DELETE" });
+  });
+
+  it("resets the demo and returns what changed", async () => {
+    const result = { cancelled: 2, deleted: 1, created: 7, skipped: 1, failed: 0 };
+    const fetchMock = vi.fn().mockImplementation(async () => Response.json(result));
+    vi.stubGlobal("fetch", fetchMock);
+
+    expect(await resetDemo()).toEqual(result);
+    expect(fetchMock).toHaveBeenCalledWith("/api/demo/reset", { method: "POST" });
   });
 
   it("posts a new invoice and a retry of its send", async () => {

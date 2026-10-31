@@ -34,6 +34,14 @@ export interface DemoRecipientResponse {
   email: string;
 }
 
+export interface DemoResetResponse {
+  cancelled: number;
+  deleted: number;
+  created: number;
+  skipped: number;
+  failed: number;
+}
+
 export interface RemindersResponse {
   drafts: ReminderDraft[];
 }
