@@ -3,7 +3,6 @@ import { GET as getDemoRecipient } from "@/app/api/demo/recipient/route";
 import { POST as sendInvoice } from "@/app/api/invoices/[id]/send/route";
 import { POST as createInvoice } from "@/app/api/invoices/route";
 import { GET as getPurposeCodes } from "@/app/api/purpose-codes/route";
-import { STUB_HEADER } from "@/app/api/_lib/stub";
 import { RecipientNotAllowedError } from "@/lib/demo-guard";
 import { CreateOutcomeUnknownError, InvoiceNotFoundError } from "@/lib/invoices/errors";
 import { PayPalApiError } from "@/lib/paypal/errors";
@@ -59,7 +58,6 @@ describe("POST /api/invoices", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(response.headers.get(STUB_HEADER)).toBeNull();
     expect(await response.json()).toEqual(stored);
     expect(service.createAndSendInvoice).toHaveBeenCalledWith(
       { draft: extraction.draft, discount: { percent: 2, withinDays: 7 } },
@@ -142,7 +140,6 @@ describe("POST /api/invoices/{id}/send", () => {
 
     const response = await sendInvoice(post({ requestId }), ctx("INV2-NEW"));
     expect(response.status).toBe(200);
-    expect(response.headers.get(STUB_HEADER)).toBeNull();
     expect(await response.json()).toEqual(stored);
     expect(service.sendExistingDraft).toHaveBeenCalledWith("INV2-NEW", requestId);
   });
@@ -164,7 +161,6 @@ describe("POST /api/invoices/{id}/send", () => {
 describe("GET /api/purpose-codes", () => {
   it("returns the fixed list", async () => {
     const response = await getPurposeCodes();
-    expect(response.headers.get(STUB_HEADER)).toBeNull();
     expect(await response.json()).toEqual({ codes: PURPOSE_CODES });
   });
 });

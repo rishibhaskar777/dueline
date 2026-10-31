@@ -77,8 +77,21 @@ describe("toCsv", () => {
       paypalInr: 0,
       estimatedInr: 0,
       missingPurposeCodes: 0,
+      recordedOutsidePayPal: [],
     });
     expect(lines(csv)).toHaveLength(2);
     expect(lines(csv)[1]).toBe("");
+  });
+
+  it("lists invoices recorded outside PayPal after the rows, without changing the columns", () => {
+    const csv = toCsv({ ...register(paypalRow), recordedOutsidePayPal: ["INV-0007", "INV-0009"] });
+
+    expect(lines(csv).slice(2)).toEqual([
+      "",
+      "Recorded outside PayPal (not on PayPal's FIRA): 2",
+      '"INV-0007, INV-0009"',
+      "",
+    ]);
+    expect(lines(csv)[0]).toBe(lines(toCsv(register(paypalRow)))[0]);
   });
 });

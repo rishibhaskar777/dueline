@@ -8,9 +8,8 @@ handlers talk to PayPal, Gemini, Postgres and the exchange-rate service.
 `GET /api/export-register`, `GET /api/settings`, `PUT /api/settings`, `POST /api/payout-estimate`, `GET /api/activity`,
 `POST /api/invoices/extract`, `GET /api/purpose-codes`, `GET /api/demo/recipient`,
 `GET /api/clients/risk`, `GET /api/reminders`, `POST /api/reminders/draft`,
-`POST /api/reminders/send`, `POST /api/webhooks/paypal` and the demo sign-in routes are built. The
-remaining route (`POST /api/demo/reset`) still returns sample data and the header
-`x-dueline-stub: true`. Parts that are not built yet are marked **planned**.
+`POST /api/reminders/send`, `POST /api/demo/reset`, `POST /api/webhooks/paypal` and the demo sign-in
+routes are built. No route answers from sample data.
 
 ```mermaid
 flowchart LR
@@ -162,7 +161,9 @@ fails.
 `GET /api/export-register?month=YYYY-MM` rejects a month after the current one (400), then
 `buildExportRegister` takes the loaded invoices (the same cached list as receivables) and keeps those
 that are paid or marked as paid and whose `paidOn`, the India date, is in the month. A partly paid
-invoice is left out. Each becomes a row: the foreign amount, PayPal's fee, net and transaction ID when
+invoice is left out. An invoice marked as paid outside PayPal is not a row and not in any total; its
+number goes into `recordedOutsidePayPal`, which the screen shows under the table and the CSV adds
+after the rows. Each becomes a row: the foreign amount, PayPal's fee, net and transaction ID when
 PayPal's figures were found, and the rupees. The rupees are PayPal's `netInr` rounded to whole rupees
 when it reports one. Otherwise they are worked out at the ECB rate of the paid date from `getRatesOn`
 (PayPal's net when known, the estimate from the published fees when not) less the settings' markup,
@@ -418,6 +419,23 @@ drafted until the user chooses. Each draft gets its own request ID, so a retry n
 overdue invoices the screen reads "No late invoices. Nothing to chase today." The sidebar shows no
 count on Nudges: it sits in the layout and shares no state with the screens, so a count would need
 its own request for the invoice list.
+
+## Demo story and reset
+
+`src/lib/demo/story.ts` is pure data and a builder, and owns the story's client names, work, amounts and purpose codes
+(`engagements`), which the sample data in `src/mocks` imports so nothing under `src/lib` or `src/app`
+depends on it; `buildDemoStory(today)` turns day offsets into
+the dates of eight invoices, each with a key and the memo `dueline-demo:<key>`. `seed.ts` (`seedDemo`)
+reads every invoice in full, creates and sends the keys PayPal lacks through `invoice-body.ts`, and
+records the history ones as paid with `recordExternalPayment`. It returns one row per invoice
+(`created`, `repaired`, `skipped` or `failed`). `npm run seed` prints that table. An invoice paid
+outside PayPal has no actual payout (`getActualPayout` skips it), so its rupees are estimated.
+
+`POST /api/demo/reset` calls `resetDemo` in `reset.ts`: in demo mode only, it claims the single
+ten-minute slot in the store, cancels the sent or unpaid invoices that are not in the story, deletes
+drafts, runs `seedDemo`, clears the invoice caches and returns the counts. The Settings screen's
+"Demo" card (`DemoCard`) shows only when `GET /api/demo/recipient` succeeds, asks for confirmation
+inline and shows the result line. See [decision 0015](decisions/0015-demo-story-and-reset.md).
 
 ## Demo access
 

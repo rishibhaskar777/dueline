@@ -25,3 +25,4 @@ Copy [0000-template.md](0000-template.md) to start a new one.
 | [0012](0012-hand-built-due-line.md)           | A hand-built due line                   |
 | [0013](0013-export-register.md)               | The export register                     |
 | [0014](0014-late-payer-radar-and-nudges.md)   | The late-payer radar and nudges         |
+| [0015](0015-demo-story-and-reset.md)          | The demo story and its reset            |

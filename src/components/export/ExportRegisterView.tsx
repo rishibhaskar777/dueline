@@ -5,6 +5,7 @@ import { LoadFailure } from "@/components/shared/LoadFailure";
 import { buttonVariants } from "@/components/ui/button";
 import { exportRegisterCsvUrl } from "@/lib/api-client";
 import { MonthPicker } from "./MonthPicker";
+import { RecordedOutside } from "./RecordedOutside";
 import { RegisterSummary } from "./RegisterSummary";
 import { EmptyRegister, RegisterSkeleton } from "./RegisterStates";
 import { RegisterTable } from "./RegisterTable";
@@ -28,12 +29,20 @@ function RegisterBody({ month, state, onRetry }: RegisterBodyProps) {
     );
   }
   const { register } = state;
-  if (register.rows.length === 0) return <EmptyRegister month={month} />;
+  if (register.rows.length === 0) {
+    return (
+      <>
+        <EmptyRegister month={month} />
+        <RecordedOutside numbers={register.recordedOutsidePayPal} />
+      </>
+    );
+  }
 
   return (
     <>
       <RegisterSummary register={register} />
       <RegisterTable rows={register.rows} />
+      <RecordedOutside numbers={register.recordedOutsidePayPal} />
     </>
   );
 }

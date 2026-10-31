@@ -37,8 +37,12 @@ in memory. Read [docs/architecture.md](docs/architecture.md) and
    `npm run extract:check -- my-chat.txt`) and prints the checked draft and its warnings. It calls the
    real model unless the same chat was already answered today. Migration 003 adds the table for that
    cache, so run `npm run db:migrate` first if you use a database.
-7. Create the four demo invoices with `npm run seed`. It skips invoices that already exist, so it is
-   safe to run again.
+7. Build the demo story with `npm run seed`. It creates eight invoices for five clients, with dates
+   counted back from today, and records the older ones as paid outside PayPal so the late-payer radar
+   has history. It prints a table of what it created, repaired, skipped or could not create, and it
+   skips invoices that already exist, so it is safe to run again. On a sandbox that already has
+   invoices from before the demo story, do not run `npm run seed`: press "Reset the demo" on the
+   Settings screen instead, which cancels those invoices and then builds the story.
 8. Turn off automatic reminders in the sandbox business account: sign in at
    sandbox.paypal.com as the business account, open Account settings, then Invoicing, and switch
    off automatic reminders. PayPal's create-invoice call has no per-invoice switch for them, and
@@ -79,8 +83,10 @@ the Neon database.
    deployment URL, because deployment protection blocks those. Copy the webhook ID into
    `PAYPAL_WEBHOOK_ID` in Vercel, then redeploy. Events sent from the webhook simulator are refused
    on purpose.
-5. Open the app, enter the demo password and run `npm run seed` locally if the demo invoices are
-   missing.
+5. Open the app, enter the demo password and press "Reset the demo" on the Settings screen (or run
+   `npm run seed` locally) if the demo invoices are missing. The button cancels invoices created
+   during the demo, deletes drafts and restores the sample clients; paid invoices stay. It works once
+   every ten minutes.
 
 Vercel deploys the main branch to production and every other branch to a protected preview. The
 service does not sleep.

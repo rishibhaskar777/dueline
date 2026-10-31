@@ -32,4 +32,5 @@ export interface ExportRegister {
   paypalInr: number;
   estimatedInr: number;
   missingPurposeCodes: number;
+  recordedOutsidePayPal: string[];
 }

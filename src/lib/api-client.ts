@@ -5,6 +5,7 @@ import type {
   CreateInvoiceRequest,
   CreateInvoiceResponse,
   DemoRecipientResponse,
+  DemoResetResponse,
   ExportRegister,
   ExtractResponse,
   HealthResponse,
@@ -160,8 +161,8 @@ export function exportRegisterCsvUrl(month: string): string {
   return `/api/export-register?month=${encodeURIComponent(month)}&format=csv`;
 }
 
-export async function resetDemo(): Promise<void> {
-  await request("/api/demo/reset", { method: "POST" });
+export function resetDemo(): Promise<DemoResetResponse> {
+  return requestJson("/api/demo/reset", { method: "POST" });
 }
 
 export async function signIn(password: string): Promise<void> {

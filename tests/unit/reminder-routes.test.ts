@@ -4,7 +4,6 @@ import { GET as getRisk } from "@/app/api/clients/risk/route";
 import { POST as draft } from "@/app/api/reminders/draft/route";
 import { GET as list } from "@/app/api/reminders/route";
 import { POST as send } from "@/app/api/reminders/send/route";
-import { STUB_HEADER } from "@/app/api/_lib/stub";
 import { PayPalApiError } from "@/lib/paypal/errors";
 import type { PayPalInvoice } from "@/lib/paypal/types";
 import { createMemoryStore } from "@/lib/store/memory-store";
@@ -91,14 +90,13 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe("GET /api/clients/risk", () => {
-  it("is no longer a stub and reports the client's history", async () => {
+  it("reports the client's history", async () => {
     load(paidInvoice("2026-08-01", "2026-08-13"), paidInvoice("2026-09-01", "2026-09-17"));
     const response = await getRisk(
       new Request(`${origin}/api/clients/risk?email=${OKAFOR.email}&name=okafor%20%26%20reyes`),
     );
 
     expect(response.status).toBe(200);
-    expect(response.headers.get(STUB_HEADER)).toBeNull();
     expect(await response.json()).toMatchObject({
       clientEmail: OKAFOR.email,
       clientName: "Okafor & Reyes",
@@ -115,12 +113,11 @@ describe("GET /api/clients/risk", () => {
 });
 
 describe("GET /api/reminders", () => {
-  it("is no longer a stub and drafts a reminder for each overdue invoice", async () => {
+  it("drafts a reminder for each overdue invoice", async () => {
     load(overdue, openInvoice("2026-11-20"), overdueInvoice("2026-10-11", 20));
     const response = await list();
 
     expect(response.status).toBe(200);
-    expect(response.headers.get(STUB_HEADER)).toBeNull();
     const { drafts } = await response.json();
     expect(drafts.map((entry: { tone: string }) => entry.tone)).toEqual(["firm", "gentle"]);
     expect(drafts[0]).toMatchObject({ source: "template", history: [] });
@@ -133,7 +130,6 @@ describe("POST /api/reminders/draft", () => {
       post("/api/reminders/draft", { invoiceId: overdue.id, tone: "firm" }),
     );
     expect(response.status).toBe(200);
-    expect(response.headers.get(STUB_HEADER)).toBeNull();
     expect(await response.json()).toMatchObject({ tone: "firm", suggestedTone: "gentle" });
   });
 
@@ -182,10 +178,9 @@ describe("POST /api/reminders/draft", () => {
 });
 
 describe("POST /api/reminders/send", () => {
-  it("is no longer a stub and returns when the reminder was sent", async () => {
+  it("returns when the reminder was sent", async () => {
     const response = await send(post("/api/reminders/send", sendBody));
     expect(response.status).toBe(200);
-    expect(response.headers.get(STUB_HEADER)).toBeNull();
     expect(Object.keys(await response.json())).toEqual(["sentAt"]);
   });
 

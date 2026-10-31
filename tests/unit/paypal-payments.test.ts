@@ -122,6 +122,12 @@ describe("getActualPayout", () => {
     expect(await getActualPayout(paid)).toBeNull();
   });
 
+  it("does not look up an invoice recorded as paid outside PayPal, which has no capture", async () => {
+    expect(await getActualPayout({ ...paid, status: "MARKED_AS_PAID" })).toBeNull();
+    expect(sdk.getCapturedPayment).not.toHaveBeenCalled();
+    expect(sdk.searchTransactions).not.toHaveBeenCalled();
+  });
+
   it("does not look up an invoice that is not paid", async () => {
     expect(await getActualPayout(unpaidFixture as PayPalInvoice)).toBeNull();
     expect(sdk.getCapturedPayment).not.toHaveBeenCalled();

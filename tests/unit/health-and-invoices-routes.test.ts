@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as getHealth } from "@/app/api/health/route";
 import { GET as getInvoices } from "@/app/api/invoices/route";
-import { STUB_HEADER } from "@/app/api/_lib/stub";
 import { clearInvoiceCaches } from "@/lib/paypal/summaries";
 import { clearAccessToken } from "@/lib/paypal/token";
 import type { PayPalInvoice } from "@/lib/paypal/types";
@@ -38,7 +37,6 @@ describe("GET /api/health", () => {
   it("reports a connected sandbox", async () => {
     mockPayPal(() => jsonResponse({}));
     const response = await getHealth();
-    expect(response.headers.get(STUB_HEADER)).toBeNull();
     expect(await response.json()).toEqual({
       paypal: "connected",
       ai: "missing_key",
@@ -110,7 +108,6 @@ describe("GET /api/invoices", () => {
 
     const response = await getInvoices();
     expect(response.status).toBe(200);
-    expect(response.headers.get(STUB_HEADER)).toBeNull();
     const body = await response.json();
     expect(body.invoices.map((invoice: { number: string }) => invoice.number)).toEqual([
       "INV-0101",
