@@ -7,9 +7,10 @@ handlers talk to PayPal, Gemini, Postgres and the exchange-rate service.
 `GET /api/health`, `GET /api/invoices`, `POST /api/invoices`, `POST /api/invoices/{id}/send`,
 `GET /api/export-register`, `GET /api/settings`, `PUT /api/settings`, `POST /api/payout-estimate`, `GET /api/activity`,
 `POST /api/invoices/extract`, `GET /api/purpose-codes`, `GET /api/demo/recipient`,
-`POST /api/webhooks/paypal` and the demo sign-in routes are built. Every other route handler still
-returns sample data and the header `x-dueline-stub: true`. Parts that are not built yet are marked
-**planned**.
+`GET /api/clients/risk`, `GET /api/reminders`, `POST /api/reminders/draft`,
+`POST /api/reminders/send`, `POST /api/webhooks/paypal` and the demo sign-in routes are built. The
+remaining route (`POST /api/demo/reset`) still returns sample data and the header
+`x-dueline-stub: true`. Parts that are not built yet are marked **planned**.
 
 ```mermaid
 flowchart LR
@@ -45,9 +46,14 @@ types. Built. `invoice-body.ts` is the one place that turns a draft into PayPal'
 `webhooks.ts` verifies webhook signatures and `webhook-events.ts` processes verified events (see
 Webhooks below).
 
-**`invoices/`** holds `createAndSendInvoice` and `sendExistingDraft`, the claim and recovery logic
-around them, the request hash and the errors the routes map. Built. See "Create and send an
+**`invoices/`** holds `createAndSendInvoice` and `sendExistingDraft` and the errors the routes map.
+Built. See "Create and send an
 invoice" below and [decision 0011](decisions/0011-creating-and-sending-invoices.md).
+
+**`requests/`** holds what invoices and reminders share to make a request safe to repeat: the
+request hash, `claimRequest` (the claim and recovery logic, which takes over a request that was cut
+off) and `DuplicateRequestError`. **`demo-guard.ts`** holds the demo-mode check that a recipient is a
+PayPal sandbox buyer. **`in-batches.ts`** runs work a few items at a time, keeping the order.
 
 **`demo-access/`** holds the signed session token, the password comparison, the cookie settings, the
 safe `next` path and the rule that decides whether access is open, required or misconfigured. It
@@ -78,8 +84,18 @@ not there, and falls back to the rates in use. Built. See
 **`settings.ts`** merges the saved settings over the defaults, so a row from an older version still
 loads, and puts the rates in use into `marketRates` when the source is "ecb". Built.
 
-**`risk/`** scores late payers from payment history and suggests an early-payment discount. Pure
-functions. Planned.
+**`risk/`** scores late payers from payment history and suggests an early-payment discount.
+`score.ts` and `client-key.ts` are pure; `client-risk.ts` reads the cached invoice list and answers
+for one client (`getClientRisk`) or for every client at once (`riskByClient`, which fills each
+`InvoiceSummary.riskLevel`). Built. See [decision 0014](decisions/0014-late-payer-radar-and-nudges.md).
+
+**`reminders/`** drafts and sends payment reminders. `tone.ts` suggests a tone, `check-reminder.ts`
+holds the text rules (length, invoice number, amounts, no links or email addresses) used both on the
+model's draft and on the text the freelancer sends (the client's business name and the work
+description are taken out before links are looked for, so a client called "Acme.io" is not a link), `templates.ts` is the fallback, `draft-reminder.ts`
+asks Gemini and caches the answer, `reminder-drafts.ts` builds the drafts for the Nudges screen and
+`send-reminder.ts` sends one through PayPal. Built. See
+[decision 0014](decisions/0014-late-payer-radar-and-nudges.md).
 
 **`export/`** holds the fixed RBI purpose-code list (checked against the RBI's list on 30 Oct 2026;
 `isPurposeCode` rejects any AI suggestion that is not on it), `register.ts`, which builds the monthly
@@ -195,8 +211,10 @@ AI only fills it; nothing is created or sent.
    placeholders, and collects warnings. An item whose price does not appear as a number in its own
    quote is kept with a warning, and a chat with phrases such as "ignore previous instructions" gets
    one warning to check every item. No usable item is 422 `extraction_failed`.
-6. The model's answer is stored for 24 hours and the draft is returned with `risk: null` and the
-   count of masked emails and phone numbers.
+6. The model's answer is stored for 24 hours. The draft is returned with the count of masked emails
+   and phone numbers and `risk`, the late-payer radar's reading for the draft's client (name and
+   email) from the cached invoice list. It is `null` when the draft has no email or the invoices
+   cannot be read, which never fails the extraction.
 
 ## Create and send an invoice
 
@@ -315,6 +333,91 @@ payer link. A paid invoice with PayPal's figures calls `POST /api/payout-estimat
 amount and sets the estimate (published fees) beside PayPal's actual fee, amount after fee and
 rupees, with the difference in words. When PayPal reported no exchange rate, the panel says the
 conversion is reported at withdrawal and the rupees use the ECB rate less PayPal's markup.
+
+## Late-payer radar
+
+`GET /api/clients/risk?email=&name=` filters the cached invoice list (`loadInvoices`) to the client
+(email, and name when given, compared after trimming, collapsing spaces and ignoring case) and calls
+`scoreClient`. Only paid and overdue invoices are considered. `GET /api/invoices` also tags each
+invoice with `riskLevel` from `riskByClient`, which is `null` for a client with nothing to judge. The
+reason sentence is built by code from the numbers.
+
+On the review screen `RiskRadar` shows the reading above the discount section: for a client on watch
+or a late payer, the reason and a button "Offer N% if paid within D days" that ticks the discount and
+fills its fields; for a reliable client, a short line. It uses the reading that came with the
+extraction, and asks again (400 ms after typing stops) when the client name or email is edited. The
+receivables table tags a client on watch or a late payer next to the name, and the invoice panel
+shows the reason.
+
+## Reminders
+
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant R as Route handler
+  participant S as Store
+  participant G as Gemini
+  participant P as PayPal
+  U->>R: Open Nudges (GET /api/reminders)
+  R->>R: Overdue invoices from the cached list, most days late first, at most 10
+  loop two at a time
+    R->>S: Cached draft for invoice, tone, days late?
+    alt not cached and allowance left
+      R->>G: Facts only, no contact details
+      G-->>R: subject, message
+      R->>R: Check length, invoice number, amounts, no links
+    end
+    R->>R: Model draft, or template when unusable
+  end
+  R-->>U: Drafts in the suggested tone
+  U->>R: Send (invoiceId, subject, message, tone, requestId)
+  R->>S: Claim requestId with the body hash
+  R->>P: Read the invoice
+  R->>R: Sent, unpaid and overdue? Demo guard? Already sent today?
+  R->>P: POST /remind
+  P-->>R: 204 (or 429: two a day)
+  R->>S: Log reminder, record activity, complete the claim
+  R-->>U: sentAt
+```
+
+1. `GET /api/reminders` takes the invoices with PayPal status SENT, UNPAID or PARTIALLY_PAID that
+   are overdue, most days late first (at most 10), and drafts each in its suggested tone
+   (`suggestTone` from the days late and the reminders already sent), two model calls at a time.
+2. `draftReminderText` first looks in the store's cache (24 hours, keyed by invoice, tone, days late
+   and the prompt version). Otherwise it reserves a call (the app's 400 a day; for
+   `POST /api/reminders/draft` also 20 an hour per address) and asks `runWithFallback` for a
+   structured `{ subject, message }`. The model sees the client's business name, invoice number,
+   amount, dates, days late and the work, never an email address or phone number.
+3. `checkReminderText` accepts the draft only if the subject is 5 to 120 characters and the message
+   20 to 900, the message names the invoice, every amount equals the invoice's (and is in its
+   currency), and nothing is a link or an email address (not counting the client's business name or
+   the work description, which are removed before the check). Otherwise, with no model, no allowance or
+   no valid answer, `templateReminder` supplies the text and `source` is `"template"`. The daily
+   allowance running out is not an error here; a per-address limit is `429 rate_limited`.
+4. `POST /api/reminders/send` validates the lengths with zod, claims the request ID (hash of
+   invoice, subject, message and tone), reads the invoice from PayPal, and refuses text with a link
+   or an email address (`400`: "The message must not contain links or email addresses.", checked
+   here because the client's name must be known). It also refuses an invoice that
+   is paid ("This invoice is already paid."), not sent and unpaid, or not overdue ("This invoice is
+   not overdue."). In demo mode a recipient that is not a sandbox buyer is `403` before PayPal is
+   asked to send the reminder. A reminder already logged for the invoice on the current India day (real clock) is
+   `429`. It then posts to the invoice's `/remind` endpoint with the freelancer's subject and
+   message. Any failure before PayPal accepts it releases the claim; a PayPal 429 becomes "PayPal
+   allows two reminders a day for this account. Try again tomorrow."
+5. On success the reminder is logged with its tone, a `reminder_sent` activity event
+   (`reminder:<requestId>`) is recorded, the invoice caches are cleared and the claim is completed
+   with `sentAt`. A repeat of the request returns the stored `sentAt`.
+
+**Nudges screen.** `/nudges` renders `Nudges`, which loads the drafts and the invoices. Each card
+(`NudgeCard`) shows the client with a risk badge and reason, the invoice, the amount, the due date,
+the days late and the reminders already sent; a tone switch with the suggested tone marked; the
+editable subject and message with a note saying whether the AI or a template wrote it; and "Send
+reminder through PayPal". Switching tone calls `POST /api/reminders/draft`; when the subject or message was edited, the card
+first asks "Replace your edits with a Firm draft?" with "Replace" and "Keep editing", and nothing is
+drafted until the user chooses. Each draft gets its own request ID, so a retry never sends twice. After a send the card is closed for the day. Without
+overdue invoices the screen reads "No late invoices. Nothing to chase today." The sidebar shows no
+count on Nudges: it sits in the layout and shares no state with the screens, so a count would need
+its own request for the invoice list.
 
 ## Demo access
 

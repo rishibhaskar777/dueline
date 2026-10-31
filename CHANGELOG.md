@@ -9,6 +9,22 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- The late-payer radar. Dueline scores each client from their paid and overdue invoices, by name and
+  email together, as reliable, on watch or a late payer, with a one-sentence reason worked out from
+  the numbers. For a client on watch or a late payer the new invoice screen offers a 1% or 2%
+  early-payment discount in one click, and re-checks when the client's name or email is edited. The
+  receivables table tags clients on watch and late payers, and the invoice panel shows the reason.
+  `GET /api/clients/risk` is built and no longer a stub, `POST /api/invoices/extract` now returns
+  the draft client's risk, and every invoice carries a `riskLevel`.
+- Nudges. For every overdue invoice Dueline drafts a polite reminder in a suggested tone (gentle,
+  firm or final). You switch tone (if you have edited the text, the card asks "Replace your edits with a Firm draft?"
+  first), edit the text and click "Send reminder through PayPal"; PayPal
+  emails the client from your account with the invoice and its Pay now button. Drafts are written by
+  Gemini and checked in code (length, invoice number, amounts, no links or email addresses; a client called "Acme.io" is not taken for a link), with a
+  template when AI is unavailable or the check fails. `GET /api/reminders`,
+  `POST /api/reminders/draft` and `POST /api/reminders/send` are built and no longer stubs. Dueline
+  sends one reminder per invoice a day, PayPal allows two a day for the account, and drafting is
+  limited to 20 an hour per address.
 - The export register: for any month, the invoices paid in it (India time) with the foreign amount,
   PayPal's fee and net, the rupees received, the purpose code, whether the invoice was under LUT and
   PayPal's transaction ID (from the invoice's own latest payment when PayPal reported no payout
