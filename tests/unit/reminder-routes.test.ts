@@ -9,7 +9,7 @@ import type { PayPalInvoice } from "@/lib/paypal/types";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
 import { stubEnv } from "../support/env";
-import { OKAFOR, openInvoice, overdueInvoice, paidInvoice } from "../support/summaries";
+import { BRIGHTWELL, OKAFOR, openInvoice, overdueInvoice, paidInvoice } from "../support/summaries";
 import unpaidFixture from "../fixtures/paypal/invoice-unpaid.json";
 
 vi.mock("ai", async (importOriginal) => ({
@@ -114,13 +114,32 @@ describe("GET /api/clients/risk", () => {
 
 describe("GET /api/reminders", () => {
   it("drafts a reminder for each overdue invoice", async () => {
-    load(overdue, openInvoice("2026-11-20"), overdueInvoice("2026-10-11", 20));
+    load(overdue, openInvoice("2026-11-20"), overdueInvoice("2026-10-11", 20, BRIGHTWELL));
     const response = await list();
 
     expect(response.status).toBe(200);
-    const { drafts } = await response.json();
+    const { drafts, remindersLeftToday } = await response.json();
     expect(drafts.map((entry: { tone: string }) => entry.tone)).toEqual(["firm", "gentle"]);
     expect(drafts[0]).toMatchObject({ source: "template", history: [] });
+    expect(remindersLeftToday).toBe(2);
+  });
+
+  it("counts the reminders sent today and PayPal's own refusal against the daily limit", async () => {
+    const now = new Date().toISOString();
+    await store.logReminder({ invoiceId: "a", tone: "gentle", sentAt: now });
+    expect((await (await list()).json()).remindersLeftToday).toBe(1);
+
+    await store.logReminder({ invoiceId: "b", tone: "gentle", sentAt: now });
+    expect((await (await list()).json()).remindersLeftToday).toBe(0);
+  });
+
+  it("reports none left after PayPal answers 429, even with fewer reminders logged", async () => {
+    paypal.remindInvoice.mockRejectedValueOnce(
+      new PayPalApiError({ status: 429, paypalName: "RATE_LIMIT", message: "Too many" }),
+    );
+    expect((await send(post("/api/reminders/send", sendBody))).status).toBe(429);
+
+    expect((await (await list()).json()).remindersLeftToday).toBe(0);
   });
 });
 
@@ -244,6 +263,17 @@ describe("POST /api/reminders/send", () => {
     expect((await errorOf(response)).message).toBe(
       "PayPal allows two reminders a day for this account. Try again tomorrow.",
     );
+  });
+
+  it("refuses without calling PayPal once the day's two reminders are logged", async () => {
+    const now = new Date().toISOString();
+    await store.logReminder({ invoiceId: "a", tone: "gentle", sentAt: now });
+    await store.logReminder({ invoiceId: "b", tone: "gentle", sentAt: now });
+
+    const response = await send(post("/api/reminders/send", sendBody));
+
+    expect(response.status).toBe(429);
+    expect(paypal.remindInvoice).not.toHaveBeenCalled();
   });
 
   it("answers 400 for an invoice that is not overdue", async () => {

@@ -3,8 +3,9 @@ import { reserveDailyModelCall } from "@/lib/ai/quota";
 import { inBatches } from "@/lib/in-batches";
 import { InvoiceNotFoundError } from "@/lib/invoices/errors";
 import { loadInvoices, type LoadedInvoice } from "@/lib/paypal/summaries";
+import { riskLevelsById } from "@/lib/risk/client-risk";
 import { getStore } from "@/lib/store";
-import type { ReminderDraft, Tone } from "@/types";
+import type { ReminderDraft, RiskLevel, Tone } from "@/types";
 import { draftReminderText } from "./draft-reminder";
 import { factsOf } from "./facts";
 import { assertRemindable, isRemindable } from "./overdue";
@@ -27,11 +28,12 @@ async function historyOf(invoiceId: string): Promise<ReminderDraft["history"]> {
 // Without a tone the draft is in the suggested one.
 async function draftFor(
   { summary, amountDue }: LoadedInvoice,
+  risk: RiskLevel | null,
   tone: Tone | null,
   options: DraftOptions,
 ): Promise<ReminderDraft> {
   const history = await historyOf(summary.id);
-  const suggestedTone = suggestTone(summary.daysLate, history);
+  const suggestedTone = suggestTone(summary.daysLate, history, risk);
   const chosen = tone ?? suggestedTone;
   const text = await draftReminderText(factsOf(summary, amountDue), chosen, options);
   return {
@@ -47,7 +49,9 @@ async function draftFor(
 
 // The most days late come first, and the page stays small enough to draft quickly.
 export async function listReminderDrafts(): Promise<ReminderDraft[]> {
-  const overdue = (await loadInvoices())
+  const all = await loadInvoices();
+  const levels = riskLevelsById(all.map(({ summary }) => summary));
+  const overdue = all
     .filter(({ summary }) => isRemindable(summary))
     .sort(
       (a, b) =>
@@ -56,7 +60,9 @@ export async function listReminderDrafts(): Promise<ReminderDraft[]> {
     .slice(0, MAX_DRAFTS);
 
   return inBatches(overdue, MODEL_CALLS_AT_A_TIME, (loaded) =>
-    draftFor(loaded, null, { beforeModelCall: reserveDailyModelCall }),
+    draftFor(loaded, levels.get(loaded.summary.id) ?? null, null, {
+      beforeModelCall: reserveDailyModelCall,
+    }),
   );
 }
 
@@ -65,8 +71,10 @@ export async function draftReminderFor(
   tone: Tone,
   options: DraftOptions,
 ): Promise<ReminderDraft> {
-  const loaded = (await loadInvoices()).find(({ summary }) => summary.id === invoiceId);
+  const all = await loadInvoices();
+  const loaded = all.find(({ summary }) => summary.id === invoiceId);
   if (!loaded) throw new InvoiceNotFoundError();
   assertRemindable(loaded.summary);
-  return draftFor(loaded, tone, options);
+  const levels = riskLevelsById(all.map(({ summary }) => summary));
+  return draftFor(loaded, levels.get(invoiceId) ?? null, tone, options);
 }

@@ -5,6 +5,9 @@ import type { DueLineRow, SegmentTone } from "./due-line-layout";
 const ROW_HEIGHT = 44;
 export const ROW_COLUMNS = "grid grid-cols-[11rem_minmax(28rem,1fr)_6.5rem] items-center";
 const LINE_Y = ROW_HEIGHT / 2;
+// Room the status text leaves after the end dot (radius and stroke) or the due tick, plus 6 px.
+const AFTER_END_DOT_PX = 12;
+const AFTER_DUE_TICK_PX = 7;
 
 const STROKES: Record<SegmentTone, string> = {
   paid: "stroke-paid",
@@ -68,7 +71,10 @@ export function DueLineRowView({
     >
       <div className="min-w-0 pr-3">
         <p className="truncate text-sm font-medium">{invoice.client.name}</p>
-        <p className="text-xs text-muted-foreground tabular-nums">{formatMoney(invoice.amount)}</p>
+        <p className="truncate text-sm text-muted-foreground tabular-nums">
+          {row.sharesClientName && `${invoice.number} · `}
+          {formatMoney(invoice.amount)}
+        </p>
       </div>
       <svg
         aria-hidden="true"
@@ -122,8 +128,8 @@ export function DueLineRowView({
           className={`${row.endMark === "filled" ? FILLS[row.endTone] : "fill-white"} ${STROKES[row.endTone]}`}
         />
         <text
-          x={percent(row.end)}
-          dx={12}
+          x={percent(row.statusAt)}
+          dx={row.end >= row.due ? AFTER_END_DOT_PX : AFTER_DUE_TICK_PX}
           y={LINE_Y + 4}
           className={`${STATUS_TEXT[row.statusTone]} text-xs`}
         >

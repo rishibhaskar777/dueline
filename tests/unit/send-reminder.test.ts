@@ -195,7 +195,7 @@ describe("sendReminder", () => {
     await expect(sendReminder({ ...request, tone: "firm" })).resolves.toHaveProperty("sentAt");
   });
 
-  it("explains PayPal's two-a-day limit and frees the request ID", async () => {
+  it("explains PayPal's two-a-day limit and stops asking PayPal for the rest of the day", async () => {
     paypal.remindInvoice.mockRejectedValueOnce(rejection(429));
     const error = await sendReminder(request).catch((caught: unknown) => caught);
     expect(error).toBeInstanceOf(ReminderLimitError);
@@ -204,8 +204,8 @@ describe("sendReminder", () => {
     );
     expect(await store.reminderHistory(unpaid.id)).toEqual([]);
 
-    await expect(sendReminder(request)).resolves.toHaveProperty("sentAt");
-    expect(paypal.remindInvoice).toHaveBeenCalledTimes(2);
+    await expect(sendReminder(request)).rejects.toBeInstanceOf(ReminderLimitError);
+    expect(paypal.remindInvoice).toHaveBeenCalledTimes(1);
   });
 
   it("frees the request ID when PayPal fails another way", async () => {

@@ -6,8 +6,11 @@ import {
   replaceEditsQuestion,
   sentMessage,
   sourceNote,
+  toneReason,
   wasSentToday,
 } from "@/components/nudges/nudge-model";
+import { tandemInvoice } from "@/mocks/fixtures";
+import type { InvoiceSummary, ReminderDraft, Tone } from "@/types";
 
 describe("nudge model", () => {
   it("labels days late", () => {
@@ -63,5 +66,30 @@ describe("nudge model", () => {
       expect(replaceEditsQuestion("firm")).toBe("Replace your edits with a Firm draft?");
       expect(replaceEditsQuestion("gentle")).toBe("Replace your edits with a Gentle draft?");
     });
+  });
+});
+
+describe("toneReason", () => {
+  const lateInvoice = { ...tandemInvoice, daysLate: 3, riskLevel: "late_payer" } as InvoiceSummary;
+  const draft = (suggestedTone: Tone): ReminderDraft => ({
+    invoiceId: lateInvoice.id,
+    tone: suggestedTone,
+    suggestedTone,
+    subject: "A quick reminder",
+    message: "Please pay when you can.",
+    source: "template",
+    history: [],
+  });
+
+  it("says the client's record made the suggestion firmer", () => {
+    expect(toneReason(lateInvoice, draft("firm"))).toBe(
+      `Suggested firm because ${lateInvoice.client.name} is a late payer.`,
+    );
+  });
+
+  it("says nothing when the days alone give the same tone, or the client is not a late payer", () => {
+    expect(toneReason({ ...lateInvoice, daysLate: 25 }, draft("final"))).toBeNull();
+    expect(toneReason({ ...lateInvoice, riskLevel: "watch" }, draft("gentle"))).toBeNull();
+    expect(toneReason({ ...lateInvoice, riskLevel: null }, draft("gentle"))).toBeNull();
   });
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { RiskBadge } from "@/components/shared/RiskBadge";
+import { RiskReason } from "@/components/shared/RiskReason";
 import { useClientRisk, type KnownRisk } from "@/components/shared/use-client-risk";
 import { Button } from "@/components/ui/button";
 import type { ClientRisk } from "@/types";
@@ -20,7 +21,7 @@ export function RiskRadar({ clientName, clientEmail, known, onOffer }: RiskRadar
   if (risk.level === "reliable") {
     return (
       <p className="text-sm text-muted-foreground">
-        <span className="font-medium text-paid">Reliable payer.</span> {risk.reason}
+        <span className="font-medium text-paid">Reliable payer.</span> <RiskReason risk={risk} />
       </p>
     );
   }
@@ -34,7 +35,9 @@ export function RiskRadar({ clientName, clientEmail, known, onOffer }: RiskRadar
         </h2>
         <RiskBadge level={risk.level} />
       </div>
-      <p className="mt-2 text-sm">{risk.reason}</p>
+      <p className="mt-2 text-sm">
+        <RiskReason risk={risk} />
+      </p>
       {suggestion && (
         <Button
           type="button"

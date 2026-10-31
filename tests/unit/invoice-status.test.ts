@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { rupeesFromPayPal, statusLabel } from "@/components/receivables/invoice-status";
+import { payoutSourceNote, rateNote, statusLabel } from "@/components/receivables/invoice-status";
 import { tandemInvoice } from "@/mocks/fixtures";
 import type { InvoiceSummary } from "@/types";
 
@@ -35,17 +35,20 @@ describe("statusLabel", () => {
   });
 });
 
-describe("rupeesFromPayPal", () => {
-  const payout = { ...tandemInvoice.actualPayout, netInr: 35617 } as NonNullable<
-    InvoiceSummary["actualPayout"]
-  >;
+describe("outside PayPal", () => {
+  it("names an invoice paid outside PayPal", () => {
+    const outside = invoice({ dueState: "paid", payoutSource: "outside_paypal" });
+    expect(statusLabel(outside, "2026-10-30")).toBe("Paid outside PayPal");
+    expect(payoutSourceNote("outside_paypal")).toBe("outside PayPal");
+  });
+});
 
-  it("is true only when PayPal reported the rupees", () => {
-    expect(rupeesFromPayPal(invoice({ actualPayout: payout }))).toBe(true);
+describe("rateNote", () => {
+  it("names the day of the ECB rate behind a worked-out figure", () => {
+    expect(rateNote(invoice({ rateDate: "2026-10-30" }))).toBe("ECB rate of 30 Oct 2026");
   });
 
-  it("is false when PayPal gave its net but no rupees, or no figures at all", () => {
-    expect(rupeesFromPayPal(invoice({ actualPayout: { ...payout, netInr: null } }))).toBe(false);
-    expect(rupeesFromPayPal(invoice({ actualPayout: null }))).toBe(false);
+  it("says nothing when PayPal reported the rupees", () => {
+    expect(rateNote(invoice({ rateDate: null }))).toBeNull();
   });
 });

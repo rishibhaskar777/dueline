@@ -1,7 +1,5 @@
 "use client";
 
-import { RiskBadge } from "@/components/shared/RiskBadge";
-import { useClientRisk } from "@/components/shared/use-client-risk";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,11 +8,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { formatDate } from "@/lib/format-date";
 import { formatMoney, formatRupees } from "@/lib/money/format";
 import { cn } from "@/lib/utils";
 import type { InvoiceSummary } from "@/types";
 import { EstimateComparison } from "./EstimateComparison";
+import { ClientHistory, Dates, OutsidePayPal, Work } from "./InvoiceFacts";
+import { isPaidOutsidePayPal, rateNote } from "./invoice-status";
 import { StatusBadge } from "./StatusBadge";
 
 interface InvoicePanelProps {
@@ -23,49 +22,13 @@ interface InvoicePanelProps {
   onClose: () => void;
 }
 
-function lateText(daysLate: number): string {
-  if (daysLate === 0) return "Not late";
-  return `${daysLate} ${daysLate === 1 ? "day" : "days"}`;
-}
-
-function Dates({ invoice }: { invoice: InvoiceSummary }) {
-  return (
-    <dl className="grid grid-cols-3 gap-3 text-sm">
-      <div>
-        <dt className="text-muted-foreground">Issued</dt>
-        <dd className="tabular-nums">{formatDate(invoice.issuedOn)}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground">Due</dt>
-        <dd className="tabular-nums">{formatDate(invoice.dueOn)}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground">{invoice.paidOn ? "Paid" : "Late by"}</dt>
-        <dd className="tabular-nums">
-          {invoice.paidOn ? formatDate(invoice.paidOn) : lateText(invoice.daysLate)}
-        </dd>
-      </div>
-    </dl>
-  );
-}
-
-function ClientHistory({ client }: { client: InvoiceSummary["client"] }) {
-  const risk = useClientRisk(client.email, client.name);
-  if (!risk || risk.invoicesConsidered === 0) return null;
-  return (
-    <p className="flex flex-wrap items-center gap-2 text-sm">
-      <RiskBadge level={risk.level} />
-      <span>{risk.reason}</span>
-    </p>
-  );
-}
-
 function Body({ invoice }: { invoice: InvoiceSummary }) {
   const unpaid = invoice.dueState !== "paid";
 
   return (
     <div className="grid gap-5">
       <ClientHistory client={invoice.client} />
+      <Work invoice={invoice} />
       <Dates invoice={invoice} />
       {unpaid && invoice.payoutInr !== null && (
         <div>
@@ -76,9 +39,13 @@ function Body({ invoice }: { invoice: InvoiceSummary }) {
             </span>{" "}
             reaches your bank
           </p>
-          <p className="text-sm text-muted-foreground">Estimate from published fees and rates</p>
+          <p className="text-sm text-muted-foreground">
+            Estimate from published fees and rates
+            {rateNote(invoice) && ` · ${rateNote(invoice)}`}
+          </p>
         </div>
       )}
+      {isPaidOutsidePayPal(invoice) && <OutsidePayPal invoice={invoice} />}
       {unpaid ? (
         <a
           href={invoice.payLink}
@@ -89,7 +56,7 @@ function Body({ invoice }: { invoice: InvoiceSummary }) {
           Open payer link
         </a>
       ) : (
-        <EstimateComparison invoice={invoice} />
+        !isPaidOutsidePayPal(invoice) && <EstimateComparison invoice={invoice} />
       )}
       {invoice.purposeCode && (
         <p className="text-sm">

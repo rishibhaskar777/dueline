@@ -18,12 +18,6 @@ const service = vi.hoisted(() => ({
 
 vi.mock("@/lib/invoices/create-invoice", () => service);
 
-// connection() only works inside a Next.js request, which a direct call to the handler is not.
-vi.mock("next/server", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("next/server")>()),
-  connection: async () => {},
-}));
-
 const requestId = "3f2b8c1e-6a4d-4e8b-9c1a-2d5e7f9a0b1c";
 
 function post(body: unknown): Request {

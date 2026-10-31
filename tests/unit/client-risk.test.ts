@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { clientKeyOf } from "@/lib/risk/client-key";
-import { getClientRisk, riskByClient } from "@/lib/risk/client-risk";
+import { getClientRisk, riskLevelsById } from "@/lib/risk/client-risk";
 import { stubEnv } from "../support/env";
 import { BRIGHTWELL, OKAFOR, openInvoice, overdueInvoice, paidInvoice } from "../support/summaries";
 
@@ -64,14 +63,43 @@ describe("getClientRisk", () => {
   });
 });
 
-describe("riskByClient", () => {
-  it("gives each client its own level and leaves out clients with nothing to judge", () => {
-    const levels = riskByClient([
-      ...summaries,
-      openInvoice("2026-11-20", { name: "Fresh", email: "f@x.co" }),
-    ]);
-    expect(levels.get(clientKeyOf(OKAFOR))).toBe("late_payer");
-    expect(levels.get(clientKeyOf(BRIGHTWELL))).toBe("watch");
-    expect(levels.has(clientKeyOf({ name: "Fresh", email: "f@x.co" }))).toBe(false);
+describe("getClientRisk matching", () => {
+  it("finds a client's history under a new email by its business name", async () => {
+    for (const DEMO_MODE of ["true", "false"]) {
+      stubEnv({ DEMO_TODAY: "2026-10-31", DEMO_MODE });
+      const risk = await getClientRisk("accounts@brightwell.example.com", "Brightwell Labs");
+      expect(risk).toMatchObject({ clientName: "Brightwell Labs", invoicesConsidered: 1 });
+    }
+  });
+
+  it("finds a client's history under a new name by its email outside the demo", async () => {
+    stubEnv({ DEMO_TODAY: "2026-10-31", DEMO_MODE: "false" });
+    const risk = await getClientRisk(OKAFOR.email, "Okafor Reyes Ltd");
+    expect(risk.invoicesConsidered).toBe(3);
+  });
+
+  it("keeps the shared sandbox email from joining clients in the demo", async () => {
+    stubEnv({ DEMO_TODAY: "2026-10-31", DEMO_MODE: "true" });
+    const risk = await getClientRisk(OKAFOR.email, "Somebody Else");
+    expect(risk.invoicesConsidered).toBe(0);
+  });
+});
+
+describe("riskLevelsById", () => {
+  it("gives each invoice its client's level and leaves out clients with nothing to judge", () => {
+    const fresh = openInvoice("2026-11-20", { name: "Fresh", email: "f@x.co" });
+    const levels = riskLevelsById([...summaries, fresh]);
+    expect(levels.get(summaries[0].id)).toBe("late_payer");
+    expect(levels.get(summaries[2].id)).toBe("watch");
+    expect(levels.has(fresh.id)).toBe(false);
+  });
+
+  it("joins invoices of one business name sent to different emails", () => {
+    const moved = paidInvoice("2026-09-01", "2026-09-17", {
+      name: "Okafor & Reyes",
+      email: "new@okafor.example.com",
+    });
+    const levels = riskLevelsById([...summaries, moved]);
+    expect(levels.get(moved.id)).toBe("late_payer");
   });
 });

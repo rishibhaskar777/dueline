@@ -4,6 +4,7 @@ import { inBatches } from "@/lib/in-batches";
 import { getStore } from "@/lib/store";
 import type { ActualPayout, InvoiceSummary, Money } from "@/types";
 import { getInvoice, listInvoices } from "./invoices";
+import { markerOf } from "./memo";
 import { amountDueOf, isUnderLut, latestPayment, PAYOUT_STATUSES, toInvoiceSummary } from "./map";
 import { getActualPayout } from "./payments";
 import type { PayPalInvoice } from "./types";
@@ -124,7 +125,9 @@ export async function listInvoicesInFull(): Promise<PayPalInvoice[]> {
 }
 
 export async function findInvoiceByMemo(memo: string): Promise<PayPalInvoice | undefined> {
-  return (await listInvoicesInFull()).find((invoice) => invoice.detail.memo === memo);
+  return (await listInvoicesInFull()).find(
+    (invoice) => markerOf(invoice.detail.memo) === markerOf(memo),
+  );
 }
 
 // Rupee figures are filled in later, so a settings change shows up without waiting for PayPal.

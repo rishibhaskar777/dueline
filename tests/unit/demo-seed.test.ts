@@ -48,7 +48,7 @@ describe("seedDemo", () => {
     expect(fake.calls.sent).toHaveLength(story.length);
     const created = [...fake.invoices.values()];
     expect(created.map((invoice) => invoice.detail.memo)).toEqual(
-      story.map((invoice) => demoMemo(invoice.key)),
+      story.map((invoice) => demoMemo(invoice.key, invoice.purposeCode)),
     );
     expect(
       created.every((i) => i.primary_recipients?.[0].billing_info.email_address === BUYER),

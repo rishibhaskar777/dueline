@@ -32,6 +32,7 @@ describe("proxy matcher", () => {
       "/nudges",
       "/export",
       "/settings",
+      "/demo-tools",
     ]);
   });
 });

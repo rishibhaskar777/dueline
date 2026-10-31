@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { NudgeHeader } from "./NudgeHeader";
-import { sentMessage, sourceNote } from "./nudge-model";
+import { sentMessage, sourceNote, toneReason } from "./nudge-model";
 import { ReplaceEditsPrompt } from "./ReplaceEditsPrompt";
 import { ToneSwitch } from "./ToneSwitch";
 import type { Nudge } from "./use-nudges";
@@ -15,9 +15,15 @@ import { useNudgeDraft } from "./use-nudge-draft";
 const ALREADY_SENT_TODAY =
   "A reminder was already sent for this invoice today. Dueline sends one a day.";
 
-export function NudgeCard({ draft: initial, invoice }: Nudge) {
+interface NudgeCardProps extends Nudge {
+  // PayPal's daily reminder limit is used up, so drafting stays open but sending is not.
+  limitReached: boolean;
+  onSent: () => void;
+}
+
+export function NudgeCard({ draft: initial, invoice, limitReached, onSent }: NudgeCardProps) {
   const id = useId();
-  const nudge = useNudgeDraft(initial);
+  const nudge = useNudgeDraft(initial, onSent);
   const { draft, drafting, sending, closed, sentAt } = nudge;
   const locked = drafting || sending || closed;
 
@@ -32,6 +38,9 @@ export function NudgeCard({ draft: initial, invoice }: Nudge) {
           disabled={locked}
           onChange={nudge.switchTone}
         />
+        {toneReason(invoice, draft) && (
+          <p className="text-sm text-muted-foreground">{toneReason(invoice, draft)}</p>
+        )}
         {nudge.pendingTone && !locked && (
           <ReplaceEditsPrompt
             tone={nudge.pendingTone}
@@ -69,7 +78,7 @@ export function NudgeCard({ draft: initial, invoice }: Nudge) {
         </div>
 
         <div className="flex flex-wrap items-center gap-4">
-          <Button type="button" disabled={locked} onClick={nudge.send}>
+          <Button type="button" disabled={locked || limitReached} onClick={nudge.send}>
             {sending ? "Sending…" : "Send reminder through PayPal"}
           </Button>
           {sentAt && (

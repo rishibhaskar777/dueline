@@ -99,8 +99,8 @@ export function DueLineIllustration() {
         ))}
       </svg>
       <figcaption className="mt-3 text-sm text-muted-foreground">
-        Every invoice is a line from sent to due. A payment that runs past today turns red, so late
-        clients stand out.
+        Every invoice is a line from sent to due. Once a line runs past its due date it turns red,
+        so late clients stand out.
       </figcaption>
     </figure>
   );

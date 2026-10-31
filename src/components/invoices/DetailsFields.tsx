@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { FieldError } from "@/components/invoices/FieldError";
 import type { FieldErrors, InvoiceForm } from "@/components/invoices/invoice-form";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,10 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { NO_CODE, purposeCodeItems } from "@/components/invoices/purpose-code-items";
 import { Textarea } from "@/components/ui/textarea";
 import { currencySchema, type PurposeCode } from "@/types";
 
-const NO_CODE = "none";
 const CURRENCY_ITEMS = currencySchema.options.map((code) => ({ value: code, label: code }));
 
 interface DetailsFieldsProps {
@@ -27,10 +28,8 @@ interface DetailsFieldsProps {
 }
 
 export function DetailsFields({ form, update, errors, codes, today }: DetailsFieldsProps) {
-  const codeItems = [
-    { value: NO_CODE, label: "No purpose code" },
-    ...codes.map((entry) => ({ value: entry.code, label: `${entry.code} ${entry.label}` })),
-  ];
+  // The Select reads its items on every render, so a new array each time keeps it updating.
+  const codeItems = useMemo(() => purposeCodeItems(codes), [codes]);
 
   return (
     <div className="grid gap-5">

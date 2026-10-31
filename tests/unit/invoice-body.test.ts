@@ -26,10 +26,9 @@ describe("toPayPalInvoice", () => {
     expect(toPayPalInvoice(draft, options)).toEqual({
       detail: {
         invoice_number: "0042",
-        reference: "P1099",
         invoice_date: "2026-10-30",
         currency_code: "USD",
-        memo: `dueline-request:${requestId}`,
+        memo: `dueline-request:${requestId} purpose:P1099`,
         payment_term: { term_type: "DUE_ON_DATE_SPECIFIED", due_date: "2026-11-30" },
       },
       primary_recipients: [
@@ -55,10 +54,8 @@ describe("toPayPalInvoice", () => {
     });
   });
 
-  it("sets a reference only when a purpose code is chosen", () => {
-    expect(toPayPalInvoice(draft, options).detail.reference).toBe("P1099");
-    const without = toPayPalInvoice({ ...draft, purposeCode: null }, options);
-    expect(without.detail).not.toHaveProperty("reference");
+  it("keeps the purpose code out of the reference the client sees", () => {
+    expect(toPayPalInvoice(draft, options).detail).not.toHaveProperty("reference");
   });
 
   it("puts the note and the LUT line on separate lines", () => {
@@ -75,8 +72,16 @@ describe("toPayPalInvoice", () => {
   });
 
   it("carries the request in the memo so the invoice can be found again", () => {
-    expect(toPayPalInvoice(draft, options).detail.memo).toBe(requestMemo(requestId));
     expect(requestMemo(requestId)).toBe(`dueline-request:${requestId}`);
+  });
+
+  it("stores the purpose code in the private memo next to the request, only when one is chosen", () => {
+    expect(toPayPalInvoice(draft, options).detail.memo).toBe(
+      `dueline-request:${requestId} purpose:P1099`,
+    );
+    expect(toPayPalInvoice({ ...draft, purposeCode: null }, options).detail.memo).toBe(
+      requestMemo(requestId),
+    );
   });
 
   it("applies PayPal's invoice discount, says so in the note and moves the due date earlier", () => {

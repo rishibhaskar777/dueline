@@ -4,7 +4,7 @@ import { SourceTag } from "@/components/shared/SourceTag";
 import { formatDate } from "@/lib/format-date";
 import { formatMoney, formatRupees } from "@/lib/money/format";
 import type { InvoiceSummary } from "@/types";
-import { rupeesFromPayPal, statusLabel } from "./invoice-status";
+import { statusLabel } from "./invoice-status";
 import { StatusBadge } from "./StatusBadge";
 
 type Params = ICellRendererParams<InvoiceSummary>;
@@ -32,7 +32,8 @@ function PayoutCell({ data }: Params) {
   if (!data || data.payoutInr === null) return <span className="text-muted-foreground">–</span>;
   return (
     <span className="tabular-nums">
-      {formatRupees(data.payoutInr)} <SourceTag reportedByPayPal={rupeesFromPayPal(data)} />
+      {formatRupees(data.payoutInr)}
+      {data.payoutSource && <SourceTag source={data.payoutSource} />}
     </span>
   );
 }
@@ -53,17 +54,18 @@ function OpenCell({ data }: Params) {
   );
 }
 
+// Work, issue date and purpose code live in the invoice panel. They stay in the grid, hidden, so the
+// search still finds them.
 export const invoiceColumns: ColDef<InvoiceSummary>[] = [
-  { headerName: "Invoice", field: "number", width: 120 },
-  { headerName: "Client", field: "client.name", cellRenderer: ClientCell, width: 250 },
-  { headerName: "Work", field: "work", flex: 1, minWidth: 180 },
+  { headerName: "Invoice", field: "number", width: 110, pinned: "left" },
+  { headerName: "Client", field: "client.name", cellRenderer: ClientCell, flex: 1, minWidth: 200 },
   {
     headerName: "Amount",
     valueGetter: ({ data }) => (data ? Number(data.amount.value) : 0),
     valueFormatter: ({ data }) => (data ? formatMoney(data.amount) : ""),
     type: "rightAligned",
     cellClass: "tabular-nums",
-    width: 130,
+    width: 120,
   },
   {
     headerName: "To your bank",
@@ -71,26 +73,20 @@ export const invoiceColumns: ColDef<InvoiceSummary>[] = [
     valueFormatter: ({ value }) => (typeof value === "number" ? formatRupees(value) : ""),
     cellRenderer: PayoutCell,
     type: "rightAligned",
-    width: 170,
-  },
-  {
-    headerName: "Issued",
-    field: "issuedOn",
-    valueFormatter: ({ value }) => formatDate(value),
-    width: 130,
+    width: 200,
   },
   {
     headerName: "Due",
     field: "dueOn",
     valueFormatter: ({ value }) => formatDate(value),
-    width: 130,
+    width: 120,
   },
   {
     headerName: "Status",
     valueGetter: ({ data, context }) =>
       data ? statusLabel(data, (context as GridContext).today) : "",
     cellRenderer: StatusCell,
-    width: 120,
+    width: 180,
   },
   {
     headerName: "Days late",
@@ -98,19 +94,16 @@ export const invoiceColumns: ColDef<InvoiceSummary>[] = [
     valueFormatter: ({ value }) => (value > 0 ? String(value) : "–"),
     type: "rightAligned",
     cellClass: "tabular-nums",
-    width: 110,
-  },
-  {
-    headerName: "Purpose code",
-    field: "purposeCode",
-    valueFormatter: ({ value }) => value ?? "–",
-    width: 130,
+    width: 100,
   },
   {
     headerName: "PayPal",
     colId: "open",
     sortable: false,
     cellRenderer: OpenCell,
-    width: 90,
+    width: 80,
   },
+  { headerName: "Work", field: "work", hide: true },
+  { headerName: "Issued", field: "issuedOn", hide: true },
+  { headerName: "Purpose code", field: "purposeCode", hide: true },
 ];

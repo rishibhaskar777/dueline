@@ -143,4 +143,11 @@ describe("postgres store", () => {
       },
     ]);
   });
+
+  it("counts the reminders sent at or after a time", async () => {
+    const { sql, values } = fakeSql([{ count: "2" }]);
+    const count = await createPostgresStore(sql).countRemindersSince("2026-10-31T00:00:00+05:30");
+    expect(count).toBe(2);
+    expect(values[0]).toEqual(["2026-10-31T00:00:00+05:30"]);
+  });
 });

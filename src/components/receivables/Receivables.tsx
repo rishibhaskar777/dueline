@@ -44,7 +44,7 @@ export function Receivables() {
         today={health.today}
         onOpen={(invoice) => setOpenId(invoice.id)}
       />
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+      <div className="grid items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_20rem]">
         <InvoiceTable
           invoices={invoices}
           today={health.today}

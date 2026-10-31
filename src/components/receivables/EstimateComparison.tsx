@@ -5,6 +5,7 @@ import { SourceTag } from "@/components/shared/SourceTag";
 import { estimatePayout } from "@/lib/api-client";
 import { formatMoney, formatRupees } from "@/lib/money/format";
 import type { InvoiceSummary, PayoutEstimate } from "@/types";
+import { rateNote } from "./invoice-status";
 import { describeFeeDifference, describeRupeeDifference } from "./payout-comparison";
 
 type Outcome = { estimate: PayoutEstimate } | { message: string } | null;
@@ -52,7 +53,8 @@ export function EstimateComparison({ invoice }: { invoice: InvoiceSummary }) {
   if (!actualPayout) {
     return (
       <p className="text-sm text-muted-foreground">
-        PayPal has not reported its figures for this payment yet. Rupees are an estimate.
+        PayPal has not reported its figures for this payment yet. Rupees are an estimate
+        {rateNote(invoice) && ` at the ${rateNote(invoice)}`}.
       </p>
     );
   }
@@ -100,7 +102,7 @@ export function EstimateComparison({ invoice }: { invoice: InvoiceSummary }) {
               ) : (
                 <>
                   {formatRupees(invoice.payoutInr)}{" "}
-                  <SourceTag reportedByPayPal={reportedInr !== null} />
+                  {invoice.payoutSource && <SourceTag source={invoice.payoutSource} />}
                 </>
               )
             }
@@ -114,7 +116,7 @@ export function EstimateComparison({ invoice }: { invoice: InvoiceSummary }) {
       {reportedInr === null && (
         <p className="mt-2 text-sm text-muted-foreground">
           PayPal reports the conversion when you withdraw. Until then the rupees are an estimate
-          from PayPal&apos;s net at the ECB rate less PayPal&apos;s markup.
+          from PayPal&apos;s net at the {rateNote(invoice) ?? "ECB rate"} less PayPal&apos;s markup.
         </p>
       )}
     </div>

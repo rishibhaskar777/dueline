@@ -27,6 +27,7 @@ export function createFakePayPal() {
         invoice_number: `INV-${1000 + counter}`,
         invoice_date: "2026-10-01",
         currency_code: "USD",
+        metadata: { create_time: "2026-10-01T00:00:00Z" },
         ...(memo ? { memo } : {}),
       },
       ...overrides,

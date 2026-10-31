@@ -6,7 +6,7 @@ import { formatDayMonth } from "@/lib/format-date";
 import type { InvoiceSummary } from "@/types";
 import { DueLineRowView, ROW_COLUMNS } from "./DueLineRowView";
 import { DueLineTooltip, type TooltipTarget } from "./DueLineTooltip";
-import { DEFAULT_AXIS_PX, layoutDueLine, MAX_DUE_LINE_ROWS } from "./due-line-layout";
+import { DEFAULT_AXIS_PX, layoutDueLine } from "./due-line-layout";
 
 interface DueLineChartProps {
   invoices: InvoiceSummary[];
@@ -22,13 +22,13 @@ const LEGEND = [
 ];
 
 export function DueLineChart({ invoices, today, onOpen }: DueLineChartProps) {
-  const [showAll, setShowAll] = useState(false);
+  const [showOlder, setShowOlder] = useState(false);
   const [tip, setTip] = useState<TooltipTarget | null>(null);
   const [axisPx, setAxisPx] = useState(DEFAULT_AXIS_PX);
   const axis = useRef<SVGSVGElement>(null);
   const layout = useMemo(
-    () => layoutDueLine(invoices, today, showAll, axisPx),
-    [invoices, today, showAll, axisPx],
+    () => layoutDueLine(invoices, today, showOlder, axisPx),
+    [invoices, today, showOlder, axisPx],
   );
   const tickPositions = layout.ticks.map((tick) => tick.position);
 
@@ -68,30 +68,32 @@ export function DueLineChart({ invoices, today, onOpen }: DueLineChartProps) {
 
       <div className="mt-3 overflow-x-auto">
         <div className="min-w-[46rem]">
-          <div className={`${ROW_COLUMNS} h-6`}>
+          <div className={`${ROW_COLUMNS} h-8`}>
             <svg
               ref={axis}
               aria-hidden="true"
               width="100%"
-              height={24}
+              height={32}
               className="col-start-2 overflow-visible"
             >
-              {layout.ticks.map((tick) => (
-                <text
-                  key={tick.date}
-                  x={`${tick.position * 100}%`}
-                  y={16}
-                  textAnchor="middle"
-                  className="fill-muted-foreground text-[11px]"
-                >
-                  {formatDayMonth(tick.date)}
-                </text>
-              ))}
+              {layout.ticks
+                .filter((tick) => tick.labelled)
+                .map((tick) => (
+                  <text
+                    key={tick.date}
+                    x={`${tick.position * 100}%`}
+                    y={30}
+                    textAnchor="middle"
+                    className="fill-muted-foreground text-xs"
+                  >
+                    {formatDayMonth(tick.date)}
+                  </text>
+                ))}
               <text
                 x={`${layout.today * 100}%`}
-                y={6}
+                y={11}
                 textAnchor="middle"
-                className="fill-navy text-[11px] font-semibold"
+                className="fill-navy text-xs font-semibold"
               >
                 Today
               </text>
@@ -113,14 +115,15 @@ export function DueLineChart({ invoices, today, onOpen }: DueLineChartProps) {
         </div>
       </div>
 
-      {layout.total > MAX_DUE_LINE_ROWS && (
+      {layout.olderCount > 0 && (
         <Button
           type="button"
           variant="outline"
           className="mt-3"
-          onClick={() => setShowAll((value) => !value)}
+          aria-pressed={showOlder}
+          onClick={() => setShowOlder((value) => !value)}
         >
-          {showAll ? "Show fewer invoices" : `Show all ${layout.total} invoices`}
+          {showOlder ? "Hide older invoices" : `Show older (${layout.olderCount})`}
         </Button>
       )}
       {tip && <DueLineTooltip target={tip} />}

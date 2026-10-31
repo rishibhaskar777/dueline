@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { isDemoClock, today, todayInKolkata } from "@/lib/clock";
 import { getEnv } from "@/lib/env";
 import { getAccessToken } from "@/lib/paypal/token";
@@ -41,6 +42,7 @@ function readClock(): Pick<HealthResponse, "today" | "demoClock"> {
 }
 
 export async function GET(): Promise<Response> {
+  await connection();
   const [paypal, storage] = await Promise.all([checkPayPal(), checkStorage()]);
   return ok<HealthResponse>({ paypal, ai: checkAi(), storage, mode: "sandbox", ...readClock() });
 }

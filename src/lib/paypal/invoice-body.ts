@@ -1,6 +1,7 @@
 import { addDays } from "@/lib/clock";
 import { formatDate } from "@/lib/format-date";
 import type { CreateInvoiceRequest } from "@/types";
+import { memoOf } from "./memo";
 import type { PayPalInvoiceInput } from "./types";
 
 type InvoiceToCreate = CreateInvoiceRequest["draft"];
@@ -20,9 +21,8 @@ interface EarlyPayment {
 const MEMO_PREFIX = "dueline-request:";
 export const LUT_NOTE = "Export of services under LUT, without payment of IGST";
 
-// The memo is visible only to the invoicer. It lets a created invoice be found again by request.
-export function requestMemo(requestId: string): string {
-  return `${MEMO_PREFIX}${requestId}`;
+export function requestMemo(requestId: string, purposeCode: string | null = null): string {
+  return memoOf(`${MEMO_PREFIX}${requestId}`, purposeCode);
 }
 
 function noteOf(draft: InvoiceToCreate, early: EarlyPayment | undefined): string | undefined {
@@ -58,11 +58,10 @@ export function toPayPalInvoice(
   return {
     detail: {
       invoice_number: invoiceNumber,
-      ...(draft.purposeCode ? { reference: draft.purposeCode } : {}),
       invoice_date: invoiceDate,
       currency_code: draft.currency,
       ...(note ? { note } : {}),
-      memo: requestMemo(requestId),
+      memo: requestMemo(requestId, draft.purposeCode),
       payment_term: { term_type: "DUE_ON_DATE_SPECIFIED", due_date: dueDate },
     },
     primary_recipients: [

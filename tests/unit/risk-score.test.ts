@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clientKeyOf, isSameClient } from "@/lib/risk/client-key";
+import { isSameClient } from "@/lib/risk/client-key";
 import { scoreClient } from "@/lib/risk/score";
 import { BRIGHTWELL, OKAFOR, openInvoice, overdueInvoice, paidInvoice } from "../support/summaries";
 
@@ -124,18 +124,31 @@ describe("scoreClient", () => {
 });
 
 describe("client identity", () => {
+  const demo = false;
+  const outsideDemo = true;
+
   it("matches a name after trimming, collapsing spaces and ignoring case", () => {
-    expect(isSameClient(OKAFOR, "BUYER@personal.example.com ", "  okafor   &  REYES ")).toBe(true);
+    const query = { email: "other@example.com", name: "  okafor   &  REYES " };
+    expect(isSameClient(OKAFOR, query, demo)).toBe(true);
   });
 
   it("matches by email alone when no name is given", () => {
-    expect(isSameClient(OKAFOR, "buyer@personal.example.com")).toBe(true);
-    expect(isSameClient(OKAFOR, "other@example.com")).toBe(false);
+    expect(isSameClient(OKAFOR, { email: " BUYER@personal.example.com" }, demo)).toBe(true);
+    expect(isSameClient(OKAFOR, { email: "other@example.com" }, demo)).toBe(false);
   });
 
-  it("tells two clients that share one sandbox email apart", () => {
-    expect(isSameClient(BRIGHTWELL, OKAFOR.email, OKAFOR.name)).toBe(false);
-    expect(clientKeyOf(BRIGHTWELL)).not.toBe(clientKeyOf(OKAFOR));
+  it("tells two clients that share one sandbox email apart in the demo", () => {
+    expect(isSameClient(BRIGHTWELL, OKAFOR, demo)).toBe(false);
+  });
+
+  it("matches the same email under another name outside the demo", () => {
+    expect(isSameClient(BRIGHTWELL, OKAFOR, outsideDemo)).toBe(true);
+  });
+
+  it("matches the same name under another email in both modes", () => {
+    const moved = { name: "brightwell labs", email: "new@brightwell.example.com" };
+    expect(isSameClient(BRIGHTWELL, moved, demo)).toBe(true);
+    expect(isSameClient(BRIGHTWELL, moved, outsideDemo)).toBe(true);
   });
 
   it("scores each of two clients sharing an email from its own invoices", () => {
@@ -146,7 +159,7 @@ describe("client identity", () => {
     ];
     const of = (client: typeof OKAFOR) =>
       scoreClient(
-        all.filter((invoice) => isSameClient(invoice.client, client.email, client.name)),
+        all.filter((invoice) => isSameClient(invoice.client, client, demo)),
         TODAY,
       );
     expect(of(OKAFOR).level).toBe("late_payer");

@@ -36,6 +36,8 @@ export interface Store {
 
   logReminder(entry: ReminderLogEntry): Promise<void>;
   reminderHistory(invoiceId: string): Promise<ReminderLogEntry[]>;
+  // Reminders sent for any invoice at or after this ISO timestamp.
+  countRemindersSince(since: string): Promise<number>;
 
   getSettings(): Promise<Settings | null>;
   saveSettings(settings: Settings): Promise<void>;

@@ -99,7 +99,7 @@ describe("createAndSendInvoice", () => {
     expect(createdBodies()[0].detail).toMatchObject({
       invoice_number: "INV-0101",
       invoice_date: "2026-10-30",
-      memo: requestMemo(requestId),
+      memo: requestMemo(requestId, input.draft.purposeCode),
     });
     expect(paypal.sendInvoice).toHaveBeenCalledWith(
       "INV2-NEW",

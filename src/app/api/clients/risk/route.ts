@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { getClientRisk } from "@/lib/risk/client-risk";
 import { clientRiskQuerySchema, type ClientRisk } from "@/types";
 import { failFromError } from "@/app/api/_lib/errors";
@@ -5,6 +6,7 @@ import { ok } from "@/app/api/_lib/respond";
 import { parseQuery } from "@/app/api/_lib/validate";
 
 export async function GET(req: Request): Promise<Response> {
+  await connection();
   const parsed = parseQuery(req, clientRiskQuerySchema);
   if (!parsed.ok) return parsed.response;
 

@@ -42,6 +42,8 @@ describe("toInvoiceSummary", () => {
       dueState: "on_time",
       daysLate: 0,
       payoutInr: null,
+      payoutSource: null,
+      rateDate: null,
       actualPayout: null,
       purposeCode: "P1099",
       payLink: "https://www.sandbox.paypal.com/invoice/p/#TEST0001",
@@ -152,6 +154,22 @@ describe("toInvoiceSummary", () => {
     };
     const summary = toInvoiceSummary(missing, TODAY, null);
     expect(summary).toMatchObject({ dueOn: "2026-10-09", dueState: "overdue", daysLate: 8 });
+  });
+
+  it("reads the purpose code from the memo before the reference", () => {
+    const tagged: PayPalInvoice = {
+      ...unpaid,
+      detail: { ...unpaid.detail, reference: "P1007", memo: "dueline-request:abc purpose:P0802" },
+    };
+    expect(toInvoiceSummary(tagged, TODAY, null)?.purposeCode).toBe("P0802");
+  });
+
+  it("falls back to the reference of an older invoice", () => {
+    const older: PayPalInvoice = {
+      ...unpaid,
+      detail: { ...unpaid.detail, reference: "P1007", memo: "dueline-request:abc" },
+    };
+    expect(toInvoiceSummary(older, TODAY, null)?.purposeCode).toBe("P1007");
   });
 
   it("drops a reference that is not a known purpose code", () => {

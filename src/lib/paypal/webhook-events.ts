@@ -1,8 +1,9 @@
 import "server-only";
 import { z } from "zod";
 import { today } from "@/lib/clock";
+import { isDemoMemo } from "@/lib/demo/story";
 import { getStore } from "@/lib/store";
-import type { ActivityKind } from "@/types";
+import type { ActivityKind, InvoiceSummary } from "@/types";
 import { getInvoice } from "./invoices";
 import { toInvoiceSummary } from "./map";
 import { getActualPayout } from "./payments";
@@ -47,6 +48,17 @@ function happenedAt(event: WebhookEvent): string {
   return (reported && !Number.isNaN(reported.getTime()) ? reported : new Date()).toISOString();
 }
 
+const STORY_EVENT_HOUR = "09:00:00+05:30";
+
+// A demo-story invoice is created today but stands for work done earlier, so its events happened on
+// the story's dates. An event is never placed in the future.
+function storyEventAt(kind: ActivityKind, summary: InvoiceSummary, reported: string): string {
+  const date = kind === "paid" ? summary.paidOn : summary.issuedOn;
+  if (!date) return reported;
+  const story = new Date(`${date}T${STORY_EVENT_HOUR}`);
+  return story.getTime() < Date.parse(reported) ? story.toISOString() : reported;
+}
+
 // The event only says that something changed; PayPal's current invoice is what Dueline believes.
 async function refreshInvoice(event: WebhookEvent, invoiceId: string): Promise<void> {
   const store = getStore();
@@ -66,7 +78,9 @@ async function refreshInvoice(event: WebhookEvent, invoiceId: string): Promise<v
     invoiceId: summary.id,
     invoiceNumber: summary.number,
     clientName: summary.client.name,
-    at: happenedAt(event),
+    at: isDemoMemo(invoice.detail.memo)
+      ? storyEventAt(kind, summary, happenedAt(event))
+      : happenedAt(event),
     amount: summary.amount,
   });
 }

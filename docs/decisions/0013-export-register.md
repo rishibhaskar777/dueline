@@ -75,3 +75,27 @@ those are and how they were worked out. PayPal's figures are rounded to whole ru
 differ from the FIRA by under one rupee. Every register read loads the invoice list (cached for 20
 seconds) and asks for a rate at most once per distinct paid date that needs one. A month with
 many estimated rows makes that many first-time requests to Frankfurter, and none afterwards.
+
+## Update: the FIRA source and one rupee figure per payment
+
+**The FIRA is monthly and consolidated.** PayPal issues one consolidated digital FIRA a month,
+downloadable by the 15th of the next month under Reports > Statements > FIRA
+([PayPal's guide](https://www.paypal.com/in/brc/article/paypal-monthly-digital-firc)). The screen
+says so and tells the user to match the register's totals and transaction IDs with it, replacing the
+earlier wording that implied a FIRA per payment.
+
+**One rule for the rupees of a payment.** The receivables screen and the register used to disagree
+for a payment where PayPal reported its net but no rupees: the register converted at the rate of the
+payment date, receivables at today's. Both now read `resolvePayouts`, which applies `payoutFor`:
+
+- A paid invoice is PayPal's `netInr` (whole rupees) when reported.
+- Otherwise it is PayPal's net, or the estimate from the published fees when PayPal gave no figures,
+  at the ECB rate of the payment date (`getRatesOn`) less the settings' markup.
+- An unpaid invoice keeps today's rate, so its estimate moves until it is paid.
+- The invoice carries `payoutSource` and `rateDate`, so the panel can say "ECB rate of 30 Oct 2026".
+
+**A payment recorded outside PayPal is not a PayPal payout.** An invoice marked as paid outside PayPal
+had no PayPal fee and no PayPal conversion, so its rupees are its amount at the ECB rate of the
+payment date with no fee and no markup, tagged "outside PayPal". Receivables totals keep these apart
+(`paidThisMonthOutsideInr`) from what PayPal paid, and the register keeps leaving them out because
+the FIRA does not list them.

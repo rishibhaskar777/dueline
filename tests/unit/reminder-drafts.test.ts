@@ -7,7 +7,7 @@ import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
 import type { InvoiceSummary } from "@/types";
 import { stubEnv } from "../support/env";
-import { OKAFOR, openInvoice, overdueInvoice, paidInvoice } from "../support/summaries";
+import { BRIGHTWELL, OKAFOR, openInvoice, overdueInvoice, paidInvoice } from "../support/summaries";
 
 vi.mock("ai", async (importOriginal) => ({
   ...(await importOriginal<typeof import("ai")>()),
@@ -42,22 +42,39 @@ afterEach(() => vi.restoreAllMocks());
 
 describe("listReminderDrafts", () => {
   it("drafts only overdue invoices, most days late first", async () => {
+    const bystander = { name: "Northpine Studio", email: "n@x.example" };
     const five = overdueInvoice("2026-10-26", 5);
-    const twenty = overdueInvoice("2026-10-11", 20);
-    const nine = overdueInvoice("2026-10-22", 9);
+    const twenty = overdueInvoice("2026-10-11", 20, BRIGHTWELL);
+    const nine = overdueInvoice("2026-10-22", 9, {
+      name: "Halden Coffee Co.",
+      email: "h@x.example",
+    });
     load([
       five,
-      paidInvoice("2026-10-01", "2026-10-02"),
-      openInvoice("2026-11-20"),
+      paidInvoice("2026-10-01", "2026-10-02", bystander),
+      openInvoice("2026-11-20", bystander),
       twenty,
       nine,
-      { ...overdueInvoice("2026-10-01", 30), paypalStatus: "CANCELLED" },
+      { ...overdueInvoice("2026-10-01", 30, bystander), paypalStatus: "CANCELLED" },
     ]);
 
     const drafts = await listReminderDrafts();
     expect(drafts.map((draft) => draft.invoiceId)).toEqual([twenty.id, nine.id, five.id]);
     expect(drafts.map((draft) => draft.tone)).toEqual(["firm", "firm", "gentle"]);
     expect(drafts.every((draft) => draft.source === "template")).toBe(true);
+  });
+
+  it("suggests a tone one step firmer for a late payer, and says which it started from", async () => {
+    const first = overdueInvoice("2026-10-11", 20);
+    const second = overdueInvoice("2026-10-22", 9);
+    const watched = overdueInvoice("2026-10-26", 5, BRIGHTWELL);
+    load([first, second, watched]);
+
+    const drafts = await listReminderDrafts();
+    const toneOf = (id: string) => drafts.find((draft) => draft.invoiceId === id)?.suggestedTone;
+    expect(toneOf(first.id)).toBe("final");
+    expect(toneOf(second.id)).toBe("final");
+    expect(toneOf(watched.id)).toBe("gentle");
   });
 
   it("returns an empty list when nothing is overdue", async () => {

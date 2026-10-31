@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { today } from "@/lib/clock";
 import { toCsv } from "@/lib/export/csv";
 import { buildExportRegister } from "@/lib/export/register";
@@ -7,6 +8,7 @@ import { fail, ok } from "@/app/api/_lib/respond";
 import { parseQuery } from "@/app/api/_lib/validate";
 
 export async function GET(req: Request): Promise<Response> {
+  await connection();
   const parsed = parseQuery(req, exportRegisterQuerySchema);
   if (!parsed.ok) return parsed.response;
 

@@ -33,12 +33,6 @@ vi.mock("@/lib/paypal/summaries", () => ({
 let store: Store;
 vi.mock("@/lib/store", () => ({ getStore: () => store }));
 
-// connection() only works inside a Next.js request, which a direct call to the handler is not.
-vi.mock("next/server", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("next/server")>()),
-  connection: async () => {},
-}));
-
 const STORY_SIZE = 8;
 const HISTORY_SIZE = 4;
 
@@ -88,6 +82,7 @@ describe("POST /api/demo/reset", () => {
       created: STORY_SIZE - 1,
       skipped: 1,
       failed: 0,
+      kept: 0,
     });
     expect(fake.calls.cancelled).toEqual([sent.id, unpaid.id]);
     expect(fake.calls.deleted).toEqual([draft.id]);
@@ -96,6 +91,37 @@ describe("POST /api/demo/reset", () => {
     expect(fake.statusOf(partly.id)).toBe("PARTIALLY_PAID");
     expect(fake.statusOf(storyOpen.id)).toBe("SENT");
     expect(paypal.clearInvoiceCaches).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps an invoice, sent or draft, that was created in the last 30 minutes", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-31T10:00:00Z"));
+    const createdAt = (minutesAgo: number): string =>
+      new Date(Date.now() - minutesAgo * 60_000).toISOString();
+    const fresh = fake.add("SENT", "dueline-request:fresh");
+    fresh.detail.metadata = { create_time: createdAt(10) };
+    const freshDraft = fake.add("DRAFT", "dueline-request:fresh-draft");
+    freshDraft.detail.metadata = { create_time: createdAt(2) };
+    const old = fake.add("SENT", "dueline-request:old");
+    old.detail.metadata = { create_time: createdAt(31) };
+
+    const body = await (await reset()).json();
+
+    expect(body).toMatchObject({ cancelled: 1, deleted: 0, kept: 2 });
+    expect(fake.calls.cancelled).toEqual([old.id]);
+    expect(fake.calls.deleted).toEqual([]);
+    expect(fake.statusOf(fresh.id)).toBe("SENT");
+    expect(fake.statusOf(freshDraft.id)).toBe("DRAFT");
+  });
+
+  it("keeps an invoice whose creation time PayPal did not report", async () => {
+    const unknown = fake.add("SENT", "dueline-request:unknown");
+    delete unknown.detail.metadata;
+
+    const body = await (await reset()).json();
+
+    expect(body).toMatchObject({ cancelled: 0, kept: 1 });
+    expect(fake.statusOf(unknown.id)).toBe("SENT");
   });
 
   it("sends no emails when it cancels", async () => {
@@ -124,6 +150,7 @@ describe("POST /api/demo/reset", () => {
       created: 0,
       skipped: STORY_SIZE,
       failed: 0,
+      kept: 0,
     });
     expect(fake.invoices.size).toBe(before);
   });

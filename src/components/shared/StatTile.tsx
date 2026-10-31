@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 interface StatTileProps {
   label: string;
   value: ReactNode;
-  note: string;
+  note: ReactNode;
   tone?: "late" | "due-soon";
   compact?: boolean;
 }

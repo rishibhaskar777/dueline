@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  AHEAD_DAYS,
   DEFAULT_AXIS_PX,
+  HISTORY_DAYS,
   layoutDueLine,
-  MAX_DUE_LINE_ROWS,
   MIN_LINE_PX,
+  TODAY_LABEL_CLEARANCE_PX,
 } from "@/components/receivables/due-line-layout";
+import { addDays, daysBetween } from "@/lib/date-math";
 import { haldenLabelsInvoice, tandemInvoice } from "@/mocks/fixtures";
 import type { InvoiceSummary } from "@/types";
 
@@ -59,6 +62,25 @@ describe("layoutDueLine", () => {
     expect(row.segments.map((segment) => segment.tone)).toEqual(["paid", "late"]);
     expect(row.segments[0].to).toBe(row.segments[1].from);
     expect(row.endTone).toBe("late");
+    expect(row.statusTone).toBe("late");
+    expect(row.statusText).toBe("Paid 5 days late");
+    expect(row.accessibleName).toContain("paid 15 Oct 2026, 5 days late");
+  });
+
+  it("keeps Paid green for an invoice paid on its due date", () => {
+    const [row] = layoutDueLine(
+      [
+        invoice({
+          dueState: "paid",
+          issuedOn: "2026-10-01",
+          dueOn: "2026-10-10",
+          paidOn: "2026-10-10",
+        }),
+      ],
+      "2026-10-30",
+      false,
+    ).rows;
+    expect(row.statusText).toBe("Paid");
     expect(row.statusTone).toBe("paid");
   });
 
@@ -146,22 +168,126 @@ describe("layoutDueLine", () => {
     expect(row.end).toBeCloseTo(5 / 17);
   });
 
-  it("shows the newest 12 invoices first and can show them all", () => {
-    const many = Array.from({ length: 15 }, (_, index) =>
-      invoice({
-        id: `inv-${index}`,
-        number: `INV-${index}`,
-        issuedOn: `2026-10-${String(index + 1).padStart(2, "0")}`,
-        dueOn: "2026-11-20",
-      }),
-    );
-    const limited = layoutDueLine(many, "2026-10-30", false);
-    expect(limited.rows).toHaveLength(MAX_DUE_LINE_ROWS);
-    expect(limited.rows[0].invoice.id).toBe("inv-14");
-    expect(limited.total).toBe(15);
+  it("shows the last 60 days and leaves older paid invoices to Show older", () => {
+    const today = "2026-10-30";
+    const recent = invoice({
+      id: "recent",
+      dueState: "paid",
+      issuedOn: "2026-09-01",
+      dueOn: "2026-09-15",
+      paidOn: "2026-09-10",
+    });
+    const old = invoice({
+      id: "old",
+      dueState: "paid",
+      issuedOn: "2026-06-01",
+      dueOn: "2026-06-15",
+      paidOn: "2026-06-10",
+    });
+    const stillOpen = invoice({
+      id: "open",
+      dueState: "overdue",
+      issuedOn: "2026-06-01",
+      dueOn: "2026-06-15",
+      daysLate: 137,
+    });
 
-    const all = layoutDueLine(many, "2026-10-30", true);
-    expect(all.rows).toHaveLength(15);
+    const limited = layoutDueLine([recent, old, stillOpen], today, false);
+    expect(limited.rows.map((row) => row.invoice.id).sort()).toEqual(["open", "recent"]);
+    expect(limited.olderCount).toBe(1);
+    expect(limited.ticks[0].date).toBe("2026-08-31");
+    expect(daysBetween(limited.ticks[0].date, today)).toBeLessThanOrEqual(HISTORY_DAYS);
+
+    const all = layoutDueLine([recent, old, stillOpen], today, true);
+    expect(all.rows).toHaveLength(3);
+    expect(all.ticks[0].date).toBe("2026-06-01");
+  });
+
+  it("clips a line that began before the default view to the left edge", () => {
+    const [row] = layoutDueLine(
+      [
+        invoice({
+          dueState: "overdue",
+          issuedOn: "2026-06-01",
+          dueOn: "2026-06-15",
+          daysLate: 137,
+        }),
+      ],
+      "2026-10-30",
+      false,
+    ).rows;
+    expect(row.segments[0].from).toBe(0);
+  });
+
+  it("ends the axis three days after the latest date but no later than 21 days ahead", () => {
+    const [soon] = layoutDueLine(
+      [invoice({ dueOn: "2026-11-02" })],
+      "2026-10-30",
+      false,
+    ).ticks.slice(-1);
+    expect(soon.date <= "2026-11-05").toBe(true);
+
+    const far = layoutDueLine([invoice({ dueOn: "2027-03-01" })], "2026-10-30", false);
+    const last = far.ticks[far.ticks.length - 1];
+    expect(last.date <= addDays("2026-10-30", AHEAD_DAYS)).toBe(true);
+    expect(far.rows[0].due).toBe(1);
+  });
+
+  it("drops the week labels that would sit under the Today label", () => {
+    const layout = layoutDueLine(
+      [invoice({ dueState: "on_time", issuedOn: "2026-10-01", dueOn: "2026-11-20" })],
+      "2026-10-30",
+      false,
+      700,
+    );
+    for (const tick of layout.ticks) {
+      const near = Math.abs(tick.position - layout.today) * 700 < TODAY_LABEL_CLEARANCE_PX;
+      expect(tick.labelled).toBe(!near);
+    }
+    expect(layout.ticks.filter((tick) => !tick.labelled)).toHaveLength(1);
+
+    const crowded = layoutDueLine(
+      [invoice({ dueState: "on_time", issuedOn: "2026-10-01", dueOn: "2026-11-20" })],
+      "2026-10-29",
+      false,
+      700,
+    );
+    expect(crowded.ticks.filter((tick) => !tick.labelled)).toHaveLength(1);
+    expect(crowded.ticks.find((tick) => !tick.labelled)?.date).toBe("2026-10-29");
+  });
+
+  it("starts the status text after whichever is further right, the line's end or its due tick", () => {
+    const [overdue] = layoutDueLine(
+      [invoice({ dueState: "overdue", issuedOn: "2026-10-01", dueOn: "2026-10-10", daysLate: 5 })],
+      "2026-10-15",
+      false,
+    ).rows;
+    expect(overdue.statusAt).toBe(overdue.end);
+
+    const [early] = layoutDueLine(
+      [invoice({ dueState: "on_time", issuedOn: "2026-10-01", dueOn: "2026-10-28" })],
+      "2026-10-15",
+      false,
+    ).rows;
+    expect(early.statusAt).toBe(early.due);
+    expect(early.due).toBeGreaterThan(early.end);
+  });
+
+  it("marks rows that share a client name so the invoice number can tell them apart", () => {
+    const rows = layoutDueLine(
+      [
+        invoice({ id: "a", number: "INV-1" }),
+        invoice({ id: "b", number: "INV-2" }),
+        invoice({
+          id: "c",
+          number: "INV-3",
+          client: { ...tandemInvoice.client, name: "Other Co." },
+        }),
+      ],
+      "2026-10-30",
+      false,
+    ).rows;
+    expect(rows.map((row) => row.sharesClientName)).toEqual([false, true, true]);
   });
 
   it("returns an empty layout without invoices", () => {
@@ -169,7 +295,7 @@ describe("layoutDueLine", () => {
       today: 0,
       ticks: [],
       rows: [],
-      total: 0,
+      olderCount: 0,
     });
   });
 

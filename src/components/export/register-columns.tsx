@@ -15,7 +15,7 @@ function RupeesCell({ data }: Params) {
   if (!data) return null;
   return (
     <span className="tabular-nums">
-      {formatRupees(data.inrReceived)} <SourceTag reportedByPayPal={data.inrSource === "paypal"} />
+      {formatRupees(data.inrReceived)} <SourceTag source={data.inrSource} />
     </span>
   );
 }
@@ -29,13 +29,12 @@ function rupeesTooltip(row: ExportRegisterRow): string {
 function PurposeCell({ data }: Params) {
   if (!data) return null;
   if (!data.purposeCode) return <span className="text-due-soon">Missing</span>;
-  const label = findPurposeCode(data.purposeCode)?.label;
-  return (
-    <span>
-      <span className="font-medium">{data.purposeCode}</span>
-      {label && <span className="text-muted-foreground"> · {label}</span>}
-    </span>
-  );
+  return <span className="font-medium">{data.purposeCode}</span>;
+}
+
+function purposeTooltip(row: ExportRegisterRow): string {
+  if (!row.purposeCode) return "No purpose code. Ask your CA which one to use.";
+  return findPurposeCode(row.purposeCode)?.label ?? "";
 }
 
 export const registerColumns: ColDef<ExportRegisterRow>[] = [
@@ -43,33 +42,17 @@ export const registerColumns: ColDef<ExportRegisterRow>[] = [
     headerName: "Paid on",
     field: "paidOn",
     valueFormatter: ({ value }) => formatDate(value),
-    width: 130,
+    width: 115,
   },
-  { headerName: "Invoice", field: "invoiceNumber", width: 120 },
-  { headerName: "Client", field: "clientName", width: 200 },
+  { headerName: "Invoice", field: "invoiceNumber", width: 105 },
+  { headerName: "Client", field: "clientName", width: 150 },
   {
     headerName: "Amount",
     valueGetter: ({ data }) => (data ? Number(data.foreign.value) : 0),
     valueFormatter: ({ data }) => (data ? formatMoney(data.foreign) : ""),
     type: "rightAligned",
     cellClass: "tabular-nums",
-    width: 130,
-  },
-  {
-    headerName: "PayPal fee",
-    valueGetter: ({ data }) => (data?.fee ? Number(data.fee.value) : null),
-    valueFormatter: ({ data }) => moneyOrDash(data?.fee),
-    type: "rightAligned",
-    cellClass: "tabular-nums",
-    width: 120,
-  },
-  {
-    headerName: "Net",
-    valueGetter: ({ data }) => (data?.net ? Number(data.net.value) : null),
-    valueFormatter: ({ data }) => moneyOrDash(data?.net),
-    type: "rightAligned",
-    cellClass: "tabular-nums",
-    width: 130,
+    width: 115,
   },
   {
     headerName: "Rupees",
@@ -77,26 +60,42 @@ export const registerColumns: ColDef<ExportRegisterRow>[] = [
     cellRenderer: RupeesCell,
     tooltipValueGetter: ({ data }) => (data ? rupeesTooltip(data) : ""),
     type: "rightAligned",
-    width: 170,
+    width: 150,
   },
   {
     headerName: "Purpose code",
     field: "purposeCode",
     cellRenderer: PurposeCell,
-    flex: 1,
-    minWidth: 300,
+    tooltipValueGetter: ({ data }) => (data ? purposeTooltip(data) : ""),
+    width: 125,
   },
   {
     headerName: "LUT",
     field: "underLut",
     valueFormatter: ({ value }) => (value ? "Yes" : "No"),
-    width: 90,
+    width: 75,
   },
   {
     headerName: "Transaction ID",
     field: "transactionId",
     valueFormatter: ({ value }) => value ?? "–",
     cellClass: "font-mono text-[13px]",
-    width: 190,
+    width: 175,
+  },
+  {
+    headerName: "PayPal fee",
+    valueGetter: ({ data }) => (data?.fee ? Number(data.fee.value) : null),
+    valueFormatter: ({ data }) => moneyOrDash(data?.fee),
+    type: "rightAligned",
+    cellClass: "tabular-nums",
+    width: 110,
+  },
+  {
+    headerName: "Net",
+    valueGetter: ({ data }) => (data?.net ? Number(data.net.value) : null),
+    valueFormatter: ({ data }) => moneyOrDash(data?.net),
+    type: "rightAligned",
+    cellClass: "tabular-nums",
+    width: 120,
   },
 ];
