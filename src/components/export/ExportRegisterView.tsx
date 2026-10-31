@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { exportRegisterCsvUrl } from "@/lib/api-client";
 import { MonthPicker } from "./MonthPicker";
 import { RecordedOutside } from "./RecordedOutside";
+import { FIRA_EXPLAINER, FIRA_GUIDE_URL } from "./register-text";
 import { RegisterSummary } from "./RegisterSummary";
 import { EmptyRegister, RegisterSkeleton } from "./RegisterStates";
 import { RegisterTable } from "./RegisterTable";
@@ -68,8 +69,15 @@ export function ExportRegisterView() {
         </a>
       </div>
       <p className="max-w-2xl text-sm text-muted-foreground">
-        PayPal emails a FIRA for the money it sends to your bank. Match each line here with it.
-        Purpose codes are suggestions; confirm them with your CA.
+        {FIRA_EXPLAINER}{" "}
+        <a
+          href={FIRA_GUIDE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue underline underline-offset-2"
+        >
+          Learn more
+        </a>
       </p>
       <RegisterBody month={month} state={state} onRetry={retry} />
     </div>

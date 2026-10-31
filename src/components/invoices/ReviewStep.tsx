@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ClientFields } from "@/components/invoices/ClientFields";
 import { DetailsFields } from "@/components/invoices/DetailsFields";
 import { DiscountSection } from "@/components/invoices/DiscountSection";
@@ -36,6 +36,14 @@ export function ReviewStep({ initial, onCreateAnother }: ReviewStepProps) {
   const [errors, setErrors] = useState<FieldErrors>({});
   const { codes, demoEmail, today } = useFormReferences();
   const { pending, formError, held, result, submit } = useSubmitInvoice(form, today, setErrors);
+  const known = useMemo(
+    () => ({
+      name: initial.form.clientName,
+      email: initial.form.clientEmail,
+      risk: initial.risk,
+    }),
+    [initial],
+  );
 
   const update = (changes: Partial<InvoiceForm>) => {
     setForm((previous) => ({ ...previous, ...changes }));
@@ -92,16 +100,7 @@ export function ReviewStep({ initial, onCreateAnother }: ReviewStepProps) {
           </div>
         </section>
 
-        <DiscountSection
-          form={form}
-          update={update}
-          errors={errors}
-          known={{
-            name: initial.form.clientName,
-            email: initial.form.clientEmail,
-            risk: initial.risk,
-          }}
-        />
+        <DiscountSection form={form} update={update} errors={errors} known={known} />
       </div>
 
       <div className="grid gap-4 lg:sticky lg:top-6">

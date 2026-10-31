@@ -70,6 +70,7 @@ export function InvoiceTable({ invoices, today, onOpen }: InvoiceTableProps) {
         context={context}
         defaultColDef={defaultColDef}
         quickFilterText={search}
+        includeHiddenColumnsInQuickFilter
         getRowId={({ data }) => data.id}
         domLayout="autoHeight"
         onRowClicked={({ data }) => data && onOpen(data)}

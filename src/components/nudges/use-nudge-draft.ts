@@ -31,7 +31,7 @@ interface NudgeDraft {
   send: () => void;
 }
 
-export function useNudgeDraft(initial: ReminderDraft): NudgeDraft {
+export function useNudgeDraft(initial: ReminderDraft, onSent: () => void): NudgeDraft {
   const [draft, setDraft] = useState(initial);
   const [subject, setSubject] = useState(initial.subject);
   const [message, setMessage] = useState(initial.message);
@@ -92,6 +92,7 @@ export function useNudgeDraft(initial: ReminderDraft): NudgeDraft {
         requestId,
       });
       setSentAt(sent.sentAt);
+      onSent();
       setHistory((previous) => [...previous, { tone: draft.tone, sentAt: sent.sentAt }]);
     } catch (error) {
       setSendError(messageOf(error));

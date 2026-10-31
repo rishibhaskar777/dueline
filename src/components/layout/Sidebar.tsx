@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FileUp, Inbox, Landmark, MailWarning, Plus } from "lucide-react";
+import { DemoToolsLink } from "./DemoToolsLink";
 import { LockDemoButton } from "./LockDemoButton";
 import { NavLink } from "./NavLink";
 import { StatusLine } from "./StatusLine";
@@ -43,6 +44,7 @@ export function Sidebar() {
               Fees and rates
             </NavLink>
           </li>
+          <DemoToolsLink />
         </ul>
       </nav>
       <StatusLine />

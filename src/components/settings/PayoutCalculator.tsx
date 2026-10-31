@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { FactRow } from "@/components/shared/FactRow";
+import { usePayoutEstimate } from "@/components/shared/use-payout-estimate";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -10,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { estimatePayout } from "@/lib/api-client";
 import { formatDate } from "@/lib/format-date";
 import { formatMoney, formatRate, formatRupees } from "@/lib/money/format";
 import {
@@ -21,19 +22,7 @@ import {
   type RateSource,
 } from "@/types";
 
-const TYPING_PAUSE_MS = 300;
 const CURRENCY_ITEMS = currencySchema.options.map((code) => ({ value: code, label: code }));
-
-type Outcome = { key: string; estimate: PayoutEstimate } | { key: string; message: string };
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-baseline justify-between gap-4 py-2">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="tabular-nums">{value}</dd>
-    </div>
-  );
-}
 
 function rateNote(estimate: PayoutEstimate): string {
   const source = estimate.marketRateSource === "ecb" ? "ECB rate" : "Your own rate";
@@ -48,35 +37,11 @@ interface PayoutCalculatorProps {
 export function PayoutCalculator({ settingsVersion, rateSource }: PayoutCalculatorProps) {
   const [amount, setAmount] = useState("1000.00");
   const [currency, setCurrency] = useState<CurrencyCode>("USD");
-  const [outcome, setOutcome] = useState<Outcome | null>(null);
-
   const parsed = moneySchema.safeParse({ currency, value: amount });
-  const key = `${currency}:${amount}:${settingsVersion}`;
-
-  useEffect(() => {
-    const money = moneySchema.safeParse({ currency, value: amount });
-    if (!money.success) return;
-    let current = true;
-    const timer = setTimeout(() => {
-      estimatePayout(money.data).then(
-        (estimate) => current && setOutcome({ key, estimate }),
-        (error: unknown) =>
-          current &&
-          setOutcome({
-            key,
-            message: error instanceof Error ? error.message : "Could not work out the estimate.",
-          }),
-      );
-    }, TYPING_PAUSE_MS);
-    return () => {
-      current = false;
-      clearTimeout(timer);
-    };
-  }, [amount, currency, key]);
-
-  const shown = outcome?.key === key ? outcome : null;
-  const estimate = shown && "estimate" in shown ? shown.estimate : null;
-  const failure = shown && "message" in shown ? shown.message : null;
+  const { estimate, failure } = usePayoutEstimate(
+    parsed.success ? parsed.data : null,
+    settingsVersion,
+  );
 
   return (
     <section
@@ -134,21 +99,21 @@ export function PayoutCalculator({ settingsVersion, rateSource }: PayoutCalculat
         )}
         {estimate && parsed.success && (
           <dl className="divide-y divide-line text-sm">
-            <Row label="Invoice amount" value={formatMoney(estimate.gross)} />
-            <Row label="PayPal fee" value={`− ${formatMoney(estimate.fee)}`} />
-            <Row label="After fee" value={formatMoney(estimate.net)} />
-            <Row
+            <FactRow label="Invoice amount" value={formatMoney(estimate.gross)} />
+            <FactRow label="PayPal fee" value={`− ${formatMoney(estimate.fee)}`} />
+            <FactRow label="After fee" value={formatMoney(estimate.net)} />
+            <FactRow
               label={`Market rate (${rateNote(estimate)})`}
               value={`₹${formatRate(estimate.marketRate)}`}
             />
-            <Row label="PayPal's rate" value={`₹${formatRate(estimate.conversionRate)}`} />
+            <FactRow label="PayPal's rate" value={`₹${formatRate(estimate.conversionRate)}`} />
             <div className="py-4">
               <dt className="text-muted-foreground">You receive</dt>
               <dd className="mt-1 font-heading text-4xl font-semibold text-navy tabular-nums">
                 {formatRupees(estimate.netInr)}
               </dd>
             </div>
-            <Row
+            <FactRow
               label="Lost to fees and conversion"
               value={`${formatRupees(estimate.lossInr)} (${estimate.lossPercent.toFixed(1)}%)`}
             />
@@ -160,6 +125,9 @@ export function PayoutCalculator({ settingsVersion, rateSource }: PayoutCalculat
         Estimate from PayPal India&apos;s published fees and{" "}
         {rateSource === "ecb" ? "the ECB rate" : "your own rates"}. Your real figures appear on each
         paid invoice.
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        PayPal&apos;s sandbox can charge differently from live pricing.
       </p>
     </section>
   );

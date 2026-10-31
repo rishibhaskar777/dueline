@@ -1,12 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { LoadFailure } from "@/components/shared/LoadFailure";
 import { SkeletonBlock } from "@/components/shared/SkeletonBlock";
 import { NudgeCard } from "./NudgeCard";
+import { LIMIT_REACHED_NOTICE } from "./nudge-model";
 import { useNudges } from "./use-nudges";
 
 export function Nudges() {
   const { state, retry } = useNudges();
+  const [sentHere, setSentHere] = useState(0);
 
   if (state.kind === "error") {
     return <LoadFailure title="Couldn't load your nudges" error={state.error} onRetry={retry} />;
@@ -27,15 +30,27 @@ export function Nudges() {
     );
   }
 
+  const limitReached = state.remindersLeftToday - sentHere <= 0;
+
   return (
     <div className="grid gap-4">
       <p className="max-w-3xl text-sm text-muted-foreground">
         PayPal sends each reminder from your account with the invoice and a Pay now button. PayPal
         allows two reminders a day.
       </p>
+      {limitReached && (
+        <p role="status" className="max-w-3xl rounded-xl border border-line bg-ground p-4 text-sm">
+          {LIMIT_REACHED_NOTICE}
+        </p>
+      )}
       <ul className="grid max-w-3xl gap-4">
         {state.nudges.map((nudge) => (
-          <NudgeCard key={nudge.draft.invoiceId} {...nudge} />
+          <NudgeCard
+            key={nudge.draft.invoiceId}
+            {...nudge}
+            limitReached={limitReached}
+            onSent={() => setSentHere((count) => count + 1)}
+          />
         ))}
       </ul>
     </div>

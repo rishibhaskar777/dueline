@@ -1,4 +1,5 @@
-import type { DueState, InvoiceSummary } from "@/types";
+import { formatDate } from "@/lib/format-date";
+import type { DueState, InvoiceSummary, PayoutSource } from "@/types";
 
 const LABELS: Record<DueState, string> = {
   paid: "Paid",
@@ -7,15 +8,29 @@ const LABELS: Record<DueState, string> = {
   overdue: "Overdue",
 };
 
-// PayPal reports the rupees only when it converted the money. Otherwise they are worked out
-// from PayPal's net at the ECB rate, so they are an estimate.
-export function rupeesFromPayPal(invoice: InvoiceSummary): boolean {
-  return (invoice.actualPayout?.netInr ?? null) !== null;
+const SOURCE_NOTES: Record<PayoutSource, string> = {
+  paypal: "PayPal",
+  estimate: "estimate",
+  outside_paypal: "outside PayPal",
+};
+
+export function payoutSourceNote(source: PayoutSource): string {
+  return SOURCE_NOTES[source];
 }
 
-// "Due today" is not a DueState of its own, so the table, the panel and the due line all
-// read it from here.
+export function isPaidOutsidePayPal(invoice: InvoiceSummary): boolean {
+  return invoice.payoutSource === "outside_paypal";
+}
+
+// Shows which day's ECB rate stands behind a rupee figure that was worked out.
+export function rateNote(invoice: InvoiceSummary): string | null {
+  return invoice.rateDate ? `ECB rate of ${formatDate(invoice.rateDate)}` : null;
+}
+
+// "Due today" and "Paid outside PayPal" are not DueStates of their own, so the table, the panel and
+// the due line all read them from here.
 export function statusLabel(invoice: InvoiceSummary, today: string): string {
+  if (isPaidOutsidePayPal(invoice)) return "Paid outside PayPal";
   if (invoice.dueState !== "paid" && invoice.dueOn === today) return "Due today";
   return LABELS[invoice.dueState];
 }

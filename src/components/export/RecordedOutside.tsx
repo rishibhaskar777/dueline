@@ -7,7 +7,7 @@ export function RecordedOutside({ numbers }: { numbers: string[] }) {
         Recorded outside PayPal (not on PayPal&apos;s FIRA): {numbers.length}
       </strong>
       <span className="tabular-nums"> · {numbers.join(", ")}</span>. Left out of the rows and the
-      rupee totals.
+      rupee totals. Receivables counts them separately.
     </p>
   );
 }

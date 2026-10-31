@@ -1,6 +1,7 @@
 import { todayInKolkata } from "@/lib/date-math";
 import { formatDayMonth } from "@/lib/format-date";
-import type { ReminderDraft, Tone } from "@/types";
+import { suggestTone } from "@/lib/reminders/tone";
+import type { InvoiceSummary, ReminderDraft, Tone } from "@/types";
 
 export const TONE_LABELS: Record<Tone, string> = {
   gentle: "Gentle",
@@ -48,4 +49,15 @@ export function sourceNote(source: ReminderDraft["source"]): string {
   return source === "ai"
     ? "Drafted by Dueline AI. Read and edit before sending."
     : "Template draft (AI unavailable).";
+}
+
+export const LIMIT_REACHED_NOTICE =
+  "Today's PayPal reminder limit for the demo account is used up. Drafts still work; sending resumes tomorrow.";
+
+// Says so when the client's record is what made the suggestion firmer than the days alone would.
+export function toneReason(invoice: InvoiceSummary, draft: ReminderDraft): string | null {
+  if (invoice.riskLevel !== "late_payer") return null;
+  if (suggestTone(invoice.daysLate, draft.history, null) === draft.suggestedTone) return null;
+  const tone = TONE_LABELS[draft.suggestedTone].toLowerCase();
+  return `Suggested ${tone} because ${invoice.client.name} is a late payer.`;
 }

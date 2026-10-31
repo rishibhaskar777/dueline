@@ -11,7 +11,9 @@ export interface Nudge {
 }
 
 type NudgesState =
-  { kind: "loading" } | { kind: "error"; error: LoadError } | { kind: "ready"; nudges: Nudge[] };
+  | { kind: "loading" }
+  | { kind: "error"; error: LoadError }
+  | { kind: "ready"; nudges: Nudge[]; remindersLeftToday: number };
 
 interface NudgesData {
   state: NudgesState;
@@ -32,8 +34,10 @@ export function useNudges(): NudgesData {
   useEffect(() => {
     let active = true;
     Promise.all([getReminders(), getInvoices()]).then(
-      ([drafts, { invoices }]) => {
-        if (active) setState({ kind: "ready", nudges: pair(drafts, invoices) });
+      ([{ drafts, remindersLeftToday }, { invoices }]) => {
+        if (active) {
+          setState({ kind: "ready", nudges: pair(drafts, invoices), remindersLeftToday });
+        }
       },
       (error) => {
         if (active) setState({ kind: "error", error: toLoadError(error) });

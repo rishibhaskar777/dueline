@@ -1,29 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { getDemoRecipient, resetDemo } from "@/lib/api-client";
+import { resetDemo } from "@/lib/api-client";
 import { describeReset } from "./reset-summary";
+import { useDemoMode } from "./use-demo-mode";
 
 type Step = "idle" | "confirming" | "working";
 
 export function DemoCard() {
-  const [inDemo, setInDemo] = useState(false);
   const [step, setStep] = useState<Step>("idle");
   const [outcome, setOutcome] = useState<{ text: string; failed: boolean } | null>(null);
 
-  useEffect(() => {
-    let current = true;
-    getDemoRecipient().then(
-      () => current && setInDemo(true),
-      () => undefined,
-    );
-    return () => {
-      current = false;
-    };
-  }, []);
+  const inDemo = useDemoMode();
 
-  if (!inDemo) return null;
+  if (inDemo === null) return null;
+  if (!inDemo) {
+    return (
+      <p className="max-w-xl text-sm text-muted-foreground">
+        Demo tools are available only while the app runs in demo mode.
+      </p>
+    );
+  }
 
   async function reset(): Promise<void> {
     setStep("working");
@@ -42,7 +40,7 @@ export function DemoCard() {
   return (
     <section
       aria-labelledby="demo-title"
-      className="mt-6 max-w-xl rounded-xl border border-line bg-white p-6"
+      className="max-w-xl rounded-xl border border-line bg-white p-6"
     >
       <h2 id="demo-title" className="text-xl font-semibold">
         Demo
@@ -58,8 +56,8 @@ export function DemoCard() {
       ) : (
         <div role="group" aria-label="Confirm the reset" className="mt-4">
           <p className="text-sm">
-            This cancels invoices created during the demo and restores the sample clients. Paid
-            invoices stay.
+            This cancels invoices created during the demo, except any made in the last 30 minutes,
+            and restores the sample clients. Paid invoices stay.
           </p>
           <div className="mt-3 flex gap-2">
             <Button onClick={reset} disabled={step === "working"}>

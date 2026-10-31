@@ -1,6 +1,6 @@
 import { formatTimestamp } from "@/lib/format-date";
 import type { ActivityEvent } from "@/types";
-import { describeEvent, relativeTime } from "./activity-text";
+import { describeEvent, eventWhen } from "./activity-text";
 
 interface ActivityFeedProps {
   events: ActivityEvent[];
@@ -36,7 +36,7 @@ export function ActivityFeed({ events, today, freshEvents }: ActivityFeedProps) 
               <p className="text-sm">{describeEvent(event)}</p>
               <p className="text-xs text-muted-foreground">
                 <time dateTime={event.at} title={formatTimestamp(event.at)}>
-                  {relativeTime(event.at, today)}
+                  {eventWhen(event.at, today)}
                 </time>
               </p>
             </li>
