@@ -4,13 +4,10 @@ import { POST as sendInvoice } from "@/app/api/invoices/[id]/send/route";
 import { POST as createInvoice } from "@/app/api/invoices/route";
 import { GET as getPurposeCodes } from "@/app/api/purpose-codes/route";
 import { STUB_HEADER } from "@/app/api/_lib/stub";
-import {
-  CreateOutcomeUnknownError,
-  DuplicateRequestError,
-  InvoiceNotFoundError,
-  RecipientNotAllowedError,
-} from "@/lib/invoices/errors";
+import { RecipientNotAllowedError } from "@/lib/demo-guard";
+import { CreateOutcomeUnknownError, InvoiceNotFoundError } from "@/lib/invoices/errors";
 import { PayPalApiError } from "@/lib/paypal/errors";
+import { DuplicateRequestError } from "@/lib/requests/errors";
 import { PURPOSE_CODES } from "@/lib/export/purpose-codes";
 import { extraction, haldenLabelsInvoice } from "@/mocks/fixtures";
 import { stubEnv } from "../support/env";

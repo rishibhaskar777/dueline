@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hashRequestBody } from "@/lib/invoices/body-hash";
+import { hashRequestBody } from "@/lib/requests/body-hash";
 
 describe("hashRequestBody", () => {
   it("gives the same hash whatever order the fields come in", () => {
