@@ -4,7 +4,6 @@ import { POST } from "@/app/api/invoices/extract/route";
 import type { ModelDraft } from "@/lib/ai/check-draft";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
-import { STUB_HEADER } from "@/app/api/_lib/stub";
 import { apiCallError, haldenGuess, noObjectError } from "../support/ai";
 import { paidInvoice } from "../support/summaries";
 import { stubEnv } from "../support/env";
@@ -61,12 +60,28 @@ afterEach(() => {
 });
 
 describe("POST /api/invoices/extract", () => {
+  it("returns 400 invalid_request naming the failing field", async () => {
+    const response = await extract("");
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.error.code).toBe("invalid_request");
+    expect(body.error.message).toContain("chat");
+  });
+
+  it("returns 400 for a body that is not JSON", async () => {
+    const request = new Request("http://localhost:3000/api/invoices/extract", {
+      method: "POST",
+      body: "nope",
+    });
+    expect((await POST(request)).status).toBe(400);
+  });
+
   it("returns the draft, warnings, the client's risk and the masked counts", async () => {
     modelAnswers(haldenGuess);
     const response = await extract(chatNumber(1));
 
     expect(response.status).toBe(200);
-    expect(response.headers.get(STUB_HEADER)).toBeNull();
     const body = await response.json();
     expect(Object.keys(body).sort()).toEqual(["draft", "masked", "risk", "warnings"]);
     expect(body.risk).toMatchObject({

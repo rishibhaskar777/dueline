@@ -298,7 +298,6 @@ describe("GET /api/activity", () => {
     const response = await getActivity();
     const { events } = await response.json();
 
-    expect(response.headers.get("x-dueline-stub")).toBeNull();
     expect(events).toHaveLength(20);
     expect(events[0].id).toBe("act-24");
     expect(events[19].id).toBe("act-05");

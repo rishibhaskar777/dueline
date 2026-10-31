@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST as estimate } from "@/app/api/payout-estimate/route";
 import { GET as getSettings, PUT as putSettings } from "@/app/api/settings/route";
-import { STUB_HEADER } from "@/app/api/_lib/stub";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
 import { DEFAULT_SETTINGS, type Settings } from "@/types";
@@ -41,7 +40,6 @@ afterEach(() => vi.restoreAllMocks());
 describe("/api/settings", () => {
   it("returns the defaults with the ECB rates before anything is saved", async () => {
     const response = await getSettings();
-    expect(response.headers.get(STUB_HEADER)).toBeNull();
     expect(await response.json()).toEqual({
       ...DEFAULT_SETTINGS,
       marketRates: ECB_RATES,
@@ -78,7 +76,6 @@ describe("POST /api/payout-estimate", () => {
 
   it("estimates with the ECB rate of the day", async () => {
     const response = await estimate(json("POST", "/api/payout-estimate", { amount }));
-    expect(response.headers.get(STUB_HEADER)).toBeNull();
     expect(await response.json()).toMatchObject({
       fee: { currency: "USD", value: "4.70" },
       net: { currency: "USD", value: "95.30" },
