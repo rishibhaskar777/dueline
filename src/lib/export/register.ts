@@ -2,6 +2,7 @@ import "server-only";
 import { fromMinorUnits, toMinorUnits } from "@/lib/money/decimal";
 import { payoutInrFor } from "@/lib/money/invoice-payout";
 import { paypalRateFor } from "@/lib/money/payout";
+import { isRecordedOutsidePayPal } from "@/lib/paypal/map";
 import { loadInvoices, type LoadedInvoice } from "@/lib/paypal/summaries";
 import { getRatesOn } from "@/lib/rates/rates";
 import { getSettings } from "@/lib/settings";
@@ -97,15 +98,22 @@ function sumRupees(rows: ExportRegisterRow[], source?: ExportRegisterRow["inrSou
 }
 
 // An invoice belongs to the month of the India date it was paid on. A partly paid invoice is left
-// out until it is paid in full.
+// out until it is paid in full. An invoice marked as paid outside PayPal has no PayPal payment, so
+// it is listed by number after the table and left out of the rows and the rupee totals.
 export async function buildExportRegister(month: string): Promise<ExportRegister> {
   const [loaded, settings] = await Promise.all([loadInvoices(), getSettings()]);
   const ratesOn = ratesLookup(settings);
 
-  const paid = loaded.flatMap((invoice) => {
+  const inMonth = loaded.flatMap((invoice) => {
     const { paidOn } = invoice.summary;
     return paidOn?.slice(0, 7) === month ? [{ invoice, paidOn }] : [];
   });
+  const paid = inMonth.filter(
+    ({ invoice }) => !isRecordedOutsidePayPal(invoice.summary.paypalStatus),
+  );
+  const outside = inMonth.filter(({ invoice }) =>
+    isRecordedOutsidePayPal(invoice.summary.paypalStatus),
+  );
   const rows = (
     await Promise.all(paid.map(({ invoice, paidOn }) => toRow(invoice, paidOn, settings, ratesOn)))
   ).sort(
@@ -122,5 +130,8 @@ export async function buildExportRegister(month: string): Promise<ExportRegister
     paypalInr: sumRupees(rows, "paypal"),
     estimatedInr: sumRupees(rows, "estimate"),
     missingPurposeCodes: rows.filter((row) => row.purposeCode === null).length,
+    recordedOutsidePayPal: outside
+      .map(({ invoice }) => invoice.summary.number)
+      .sort((a, b) => a.localeCompare(b, "en", { numeric: true })),
   };
 }

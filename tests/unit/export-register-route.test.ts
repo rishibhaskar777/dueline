@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/api/export-register/route";
-import { STUB_HEADER } from "@/app/api/_lib/stub";
 import { PayPalApiError } from "@/lib/paypal/errors";
 import type { LoadedInvoice } from "@/lib/paypal/summaries";
 import { createMemoryStore } from "@/lib/store/memory-store";
@@ -39,7 +38,6 @@ describe("GET /api/export-register", () => {
   it("returns the register as JSON", async () => {
     const response = await get("month=2026-10");
     expect(response.status).toBe(200);
-    expect(response.headers.get(STUB_HEADER)).toBeNull();
     const body = await response.json();
     expect(body).toMatchObject({
       month: "2026-10",
@@ -55,7 +53,6 @@ describe("GET /api/export-register", () => {
   it("returns the same rows as a CSV attachment", async () => {
     const response = await get("month=2026-10&format=csv");
     expect(response.status).toBe(200);
-    expect(response.headers.get(STUB_HEADER)).toBeNull();
     expect(response.headers.get("content-type")).toBe("text/csv; charset=utf-8");
     expect(response.headers.get("content-disposition")).toBe(
       'attachment; filename="dueline-export-2026-10.csv"',

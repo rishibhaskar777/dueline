@@ -82,6 +82,40 @@ describe("buildExportRegister", () => {
     expect((await buildExportRegister("2026-10")).rows).toEqual([]);
   });
 
+  it("lists invoices recorded as paid outside PayPal by number, apart from the rows and totals", async () => {
+    serve(
+      loaded(haldenLabelsInvoice),
+      loaded({
+        ...okaforInvoice,
+        number: "INV-0102",
+        paypalStatus: "MARKED_AS_PAID",
+        paidOn: "2026-10-12",
+      }),
+      loaded({
+        ...okaforInvoice,
+        id: "e",
+        number: "INV-0099",
+        paypalStatus: "MARKED_AS_PAID",
+        paidOn: "2026-10-02",
+      }),
+      loaded({
+        ...okaforInvoice,
+        id: "f",
+        number: "INV-0050",
+        paypalStatus: "MARKED_AS_PAID",
+        paidOn: "2026-09-30",
+      }),
+    );
+
+    const register = await buildExportRegister("2026-10");
+
+    expect(register.rows.map((row) => row.invoiceNumber)).toEqual(["INV-0042"]);
+    expect(register.recordedOutsidePayPal).toEqual(["INV-0099", "INV-0102"]);
+    expect(register.totalInr).toBe(35617);
+    expect(register.totalsByCurrency).toEqual([{ currency: "USD", value: "450.00" }]);
+    expect(register.missingPurposeCodes).toBe(0);
+  });
+
   it("shows PayPal's own figures and does not ask for a rate", async () => {
     const fetch = vi.mocked(globalThis.fetch);
     serve(loaded(haldenLabelsInvoice, true));
@@ -226,6 +260,7 @@ describe("buildExportRegister", () => {
       paypalInr: 0,
       estimatedInr: 0,
       missingPurposeCodes: 0,
+      recordedOutsidePayPal: [],
     });
   });
 

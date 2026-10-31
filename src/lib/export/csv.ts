@@ -53,7 +53,16 @@ function rowOf(row: ExportRegisterRow): string[] {
   ];
 }
 
+function outsideNote(numbers: string[]): string[] {
+  if (numbers.length === 0) return [];
+  const note = `Recorded outside PayPal (not on PayPal's FIRA): ${numbers.length}`;
+  return ["", cell(note), cell(numbers.join(", "))];
+}
+
 export function toCsv(register: ExportRegister): string {
-  const lines = [HEADER.map(cell), ...register.rows.map(rowOf)].map((line) => line.join(","));
+  const lines = [
+    ...[HEADER.map(cell), ...register.rows.map(rowOf)].map((line) => line.join(",")),
+    ...outsideNote(register.recordedOutsidePayPal),
+  ];
   return BYTE_ORDER_MARK + lines.join(LINE_END) + LINE_END;
 }
