@@ -44,7 +44,8 @@ describe("computeTotals", () => {
       outstandingInr: 1750.25,
       overdueInr: 1000,
       overdueCount: 2,
-      paidThisMonthInr: 0,
+      paidThisMonthPayPalInr: 0,
+      paidThisMonthOutsideInr: 0,
     });
   });
 
@@ -57,8 +58,43 @@ describe("computeTotals", () => {
       ],
       "2026-10-17",
     );
-    expect(totals.paidThisMonthInr).toBe(57836);
+    expect(totals.paidThisMonthPayPalInr).toBe(57836);
+    expect(totals.paidThisMonthOutsideInr).toBe(0);
     expect(totals.outstandingInr).toBe(0);
+  });
+
+  it("keeps the rupees of payments recorded outside PayPal apart from PayPal's", () => {
+    const totals = computeTotals(
+      [
+        invoice({
+          dueState: "paid",
+          payoutInr: 35617,
+          payoutSource: "paypal",
+          paidOn: "2026-10-15",
+        }),
+        invoice({
+          dueState: "paid",
+          payoutInr: 22219,
+          payoutSource: "estimate",
+          paidOn: "2026-10-07",
+        }),
+        invoice({
+          dueState: "paid",
+          payoutInr: 50000,
+          payoutSource: "outside_paypal",
+          paidOn: "2026-10-02",
+        }),
+        invoice({
+          dueState: "paid",
+          payoutInr: 77777,
+          payoutSource: "outside_paypal",
+          paidOn: "2026-09-02",
+        }),
+      ],
+      "2026-10-17",
+    );
+    expect(totals.paidThisMonthPayPalInr).toBe(57836);
+    expect(totals.paidThisMonthOutsideInr).toBe(50000);
   });
 
   it("returns zeros for no invoices", () => {
@@ -66,7 +102,8 @@ describe("computeTotals", () => {
       outstandingInr: 0,
       overdueInr: 0,
       overdueCount: 0,
-      paidThisMonthInr: 0,
+      paidThisMonthPayPalInr: 0,
+      paidThisMonthOutsideInr: 0,
     });
   });
 });

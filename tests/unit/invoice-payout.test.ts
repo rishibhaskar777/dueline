@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { payoutInrFor } from "@/lib/money/invoice-payout";
+import { payoutFor, rateDateFor } from "@/lib/money/invoice-payout";
 import { tandemInvoice } from "@/mocks/fixtures";
 import {
   DEFAULT_SETTINGS,
@@ -31,33 +31,70 @@ const sandboxPayout: ActualPayout = {
   transactionId: "5GX12345AB6789012",
 };
 
-describe("payoutInrFor", () => {
-  it("estimates an unpaid invoice from its full amount", () => {
-    expect(payoutInrFor(unpaid, unpaid.amount, DEFAULT_SETTINGS, market)).toBe(8135);
+const noDue = { currency: "USD" as const, value: "0.00" };
+
+describe("payoutFor", () => {
+  it("estimates an unpaid invoice from its full amount at today's rate", () => {
+    expect(payoutFor(unpaid, unpaid.amount, DEFAULT_SETTINGS, market)).toEqual({
+      inr: 8135,
+      source: "estimate",
+      rateUsed: 85.36,
+      rateDate: "2026-10-28",
+    });
   });
 
   it("estimates a partly paid invoice from what is still due", () => {
     const due = { currency: "USD" as const, value: "50.00" };
-    expect(payoutInrFor(unpaid, due, DEFAULT_SETTINGS, market)).toBe(4055);
+    expect(payoutFor(unpaid, due, DEFAULT_SETTINGS, market).inr).toBe(4055);
   });
 
-  it("uses the rupees PayPal reports for a paid invoice", () => {
+  it("uses the rupees PayPal reports for a paid invoice, whatever the rate", () => {
     const actual = { ...sandboxPayout, exchangeRate: 82.85, netInr: 7874 };
-    expect(
-      payoutInrFor({ ...paid, actualPayout: actual }, unpaid.amount, DEFAULT_SETTINGS, market),
-    ).toBe(7874);
+    expect(payoutFor({ ...paid, actualPayout: actual }, noDue, DEFAULT_SETTINGS, market)).toEqual({
+      inr: 7874,
+      source: "paypal",
+      rateUsed: null,
+      rateDate: null,
+    });
   });
 
-  it("converts PayPal's net at the estimated PayPal rate when no rupees are reported", () => {
+  it("converts PayPal's net at the paid day's rate less the markup when no rupees are reported", () => {
     const invoice = { ...paid, actualPayout: sandboxPayout };
-    expect(
-      payoutInrFor(invoice, { ...unpaid.amount, value: "0.00" }, DEFAULT_SETTINGS, market),
-    ).toBe(8113);
+    expect(payoutFor(invoice, noDue, DEFAULT_SETTINGS, market)).toMatchObject({
+      inr: 8113,
+      source: "estimate",
+      rateDate: "2026-10-28",
+    });
   });
 
   it("estimates a paid invoice without PayPal's figures from its full amount", () => {
-    expect(payoutInrFor(paid, { ...unpaid.amount, value: "0.00" }, DEFAULT_SETTINGS, market)).toBe(
-      8135,
-    );
+    expect(payoutFor(paid, noDue, DEFAULT_SETTINGS, market).inr).toBe(8135);
+  });
+
+  it("takes no fee and no markup from a payment recorded outside PayPal", () => {
+    const outside = { ...paid, paypalStatus: "MARKED_AS_PAID", actualPayout: null };
+    expect(payoutFor(outside, noDue, DEFAULT_SETTINGS, market)).toEqual({
+      inr: 8800,
+      source: "outside_paypal",
+      rateUsed: 88,
+      rateDate: "2026-10-28",
+    });
+  });
+});
+
+describe("rateDateFor", () => {
+  it("is the payment date for a paid invoice whose rupees are worked out", () => {
+    expect(rateDateFor(paid)).toBe("2026-10-15");
+    expect(rateDateFor({ ...paid, actualPayout: sandboxPayout })).toBe("2026-10-15");
+  });
+
+  it("is the payment date for a payment recorded outside PayPal, even with a stray figure", () => {
+    const outside = { ...paid, paypalStatus: "MARKED_AS_PAID" };
+    expect(rateDateFor(outside)).toBe("2026-10-15");
+  });
+
+  it("is none for an unpaid invoice, which keeps today's rate, or when PayPal reported rupees", () => {
+    expect(rateDateFor(unpaid)).toBeNull();
+    expect(rateDateFor({ ...paid, actualPayout: { ...sandboxPayout, netInr: 7874 } })).toBeNull();
   });
 });

@@ -1,67 +1,28 @@
 import "server-only";
 import { fromMinorUnits, toMinorUnits } from "@/lib/money/decimal";
-import { payoutInrFor } from "@/lib/money/invoice-payout";
-import { paypalRateFor } from "@/lib/money/payout";
+import type { InvoicePayout } from "@/lib/money/invoice-payout";
 import { isRecordedOutsidePayPal } from "@/lib/paypal/map";
 import { loadInvoices, type LoadedInvoice } from "@/lib/paypal/summaries";
-import { getRatesOn } from "@/lib/rates/rates";
-import { getSettings } from "@/lib/settings";
-import {
-  currencySchema,
-  type ExportRegister,
-  type ExportRegisterRow,
-  type MarketRates,
-  type Money,
-  type Settings,
-} from "@/types";
+import { resolvePayouts } from "@/lib/payouts/resolve-payouts";
+import { getSettingsAndRates } from "@/lib/settings";
+import { currencySchema, type ExportRegister, type ExportRegisterRow, type Money } from "@/types";
 
-type RatesOn = (date: string) => Promise<MarketRates>;
 type Rupees = Pick<ExportRegisterRow, "inrReceived" | "inrSource" | "rateUsed" | "rateDate">;
 
-// One request per date, however many invoices were paid on it.
-function ratesLookup(settings: Settings): RatesOn {
-  const lookups = new Map<string, Promise<MarketRates>>();
-  return (date) => {
-    const known = lookups.get(date);
-    if (known) return known;
-    const started = getRatesOn(date, settings);
-    lookups.set(date, started);
-    return started;
-  };
-}
-
-async function rupeesOf(
-  { summary }: LoadedInvoice,
-  paidOn: string,
-  settings: Settings,
-  ratesOn: RatesOn,
-): Promise<Rupees> {
-  const reported = summary.actualPayout?.netInr ?? null;
-  if (reported !== null) {
-    return {
-      inrReceived: Math.round(reported),
-      inrSource: "paypal",
-      rateUsed: null,
-      rateDate: null,
-    };
-  }
-
-  const rates = await ratesOn(paidOn);
+function rupeesOf(payout: InvoicePayout): Rupees {
   return {
-    inrReceived: payoutInrFor(summary, summary.amount, settings, rates),
-    inrSource: "estimate",
-    rateUsed: paypalRateFor(rates.rates[summary.amount.currency], settings.fxMarkupPercent),
-    rateDate: rates.onDate,
+    inrReceived: payout.inr,
+    inrSource: payout.source === "paypal" ? "paypal" : "estimate",
+    rateUsed: payout.rateUsed,
+    rateDate: payout.rateDate,
   };
 }
 
-async function toRow(
-  loaded: LoadedInvoice,
+function toRow(
+  { summary, underLut, paymentId }: LoadedInvoice,
   paidOn: string,
-  settings: Settings,
-  ratesOn: RatesOn,
-): Promise<ExportRegisterRow> {
-  const { summary, underLut, paymentId } = loaded;
+  payout: InvoicePayout,
+): ExportRegisterRow {
   const actual = summary.actualPayout;
   return {
     invoiceId: summary.id,
@@ -72,7 +33,7 @@ async function toRow(
     foreign: summary.amount,
     fee: actual?.fee ?? null,
     net: actual?.net ?? null,
-    ...(await rupeesOf(loaded, paidOn, settings, ratesOn)),
+    ...rupeesOf(payout),
     purposeCode: summary.purposeCode,
     underLut,
     transactionId: actual?.transactionId ?? paymentId,
@@ -101,8 +62,7 @@ function sumRupees(rows: ExportRegisterRow[], source?: ExportRegisterRow["inrSou
 // out until it is paid in full. An invoice marked as paid outside PayPal has no PayPal payment, so
 // it is listed by number after the table and left out of the rows and the rupee totals.
 export async function buildExportRegister(month: string): Promise<ExportRegister> {
-  const [loaded, settings] = await Promise.all([loadInvoices(), getSettings()]);
-  const ratesOn = ratesLookup(settings);
+  const [loaded, { settings, market }] = await Promise.all([loadInvoices(), getSettingsAndRates()]);
 
   const inMonth = loaded.flatMap((invoice) => {
     const { paidOn } = invoice.summary;
@@ -114,13 +74,18 @@ export async function buildExportRegister(month: string): Promise<ExportRegister
   const outside = inMonth.filter(({ invoice }) =>
     isRecordedOutsidePayPal(invoice.summary.paypalStatus),
   );
-  const rows = (
-    await Promise.all(paid.map(({ invoice, paidOn }) => toRow(invoice, paidOn, settings, ratesOn)))
-  ).sort(
-    (a, b) =>
-      a.paidOn.localeCompare(b.paidOn) ||
-      a.invoiceNumber.localeCompare(b.invoiceNumber, "en", { numeric: true }),
+  const paidWithPayouts = await resolvePayouts(
+    paid.map(({ invoice }) => invoice),
+    settings,
+    market,
   );
+  const rows = paidWithPayouts
+    .map(({ loaded: invoice, payout }, index) => toRow(invoice, paid[index].paidOn, payout))
+    .sort(
+      (a, b) =>
+        a.paidOn.localeCompare(b.paidOn) ||
+        a.invoiceNumber.localeCompare(b.invoiceNumber, "en", { numeric: true }),
+    );
 
   return {
     month,
