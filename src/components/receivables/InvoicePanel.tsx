@@ -1,5 +1,7 @@
 "use client";
 
+import { RiskBadge } from "@/components/shared/RiskBadge";
+import { useClientRisk } from "@/components/shared/use-client-risk";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
@@ -47,11 +49,23 @@ function Dates({ invoice }: { invoice: InvoiceSummary }) {
   );
 }
 
+function ClientHistory({ client }: { client: InvoiceSummary["client"] }) {
+  const risk = useClientRisk(client.email, client.name);
+  if (!risk || risk.invoicesConsidered === 0) return null;
+  return (
+    <p className="flex flex-wrap items-center gap-2 text-sm">
+      <RiskBadge level={risk.level} />
+      <span>{risk.reason}</span>
+    </p>
+  );
+}
+
 function Body({ invoice }: { invoice: InvoiceSummary }) {
   const unpaid = invoice.dueState !== "paid";
 
   return (
     <div className="grid gap-5">
+      <ClientHistory client={invoice.client} />
       <Dates invoice={invoice} />
       {unpaid && invoice.payoutInr !== null && (
         <div>

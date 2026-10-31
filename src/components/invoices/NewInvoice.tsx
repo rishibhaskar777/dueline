@@ -4,11 +4,13 @@ import { useState } from "react";
 import { blankForm, formFromDraft, type InvoiceForm } from "@/components/invoices/invoice-form";
 import { PasteStep, type Drafted } from "@/components/invoices/PasteStep";
 import { ReviewStep } from "@/components/invoices/ReviewStep";
+import type { ClientRisk } from "@/types";
 
 interface Review {
   form: InvoiceForm;
   warnings: string[];
   notice: string | null;
+  risk: ClientRisk | null;
 }
 
 export function NewInvoice() {
@@ -16,8 +18,8 @@ export function NewInvoice() {
   // A new form gets a new request ID, so a counter remounts the review step.
   const [formNumber, setFormNumber] = useState(0);
 
-  function onDrafted({ draft, warnings, notice }: Drafted) {
-    setReview({ form: draft ? formFromDraft(draft) : blankForm(), warnings, notice });
+  function onDrafted({ draft, warnings, notice, risk }: Drafted) {
+    setReview({ form: draft ? formFromDraft(draft) : blankForm(), warnings, notice, risk });
     setFormNumber((number) => number + 1);
   }
 
