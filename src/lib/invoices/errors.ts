@@ -12,3 +12,19 @@ export class CreateOutcomeUnknownError extends Error {
     this.name = "CreateOutcomeUnknownError";
   }
 }
+
+// The request is well formed but not allowed for this invoice, e.g. a payment dated in the future.
+export class InvalidActionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InvalidActionError";
+  }
+}
+
+// The invoice's status does not allow the action, e.g. cancelling one that is already paid.
+export class InvoiceStateError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InvoiceStateError";
+  }
+}

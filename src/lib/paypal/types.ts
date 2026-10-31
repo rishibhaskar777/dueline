@@ -58,6 +58,8 @@ export interface PayPalInvoice {
     payment_term?: PayPalPaymentTerm;
     metadata?: {
       create_time?: string;
+      first_sent_time?: string;
+      last_update_time?: string;
       recipient_view_url?: string;
       invoicer_view_url?: string;
     };

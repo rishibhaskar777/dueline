@@ -2,10 +2,7 @@ import { connection } from "next/server";
 import { today } from "@/lib/clock";
 import { createAndSendInvoice } from "@/lib/invoices/create-invoice";
 import { computeTotals } from "@/lib/money/totals";
-import { loadInvoices } from "@/lib/paypal/summaries";
-import { resolvePayouts } from "@/lib/payouts/resolve-payouts";
-import { riskLevelsById } from "@/lib/risk/client-risk";
-import { getSettingsAndRates } from "@/lib/settings";
+import { loadSummaries } from "@/lib/payouts/load-summaries";
 import {
   createInvoiceRequestSchema,
   type CreateInvoiceResponse,
@@ -18,20 +15,7 @@ import { parseBody } from "@/app/api/_lib/validate";
 export async function GET(): Promise<Response> {
   await connection();
   try {
-    const [loaded, { settings, market }] = await Promise.all([
-      loadInvoices(),
-      getSettingsAndRates(),
-    ]);
-    const levels = riskLevelsById(loaded.map(({ summary }) => summary));
-    const invoices = (await resolvePayouts(loaded, settings, market)).map(
-      ({ loaded: { summary }, payout }) => ({
-        ...summary,
-        payoutInr: payout.inr,
-        payoutSource: payout.source,
-        rateDate: payout.rateDate,
-        riskLevel: levels.get(summary.id) ?? null,
-      }),
-    );
+    const invoices = await loadSummaries();
     return ok<InvoicesResponse>({ invoices, totals: computeTotals(invoices, today()) });
   } catch (error) {
     return failFromError(error);

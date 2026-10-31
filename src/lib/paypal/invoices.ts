@@ -1,4 +1,5 @@
 import "server-only";
+import type { PaymentMethod } from "@/types";
 import { paypalFetch } from "./rest";
 import type { PayPalInvoice, PayPalInvoiceInput, PayPalInvoiceList } from "./types";
 
@@ -47,11 +48,14 @@ export async function remindInvoice(
   });
 }
 
-// Cancels a sent invoice without emailing anyone.
-export async function cancelInvoice(id: string): Promise<void> {
+// Cancels a sent invoice. The client is emailed only when asked.
+export async function cancelInvoice(
+  id: string,
+  { notifyClient = false }: { notifyClient?: boolean } = {},
+): Promise<void> {
   await paypalFetch<void>(`/v2/invoicing/invoices/${encodeURIComponent(id)}/cancel`, {
     method: "POST",
-    body: { send_to_invoicer: false, send_to_recipient: false },
+    body: { send_to_invoicer: false, send_to_recipient: notifyClient },
   });
 }
 
@@ -64,14 +68,14 @@ export async function deleteDraftInvoice(id: string): Promise<void> {
 // Records a payment made outside PayPal. The invoice becomes MARKED_AS_PAID.
 export async function recordExternalPayment(
   id: string,
-  payment: { paymentDate: string; note: string },
+  payment: { paymentDate: string; note: string; method?: PaymentMethod },
 ): Promise<void> {
   await paypalFetch<{ payment_id: string }>(
     `/v2/invoicing/invoices/${encodeURIComponent(id)}/payments`,
     {
       method: "POST",
       body: {
-        method: "BANK_TRANSFER",
+        method: payment.method ?? "BANK_TRANSFER",
         type: "EXTERNAL",
         payment_date: payment.paymentDate,
         note: payment.note,

@@ -29,6 +29,7 @@ describe("proxy matcher", () => {
       "/api/:path*",
       "/receivables",
       "/invoices/:path*",
+      "/clients/:path*",
       "/nudges",
       "/export",
       "/profile",

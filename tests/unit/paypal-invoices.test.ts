@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  cancelInvoice,
   createDraftInvoice,
   getInvoice,
   listInvoices,
   nextInvoiceNumber,
+  recordExternalPayment,
   sendInvoice,
 } from "@/lib/paypal/invoices";
 import type { PayPalInvoice, PayPalInvoiceInput } from "@/lib/paypal/types";
@@ -81,5 +83,35 @@ describe("PayPal invoices", () => {
   it("reads one invoice", async () => {
     mockPayPal(() => jsonResponse(invoice("INV2-1")));
     expect((await getInvoice("INV2-1")).id).toBe("INV2-1");
+  });
+
+  it("cancels without emailing anyone unless asked", async () => {
+    const spy = mockPayPal(() => new Response(null, { status: 204 }));
+    await cancelInvoice("INV2-1");
+    await cancelInvoice("INV2-1", { notifyClient: true });
+
+    const bodies = spy.mock.calls.slice(1).map(([, init]) => JSON.parse(String(init?.body)));
+    expect(String(spy.mock.calls[1][0])).toContain("/v2/invoicing/invoices/INV2-1/cancel");
+    expect(bodies).toEqual([
+      { send_to_invoicer: false, send_to_recipient: false },
+      { send_to_invoicer: false, send_to_recipient: true },
+    ]);
+  });
+
+  it("records an external payment by bank transfer unless told another method", async () => {
+    const spy = mockPayPal(() => jsonResponse({ payment_id: "EXTR-1" }));
+    await recordExternalPayment("INV2-1", { paymentDate: "2026-11-03", note: "Paid" });
+    await recordExternalPayment("INV2-1", {
+      paymentDate: "2026-11-03",
+      note: "Paid",
+      method: "WIRE_TRANSFER",
+    });
+
+    const bodies = spy.mock.calls.slice(1).map(([, init]) => JSON.parse(String(init?.body)));
+    expect(String(spy.mock.calls[1][0])).toContain("/v2/invoicing/invoices/INV2-1/payments");
+    expect(bodies.map(({ method, type }) => [method, type])).toEqual([
+      ["BANK_TRANSFER", "EXTERNAL"],
+      ["WIRE_TRANSFER", "EXTERNAL"],
+    ]);
   });
 });
