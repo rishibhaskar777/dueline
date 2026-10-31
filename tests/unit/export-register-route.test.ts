@@ -16,6 +16,7 @@ const paid: LoadedInvoice = {
   summary: haldenLabelsInvoice,
   amountDue: haldenLabelsInvoice.amount,
   underLut: true,
+  sac: null,
   paymentId: null,
 };
 

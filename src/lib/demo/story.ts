@@ -1,6 +1,6 @@
-import { addDays } from "@/lib/date-math";
+import { addDays, financialYearOf, financialYearRange } from "@/lib/date-math";
 import { memoOf } from "@/lib/paypal/memo";
-import type { Money } from "@/types";
+import type { Money, Profile } from "@/types";
 
 export interface DemoInvoice {
   key: string;
@@ -68,11 +68,32 @@ export const engagements = {
   },
 } satisfies Record<string, Engagement>;
 
+export const DEMO_SAC = "998391";
+
+// The freelancer behind the demo. The identifiers are made up and pass only the format checks; the
+// LUT runs to the end of the financial year the demo date is in.
+export function buildDemoProfile(today: string): Profile {
+  return {
+    yourName: "Riya Sharma",
+    businessName: "Riya Sharma Design",
+    gstin: "29ABCPS1234C1Z5",
+    lutArn: "AD2904260012345",
+    lutValidUntil: financialYearRange(financialYearOf(today.slice(0, 7))).to,
+    defaultSac: DEMO_SAC,
+    website: null,
+    signOff: "Thank you",
+  };
+}
+
 const MEMO_PREFIX = "dueline-demo:";
 
 // The memo marks the invoices that belong to the story.
-export function demoMemo(key: string, purposeCode: string | null = null): string {
-  return memoOf(`${MEMO_PREFIX}${key}`, purposeCode);
+export function demoMemo(
+  key: string,
+  purposeCode: string | null = null,
+  sac: string | null = null,
+): string {
+  return memoOf(`${MEMO_PREFIX}${key}`, purposeCode, sac);
 }
 
 export function isDemoMemo(memo: string | undefined): boolean {

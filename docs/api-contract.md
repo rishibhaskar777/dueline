@@ -75,6 +75,7 @@ export interface LineItem {
   quantity: number; // integer >= 1
   unitAmount: string; // decimal string in the invoice currency
   sourceQuote?: string; // words from the chat this item came from
+  sac: string | null; // 6-digit services accounting code starting with 99; defaults to the profile's defaultSac
 }
 
 export interface InvoiceDraft {
@@ -85,7 +86,7 @@ export interface InvoiceDraft {
   note?: string;
   purposeCode: string | null; // suggestion from the fixed list, user can change
   purposeReason?: string; // one line on why that code was suggested
-  includeLutNote: boolean; // adds "Export of services under LUT, without payment of IGST"
+  includeLutNote: boolean; // adds the LUT declaration, the LUT ARN when saved and the place of supply to the invoice note
 }
 
 // src/types/export.ts
@@ -109,7 +110,8 @@ export interface ExportRegisterRow {
   rateUsed: number | null; // rupees per unit after PayPal's markup, when rupees are estimated
   rateDate: string | null; // date of the ECB rate used, when rupees are estimated
   purposeCode: string | null;
-  underLut: boolean; // the invoice note carries the LUT line
+  sac: string | null; // services accounting code of the invoice's first item, kept in the invoice's private memo
+  underLut: boolean; // the invoice note carries the LUT declaration
   transactionId: string | null; // PayPal's transaction ID, to match the FIRA: the capture or transaction PayPal reported, otherwise the invoice's own latest payment ID
 }
 
@@ -187,6 +189,35 @@ export interface Settings {
 // Defaults: PayPal India's published fees for international commercial payments, from
 // paypal.com/in/webapps/mpp/merchant-fees, checked on 29 Oct 2026.
 
+// src/types/profile.ts
+export interface Profile {
+  yourName: string; // "" until set; printed on invoices and signed under reminders
+  businessName: string; // "" until set; replaces PayPal's sandbox name on invoices
+  gstin: string | null; // 15 characters, ^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$
+  lutArn: string | null; // 15 letters and digits
+  lutValidUntil: string | null; // YYYY-MM-DD
+  defaultSac: string | null; // ^99[0-9]{4}$
+  website: string | null; // http or https address
+  signOff: string; // closing of reminders, default "Thank you"
+}
+
+// src/types/export.ts, year summary for a chartered accountant
+export interface AnnualSummary {
+  fy: string; // "2026-27": 1 April 2026 to 31 March 2027
+  from: string; // first day of the financial year
+  to: string; // last day of the financial year
+  receivedPayPalInr: number; // rupees PayPal paid out, by the one rupee rule; invoices paid in the year
+  receivedOutsideInr: number; // invoices recorded as paid outside PayPal, at the ECB rate of the payment date
+  paypalFeesInr: number; // PayPal's fees (reported, otherwise estimated) at the ECB rate of the payment date
+  conversionLossInr: number; // what PayPal's conversion rate took beyond the fees
+  grossReceiptsInr: number; // the four figures above added up
+  presumptiveIncomeInr: number; // section 44ADA: 50% of grossReceiptsInr
+  presumptiveLimitInr: number; // 7,500,000: Dueline records no cash receipts, so the higher limit applies
+  overLimit: boolean; // grossReceiptsInr is above presumptiveLimitInr
+  invoiceCount: number; // invoices paid in the year
+  clientCount: number; // clients behind them
+}
+
 // src/types/api.ts
 export interface ApiError {
   error: { code: string; message: string; debugId?: string };
@@ -207,6 +238,9 @@ export interface ApiError {
 | `GET /api/demo/recipient`                           | none                                                                                             | `{ email: string }`                                                                                                                                                | The sandbox buyer's address from `SANDBOX_BUYER_EMAIL`, for the review screen's "Send to the demo buyer" button. `404 not_found` unless `DEMO_MODE` is on and the address is set                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `GET /api/export-register?month=YYYY-MM`            | none                                                                                             | `ExportRegister`                                                                                                                                                   | Invoices paid in that month in India time (the date of PayPal's payment timestamp, not PayPal's own `payment_date`), sorted by paid date then invoice number. Invoices paid through PayPal only; a partly paid invoice is left out until it is paid in full. An invoice marked as paid outside PayPal has no PayPal payment or FIRA line, so it is not a row and not in the rupee totals; its number is listed in `recordedOutsidePayPal`. Rupees are the same figure as `payoutInr` on the invoice: PayPal's `netInr` when PayPal reports a conversion, otherwise PayPal's net at the ECB rate of the payment date less the settings' markup (`inrSource: "estimate"`). `400 invalid_request` for a month after the current one                                                                                                                                                                               |
 | `GET /api/export-register?month=YYYY-MM&format=csv` | none                                                                                             | CSV file (`text/csv; charset=utf-8`, attachment `dueline-export-YYYY-MM.csv`)                                                                                      | Same rows, for a chartered accountant, followed by a blank line and "Recorded outside PayPal (not on PayPal's FIRA): N" with the numbers when there are any (the columns do not change). UTF-8 with a byte order mark, quoted as RFC 4180. A text cell starting with `=`, `+`, `-`, `@`, tab or carriage return gets a leading `'` so a spreadsheet does not run it as a formula                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `GET /api/profile` / `PUT /api/profile`             | PUT: `Profile`                                                                                   | `Profile`                                                                                                                                                          | Stored in Postgres (memory when no database is configured). An empty profile is `yourName: ""`, `businessName: ""`, every optional field `null` and `signOff: "Thank you"`. PUT checks the GSTIN, SAC (`^99[0-9]{4}$`) and LUT ARN (15 letters and digits) formats and a `website` that starts with http or https, and refuses a `yourName` or `signOff` that holds a link or email address. See "Business profile"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `GET /api/exports/gstr1?month=YYYY-MM&format=csv`   | none                                                                                             | CSV file (attachment `dueline-gstr1-YYYY-MM.csv`)                                                                                                                  | The export rows of GSTR-1's offline tool for invoices **issued** in the month. See "GSTR-1 export". `400 invalid_request` for a month after the current one                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `GET /api/exports/annual?fy=2026-27`                | none                                                                                             | `AnnualSummary`                                                                                                                                                    | Year totals for a chartered accountant. With `format=csv` the same figures come as a CSV file (attachment `dueline-year-summary-2026-27.csv`). `400 invalid_request` for a malformed year or one that has not started. See "Annual summary"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `POST /api/demo/reset`                              | none                                                                                             | `{ cancelled: number, deleted: number, created: number, skipped: number, failed: number, kept: number }`                                                           | Demo mode only (`404 not_found` otherwise), behind the demo password. Cancels every sent or unpaid invoice that is not part of the demo story (sending no emails) and deletes every draft, except any created in the last 30 minutes (by PayPal's `create_time`), which are left alone and counted in `kept`, then creates the story invoices PayPal does not have yet and records the history ones as paid outside PayPal. Paid, marked-as-paid and partly paid invoices are never touched. Once every 10 minutes for the whole app (`429 rate_limited`: "The demo was reset a few minutes ago. Try again in N minutes.")                                                                                                                                                                                                                                                                                     |
 | `POST /api/demo/session`                            | `{ password: string }` (1 to 200 chars)                                                          | `204` and sets the `dueline_demo` cookie                                                                                                                           | Public. `401 unauthorized` for a wrong password; `429 rate_limited` after 10 attempts in 15 minutes from one address                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `DELETE /api/demo/session`                          | none                                                                                             | `204` and clears the cookie                                                                                                                                        | Public                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -246,12 +280,51 @@ signed cookie named `dueline_demo` (HttpOnly, SameSite=Lax, Path=/, 7 days, Secu
 - Every `/api` route needs the cookie, except `GET /api/health`, `POST /api/webhooks/paypal` and
   `/api/demo/session`. Without it the route answers `401 unauthorized` with "Enter the demo password
   to continue."
-- The screens `/receivables`, `/invoices/new`, `/nudges`, `/export`, `/settings` and `/demo-tools` redirect to
+- The screens `/receivables`, `/invoices/new`, `/nudges`, `/export`, `/profile`, `/settings` and `/demo-tools` redirect to
   `/demo?next=<path>`. The landing page stays public.
 - Access is on when `DEMO_PASSWORD` is set. In production `DEMO_PASSWORD` and `SESSION_SECRET` are
   both required: without them protected routes answer `500 config_error` and protected screens show
   "This deployment is not configured". In development and tests an unset `DEMO_PASSWORD` leaves
   access open.
+
+## Business profile
+
+One profile for the whole app. Every invoice and reminder uses it.
+
+- **Invoice header.** `invoicer.business_name` is `businessName`, `invoicer.name` is `yourName` split
+  at its last space into given name and surname, `invoicer.tax_id` is the GSTIN and `invoicer.website`
+  the website; each only when set. This replaces PayPal's sandbox name where the API allows it.
+- **Items.** An item with a SAC has the description `SAC 998314`. The first item's SAC is also kept in
+  the private memo as `sac:998314`, next to `purpose:`, so the export register can read it.
+- **LUT.** When `includeLutNote` is true the invoice note carries `SUPPLY MEANT FOR EXPORT UNDER LETTER
+OF UNDERTAKING WITHOUT PAYMENT OF INTEGRATED TAX` (on one line), then `LUT ARN: <ARN>` when the
+  profile has one, then `Place of supply: outside India`. The older line "Export of services under
+  LUT, without payment of IGST" on invoices made before this change still counts as under LUT.
+- **Reminders.** Every reminder, from the template or the model, ends with `signOff` and, on the next
+  line, `yourName`. With no `yourName` only the sign-off is written; a name is never invented.
+- **Draft items.** `POST /api/invoices/extract` gives every item the profile's `defaultSac`.
+
+## GSTR-1 export
+
+Columns, in the order of the offline tool's `exp` sheet: Export Type, Invoice Number, Invoice date,
+Invoice Value, Port Code, Shipping Bill Number, Shipping Bill Date, Rate, Taxable Value, Cess Amount.
+
+- One row per invoice **issued** in the month (GST follows the invoice date, not the payment date),
+  whatever its payment state. Drafts and cancelled invoices are left out.
+- Export Type is `WOPAY` with Rate 0 for an invoice under LUT, and `WPAY` with Rate 18 otherwise. Port
+  code, shipping bill number and date, and cess are blank.
+- Invoice Value and Taxable Value are the invoice amount in rupees, to the paisa, at the ECB rate of
+  the invoice date (the last rate the ECB published before it). GST law uses the RBI reference rate,
+  so a note under the rows says to confirm with a CA.
+- Dates are `dd-mmm-yyyy`. Text cells are protected against spreadsheet formulas like the register's.
+
+## Annual summary
+
+For the financial year `fy` (1 April to 31 March, for example `2026-27`), over the invoices paid in it
+by India date, with the register's rupee rule. `grossReceiptsInr` adds rupees received through
+PayPal, rupees recorded outside PayPal, PayPal's fees and the conversion loss. Section 44ADA deems 50%
+of it to be income. The limit is 75 lakh because Dueline records no cash receipts. The screen and the
+CSV say "Estimate. Confirm with your CA." and warn when `overLimit` is true.
 
 ## Late-payer radar
 

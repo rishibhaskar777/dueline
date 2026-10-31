@@ -54,6 +54,7 @@ function serve(...summaries: InvoiceSummary[]): void {
       summary,
       amountDue: summary.amount,
       underLut: false,
+      sac: null,
       paymentId: null,
     })),
   );

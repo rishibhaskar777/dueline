@@ -126,6 +126,7 @@ function checkItems(
       quantity: entry.quantity,
       unitAmount,
       sourceQuote: quote.trim().slice(0, MAX_QUOTE_LENGTH),
+      sac: null,
     });
   }
   return items;

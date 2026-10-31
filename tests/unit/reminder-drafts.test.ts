@@ -5,7 +5,7 @@ import { InvoiceNotFoundError } from "@/lib/invoices/errors";
 import { draftReminderFor, listReminderDrafts } from "@/lib/reminders/reminder-drafts";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
-import type { InvoiceSummary } from "@/types";
+import { EMPTY_PROFILE, type InvoiceSummary } from "@/types";
 import { stubEnv } from "../support/env";
 import { BRIGHTWELL, OKAFOR, openInvoice, overdueInvoice, paidInvoice } from "../support/summaries";
 
@@ -152,6 +152,29 @@ describe("listReminderDrafts", () => {
     const [draft] = await listReminderDrafts();
     expect(draft.source).toBe("template");
     expect(generateText).not.toHaveBeenCalled();
+  });
+});
+
+describe("sign-off", () => {
+  it("ends every draft with the profile sign-off and name", async () => {
+    await store.saveProfile({ ...EMPTY_PROFILE, yourName: "Riya Sharma", signOff: "Best regards" });
+    const invoice = overdueInvoice("2026-10-26", 5, OKAFOR);
+    load([invoice]);
+
+    const [listed] = await listReminderDrafts();
+    const drafted = await draftReminderFor(invoice.id, "firm", {});
+
+    expect(listed.message.endsWith("\n\nBest regards,\nRiya Sharma")).toBe(true);
+    expect(drafted.message.endsWith("\n\nBest regards,\nRiya Sharma")).toBe(true);
+  });
+
+  it("signs with the default thank you and no name until a profile is saved", async () => {
+    const invoice = overdueInvoice("2026-10-26", 5, OKAFOR);
+    load([invoice]);
+
+    const [listed] = await listReminderDrafts();
+    expect(listed.message.endsWith("\n\nThank you")).toBe(true);
+    expect(listed.message).not.toContain("Riya");
   });
 });
 

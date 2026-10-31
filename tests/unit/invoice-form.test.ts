@@ -6,16 +6,26 @@ import {
   fieldErrorsFromServer,
   formFromDraft,
   lineTotal,
+  lutIssue,
+  newItem,
   toRequest,
   type FormItem,
   type InvoiceForm,
 } from "@/components/invoices/invoice-form";
 import { extraction } from "@/mocks/fixtures";
+import { EMPTY_PROFILE } from "@/types";
 
 const requestId = "3f2b8c1e-6a4d-4e8b-9c1a-2d5e7f9a0b1c";
 
 function item(overrides: Partial<FormItem> = {}): FormItem {
-  return { key: "k", name: "Logo design", quantity: "3", unitAmount: "120.00", ...overrides };
+  return {
+    key: "k",
+    name: "Logo design",
+    quantity: "3",
+    unitAmount: "120.00",
+    sac: "",
+    ...overrides,
+  };
 }
 
 function filled(overrides: Partial<InvoiceForm> = {}): InvoiceForm {
@@ -115,8 +125,8 @@ describe("toRequest", () => {
           currency: "USD",
           dueOn: "2026-11-30",
           items: [
-            { name: "Logo design", quantity: 3, unitAmount: "120.00" },
-            { name: "Revision round", quantity: 2, unitAmount: "45" },
+            { name: "Logo design", quantity: 3, unitAmount: "120.00", sac: null },
+            { name: "Revision round", quantity: 2, unitAmount: "45", sac: null },
           ],
           purposeCode: "P1099",
           includeLutNote: false,
@@ -219,5 +229,60 @@ describe("fieldErrorsFromServer", () => {
 
   it("gives up on a message that names no field", () => {
     expect(fieldErrorsFromServer("The request body must be JSON.")).toBeNull();
+  });
+});
+
+describe("SAC", () => {
+  it("sends a SAC the user typed, trimmed, and null when the field is blank", () => {
+    const result = toRequest(
+      filled({ items: [item({ sac: " 998314 " }), item({ key: "k2", sac: "" })] }),
+      requestId,
+    );
+    expect(result.ok && result.request.draft.items.map((line) => line.sac)).toEqual([
+      "998314",
+      null,
+    ]);
+  });
+
+  it("names a SAC that is not 6 digits starting with 99", () => {
+    const result = toRequest(filled({ items: [item({ sac: "12345" })] }), requestId);
+    expect(result).toMatchObject({
+      ok: false,
+      errors: { "items.0.sac": "Use 6 digits starting with 99, like 998314" },
+    });
+  });
+
+  it("starts a blank form, and a new item, with the profile's default SAC", () => {
+    expect(blankForm("998391").items[0].sac).toBe("998391");
+    expect(blankForm().items[0].sac).toBe("");
+    expect(newItem("998391").sac).toBe("998391");
+  });
+
+  it("shows the SAC a draft came with", () => {
+    const form = formFromDraft(extraction.draft);
+    expect(form.items.map((line) => line.sac)).toEqual(["998391", "998391"]);
+  });
+});
+
+describe("lutIssue", () => {
+  const lutProfile = { ...EMPTY_PROFILE, lutArn: "AD2904260012345", lutValidUntil: "2027-03-31" };
+
+  it("has nothing to say while the LUT line is not ticked", () => {
+    expect(lutIssue(EMPTY_PROFILE, false, "2026-11-01")).toBeNull();
+  });
+
+  it("asks for the ARN when the LUT line is ticked and none is saved", () => {
+    expect(lutIssue(EMPTY_PROFILE, true, "2026-11-01")).toBe("missing_arn");
+  });
+
+  it("is happy with an ARN and a LUT that has not run out", () => {
+    expect(lutIssue(lutProfile, true, "2026-11-01")).toBeNull();
+    expect(lutIssue(lutProfile, true, "2027-03-31")).toBeNull();
+    expect(lutIssue(lutProfile, true)).toBeNull();
+    expect(lutIssue({ ...lutProfile, lutValidUntil: null }, true, "2030-01-01")).toBeNull();
+  });
+
+  it("notices a LUT that ended", () => {
+    expect(lutIssue(lutProfile, true, "2027-04-01")).toBe("expired");
   });
 });

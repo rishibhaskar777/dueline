@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LUT_NOTE } from "@/lib/paypal/invoice-body";
+import { LUT_DECLARATION } from "@/lib/paypal/invoice-body";
 import { amountDueOf, isUnderLut, toInvoiceSummary } from "@/lib/paypal/map";
 import type { PayPalInvoice } from "@/lib/paypal/types";
 import type { ActualPayout } from "@/types";
@@ -94,8 +94,10 @@ describe("toInvoiceSummary", () => {
     expect(toInvoiceSummary(paidOn("2026-10-29"), TODAY, payout)?.paidOn).toBe("2026-10-29");
   });
 
-  it("finds the LUT line in the invoice note", () => {
-    const note = `Thank you\n${LUT_NOTE}`;
+  it("finds the LUT declaration in the invoice note, and the line older invoices carry", () => {
+    const note = `Thank you\n${LUT_DECLARATION}`;
+    const earlier = "Export of services under LUT, without payment of IGST";
+    expect(isUnderLut({ ...paid, detail: { ...paid.detail, note: earlier } })).toBe(true);
     expect(isUnderLut({ ...paid, detail: { ...paid.detail, note } })).toBe(true);
     expect(isUnderLut({ ...paid, detail: { ...paid.detail, note: "Thank you" } })).toBe(false);
     expect(isUnderLut(paid)).toBe(false);

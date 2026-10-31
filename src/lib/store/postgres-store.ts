@@ -6,6 +6,7 @@ import {
   type ActualPayout,
   type CurrencyCode,
   type Money,
+  type Profile,
   type Settings,
   type Tone,
 } from "@/types";
@@ -146,6 +147,17 @@ export function createPostgresStore(sql: Sql): Store {
     async saveSettings(settings): Promise<void> {
       await sql`
         insert into settings (id, value) values (1, ${toJson(sql, settings)})
+        on conflict (id) do update set value = excluded.value, updated_at = now()`;
+    },
+
+    async getProfile(): Promise<Profile | null> {
+      const [row] = await sql<{ value: Profile }[]>`select value from profile where id = 1`;
+      return row?.value ?? null;
+    },
+
+    async saveProfile(profile): Promise<void> {
+      await sql`
+        insert into profile (id, value) values (1, ${toJson(sql, profile)})
         on conflict (id) do update set value = excluded.value, updated_at = now()`;
     },
 

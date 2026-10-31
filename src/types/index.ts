@@ -5,6 +5,7 @@ export * from "./health";
 export * from "./invoice";
 export * from "./money";
 export * from "./payout";
+export * from "./profile";
 export * from "./reminder";
 export * from "./responses";
 export * from "./risk";

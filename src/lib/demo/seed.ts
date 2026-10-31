@@ -13,7 +13,10 @@ import {
 import { markerOf } from "@/lib/paypal/memo";
 import { listInvoicesInFull } from "@/lib/paypal/summaries";
 import type { PayPalInvoice } from "@/lib/paypal/types";
-import { buildDemoStory, demoMemo, type DemoInvoice } from "./story";
+import { getProfile } from "@/lib/profile";
+import { getStore } from "@/lib/store";
+import type { Profile } from "@/types";
+import { buildDemoProfile, buildDemoStory, demoMemo, type DemoInvoice } from "./story";
 
 type SeedResult = "created" | "repaired" | "skipped" | "failed";
 
@@ -40,22 +43,40 @@ function buyerEmail(): string {
   return email;
 }
 
-async function createDraft(story: DemoInvoice, email: string): Promise<PayPalInvoice> {
+// A profile the freelancer saved is never replaced; the demo only fills in when there is none.
+async function ensureDemoProfile(date: string): Promise<Profile> {
+  const store = getStore();
+  if (!(await store.getProfile())) await store.saveProfile(buildDemoProfile(date));
+  return getProfile();
+}
+
+async function createDraft(
+  story: DemoInvoice,
+  email: string,
+  profile: Profile,
+): Promise<PayPalInvoice> {
   const requestId = crypto.randomUUID();
   const body = toPayPalInvoice(
     {
       client: { name: story.clientName, email },
       currency: story.amount.currency,
       dueOn: story.dueOn,
-      items: [{ name: story.work, quantity: 1, unitAmount: story.amount.value }],
+      items: [
+        {
+          name: story.work,
+          quantity: 1,
+          unitAmount: story.amount.value,
+          sac: profile.defaultSac,
+        },
+      ],
       purposeCode: story.purposeCode,
       includeLutNote: false,
     },
-    { invoiceNumber: await nextInvoiceNumber(), invoiceDate: story.issuedOn, requestId },
+    { invoiceNumber: await nextInvoiceNumber(), invoiceDate: story.issuedOn, requestId, profile },
   );
   const marked = {
     ...body,
-    detail: { ...body.detail, memo: demoMemo(story.key, story.purposeCode) },
+    detail: { ...body.detail, memo: demoMemo(story.key, story.purposeCode, profile.defaultSac) },
   };
   return createDraftInvoice(marked, requestId);
 }
@@ -74,8 +95,9 @@ async function finish(
   story: DemoInvoice,
   found: PayPalInvoice | undefined,
   email: string,
+  profile: Profile,
 ): Promise<Pick<SeedRow, "result" | "invoice">> {
-  const existing = found ?? (await createDraft(story, email));
+  const existing = found ?? (await createDraft(story, email, profile));
   let acted = found === undefined;
 
   if (existing.status === "DRAFT") {
@@ -104,6 +126,7 @@ function failureNote(error: unknown): string {
 // invoice numbers in order. One failure does not stop the rest, and running it again repairs it.
 export async function seedDemo(): Promise<SeedRow[]> {
   const email = buyerEmail();
+  const profile = await ensureDemoProfile(today());
   const listed = await listInvoicesInFull();
   const rows: SeedRow[] = [];
 
@@ -114,7 +137,7 @@ export async function seedDemo(): Promise<SeedRow[]> {
         markerOf(invoice.detail.memo) === demoMemo(story.key) && invoice.status !== "CANCELLED",
     );
     try {
-      rows.push({ ...base, ...(await finish(story, found, email)) });
+      rows.push({ ...base, ...(await finish(story, found, email, profile)) });
     } catch (error) {
       rows.push({ ...base, result: "failed", note: failureNote(error) });
     }

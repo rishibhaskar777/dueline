@@ -20,6 +20,7 @@ export interface ExportRegisterRow {
   rateUsed: number | null;
   rateDate: string | null;
   purposeCode: string | null;
+  sac: string | null;
   underLut: boolean;
   transactionId: string | null;
 }
@@ -33,4 +34,20 @@ export interface ExportRegister {
   estimatedInr: number;
   missingPurposeCodes: number;
   recordedOutsidePayPal: string[];
+}
+
+export interface AnnualSummary {
+  fy: string;
+  from: string;
+  to: string;
+  receivedPayPalInr: number;
+  receivedOutsideInr: number;
+  paypalFeesInr: number;
+  conversionLossInr: number;
+  grossReceiptsInr: number;
+  presumptiveIncomeInr: number;
+  presumptiveLimitInr: number;
+  overLimit: boolean;
+  invoiceCount: number;
+  clientCount: number;
 }

@@ -1,4 +1,4 @@
-import type { ActivityEvent, ActualPayout, Settings } from "@/types";
+import type { ActivityEvent, ActualPayout, Profile, Settings } from "@/types";
 import type { ClaimResult, Json, ReminderLogEntry, Store, StoredRates } from "./store";
 
 interface IdempotencyRecord {
@@ -17,6 +17,7 @@ export function createMemoryStore(): Store {
   let rates: StoredRates | null = null;
   const payouts = new Map<string, ActualPayout>();
   let settings: Settings | null = null;
+  let profile: Profile | null = null;
 
   return {
     async claim(requestId, bodyHash): Promise<ClaimResult> {
@@ -80,6 +81,14 @@ export function createMemoryStore(): Store {
 
     async saveSettings(next): Promise<void> {
       settings = next;
+    },
+
+    async getProfile(): Promise<Profile | null> {
+      return profile;
+    },
+
+    async saveProfile(next): Promise<void> {
+      profile = next;
     },
 
     async hitRateLimit(key, windowSeconds): Promise<number> {

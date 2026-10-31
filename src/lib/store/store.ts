@@ -1,4 +1,4 @@
-import type { ActivityEvent, ActualPayout, CurrencyCode, Settings, Tone } from "@/types";
+import type { ActivityEvent, ActualPayout, CurrencyCode, Profile, Settings, Tone } from "@/types";
 
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
@@ -41,6 +41,9 @@ export interface Store {
 
   getSettings(): Promise<Settings | null>;
   saveSettings(settings: Settings): Promise<void>;
+
+  getProfile(): Promise<Profile | null>;
+  saveProfile(profile: Profile): Promise<void>;
 
   hitRateLimit(key: string, windowSeconds: number): Promise<number>;
 

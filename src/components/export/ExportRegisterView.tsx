@@ -3,7 +3,10 @@
 import { Download } from "lucide-react";
 import { LoadFailure } from "@/components/shared/LoadFailure";
 import { buttonVariants } from "@/components/ui/button";
-import { exportRegisterCsvUrl } from "@/lib/api-client";
+import { exportRegisterCsvUrl, gstr1CsvUrl } from "@/lib/api-client";
+import { ESTIMATE_LABEL } from "@/lib/export/tax-notes";
+import { financialYearOf } from "@/lib/date-math";
+import { AnnualSummaryDialog } from "./AnnualSummaryDialog";
 import { MonthPicker } from "./MonthPicker";
 import { RecordedOutside } from "./RecordedOutside";
 import { FIRA_EXPLAINER, FIRA_GUIDE_URL } from "./register-text";
@@ -63,10 +66,20 @@ export function ExportRegisterView() {
     <div className="grid gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <MonthPicker month={month} currentMonth={currentMonth} onChange={setMonth} />
-        <a href={exportRegisterCsvUrl(month)} className={buttonVariants({ size: "lg" })}>
-          <Download aria-hidden="true" />
-          Download CSV for your CA
-        </a>
+        <div className="flex flex-wrap gap-3">
+          <a href={exportRegisterCsvUrl(month)} className={buttonVariants({ size: "lg" })}>
+            <Download aria-hidden="true" />
+            Download CSV for your CA
+          </a>
+          <a
+            href={gstr1CsvUrl(month)}
+            className={buttonVariants({ variant: "outline", size: "lg" })}
+          >
+            <Download aria-hidden="true" />
+            GSTR-1 exports (CSV)
+          </a>
+          <AnnualSummaryDialog fy={financialYearOf(month)} />
+        </div>
       </div>
       <p className="max-w-2xl text-sm text-muted-foreground">
         {FIRA_EXPLAINER}{" "}
@@ -78,6 +91,10 @@ export function ExportRegisterView() {
         >
           Learn more
         </a>
+      </p>
+      <p className="max-w-2xl text-sm text-muted-foreground">
+        GSTR-1 exports list the invoices issued in this month, valued at the ECB rate of the invoice
+        date; the official rule uses the RBI reference rate. {ESTIMATE_LABEL}
       </p>
       <RegisterBody month={month} state={state} onRetry={retry} />
     </div>

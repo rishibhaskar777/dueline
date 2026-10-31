@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
 import { settings } from "@/mocks/fixtures";
+import { EMPTY_PROFILE } from "@/types";
 import type { ActivityEvent, ActualPayout } from "@/types";
 
 let store: Store;
@@ -161,6 +162,20 @@ describe("activity and reminders", () => {
     expect(await store.reminderHistory("INV2-1")).toEqual([
       { invoiceId: "INV2-1", tone: "gentle", sentAt: "2026-10-10T00:00:00Z" },
     ]);
+  });
+});
+
+describe("profile", () => {
+  it("starts without a profile and keeps the saved one", async () => {
+    expect(await store.getProfile()).toBeNull();
+    await store.saveProfile({ ...EMPTY_PROFILE, yourName: "Riya Sharma" });
+    expect(await store.getProfile()).toEqual({ ...EMPTY_PROFILE, yourName: "Riya Sharma" });
+  });
+
+  it("keeps one profile, the last saved", async () => {
+    await store.saveProfile({ ...EMPTY_PROFILE, yourName: "Riya Sharma" });
+    await store.saveProfile({ ...EMPTY_PROFILE, yourName: "Asha Rao" });
+    expect((await store.getProfile())?.yourName).toBe("Asha Rao");
   });
 });
 

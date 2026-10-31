@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import { today } from "@/lib/clock";
 import { toCsv } from "@/lib/export/csv";
 import { buildExportRegister } from "@/lib/export/register";
+import { getProfile } from "@/lib/profile";
 import { exportRegisterQuerySchema, type ExportRegister } from "@/types";
 import { failFromError } from "@/app/api/_lib/errors";
 import { fail, ok } from "@/app/api/_lib/respond";
@@ -20,7 +21,7 @@ export async function GET(req: Request): Promise<Response> {
     const register = await buildExportRegister(month);
     if (format !== "csv") return ok<ExportRegister>(register);
 
-    return new Response(toCsv(register), {
+    return new Response(toCsv(register, (await getProfile()).gstin), {
       headers: {
         "content-type": "text/csv; charset=utf-8",
         "content-disposition": `attachment; filename="dueline-export-${month}.csv"`,

@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { isFinancialYear } from "@/lib/date-math";
 import { isPurposeCode } from "@/lib/export/purpose-codes";
-import { REMINDER_LIMITS } from "@/lib/reminders/check-reminder";
+import { hasLinkOrAddress, REMINDER_LIMITS } from "@/lib/reminders/check-reminder";
 
 export const currencySchema = z.enum(["USD", "EUR", "GBP", "CAD", "AUD"]);
 
@@ -19,11 +20,14 @@ export const clientSchema = z.object({
   location: z.string().max(200).optional(),
 });
 
+export const sacSchema = z.string().regex(/^99[0-9]{4}$/, "must be 6 digits starting with 99");
+
 export const lineItemSchema = z.object({
   name: z.string().min(1).max(200),
   quantity: z.number().int().min(1).max(999),
   unitAmount: amountString,
   sourceQuote: z.string().max(500).optional(),
+  sac: sacSchema.nullable().default(null),
 });
 
 const purposeCodeSchema = z
@@ -127,4 +131,56 @@ export const settingsSchema = z.object({
   rateSource: z.enum(["ecb", "manual"]),
   marketRates: marketRatesSchema,
   ratesUpdatedOn: dateString,
+});
+
+export const gstinSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(
+    /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/,
+    "must be 15 characters, like 29ABCDE1234F1Z5",
+  );
+
+const lutArnSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^[0-9A-Z]{15}$/, "must be 15 letters and digits");
+
+const websiteSchema = z
+  .url({ protocol: /^https?$/, error: "must be a web address starting with http:// or https://" })
+  .max(200);
+
+// Both end up in reminders, which must not carry links or email addresses.
+const plainText = (max: number, min = 0) =>
+  z
+    .string()
+    .trim()
+    .min(min, "must not be empty")
+    .max(max)
+    .refine(
+      (text) => !hasLinkOrAddress(text, { clientName: "", work: "" }),
+      "must not contain links or email addresses",
+    );
+
+export const profileSchema = z.object({
+  yourName: plainText(60),
+  businessName: z.string().trim().max(120),
+  gstin: gstinSchema.nullable(),
+  lutArn: lutArnSchema.nullable(),
+  lutValidUntil: dateString.nullable(),
+  defaultSac: sacSchema.nullable(),
+  website: websiteSchema.nullable(),
+  signOff: plainText(40, 1),
+});
+
+export const gstr1QuerySchema = z.object({
+  month: monthSchema,
+  format: z.literal("csv").optional(),
+});
+
+export const annualQuerySchema = z.object({
+  fy: z.string().refine(isFinancialYear, "must be a financial year like 2026-27"),
+  format: z.enum(["json", "csv"]).optional(),
 });

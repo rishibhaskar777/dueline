@@ -4,6 +4,7 @@ import { generateText, NoObjectGeneratedError, Output } from "ai";
 import { today } from "@/lib/clock";
 import { PURPOSE_CODES } from "@/lib/export/purpose-codes";
 import { maskContacts } from "@/lib/privacy/mask";
+import { getProfile } from "@/lib/profile";
 import { getStore } from "@/lib/store";
 import type { ExtractResponse } from "@/types";
 import { checkModelDraft, modelDraftSchema, type ModelDraft } from "./check-draft";
@@ -119,8 +120,10 @@ export async function extractInvoiceDraft(
   if (draft.items.length === 0) throw new ExtractionFailedError();
   if (!cached) await writeCache(key, guess);
 
+  // The SAC is the freelancer's own, so it never comes from the model.
+  const { defaultSac } = await getProfile();
   return {
-    draft,
+    draft: { ...draft, items: draft.items.map((item) => ({ ...item, sac: defaultSac })) },
     warnings,
     masked: { emails: contacts.emails.length, phones: contacts.phones.length },
   };

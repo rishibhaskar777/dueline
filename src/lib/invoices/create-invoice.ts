@@ -17,6 +17,7 @@ import {
   summarise,
 } from "@/lib/paypal/summaries";
 import type { PayPalInvoice } from "@/lib/paypal/types";
+import { getProfile } from "@/lib/profile";
 import { claimRequest } from "@/lib/requests/claim-request";
 import { hashRequestBody } from "@/lib/requests/body-hash";
 import { getStore } from "@/lib/store";
@@ -59,6 +60,7 @@ async function createDraft(input: NewInvoice, requestId: string): Promise<PayPal
     invoiceNumber: await nextInvoiceNumber(),
     invoiceDate: today(),
     requestId,
+    profile: await getProfile(),
     discount: input.discount,
   });
   return createDraftInvoice(body, requestId);

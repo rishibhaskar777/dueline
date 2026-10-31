@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { addDays, addMonths, daysBetween, todayInKolkata } from "@/lib/date-math";
+import {
+  addDays,
+  addMonths,
+  daysBetween,
+  financialYearOf,
+  financialYearRange,
+  isFinancialYear,
+  todayInKolkata,
+} from "@/lib/date-math";
 import { formatDayMonth, formatMonth, formatTimestamp } from "@/lib/format-date";
 
 describe("date math", () => {
@@ -33,5 +41,31 @@ describe("months", () => {
 
   it("names a month", () => {
     expect(formatMonth("2026-10")).toBe("October 2026");
+  });
+});
+
+describe("financial years", () => {
+  it.each([
+    ["2026-03", "2025-26"],
+    ["2026-04", "2026-27"],
+    ["2026-12", "2026-27"],
+    ["2027-01", "2026-27"],
+    ["2027-03", "2026-27"],
+    ["2027-04", "2027-28"],
+    ["2099-04", "2099-00"],
+  ])("puts %s in %s", (month, fy) => {
+    expect(financialYearOf(month)).toBe(fy);
+  });
+
+  it("runs from 1 April to 31 March", () => {
+    expect(financialYearRange("2026-27")).toEqual({ from: "2026-04-01", to: "2027-03-31" });
+  });
+
+  it("knows a financial year from a pair of years that do not follow each other", () => {
+    expect(isFinancialYear("2026-27")).toBe(true);
+    expect(isFinancialYear("2099-00")).toBe(true);
+    expect(isFinancialYear("2026-28")).toBe(false);
+    expect(isFinancialYear("2026")).toBe(false);
+    expect(isFinancialYear("26-27")).toBe(false);
   });
 });

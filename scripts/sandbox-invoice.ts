@@ -3,7 +3,7 @@ import { PayPalApiError } from "@/lib/paypal/errors";
 import { createDraftInvoice, nextInvoiceNumber, sendInvoice } from "@/lib/paypal/invoices";
 import { toPayPalInvoice } from "@/lib/paypal/invoice-body";
 import type { PayPalInvoice } from "@/lib/paypal/types";
-import type { CurrencyCode } from "@/types";
+import { EMPTY_PROFILE, type CurrencyCode } from "@/types";
 
 interface SandboxInvoiceSpec {
   clientName: string;
@@ -33,11 +33,11 @@ async function createDraft(
       client: { name: spec.clientName, email: spec.email },
       currency: spec.currency,
       dueOn: dates.dueDate,
-      items: [{ name: spec.itemName, quantity: 1, unitAmount: spec.amount }],
+      items: [{ name: spec.itemName, quantity: 1, unitAmount: spec.amount, sac: null }],
       purposeCode: spec.reference || null,
       includeLutNote: false,
     },
-    { invoiceNumber, invoiceDate: dates.invoiceDate, requestId },
+    { invoiceNumber, invoiceDate: dates.invoiceDate, requestId, profile: EMPTY_PROFILE },
   );
   return createDraftInvoice(body, requestId);
 }

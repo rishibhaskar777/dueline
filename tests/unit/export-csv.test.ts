@@ -18,7 +18,7 @@ describe("toCsv", () => {
     const csv = toCsv(register(paypalRow));
     expect(csv.startsWith("﻿Invoice number,")).toBe(true);
     expect(lines(csv)[0]).toBe(
-      "Invoice number,Client,Client country,Paid on (IST),Currency,Invoice amount,PayPal fee,Net received (foreign),Rupees received,Rupee source,Rate used,Rate date,Purpose code,Purpose description,Under LUT,PayPal transaction ID",
+      "Invoice number,Client,Client country,Paid on (IST),Currency,Invoice amount,PayPal fee,Net received (foreign),Rupees received,Rupee source,Rate used,Rate date,Purpose code,Purpose description,SAC,Under LUT,PayPal transaction ID",
     );
     expect(csv.endsWith("\r\n")).toBe(true);
     expect(csv.replaceAll("\r\n", "")).not.toMatch(/[\r\n]/);
@@ -26,13 +26,13 @@ describe("toCsv", () => {
 
   it("writes a row PayPal reported with its fee, net and transaction ID", () => {
     expect(lines(toCsv(register(paypalRow)))[1]).toBe(
-      "INV-0042,Halden Coffee Co.,United States,2026-10-15,USD,450.00,20.10,429.90,35617,PayPal,,,P1099,Other services not included elsewhere,Yes,5GX12345AB6789012",
+      "INV-0042,Halden Coffee Co.,United States,2026-10-15,USD,450.00,20.10,429.90,35617,PayPal,,,P1099,Other services not included elsewhere,998391,Yes,5GX12345AB6789012",
     );
   });
 
   it("writes an estimated row with the rate and its date, and leaves PayPal's cells empty", () => {
     expect(lines(toCsv(register(estimateRow)))[1]).toBe(
-      "INV-0041,Halden Coffee Co.,United States,2026-10-07,USD,280.00,,,22824,Estimate,85.36,2026-10-07,P1099,Other services not included elsewhere,No,",
+      "INV-0041,Halden Coffee Co.,United States,2026-10-07,USD,280.00,,,22824,Estimate,85.36,2026-10-07,P1099,Other services not included elsewhere,998391,No,",
     );
   });
 
@@ -64,7 +64,7 @@ describe("toCsv", () => {
   it("leaves a missing purpose code and client country empty", () => {
     const row = { ...paypalRow, purposeCode: null, clientCountry: null, underLut: false };
     expect(lines(toCsv(register(row)))[1]).toBe(
-      "INV-0042,Halden Coffee Co.,,2026-10-15,USD,450.00,20.10,429.90,35617,PayPal,,,,,No,5GX12345AB6789012",
+      "INV-0042,Halden Coffee Co.,,2026-10-15,USD,450.00,20.10,429.90,35617,PayPal,,,,,998391,No,5GX12345AB6789012",
     );
   });
 
@@ -93,5 +93,22 @@ describe("toCsv", () => {
       "",
     ]);
     expect(lines(csv)[0]).toBe(lines(toCsv(register(paypalRow)))[0]);
+  });
+});
+
+describe("toCsv with a GSTIN", () => {
+  it("puts the GSTIN in a comment line above the column headers", () => {
+    const csv = lines(toCsv(register(paypalRow), "29ABCPS1234C1Z5"));
+    expect(csv[0]).toBe("# GSTIN: 29ABCPS1234C1Z5");
+    expect(csv[1].startsWith("Invoice number,")).toBe(true);
+  });
+
+  it("writes no comment line without a GSTIN", () => {
+    expect(lines(toCsv(register(paypalRow), null))[0].startsWith("Invoice number,")).toBe(true);
+  });
+
+  it("leaves the SAC empty when the invoice has none", () => {
+    const row = { ...paypalRow, sac: null };
+    expect(lines(toCsv(register(row)))[1]).toContain("elsewhere,,Yes,");
   });
 });

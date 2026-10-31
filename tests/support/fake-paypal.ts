@@ -53,6 +53,7 @@ export function createFakePayPal() {
         detail: { ...body.detail },
         primary_recipients: body.primary_recipients,
         items: body.items,
+        invoicer: body.invoicer,
       }),
     sendInvoice: async (id: string): Promise<void> => {
       calls.sent.push(id);
