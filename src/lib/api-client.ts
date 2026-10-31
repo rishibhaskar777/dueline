@@ -1,5 +1,6 @@
 import type {
   ActivityResponse,
+  AnnualSummary,
   ApiError,
   ClientRisk,
   CreateInvoiceRequest,
@@ -12,6 +13,7 @@ import type {
   InvoicesResponse,
   Money,
   PayoutEstimate,
+  Profile,
   PurposeCodesResponse,
   ReminderDraft,
   RemindersResponse,
@@ -150,6 +152,26 @@ export async function getPurposeCodes(): Promise<PurposeCodesResponse["codes"]> 
 export async function getDemoRecipient(): Promise<DemoRecipientResponse["email"]> {
   const { email } = await requestJson<DemoRecipientResponse>("/api/demo/recipient");
   return email;
+}
+
+export function getProfile(): Promise<Profile> {
+  return requestJson("/api/profile");
+}
+
+export function saveProfile(profile: Profile): Promise<Profile> {
+  return requestJson("/api/profile", jsonInit("PUT", profile));
+}
+
+export function getAnnualSummary(fy: string): Promise<AnnualSummary> {
+  return requestJson(`/api/exports/annual?fy=${encodeURIComponent(fy)}`);
+}
+
+export function annualSummaryCsvUrl(fy: string): string {
+  return `/api/exports/annual?fy=${encodeURIComponent(fy)}&format=csv`;
+}
+
+export function gstr1CsvUrl(month: string): string {
+  return `/api/exports/gstr1?month=${encodeURIComponent(month)}&format=csv`;
 }
 
 export function getExportRegister(month: string): Promise<ExportRegister> {

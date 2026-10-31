@@ -62,11 +62,24 @@ export interface PayPalInvoice {
       invoicer_view_url?: string;
     };
   };
-  invoicer?: { email_address?: string };
+  invoicer?: {
+    email_address?: string;
+    business_name?: string;
+    name?: { given_name?: string; surname?: string };
+    tax_id?: string;
+    website?: string;
+  };
   primary_recipients?: PayPalRecipient[];
   items?: PayPalItem[];
   amount?: PayPalMoney;
   payments?: { paid_amount?: PayPalMoney; transactions?: PayPalPayment[] };
+}
+
+interface PayPalInvoicerInput {
+  business_name?: string;
+  name?: { given_name: string; surname?: string };
+  tax_id?: string;
+  website?: string;
 }
 
 export interface PayPalInvoiceInput {
@@ -81,6 +94,7 @@ export interface PayPalInvoiceInput {
   };
   primary_recipients: PayPalRecipient[];
   items: PayPalItem[];
+  invoicer?: PayPalInvoicerInput;
   amount?: { breakdown: { discount: { invoice_discount: { percent: string } } } };
 }
 

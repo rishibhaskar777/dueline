@@ -8,7 +8,7 @@ import {
   type InvoiceSummary,
   type Money,
 } from "@/types";
-import { LUT_NOTE } from "./invoice-body";
+import { mentionsLut } from "./invoice-body";
 import { purposeCodeOf } from "./memo";
 import type { PayPalInvoice, PayPalPayment } from "./types";
 
@@ -55,7 +55,7 @@ function paidOnOf(invoice: PayPalInvoice, actualPayout: ActualPayout | null): st
 }
 
 export function isUnderLut(invoice: PayPalInvoice): boolean {
-  return invoice.detail.note?.includes(LUT_NOTE) ?? false;
+  return mentionsLut(invoice.detail.note);
 }
 
 function dueStateOf(paid: boolean, dueOn: string, today: string): DueState {

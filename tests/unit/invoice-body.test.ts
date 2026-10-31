@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { requestMemo, toPayPalInvoice } from "@/lib/paypal/invoice-body";
-import type { CreateInvoiceRequest } from "@/types";
+import {
+  LUT_DECLARATION,
+  mentionsLut,
+  requestMemo,
+  toPayPalInvoice,
+} from "@/lib/paypal/invoice-body";
+import { EMPTY_PROFILE, type CreateInvoiceRequest, type Profile } from "@/types";
 import { stubEnv } from "../support/env";
 
 const requestId = "3f2b8c1e-6a4d-4e8b-9c1a-2d5e7f9a0b1c";
@@ -10,14 +15,35 @@ const draft: CreateInvoiceRequest["draft"] = {
   currency: "USD",
   dueOn: "2026-11-30",
   items: [
-    { name: "Logo design (3 options)", quantity: 3, unitAmount: "120.00" },
-    { name: "Revision round", quantity: 2, unitAmount: "45.00", sourceQuote: "$45 a round" },
+    { name: "Logo design (3 options)", quantity: 3, unitAmount: "120.00", sac: null },
+    {
+      name: "Revision round",
+      quantity: 2,
+      unitAmount: "45.00",
+      sourceQuote: "$45 a round",
+      sac: null,
+    },
   ],
   purposeCode: "P1099",
   includeLutNote: false,
 };
 
-const options = { invoiceNumber: "0042", invoiceDate: "2026-10-30", requestId };
+const options = {
+  invoiceNumber: "0042",
+  invoiceDate: "2026-10-30",
+  requestId,
+  profile: EMPTY_PROFILE,
+};
+
+const profile: Profile = {
+  ...EMPTY_PROFILE,
+  yourName: "Riya Sharma",
+  businessName: "Riya Sharma Design",
+  gstin: "29ABCPS1234C1Z5",
+  lutArn: "AD2904260012345",
+  defaultSac: "998391",
+  website: "https://riya.example.com",
+};
 
 beforeEach(() => stubEnv());
 
@@ -64,10 +90,10 @@ describe("toPayPalInvoice", () => {
       options,
     );
     expect(body.detail.note).toBe(
-      "Files are in the shared folder.\nExport of services under LUT, without payment of IGST",
+      `Files are in the shared folder.\n${LUT_DECLARATION}\nPlace of supply: outside India`,
     );
     expect(toPayPalInvoice({ ...draft, includeLutNote: true }, options).detail.note).toBe(
-      "Export of services under LUT, without payment of IGST",
+      `${LUT_DECLARATION}\nPlace of supply: outside India`,
     );
   });
 
@@ -93,7 +119,7 @@ describe("toPayPalInvoice", () => {
       breakdown: { discount: { invoice_discount: { percent: "2" } } },
     });
     expect(body.detail.note).toBe(
-      "Export of services under LUT, without payment of IGST\nIncludes a 2% early-payment discount, valid if paid by 6 Nov 2026",
+      `${LUT_DECLARATION}\nPlace of supply: outside India\nIncludes a 2% early-payment discount, valid if paid by 6 Nov 2026`,
     );
     expect(body.detail.payment_term.due_date).toBe("2026-11-06");
   });
@@ -110,5 +136,66 @@ describe("toPayPalInvoice", () => {
 
   it("leaves the amount out when there is no discount", () => {
     expect(toPayPalInvoice(draft, options)).not.toHaveProperty("amount");
+  });
+
+  it("leaves the invoicer out when the profile is empty", () => {
+    expect(toPayPalInvoice(draft, options)).not.toHaveProperty("invoicer");
+  });
+
+  it("prints the profile in the invoice header, each part only when set", () => {
+    expect(toPayPalInvoice(draft, { ...options, profile }).invoicer).toEqual({
+      business_name: "Riya Sharma Design",
+      name: { given_name: "Riya", surname: "Sharma" },
+      tax_id: "29ABCPS1234C1Z5",
+      website: "https://riya.example.com",
+    });
+    expect(
+      toPayPalInvoice(draft, {
+        ...options,
+        profile: { ...EMPTY_PROFILE, businessName: "Riya Sharma Design" },
+      }).invoicer,
+    ).toEqual({ business_name: "Riya Sharma Design" });
+  });
+
+  it.each([
+    ["Riya", { given_name: "Riya" }],
+    ["Mary Anne Jones", { given_name: "Mary Anne", surname: "Jones" }],
+  ])("splits the name %j into a given name and a surname", (yourName, name) => {
+    const body = toPayPalInvoice(draft, { ...options, profile: { ...EMPTY_PROFILE, yourName } });
+    expect(body.invoicer).toEqual({ name });
+  });
+
+  it("describes an item with its SAC and keeps the first item's SAC in the private memo", () => {
+    const body = toPayPalInvoice(
+      {
+        ...draft,
+        items: draft.items.map((item, index) => ({ ...item, sac: index ? null : "998314" })),
+      },
+      options,
+    );
+    expect(body.items[0].description).toBe("SAC 998314");
+    expect(body.items[1]).not.toHaveProperty("description");
+    expect(body.detail.memo).toBe(`dueline-request:${requestId} purpose:P1099 sac:998314`);
+  });
+
+  it("writes the declaration, the LUT ARN and the place of supply when the LUT line is ticked", () => {
+    const note = toPayPalInvoice({ ...draft, includeLutNote: true }, { ...options, profile }).detail
+      .note;
+    expect(note).toBe(
+      `${LUT_DECLARATION}\nLUT ARN: AD2904260012345\nPlace of supply: outside India`,
+    );
+  });
+
+  it("writes no LUT lines when the LUT line is not ticked, even with an ARN saved", () => {
+    expect(toPayPalInvoice(draft, { ...options, profile }).detail).not.toHaveProperty("note");
+  });
+});
+
+describe("mentionsLut", () => {
+  it("recognises the declaration and the line older invoices carry", () => {
+    expect(mentionsLut(`Thanks\n${LUT_DECLARATION}`)).toBe(true);
+    expect(mentionsLut("Export of services under LUT, without payment of IGST")).toBe(true);
+    expect(mentionsLut("Thanks")).toBe(false);
+    expect(mentionsLut(undefined)).toBe(false);
   });
 });

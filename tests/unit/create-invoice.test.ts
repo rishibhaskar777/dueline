@@ -8,7 +8,7 @@ import type { PayPalInvoice, PayPalInvoiceInput } from "@/lib/paypal/types";
 import { DuplicateRequestError } from "@/lib/requests/errors";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
-import type { CreateInvoiceRequest } from "@/types";
+import { EMPTY_PROFILE, type CreateInvoiceRequest } from "@/types";
 import { stubEnv } from "../support/env";
 import unpaidFixture from "../fixtures/paypal/invoice-unpaid.json";
 
@@ -44,7 +44,7 @@ const input: Omit<CreateInvoiceRequest, "requestId"> = {
     client: { name: "Halden Coffee Co.", email: "buyer@personal.example.com" },
     currency: "USD",
     dueOn: "2026-11-30",
-    items: [{ name: "Logo design (3 options)", quantity: 3, unitAmount: "120.00" }],
+    items: [{ name: "Logo design (3 options)", quantity: 3, unitAmount: "120.00", sac: null }],
     purposeCode: "P1099",
     includeLutNote: false,
   },
@@ -134,13 +134,26 @@ describe("createAndSendInvoice", () => {
     expect(paypal.createDraftInvoice).not.toHaveBeenCalled();
   });
 
+  it("prints the saved profile in the invoice header", async () => {
+    await store.saveProfile({
+      ...EMPTY_PROFILE,
+      yourName: "Riya Sharma",
+      businessName: "Riya Sharma Design",
+    });
+    await createAndSendInvoice(input, requestId);
+    expect(createdBodies()[0].invoicer).toEqual({
+      business_name: "Riya Sharma Design",
+      name: { given_name: "Riya", surname: "Sharma" },
+    });
+  });
+
   it("treats the same fields in another order as the same body", async () => {
     await createAndSendInvoice(input, requestId);
     const reordered = {
       draft: {
         includeLutNote: false,
         purposeCode: "P1099",
-        items: [{ unitAmount: "120.00", quantity: 3, name: "Logo design (3 options)" }],
+        items: [{ sac: null, unitAmount: "120.00", quantity: 3, name: "Logo design (3 options)" }],
         dueOn: "2026-11-30",
         currency: "USD",
         client: { email: "buyer@personal.example.com", name: "Halden Coffee Co." },

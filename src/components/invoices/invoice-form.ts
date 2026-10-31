@@ -5,6 +5,7 @@ import {
   type CurrencyCode,
   type InvoiceDraft,
   type Money,
+  type Profile,
 } from "@/types";
 
 const DEFAULT_DISCOUNT_PERCENT = "2";
@@ -15,6 +16,7 @@ export interface FormItem {
   name: string;
   quantity: string;
   unitAmount: string;
+  sac: string;
   sourceQuote?: string;
 }
 
@@ -53,22 +55,23 @@ const MESSAGES: Record<string, string> = {
   items: "Add at least one item",
   "items.*.name": "Enter an item name",
   "items.*.quantity": `Use a whole number from 1 to ${MAX_QUANTITY}`,
+  "items.*.sac": "Use 6 digits starting with 99, like 998314",
   note: "Keep the note under 1,000 characters",
   "discount.percent": "Use a percentage from 1 to 20",
   "discount.withinDays": "Use a whole number of days from 3 to 30",
 };
 
-export function newItem(): FormItem {
-  return { key: crypto.randomUUID(), name: "", quantity: "1", unitAmount: "" };
+export function newItem(sac = ""): FormItem {
+  return { key: crypto.randomUUID(), name: "", quantity: "1", unitAmount: "", sac };
 }
 
-export function blankForm(): InvoiceForm {
+export function blankForm(defaultSac = ""): InvoiceForm {
   return {
     clientName: "",
     clientEmail: "",
     currency: "USD",
     dueOn: "",
-    items: [newItem()],
+    items: [newItem(defaultSac)],
     note: "",
     purposeCode: null,
     purposeReason: "",
@@ -91,6 +94,7 @@ export function formFromDraft(draft: InvoiceDraft): InvoiceForm {
       name: item.name,
       quantity: String(item.quantity),
       unitAmount: item.unitAmount,
+      sac: item.sac ?? "",
       sourceQuote: item.sourceQuote,
     })),
     note: draft.note ?? "",
@@ -98,6 +102,19 @@ export function formFromDraft(draft: InvoiceDraft): InvoiceForm {
     purposeReason: draft.purposeReason ?? "",
     includeLutNote: draft.includeLutNote,
   };
+}
+
+export type LutIssue = "missing_arn" | "expired";
+
+// A LUT line without the ARN, or under a LUT that has run out, is worth a second look before sending.
+export function lutIssue(
+  profile: Profile,
+  includeLutNote: boolean,
+  today?: string,
+): LutIssue | null {
+  if (!includeLutNote) return null;
+  if (!profile.lutArn) return "missing_arn";
+  return today && profile.lutValidUntil && profile.lutValidUntil < today ? "expired" : null;
 }
 
 function minorUnitsOf(value: string): number | null {
@@ -193,6 +210,7 @@ export function toRequest(form: InvoiceForm, requestId: string, today?: string):
         name: item.name.trim(),
         quantity: Number(item.quantity),
         unitAmount: item.unitAmount.trim(),
+        sac: item.sac.trim() || null,
       })),
       ...(note ? { note } : {}),
       purposeCode: form.purposeCode,

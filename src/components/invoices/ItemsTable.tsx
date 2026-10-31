@@ -48,22 +48,26 @@ interface ItemsTableProps {
   items: FormItem[];
   currency: CurrencyCode;
   errors: FieldErrors;
+  defaultSac: string;
   onChange: (items: FormItem[]) => void;
 }
 
-export function ItemsTable({ items, currency, errors, onChange }: ItemsTableProps) {
+export function ItemsTable({ items, currency, errors, defaultSac, onChange }: ItemsTableProps) {
   const update = (key: string, changes: Partial<FormItem>) =>
     onChange(items.map((item) => (item.key === key ? { ...item, ...changes } : item)));
 
   return (
     <div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[34rem] text-sm">
+        <table className="w-full min-w-[40rem] text-sm">
           <caption className="sr-only">Invoice items</caption>
           <thead>
             <tr className="text-left text-muted-foreground">
               <th scope="col" className="py-2 pr-3 font-medium">
                 Item
+              </th>
+              <th scope="col" className="w-28 py-2 pr-3 font-medium">
+                SAC
               </th>
               <th scope="col" className="w-24 py-2 pr-3 font-medium">
                 Quantity
@@ -98,6 +102,16 @@ export function ItemsTable({ items, currency, errors, onChange }: ItemsTableProp
                         From the chat: &ldquo;{item.sourceQuote}&rdquo;
                       </p>
                     )}
+                  </td>
+                  <td className="py-2 pr-3">
+                    <RowInput
+                      id={`item-sac-${item.key}`}
+                      label={`${label} SAC`}
+                      value={item.sac}
+                      onChange={(sac) => update(item.key, { sac })}
+                      error={errors[`items.${index}.sac`]}
+                      inputMode="numeric"
+                    />
                   </td>
                   <td className="py-2 pr-3">
                     <RowInput
@@ -145,7 +159,7 @@ export function ItemsTable({ items, currency, errors, onChange }: ItemsTableProp
         type="button"
         variant="outline"
         className="mt-3"
-        onClick={() => onChange([...items, newItem()])}
+        onClick={() => onChange([...items, newItem(defaultSac)])}
       >
         <Plus aria-hidden data-icon="inline-start" />
         Add item

@@ -4,7 +4,7 @@ import { inBatches } from "@/lib/in-batches";
 import { getStore } from "@/lib/store";
 import type { ActualPayout, InvoiceSummary, Money } from "@/types";
 import { getInvoice, listInvoices } from "./invoices";
-import { markerOf } from "./memo";
+import { markerOf, sacOf } from "./memo";
 import { amountDueOf, isUnderLut, latestPayment, PAYOUT_STATUSES, toInvoiceSummary } from "./map";
 import { getActualPayout } from "./payments";
 import type { PayPalInvoice } from "./types";
@@ -13,6 +13,8 @@ export interface LoadedInvoice {
   summary: InvoiceSummary;
   amountDue: Money;
   underLut: boolean;
+  // SAC of the invoice's first item, from its private memo.
+  sac: string | null;
   // The invoice's own latest payment, for a payout PayPal has not reported figures for.
   paymentId: string | null;
 }
@@ -98,6 +100,7 @@ async function loadFresh(): Promise<LoadedInvoice[]> {
               summary,
               amountDue: amountDueOf(invoice, summary.amount),
               underLut: isUnderLut(invoice),
+              sac: sacOf(invoice.detail.memo),
               paymentId: latestPayment(invoice)?.payment_id ?? null,
             },
           ]

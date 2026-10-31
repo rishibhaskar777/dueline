@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ClientFields } from "@/components/invoices/ClientFields";
 import { DetailsFields } from "@/components/invoices/DetailsFields";
@@ -17,7 +18,7 @@ import { useFormReferences } from "@/components/invoices/use-form-references";
 import { useSubmitInvoice } from "@/components/invoices/use-submit-invoice";
 import { WarningsPanel } from "@/components/invoices/WarningsPanel";
 import { Button } from "@/components/ui/button";
-import type { ClientRisk } from "@/types";
+import type { ClientRisk, Profile } from "@/types";
 
 const SECTION = "rounded-xl border border-line bg-white p-6";
 
@@ -28,10 +29,11 @@ interface ReviewStepProps {
     notice: string | null;
     risk: ClientRisk | null;
   };
+  profile: Profile | null;
   onCreateAnother: () => void;
 }
 
-export function ReviewStep({ initial, onCreateAnother }: ReviewStepProps) {
+export function ReviewStep({ initial, profile, onCreateAnother }: ReviewStepProps) {
   const [form, setForm] = useState(initial.form);
   const [errors, setErrors] = useState<FieldErrors>({});
   const { codes, demoEmail, today } = useFormReferences();
@@ -61,6 +63,14 @@ export function ReviewStep({ initial, onCreateAnother }: ReviewStepProps) {
     >
       <div className="grid gap-6">
         {initial.notice && <p className="text-sm text-muted-foreground">{initial.notice}</p>}
+        {profile && (!profile.yourName || !profile.businessName) && (
+          <p className="text-sm text-muted-foreground">
+            Your name and business name are not on the invoice yet.{" "}
+            <Link href="/profile" className="text-blue underline underline-offset-2">
+              Add them in Profile
+            </Link>
+          </p>
+        )}
 
         <WarningsPanel warnings={initial.warnings} />
 
@@ -80,6 +90,7 @@ export function ReviewStep({ initial, onCreateAnother }: ReviewStepProps) {
               items={form.items}
               currency={form.currency}
               errors={errors}
+              defaultSac={profile?.defaultSac ?? ""}
               onChange={(items) => update({ items })}
             />
           </div>
@@ -95,6 +106,7 @@ export function ReviewStep({ initial, onCreateAnother }: ReviewStepProps) {
               update={update}
               errors={errors}
               codes={codes}
+              profile={profile}
               today={today}
             />
           </div>

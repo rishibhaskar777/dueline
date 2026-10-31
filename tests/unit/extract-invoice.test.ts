@@ -6,6 +6,7 @@ import { ExtractionFailedError, extractInvoiceDraft } from "@/lib/ai/extract-inv
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
 import { haldenGuess, haldenGuessWithTerms, noObjectError } from "../support/ai";
+import { EMPTY_PROFILE } from "@/types";
 import { stubEnv } from "../support/env";
 
 vi.mock("ai", async (importOriginal) => ({
@@ -61,18 +62,27 @@ describe("extractInvoiceDraft", () => {
           quantity: 3,
           unitAmount: "120.00",
           sourceQuote: "Logos for $120 each",
+          sac: null,
         },
         {
           name: "Revision round",
           quantity: 2,
           unitAmount: "45.00",
           sourceQuote: "revisions $45 a round",
+          sac: null,
         },
       ],
       purposeCode: "P1099",
       purposeReason: "Logo design has no closer match, so it is other services.",
       includeLutNote: false,
     });
+  });
+
+  it("gives every item the SAC saved in the profile, never one from the model", async () => {
+    await store.saveProfile({ ...EMPTY_PROFILE, defaultSac: "998391" });
+    modelAnswers(haldenGuess);
+    const result = await extractInvoiceDraft(haldenChat);
+    expect(result.draft.items.map((item) => item.sac)).toEqual(["998391", "998391"]);
   });
 
   it("keeps an item whose quote is not in the chat and warns", async () => {

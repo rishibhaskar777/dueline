@@ -1,6 +1,6 @@
 import type { Client } from "@/types";
 
-function normaliseName(name: string): string {
+export function normaliseName(name: string): string {
   return name.trim().replace(/\s+/g, " ").toLowerCase();
 }
 

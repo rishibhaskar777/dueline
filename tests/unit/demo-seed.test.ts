@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { seedDemo } from "@/lib/demo/seed";
-import { buildDemoStory, demoMemo } from "@/lib/demo/story";
+import { buildDemoProfile, buildDemoStory, DEMO_SAC, demoMemo } from "@/lib/demo/story";
 import { ConfigError } from "@/lib/env";
 import { PayPalApiError } from "@/lib/paypal/errors";
+import { createMemoryStore } from "@/lib/store/memory-store";
+import type { Store } from "@/lib/store/store";
+import { EMPTY_PROFILE } from "@/types";
 import { createFakePayPal, type FakePayPal } from "../support/fake-paypal";
 import { stubEnv } from "../support/env";
 
@@ -20,6 +23,8 @@ vi.mock("@/lib/paypal/invoices", () => ({
   sendInvoice: paypal.sendInvoice,
   recordExternalPayment: paypal.recordExternalPayment,
 }));
+const holder = vi.hoisted(() => ({ store: undefined as Store | undefined }));
+vi.mock("@/lib/store", () => ({ getStore: () => holder.store }));
 vi.mock("@/lib/paypal/summaries", () => ({ listInvoicesInFull: paypal.listInvoicesInFull }));
 
 const TODAY = "2026-10-31";
@@ -30,6 +35,7 @@ const history = story.filter((invoice) => invoice.paidOn);
 let fake: FakePayPal;
 
 beforeEach(() => {
+  holder.store = createMemoryStore();
   stubEnv({ DEMO_TODAY: TODAY, SANDBOX_BUYER_EMAIL: BUYER });
   vi.spyOn(console, "error").mockImplementation(() => {});
   fake = createFakePayPal();
@@ -48,7 +54,7 @@ describe("seedDemo", () => {
     expect(fake.calls.sent).toHaveLength(story.length);
     const created = [...fake.invoices.values()];
     expect(created.map((invoice) => invoice.detail.memo)).toEqual(
-      story.map((invoice) => demoMemo(invoice.key, invoice.purposeCode)),
+      story.map((invoice) => demoMemo(invoice.key, invoice.purposeCode, DEMO_SAC)),
     );
     expect(
       created.every((i) => i.primary_recipients?.[0].billing_info.email_address === BUYER),
@@ -57,6 +63,33 @@ describe("seedDemo", () => {
       invoice_date: story[0].issuedOn,
       payment_term: { due_date: story[0].dueOn },
     });
+  });
+
+  it("saves the demo profile when none is saved and prints it on every invoice", async () => {
+    await seedDemo();
+
+    expect(await holder.store?.getProfile()).toEqual(buildDemoProfile(TODAY));
+    const created = [...fake.invoices.values()];
+    expect(
+      created.every((invoice) => invoice.invoicer?.business_name === "Riya Sharma Design"),
+    ).toBe(true);
+    expect(created.every((invoice) => invoice.invoicer?.tax_id === "29ABCPS1234C1Z5")).toBe(true);
+    expect(created.every((invoice) => invoice.items?.[0].description === "SAC 998391")).toBe(true);
+  });
+
+  it("keeps a profile the freelancer saved, and uses it", async () => {
+    const saved = { ...EMPTY_PROFILE, yourName: "Asha Rao", businessName: "Asha Rao Studio" };
+    await holder.store?.saveProfile(saved);
+
+    await seedDemo();
+
+    expect(await holder.store?.getProfile()).toEqual(saved);
+    const header = [...fake.invoices.values()][0].invoicer;
+    expect(header).toEqual({
+      business_name: "Asha Rao Studio",
+      name: { given_name: "Asha", surname: "Rao" },
+    });
+    expect([...fake.invoices.values()][0].items?.[0]).not.toHaveProperty("description");
   });
 
   it("records the history as paid outside PayPal on the story's dates, and nothing else", async () => {

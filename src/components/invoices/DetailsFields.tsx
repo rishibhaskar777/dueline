@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo } from "react";
 import { FieldError } from "@/components/invoices/FieldError";
-import type { FieldErrors, InvoiceForm } from "@/components/invoices/invoice-form";
+import { lutIssue, type FieldErrors, type InvoiceForm } from "@/components/invoices/invoice-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +16,8 @@ import {
 } from "@/components/ui/select";
 import { NO_CODE, purposeCodeItems } from "@/components/invoices/purpose-code-items";
 import { Textarea } from "@/components/ui/textarea";
-import { currencySchema, type PurposeCode } from "@/types";
+import { formatDate } from "@/lib/format-date";
+import { currencySchema, type Profile, type PurposeCode } from "@/types";
 
 const CURRENCY_ITEMS = currencySchema.options.map((code) => ({ value: code, label: code }));
 
@@ -24,12 +26,14 @@ interface DetailsFieldsProps {
   update: (changes: Partial<InvoiceForm>) => void;
   errors: FieldErrors;
   codes: PurposeCode[];
+  profile: Profile | null;
   today: string | undefined;
 }
 
-export function DetailsFields({ form, update, errors, codes, today }: DetailsFieldsProps) {
+export function DetailsFields({ form, update, errors, codes, profile, today }: DetailsFieldsProps) {
   // The Select reads its items on every render, so a new array each time keeps it updating.
   const codeItems = useMemo(() => purposeCodeItems(codes), [codes]);
+  const issue = profile ? lutIssue(profile, form.includeLutNote, today) : null;
 
   return (
     <div className="grid gap-5">
@@ -100,14 +104,27 @@ export function DetailsFields({ form, update, errors, codes, today }: DetailsFie
         </p>
       </div>
 
-      <label className="flex items-start gap-2 text-sm">
-        <Checkbox
-          checked={form.includeLutNote}
-          onCheckedChange={(checked) => update({ includeLutNote: checked })}
-          className="mt-0.5"
-        />
-        Add the LUT line (export of services without IGST)
-      </label>
+      <div className="grid gap-1.5">
+        <label className="flex items-start gap-2 text-sm">
+          <Checkbox
+            checked={form.includeLutNote}
+            onCheckedChange={(checked) => update({ includeLutNote: checked })}
+            className="mt-0.5"
+          />
+          Export under LUT (no IGST)
+        </label>
+        {issue && (
+          <p className="text-sm text-due-soon">
+            {issue === "missing_arn"
+              ? "Add your LUT ARN in "
+              : `Your LUT ended on ${formatDate(profile?.lutValidUntil ?? "")}. Update it in `}
+            <Link href="/profile" className="underline underline-offset-2">
+              Profile
+            </Link>
+            .
+          </p>
+        )}
+      </div>
 
       <div className="grid gap-1.5">
         <Label htmlFor="note">Note to the client</Label>
