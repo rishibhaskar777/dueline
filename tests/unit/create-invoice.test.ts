@@ -1,14 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createAndSendInvoice, sendExistingDraft } from "@/lib/invoices/create-invoice";
-import {
-  CreateOutcomeUnknownError,
-  DuplicateRequestError,
-  InvoiceNotFoundError,
-  RecipientNotAllowedError,
-} from "@/lib/invoices/errors";
+import { RecipientNotAllowedError } from "@/lib/demo-guard";
+import { CreateOutcomeUnknownError, InvoiceNotFoundError } from "@/lib/invoices/errors";
 import { PayPalApiError, PayPalTimeoutError } from "@/lib/paypal/errors";
 import { requestMemo } from "@/lib/paypal/invoice-body";
 import type { PayPalInvoice, PayPalInvoiceInput } from "@/lib/paypal/types";
+import { DuplicateRequestError } from "@/lib/requests/errors";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
 import type { CreateInvoiceRequest } from "@/types";
@@ -30,7 +27,8 @@ vi.mock("@/lib/paypal/invoices", () => ({
   sendInvoice: paypal.sendInvoice,
   getInvoice: paypal.getInvoice,
 }));
-vi.mock("@/lib/paypal/summaries", () => ({
+vi.mock("@/lib/paypal/summaries", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/paypal/summaries")>()),
   findInvoiceByMemo: paypal.findInvoiceByMemo,
   clearInvoiceCaches: paypal.clearInvoiceCaches,
 }));

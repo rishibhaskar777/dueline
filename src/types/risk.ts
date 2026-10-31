@@ -2,6 +2,7 @@ export type RiskLevel = "reliable" | "watch" | "late_payer";
 
 export interface ClientRisk {
   clientEmail: string;
+  clientName: string;
   invoicesConsidered: number;
   lateCount: number;
   averageDaysLate: number;

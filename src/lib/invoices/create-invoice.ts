@@ -1,6 +1,7 @@
 import "server-only";
 import { today } from "@/lib/clock";
-import { ConfigError, getEnv, SANDBOX_BUYER_DOMAIN } from "@/lib/env";
+import { assertSandboxBuyers } from "@/lib/demo-guard";
+import { ConfigError } from "@/lib/env";
 import { PayPalApiError, PayPalTimeoutError } from "@/lib/paypal/errors";
 import { requestMemo, toPayPalInvoice } from "@/lib/paypal/invoice-body";
 import {
@@ -9,32 +10,24 @@ import {
   nextInvoiceNumber,
   sendInvoice,
 } from "@/lib/paypal/invoices";
-import { toInvoiceSummary } from "@/lib/paypal/map";
-import { clearInvoiceCaches, findInvoiceByMemo } from "@/lib/paypal/summaries";
-import type { PayPalInvoice } from "@/lib/paypal/types";
-import { getStore } from "@/lib/store";
-import type { Json, Store } from "@/lib/store/store";
-import type {
-  CreateInvoiceRequest,
-  CreateInvoiceResponse,
-  InvoiceSummary,
-  SendInvoiceResponse,
-} from "@/types";
-import { hashRequestBody } from "./body-hash";
 import {
-  CreateOutcomeUnknownError,
-  DuplicateRequestError,
-  InvoiceNotFoundError,
-  RecipientNotAllowedError,
-} from "./errors";
+  clearInvoiceCaches,
+  findInvoiceByMemo,
+  recipientsOf,
+  summarise,
+} from "@/lib/paypal/summaries";
+import type { PayPalInvoice } from "@/lib/paypal/types";
+import { claimRequest } from "@/lib/requests/claim-request";
+import { hashRequestBody } from "@/lib/requests/body-hash";
+import { getStore } from "@/lib/store";
+import type { Json } from "@/lib/store/store";
+import type { CreateInvoiceRequest, CreateInvoiceResponse, SendInvoiceResponse } from "@/types";
+import { CreateOutcomeUnknownError, InvoiceNotFoundError } from "./errors";
 
 type NewInvoice = Omit<CreateInvoiceRequest, "requestId">;
 
-type Acquired =
-  { kind: "replay"; result: CreateInvoiceResponse } | { kind: "owned"; recovered: boolean };
-
-// A request that has been in progress this long was most likely cut off, so it may be resolved.
-const STALE_CLAIM_MS = 2 * 60 * 1000;
+const INVOICE_CONFLICT =
+  "This request ID was already used for different details. Check Receivables before creating the invoice again.";
 
 const SEND_NOTE =
   "Thank you for your business. You can pay securely with PayPal using the link in this email.";
@@ -55,50 +48,6 @@ function fromStored(value: Json): CreateInvoiceResponse {
     return value as unknown as CreateInvoiceResponse;
   }
   throw new Error("The stored result of this request cannot be read.");
-}
-
-// A repeat of a request that is still running is refused. Once the request is old enough to have
-// been cut off, one caller takes it over: release only succeeds for one of them, and for it alone.
-async function acquire(
-  store: Store,
-  requestId: string,
-  bodyHash: string,
-  inProgressMessage: string,
-): Promise<Acquired> {
-  const claim = await store.claim(requestId, bodyHash);
-  if (claim.kind === "new") return { kind: "owned", recovered: false };
-  if (claim.kind === "replay") return { kind: "replay", result: fromStored(claim.result) };
-  if (claim.kind === "conflict") {
-    throw new DuplicateRequestError(
-      "This request ID was already used for different details. Check Receivables before creating the invoice again.",
-    );
-  }
-
-  if (!(await store.release(requestId, STALE_CLAIM_MS))) {
-    throw new DuplicateRequestError(inProgressMessage);
-  }
-  const again = await store.claim(requestId, bodyHash);
-  if (again.kind !== "new") throw new DuplicateRequestError(inProgressMessage);
-  return { kind: "owned", recovered: true };
-}
-
-function assertSandboxBuyers(emails: string[]): void {
-  if (!getEnv().DEMO_MODE) return;
-  if (emails.some((email) => !email.toLowerCase().endsWith(SANDBOX_BUYER_DOMAIN))) {
-    throw new RecipientNotAllowedError();
-  }
-}
-
-function recipientsOf(invoice: PayPalInvoice): string[] {
-  return (invoice.primary_recipients ?? []).map(
-    (recipient) => recipient.billing_info.email_address,
-  );
-}
-
-function summarise(invoice: PayPalInvoice): InvoiceSummary {
-  const summary = toInvoiceSummary(invoice, today(), null);
-  if (!summary) throw new Error("PayPal returned an invoice without a usable amount.");
-  return summary;
 }
 
 function sendMessage(invoice: PayPalInvoice): { subject: string; note: string } {
@@ -163,11 +112,15 @@ export async function createAndSendInvoice(
   assertSandboxBuyers([input.draft.client.email]);
 
   const store = getStore();
-  const claim = await acquire(
+  const claim = await claimRequest(
     store,
     requestId,
     hashRequestBody(input),
-    "This invoice is still being created. Check Receivables before trying again.",
+    {
+      conflict: INVOICE_CONFLICT,
+      inProgress: "This invoice is still being created. Check Receivables before trying again.",
+    },
+    fromStored,
   );
   if (claim.kind === "replay") return claim.result;
 
@@ -183,11 +136,15 @@ export async function sendExistingDraft(
   requestId: string,
 ): Promise<SendInvoiceResponse> {
   const store = getStore();
-  const claim = await acquire(
+  const claim = await claimRequest(
     store,
     requestId,
     hashRequestBody({ invoiceId }),
-    "This invoice is still being sent. Check Receivables before trying again.",
+    {
+      conflict: INVOICE_CONFLICT,
+      inProgress: "This invoice is still being sent. Check Receivables before trying again.",
+    },
+    fromStored,
   );
   if (claim.kind === "replay") return { invoice: claim.result.invoice, sent: true };
 

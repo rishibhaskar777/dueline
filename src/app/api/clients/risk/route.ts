@@ -1,23 +1,16 @@
-import { risks } from "@/mocks/fixtures";
-import type { ClientRisk } from "@/types";
-import { clientRiskQuerySchema } from "@/types";
-import { stubOk } from "@/app/api/_lib/stub";
+import { getClientRisk } from "@/lib/risk/client-risk";
+import { clientRiskQuerySchema, type ClientRisk } from "@/types";
+import { failFromError } from "@/app/api/_lib/errors";
+import { ok } from "@/app/api/_lib/respond";
 import { parseQuery } from "@/app/api/_lib/validate";
 
 export async function GET(req: Request): Promise<Response> {
   const parsed = parseQuery(req, clientRiskQuerySchema);
   if (!parsed.ok) return parsed.response;
 
-  const { email } = parsed.data;
-  const known = risks.find((risk) => risk.clientEmail === email);
-  const noHistory: ClientRisk = {
-    clientEmail: email,
-    invoicesConsidered: 0,
-    lateCount: 0,
-    averageDaysLate: 0,
-    level: "reliable",
-    suggestion: null,
-    reason: "No earlier invoices to this client.",
-  };
-  return stubOk(known ?? noHistory);
+  try {
+    return ok<ClientRisk>(await getClientRisk(parsed.data.email, parsed.data.name));
+  } catch (error) {
+    return failFromError(error);
+  }
 }

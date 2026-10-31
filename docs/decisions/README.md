@@ -24,3 +24,4 @@ Copy [0000-template.md](0000-template.md) to start a new one.
 | [0011](0011-creating-and-sending-invoices.md) | Creating and sending invoices           |
 | [0012](0012-hand-built-due-line.md)           | A hand-built due line                   |
 | [0013](0013-export-register.md)               | The export register                     |
+| [0014](0014-late-payer-radar-and-nudges.md)   | The late-payer radar and nudges         |

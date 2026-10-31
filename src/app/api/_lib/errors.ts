@@ -1,11 +1,9 @@
 import { ConfigError } from "@/lib/env";
-import {
-  CreateOutcomeUnknownError,
-  DuplicateRequestError,
-  InvoiceNotFoundError,
-  RecipientNotAllowedError,
-} from "@/lib/invoices/errors";
+import { RecipientNotAllowedError } from "@/lib/demo-guard";
+import { CreateOutcomeUnknownError, InvoiceNotFoundError } from "@/lib/invoices/errors";
 import { PayPalApiError, PayPalTimeoutError } from "@/lib/paypal/errors";
+import { InvalidReminderError, ReminderLimitError } from "@/lib/reminders/errors";
+import { DuplicateRequestError } from "@/lib/requests/errors";
 import { fail } from "@/app/api/_lib/respond";
 
 export function failFromError(error: unknown): Response {
@@ -13,6 +11,8 @@ export function failFromError(error: unknown): Response {
   if (error instanceof RecipientNotAllowedError) {
     return fail(403, "recipient_not_allowed", error.message);
   }
+  if (error instanceof InvalidReminderError) return fail(400, "invalid_request", error.message);
+  if (error instanceof ReminderLimitError) return fail(429, "rate_limited", error.message);
   if (error instanceof InvoiceNotFoundError) return fail(404, "not_found", error.message);
   if (error instanceof DuplicateRequestError) {
     return fail(409, "duplicate_request", error.message);

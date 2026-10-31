@@ -7,7 +7,6 @@ import {
   type HealthResponse,
   type InvoiceSummary,
   type PayoutEstimate,
-  type ReminderDraft,
   type Settings,
   type Totals,
 } from "@/types";
@@ -34,6 +33,7 @@ export const brightwellInvoice: InvoiceSummary = {
   actualPayout: null,
   purposeCode: "P1099",
   payLink: "https://www.sandbox.paypal.com/invoice/p/#BRTW0043",
+  riskLevel: "watch",
 };
 
 export const okaforInvoice: InvoiceSummary = {
@@ -56,6 +56,7 @@ export const okaforInvoice: InvoiceSummary = {
   actualPayout: null,
   purposeCode: "P1099",
   payLink: "https://www.sandbox.paypal.com/invoice/p/#OKRZ0044",
+  riskLevel: "late_payer",
 };
 
 export const northpineInvoice: InvoiceSummary = {
@@ -78,6 +79,7 @@ export const northpineInvoice: InvoiceSummary = {
   actualPayout: null,
   purposeCode: "P1007",
   payLink: "https://www.sandbox.paypal.com/invoice/p/#NPST0045",
+  riskLevel: "watch",
 };
 
 export const tandemInvoice: InvoiceSummary = {
@@ -100,6 +102,7 @@ export const tandemInvoice: InvoiceSummary = {
   actualPayout: null,
   purposeCode: "P1099",
   payLink: "https://www.sandbox.paypal.com/invoice/p/#TNDM0046",
+  riskLevel: null,
 };
 
 export const haldenLabelsInvoice: InvoiceSummary = {
@@ -130,6 +133,7 @@ export const haldenLabelsInvoice: InvoiceSummary = {
   },
   purposeCode: "P1099",
   payLink: "https://www.sandbox.paypal.com/invoice/p/#HLDN0042",
+  riskLevel: "reliable",
 };
 
 export const haldenMenuInvoice: InvoiceSummary = {
@@ -152,6 +156,7 @@ export const haldenMenuInvoice: InvoiceSummary = {
   actualPayout: null,
   purposeCode: "P1099",
   payLink: "https://www.sandbox.paypal.com/invoice/p/#HLDN0041",
+  riskLevel: "reliable",
 };
 
 export const invoices: InvoiceSummary[] = [
@@ -191,6 +196,7 @@ export const payoutEstimate: PayoutEstimate = {
 
 export const haldenRisk: ClientRisk = {
   clientEmail: "mike@haldencoffee.example",
+  clientName: "Halden Coffee Co.",
   invoicesConsidered: 2,
   lateCount: 0,
   averageDaysLate: 0,
@@ -198,18 +204,6 @@ export const haldenRisk: ClientRisk = {
   suggestion: null,
   reason: "Both earlier invoices were paid before the due date.",
 };
-
-export const okaforRisk: ClientRisk = {
-  clientEmail: "accounts@okaforreyes.example.com",
-  invoicesConsidered: 4,
-  lateCount: 3,
-  averageDaysLate: 9,
-  level: "late_payer",
-  suggestion: { kind: "early_payment_discount", percent: 3, withinDays: 7 },
-  reason: "Paid late on 3 of 4 invoices, by 9 days on average.",
-};
-
-export const risks: ClientRisk[] = [okaforRisk, haldenRisk];
 
 export const extraction: ExtractResponse = {
   draft: {
@@ -244,27 +238,6 @@ export const extraction: ExtractResponse = {
   risk: haldenRisk,
   masked: { emails: 1, phones: 0 },
 };
-
-export const reminders: ReminderDraft[] = [
-  {
-    invoiceId: okaforInvoice.id,
-    tone: "firm",
-    suggestedTone: "firm",
-    subject: "Invoice INV-0044 is now 7 days overdue",
-    message:
-      "Hi team,\n\nInvoice INV-0044 for EUR 720.00 (Brand guidelines) was due on 10 October and is now 7 days overdue. I sent a reminder on 13 October and have not yet seen a payment.\n\nCould you please pay it through the PayPal link on the invoice this week? If something is holding it up, let me know and I will help sort it out.\n\nThank you,\nRiya",
-    history: [{ tone: "gentle", sentAt: "2026-10-13T09:30:00Z" }],
-  },
-  {
-    invoiceId: brightwellInvoice.id,
-    tone: "gentle",
-    suggestedTone: "gentle",
-    subject: "A quick reminder about invoice INV-0043",
-    message:
-      "Hi team,\n\nA quick reminder that invoice INV-0043 for GBP 600.00 (Landing page UI) was due on 12 October. If it has already been paid, please ignore this note.\n\nYou can pay through the PayPal link on the invoice. Thank you!\n\nRiya",
-    history: [],
-  },
-];
 
 export const activity: ActivityEvent[] = [
   {

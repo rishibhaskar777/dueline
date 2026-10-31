@@ -1,13 +1,24 @@
 import { ExtractionFailedError, extractInvoiceDraft } from "@/lib/ai/extract-invoice";
 import { AiUnavailableError } from "@/lib/ai/model";
 import { AiQuotaError, reserveModelCall } from "@/lib/ai/quota";
-import { extractRequestSchema, type ExtractResponse } from "@/types";
+import { getClientRisk } from "@/lib/risk/client-risk";
+import { extractRequestSchema, type ClientRisk, type ExtractResponse } from "@/types";
 import { addressOf } from "@/app/api/_lib/address";
 import { failFromError } from "@/app/api/_lib/errors";
 import { fail, ok } from "@/app/api/_lib/respond";
 import { parseBody } from "@/app/api/_lib/validate";
 
 const UNAVAILABLE = "AI is unavailable right now. You can still fill the invoice by hand.";
+
+// The radar is a hint beside the draft, so a failure to read it never fails the extraction.
+async function riskOf({ client }: ExtractResponse["draft"]): Promise<ClientRisk | null> {
+  if (!client.email) return null;
+  try {
+    return await getClientRisk(client.email, client.name);
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(req: Request): Promise<Response> {
   const parsed = await parseBody(req, extractRequestSchema);
@@ -17,9 +28,7 @@ export async function POST(req: Request): Promise<Response> {
     const extracted = await extractInvoiceDraft(parsed.data.chat, {
       beforeModelCall: () => reserveModelCall(addressOf(req)),
     });
-    // The late-payer radar arrives in a later step, so there is no risk to report yet.
-    const body: ExtractResponse = { ...extracted, risk: null };
-    return ok(body);
+    return ok<ExtractResponse>({ ...extracted, risk: await riskOf(extracted.draft) });
   } catch (error) {
     if (error instanceof AiQuotaError) {
       return error.scope === "address"

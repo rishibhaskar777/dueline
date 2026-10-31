@@ -5,6 +5,7 @@ import {
   exportRegisterCsvUrl,
   getDemoRecipient,
   getInvoices,
+  getClientRisk,
   getPurposeCodes,
   getReminders,
   sendInvoiceDraft,
@@ -51,6 +52,19 @@ describe("api client", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ drafts: [] })));
 
     await expect(getReminders()).resolves.toEqual([]);
+  });
+
+  it("asks for a client's risk by email and, when known, name", async () => {
+    const fetchMock = vi.fn().mockImplementation(async () => Response.json({}));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getClientRisk("a@b.example");
+    await getClientRisk("a@b.example", "Okafor & Reyes");
+
+    expect(fetchMock.mock.calls.map(([path]) => path)).toEqual([
+      "/api/clients/risk?email=a%40b.example",
+      "/api/clients/risk?email=a%40b.example&name=Okafor+%26+Reyes",
+    ]);
   });
 
   it("sends the browser to the sign-in page, keeping the page, when a call is unauthorized", async () => {

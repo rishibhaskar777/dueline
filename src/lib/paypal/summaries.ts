@@ -1,5 +1,6 @@
 import "server-only";
 import { today } from "@/lib/clock";
+import { inBatches } from "@/lib/in-batches";
 import { getStore } from "@/lib/store";
 import type { ActualPayout, InvoiceSummary, Money } from "@/types";
 import { getInvoice, listInvoices } from "./invoices";
@@ -39,14 +40,6 @@ export function clearInvoiceCaches(): void {
   generation += 1;
 }
 
-async function inBatches<T, R>(items: T[], work: (item: T) => Promise<R>): Promise<R[]> {
-  const results: R[] = [];
-  for (let start = 0; start < items.length; start += READS_AT_A_TIME) {
-    results.push(...(await Promise.all(items.slice(start, start + READS_AT_A_TIME).map(work))));
-  }
-  return results;
-}
-
 async function readInFull(listed: PayPalInvoice): Promise<PayPalInvoice> {
   const cached = fullInvoices.get(listed.id);
   if (
@@ -83,7 +76,7 @@ async function findPayout(invoice: PayPalInvoice): Promise<ActualPayout | null> 
 
 async function findPayouts(invoices: PayPalInvoice[]): Promise<Map<string, ActualPayout | null>> {
   const paid = invoices.filter((invoice) => PAYOUT_STATUSES.includes(invoice.status));
-  const found = await inBatches(paid, findPayout);
+  const found = await inBatches(paid, READS_AT_A_TIME, findPayout);
   return new Map(paid.map((invoice, index) => [invoice.id, found[index]]));
 }
 
@@ -91,7 +84,7 @@ async function loadFresh(): Promise<LoadedInvoice[]> {
   const listed = (await listInvoices()).filter(
     (invoice) => !HIDDEN_STATUSES.includes(invoice.status),
   );
-  const invoices = await inBatches(listed, readInFull);
+  const invoices = await inBatches(listed, READS_AT_A_TIME, readInFull);
   const payouts = await findPayouts(invoices);
   const date = today();
 
@@ -112,10 +105,22 @@ async function loadFresh(): Promise<LoadedInvoice[]> {
     .sort((a, b) => b.summary.issuedOn.localeCompare(a.summary.issuedOn));
 }
 
+export function recipientsOf(invoice: PayPalInvoice): string[] {
+  return (invoice.primary_recipients ?? []).map(
+    (recipient) => recipient.billing_info.email_address,
+  );
+}
+
+export function summarise(invoice: PayPalInvoice): InvoiceSummary {
+  const summary = toInvoiceSummary(invoice, today(), null);
+  if (!summary) throw new Error("PayPal returned an invoice without a usable amount.");
+  return summary;
+}
+
 // The list leaves out the memo, so every invoice is read in full, drafts and cancelled ones too.
 // It skips the finished list on purpose: an invoice created a moment ago must be found.
 export async function findInvoiceByMemo(memo: string): Promise<PayPalInvoice | undefined> {
-  const invoices = await inBatches(await listInvoices(), readInFull);
+  const invoices = await inBatches(await listInvoices(), READS_AT_A_TIME, readInFull);
   return invoices.find((invoice) => invoice.detail.memo === memo);
 }
 

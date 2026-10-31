@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isPurposeCode } from "@/lib/export/purpose-codes";
+import { REMINDER_LIMITS } from "@/lib/reminders/check-reminder";
 
 export const currencySchema = z.enum(["USD", "EUR", "GBP", "CAD", "AUD"]);
 
@@ -76,7 +77,10 @@ export const exportRegisterQuerySchema = z.object({
   format: z.enum(["json", "csv"]).optional(),
 });
 
-export const clientRiskQuerySchema = z.object({ email: z.email() });
+export const clientRiskQuerySchema = z.object({
+  email: z.email(),
+  name: z.string().min(1).max(200).optional(),
+});
 
 export const draftReminderRequestSchema = z.object({
   invoiceId: z.string().min(1),
@@ -85,10 +89,13 @@ export const draftReminderRequestSchema = z.object({
 
 export const sendReminderRequestSchema = z.object({
   invoiceId: z.string().min(1),
-  subject: z.string().min(1).max(200),
-  message: z.string().min(1).max(4000),
+  subject: z.string().min(REMINDER_LIMITS.subject.min).max(REMINDER_LIMITS.subject.max),
+  message: z.string().min(REMINDER_LIMITS.message.min).max(REMINDER_LIMITS.message.max),
+  tone: toneSchema,
   requestId: requestIdSchema,
 });
+
+export type SendReminderRequest = z.infer<typeof sendReminderRequestSchema>;
 
 const feeString = z
   .string()

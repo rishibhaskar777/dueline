@@ -1,4 +1,5 @@
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
+import { RiskBadge } from "@/components/shared/RiskBadge";
 import { SourceTag } from "@/components/shared/SourceTag";
 import { formatDate } from "@/lib/format-date";
 import { formatMoney, formatRupees } from "@/lib/money/format";
@@ -14,6 +15,17 @@ export interface GridContext {
 
 function StatusCell({ data, context }: Params) {
   return data ? <StatusBadge invoice={data} today={(context as GridContext).today} /> : null;
+}
+
+function ClientCell({ data }: Params) {
+  if (!data) return null;
+  const flagged = data.riskLevel === "watch" || data.riskLevel === "late_payer";
+  return (
+    <span className="flex items-center gap-2">
+      <span className="truncate">{data.client.name}</span>
+      {flagged && data.riskLevel && <RiskBadge level={data.riskLevel} />}
+    </span>
+  );
 }
 
 function PayoutCell({ data }: Params) {
@@ -43,7 +55,7 @@ function OpenCell({ data }: Params) {
 
 export const invoiceColumns: ColDef<InvoiceSummary>[] = [
   { headerName: "Invoice", field: "number", width: 120 },
-  { headerName: "Client", field: "client.name", width: 190 },
+  { headerName: "Client", field: "client.name", cellRenderer: ClientCell, width: 250 },
   { headerName: "Work", field: "work", flex: 1, minWidth: 180 },
   {
     headerName: "Amount",

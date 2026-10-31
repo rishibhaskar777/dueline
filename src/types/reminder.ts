@@ -6,5 +6,6 @@ export interface ReminderDraft {
   suggestedTone: Tone;
   subject: string;
   message: string;
+  source: "ai" | "template";
   history: { tone: Tone; sentAt: string }[];
 }

@@ -45,6 +45,7 @@ describe("toInvoiceSummary", () => {
       actualPayout: null,
       purposeCode: "P1099",
       payLink: "https://www.sandbox.paypal.com/invoice/p/#TEST0001",
+      riskLevel: null,
     });
   });
 

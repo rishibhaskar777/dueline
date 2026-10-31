@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ApiClientError, extractInvoice } from "@/lib/api-client";
-import type { ExtractResponse, InvoiceDraft } from "@/types";
+import type { ClientRisk, ExtractResponse, InvoiceDraft } from "@/types";
 
 const MAX_CHAT_LENGTH = 6000;
 const NO_ITEMS_FOUND = "We couldn't find invoice items in that chat. Fill them in below.";
@@ -15,6 +15,7 @@ export interface Drafted {
   draft: InvoiceDraft | null;
   warnings: string[];
   notice: string | null;
+  risk: ClientRisk | null;
 }
 
 function plural(count: number, one: string, many: string): string {
@@ -39,11 +40,11 @@ export function PasteStep({ onDrafted }: PasteStepProps) {
     setPending(true);
     setError(null);
     try {
-      const { draft, warnings, masked } = await extractInvoice(chat);
-      onDrafted({ draft, warnings, notice: maskedNotice(masked) });
+      const { draft, warnings, masked, risk } = await extractInvoice(chat);
+      onDrafted({ draft, warnings, notice: maskedNotice(masked), risk });
     } catch (caught) {
       if (caught instanceof ApiClientError && caught.code === "extraction_failed") {
-        onDrafted({ draft: null, warnings: [NO_ITEMS_FOUND], notice: null });
+        onDrafted({ draft: null, warnings: [NO_ITEMS_FOUND], notice: null, risk: null });
         return;
       }
       setError(caught instanceof Error ? caught.message : "Could not read the chat.");
@@ -98,7 +99,7 @@ export function PasteStep({ onDrafted }: PasteStepProps) {
         <Button
           type="button"
           variant="link"
-          onClick={() => onDrafted({ draft: null, warnings: [], notice: null })}
+          onClick={() => onDrafted({ draft: null, warnings: [], notice: null, risk: null })}
         >
           Start without a chat
         </Button>

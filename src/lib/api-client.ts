@@ -1,4 +1,3 @@
-import type { z } from "zod";
 import type {
   ActivityResponse,
   ApiError,
@@ -16,13 +15,11 @@ import type {
   ReminderDraft,
   RemindersResponse,
   SendInvoiceResponse,
+  SendReminderRequest,
   SendReminderResponse,
   Settings,
   Tone,
-  sendReminderRequestSchema,
 } from "@/types";
-
-export type SendReminderInput = z.infer<typeof sendReminderRequestSchema>;
 
 export class ApiClientError extends Error {
   readonly status: number;
@@ -114,8 +111,9 @@ export function sendInvoiceDraft(id: string, requestId: string): Promise<SendInv
   );
 }
 
-export function getClientRisk(email: string): Promise<ClientRisk> {
-  return requestJson(`/api/clients/risk?email=${encodeURIComponent(email)}`);
+export function getClientRisk(email: string, name?: string): Promise<ClientRisk> {
+  const query = new URLSearchParams(name ? { email, name } : { email });
+  return requestJson(`/api/clients/risk?${query}`);
 }
 
 export async function getReminders(): Promise<ReminderDraft[]> {
@@ -127,7 +125,7 @@ export function draftReminder(invoiceId: string, tone: Tone): Promise<ReminderDr
   return requestJson("/api/reminders/draft", jsonInit("POST", { invoiceId, tone }));
 }
 
-export function sendReminder(input: SendReminderInput): Promise<SendReminderResponse> {
+export function sendReminder(input: SendReminderRequest): Promise<SendReminderResponse> {
   return requestJson("/api/reminders/send", jsonInit("POST", input));
 }
 

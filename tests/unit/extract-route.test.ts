@@ -6,12 +6,16 @@ import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
 import { STUB_HEADER } from "@/app/api/_lib/stub";
 import { apiCallError, haldenGuess, noObjectError } from "../support/ai";
+import { paidInvoice } from "../support/summaries";
 import { stubEnv } from "../support/env";
 
 vi.mock("ai", async (importOriginal) => ({
   ...(await importOriginal<typeof import("ai")>()),
   generateText: vi.fn(),
 }));
+
+const loader = vi.hoisted(() => ({ loadInvoices: vi.fn() }));
+vi.mock("@/lib/paypal/summaries", () => ({ loadInvoices: loader.loadInvoices }));
 
 let store: Store;
 vi.mock("@/lib/store", () => ({ getStore: () => store }));
@@ -46,6 +50,8 @@ beforeEach(() => {
   store = createMemoryStore();
   stubEnv(AI_ENV);
   vi.mocked(generateText).mockReset();
+  loader.loadInvoices.mockReset();
+  loader.loadInvoices.mockResolvedValue([]);
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -55,7 +61,7 @@ afterEach(() => {
 });
 
 describe("POST /api/invoices/extract", () => {
-  it("returns the draft, warnings, no risk yet and the masked counts", async () => {
+  it("returns the draft, warnings, the client's risk and the masked counts", async () => {
     modelAnswers(haldenGuess);
     const response = await extract(chatNumber(1));
 
@@ -63,10 +69,49 @@ describe("POST /api/invoices/extract", () => {
     expect(response.headers.get(STUB_HEADER)).toBeNull();
     const body = await response.json();
     expect(Object.keys(body).sort()).toEqual(["draft", "masked", "risk", "warnings"]);
-    expect(body.risk).toBeNull();
+    expect(body.risk).toMatchObject({
+      clientEmail: "mike@haldencoffee.example",
+      clientName: "Halden Coffee Co.",
+      invoicesConsidered: 0,
+      level: "reliable",
+    });
     expect(body.masked).toEqual({ emails: 1, phones: 0 });
     expect(body.draft.client.email).toBe("mike@haldencoffee.example");
     expect(body.draft.items).toHaveLength(2);
+  });
+
+  it("reads the risk from the history of a client with that name and email", async () => {
+    const halden = { name: "Halden Coffee Co.", email: "mike@haldencoffee.example" };
+    const late = [
+      paidInvoice("2026-08-01", "2026-08-13", halden),
+      paidInvoice("2026-09-01", "2026-09-17", halden),
+    ];
+    loader.loadInvoices.mockResolvedValue(
+      late.map((summary) => ({
+        summary,
+        amountDue: summary.amount,
+        underLut: false,
+        paymentId: null,
+      })),
+    );
+    modelAnswers(haldenGuess);
+
+    const body = await (await extract(chatNumber(1))).json();
+    expect(body.risk).toMatchObject({ level: "late_payer", lateCount: 2 });
+    expect(body.risk.suggestion).toEqual({
+      kind: "early_payment_discount",
+      percent: 2,
+      withinDays: 7,
+    });
+  });
+
+  it("still returns the draft, with no risk, when the history cannot be read", async () => {
+    loader.loadInvoices.mockRejectedValue(new Error("PayPal is down"));
+    modelAnswers(haldenGuess);
+
+    const response = await extract(chatNumber(1));
+    expect(response.status).toBe(200);
+    expect((await response.json()).risk).toBeNull();
   });
 
   it("answers 400 for a chat of 6,001 characters and does not call the model", async () => {
