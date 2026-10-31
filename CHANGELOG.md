@@ -7,6 +7,25 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Money views on Receivables: a forecast of what will arrive in the next 30, 60 and 90 days (weighted by
+  each client's payment history, with the best case beside it), what getting paid costs this
+  financial year, the invoices falling due in the next 14 days, the clients furthest behind, and
+  today's rupee rates against their 30-day average.
+- A Customise button on Receivables to show, hide and reorder these widgets, with Reset to default.
+  The layout is kept in this browser only.
+- A Clients page with a searchable table, and a page for each client with their invoices, risk,
+  private notes and a "New invoice for this client" button.
+- A page for each invoice with its history (created, sent, reminders, views, payment, cancellation),
+  its items, SAC, purpose code and LUT, and the actions its status allows: send a reminder,
+  duplicate, record a payment outside PayPal, and cancel. Cancelling does not email the client unless
+  you tick the box. Receivables rows and the invoice panel link to it.
+- `GET /api/dashboard`, `GET /api/clients`, `GET /api/clients/by-key/{key}`, `PUT /api/clients/by-key/{key}/notes`,
+  `GET /api/invoices/{id}`, `POST /api/invoices/{id}/cancel` and
+  `POST /api/invoices/{id}/record-payment`, and the `invalid_state` error. Migration 005 adds client
+  notes.
+
 ### Changed
 
 - Reminder drafts are cached under a new prompt version, because they no longer end in "Thank you".
