@@ -47,6 +47,39 @@ export async function remindInvoice(
   });
 }
 
+// Cancels a sent invoice without emailing anyone.
+export async function cancelInvoice(id: string): Promise<void> {
+  await paypalFetch<void>(`/v2/invoicing/invoices/${encodeURIComponent(id)}/cancel`, {
+    method: "POST",
+    body: { send_to_invoicer: false, send_to_recipient: false },
+  });
+}
+
+export async function deleteDraftInvoice(id: string): Promise<void> {
+  await paypalFetch<void>(`/v2/invoicing/invoices/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+}
+
+// Records a payment made outside PayPal. The invoice becomes MARKED_AS_PAID.
+export async function recordExternalPayment(
+  id: string,
+  payment: { paymentDate: string; note: string },
+): Promise<void> {
+  await paypalFetch<{ payment_id: string }>(
+    `/v2/invoicing/invoices/${encodeURIComponent(id)}/payments`,
+    {
+      method: "POST",
+      body: {
+        method: "BANK_TRANSFER",
+        type: "EXTERNAL",
+        payment_date: payment.paymentDate,
+        note: payment.note,
+      },
+    },
+  );
+}
+
 export function getInvoice(id: string): Promise<PayPalInvoice> {
   return paypalFetch<PayPalInvoice>(`/v2/invoicing/invoices/${encodeURIComponent(id)}`);
 }

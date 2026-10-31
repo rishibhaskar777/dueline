@@ -15,6 +15,12 @@ const DUE_SOON_DAYS = 3;
 const PAID_STATUSES = ["PAID", "MARKED_AS_PAID"];
 export const PAYOUT_STATUSES = [...PAID_STATUSES, "PARTIALLY_PAID"];
 
+// Marked as paid means the freelancer recorded a payment made elsewhere: there is no PayPal capture,
+// fee or FIRA line for it.
+export function isRecordedOutsidePayPal(paypalStatus: string): boolean {
+  return paypalStatus === "MARKED_AS_PAID";
+}
+
 export function toMoney(currencyCode: string, value: string): Money | null {
   const currency = currencySchema.safeParse(currencyCode);
   return currency.success ? { currency: currency.data, value } : null;

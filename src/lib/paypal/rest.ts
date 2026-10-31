@@ -4,7 +4,7 @@ import { fetchPayPal } from "./http";
 import { clearAccessToken, getAccessToken } from "./token";
 
 interface PayPalRequest {
-  method?: "GET" | "POST";
+  method?: "GET" | "POST" | "DELETE";
   body?: unknown;
   // Sent as is, for a body that embeds text which must reach PayPal byte for byte.
   rawBody?: string;

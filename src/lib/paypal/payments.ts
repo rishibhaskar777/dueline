@@ -3,7 +3,7 @@ import { ApiError } from "@paypal/paypal-server-sdk";
 import { addDays } from "@/lib/clock";
 import { fromMinorUnits, toMinorUnits } from "@/lib/money/decimal";
 import type { ActualPayout, Money } from "@/types";
-import { latestPayment, PAYOUT_STATUSES, toMoney } from "./map";
+import { isRecordedOutsidePayPal, latestPayment, PAYOUT_STATUSES, toMoney } from "./map";
 import { paymentsController, transactionSearchController } from "./sdk";
 import type { PayPalInvoice } from "./types";
 
@@ -79,7 +79,9 @@ async function fromTransactionSearch(
 }
 
 export async function getActualPayout(invoice: PayPalInvoice): Promise<ActualPayout | null> {
-  if (!PAYOUT_STATUSES.includes(invoice.status)) return null;
+  if (!PAYOUT_STATUSES.includes(invoice.status) || isRecordedOutsidePayPal(invoice.status)) {
+    return null;
+  }
   const payment = latestPayment(invoice);
   if (!payment?.payment_id || !payment.payment_date) return null;
 
