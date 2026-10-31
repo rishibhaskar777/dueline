@@ -3,6 +3,10 @@ import type { RiskLevel } from "./risk";
 
 export type DueState = "paid" | "on_time" | "due_soon" | "overdue";
 
+// paypal: PayPal reported the rupees. estimate: worked out from PayPal's net or the published fees at
+// an ECB rate. outside_paypal: the payment was made elsewhere, so no PayPal fee or markup applies.
+export type PayoutSource = "paypal" | "estimate" | "outside_paypal";
+
 export interface Client {
   name: string;
   email: string;
@@ -32,6 +36,8 @@ export interface InvoiceSummary {
   dueState: DueState;
   daysLate: number;
   payoutInr: number | null;
+  payoutSource: PayoutSource | null;
+  rateDate: string | null;
   actualPayout: ActualPayout | null;
   purposeCode: string | null;
   payLink: string;
@@ -42,7 +48,8 @@ export interface Totals {
   outstandingInr: number;
   overdueInr: number;
   overdueCount: number;
-  paidThisMonthInr: number;
+  paidThisMonthPayPalInr: number;
+  paidThisMonthOutsideInr: number;
 }
 
 export interface LineItem {

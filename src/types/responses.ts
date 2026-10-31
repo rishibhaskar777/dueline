@@ -40,10 +40,12 @@ export interface DemoResetResponse {
   created: number;
   skipped: number;
   failed: number;
+  kept: number;
 }
 
 export interface RemindersResponse {
   drafts: ReminderDraft[];
+  remindersLeftToday: number;
 }
 
 export interface SendReminderResponse {
