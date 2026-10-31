@@ -29,3 +29,17 @@ export function parseQuery<S extends z.ZodType>(req: Request, schema: S): Parsed
   const result = schema.safeParse(params);
   return result.success ? { ok: true, data: result.data } : invalid(result.error);
 }
+
+// A route parameter is checked like any other input; `name` is the segment as the contract spells it.
+export function parseParam<S extends z.ZodType>(
+  value: string,
+  name: string,
+  schema: S,
+): Parsed<z.infer<S>> {
+  const result = schema.safeParse(value);
+  if (result.success) return { ok: true, data: result.data };
+  return {
+    ok: false,
+    response: fail(400, "invalid_request", `${name}: ${result.error.issues[0].message}`),
+  };
+}

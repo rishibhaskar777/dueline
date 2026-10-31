@@ -23,13 +23,10 @@ export interface EcbRates {
   rates: Record<CurrencyCode, number>;
 }
 
-// With a date, the answer is that date's rates, or those of the latest working day before it.
-async function fetchBody(date?: string): Promise<unknown> {
+async function fetchBody(url: string): Promise<unknown> {
   let response: Response;
   try {
-    response = await fetch(date ? `${RATES_URL}&date=${date}` : RATES_URL, {
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
+    response = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
   } catch {
     throw new RatesUnavailableError("The exchange-rate service did not answer in time.");
   }
@@ -43,13 +40,19 @@ async function fetchBody(date?: string): Promise<unknown> {
   }
 }
 
-export async function fetchEcbRates(date?: string): Promise<EcbRates> {
-  const parsed = responseSchema.safeParse(await fetchBody(date));
+type Row = z.infer<typeof responseSchema>[number];
+
+function parseRows(body: unknown): Row[] {
+  const parsed = responseSchema.safeParse(body);
   if (!parsed.success) {
     throw new RatesUnavailableError("The exchange-rate service sent rates in an unexpected shape.");
   }
+  return parsed.data;
+}
 
-  const perEuro = new Map(parsed.data.map((row) => [row.quote, row.rate]));
+// The rows of one date: every quote is per euro, so rupees per unit is the euro's rupees over it.
+function ratesOf(rows: Row[]): EcbRates {
+  const perEuro = new Map(rows.map((row) => [row.quote, row.rate]));
   const rupeesPerEuro = perEuro.get("INR");
   if (rupeesPerEuro === undefined) {
     throw new RatesUnavailableError("The exchange-rate service sent no rate for rupees.");
@@ -64,6 +67,20 @@ export async function fetchEcbRates(date?: string): Promise<EcbRates> {
     rates[currency] = Math.round((rupeesPerEuro / euroRate) * DECIMALS) / DECIMALS;
   }
 
-  const onDate = parsed.data.map((row) => row.date).sort()[0];
+  const onDate = rows.map((row) => row.date).sort()[0];
   return { onDate, rates };
+}
+
+// With a date, the answer is that date's rates, or those of the latest working day before it.
+export async function fetchEcbRates(date?: string): Promise<EcbRates> {
+  return ratesOf(parseRows(await fetchBody(date ? `${RATES_URL}&date=${date}` : RATES_URL)));
+}
+
+// One entry per date the ECB published in the range, oldest first.
+export async function fetchEcbSeries(from: string, to: string): Promise<EcbRates[]> {
+  const rows = parseRows(await fetchBody(`${RATES_URL}&from=${from}&to=${to}`));
+  const byDate = Map.groupBy(rows, (row) => row.date);
+  return [...byDate.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, dayRows]) => ratesOf(dayRows));
 }

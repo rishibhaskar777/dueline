@@ -45,6 +45,10 @@ export interface Store {
   getProfile(): Promise<Profile | null>;
   saveProfile(profile: Profile): Promise<void>;
 
+  // Private notes about a client, "" when there are none. Never logged.
+  getClientNotes(clientKey: string): Promise<string>;
+  saveClientNotes(clientKey: string, notes: string): Promise<void>;
+
   hitRateLimit(key: string, windowSeconds: number): Promise<number>;
 
   getCached(key: string): Promise<Json | null>;

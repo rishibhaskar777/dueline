@@ -1,4 +1,5 @@
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
+import Link from "next/link";
 import { RiskBadge } from "@/components/shared/RiskBadge";
 import { SourceTag } from "@/components/shared/SourceTag";
 import { formatDate } from "@/lib/format-date";
@@ -54,6 +55,20 @@ function OpenCell({ data }: Params) {
   );
 }
 
+function PageCell({ data }: Params) {
+  if (!data) return null;
+  return (
+    <Link
+      href={`/invoices/${encodeURIComponent(data.id)}`}
+      onClick={(event) => event.stopPropagation()}
+      aria-label={`Open invoice page for ${data.number}`}
+      className="text-blue underline underline-offset-2"
+    >
+      Open invoice page
+    </Link>
+  );
+}
+
 // Work, issue date and purpose code live in the invoice panel. They stay in the grid, hidden, so the
 // search still finds them.
 export const invoiceColumns: ColDef<InvoiceSummary>[] = [
@@ -102,6 +117,13 @@ export const invoiceColumns: ColDef<InvoiceSummary>[] = [
     sortable: false,
     cellRenderer: OpenCell,
     width: 80,
+  },
+  {
+    headerName: "Details",
+    colId: "page",
+    sortable: false,
+    cellRenderer: PageCell,
+    width: 170,
   },
   { headerName: "Work", field: "work", hide: true },
   { headerName: "Issued", field: "issuedOn", hide: true },

@@ -18,6 +18,7 @@ export function createMemoryStore(): Store {
   const payouts = new Map<string, ActualPayout>();
   let settings: Settings | null = null;
   let profile: Profile | null = null;
+  const clientNotes = new Map<string, string>();
 
   return {
     async claim(requestId, bodyHash): Promise<ClaimResult> {
@@ -89,6 +90,14 @@ export function createMemoryStore(): Store {
 
     async saveProfile(next): Promise<void> {
       profile = next;
+    },
+
+    async getClientNotes(clientKey): Promise<string> {
+      return clientNotes.get(clientKey) ?? "";
+    },
+
+    async saveClientNotes(clientKey, notes): Promise<void> {
+      clientNotes.set(clientKey, notes);
     },
 
     async hitRateLimit(key, windowSeconds): Promise<number> {

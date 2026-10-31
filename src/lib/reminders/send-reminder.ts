@@ -5,8 +5,7 @@ import { InvoiceNotFoundError } from "@/lib/invoices/errors";
 import { PayPalApiError } from "@/lib/paypal/errors";
 import { getInvoice, remindInvoice } from "@/lib/paypal/invoices";
 import { clearInvoiceCaches, recipientsOf, summarise } from "@/lib/paypal/summaries";
-import { hashRequestBody } from "@/lib/requests/body-hash";
-import { claimRequest } from "@/lib/requests/claim-request";
+import { runClaimed } from "@/lib/requests/run-claimed";
 import { getStore } from "@/lib/store";
 import type { Json, Store } from "@/lib/store/store";
 import type { InvoiceSummary, SendReminderRequest, SendReminderResponse } from "@/types";
@@ -78,46 +77,48 @@ async function remind(store: Store, request: SendReminderRequest): Promise<void>
   }
 }
 
-export async function sendReminder(request: SendReminderRequest): Promise<SendReminderResponse> {
-  const { requestId, ...body } = request;
-  const store = getStore();
-  const claim = await claimRequest(
-    store,
-    requestId,
-    hashRequestBody(body),
-    {
-      conflict:
-        "This request ID was already used for a different reminder. Draft it again to send.",
-      inProgress: "This reminder is still being sent. Try again in a moment.",
-    },
-    fromStored,
-  );
-  if (claim.kind === "replay") return claim.result;
-
-  let invoice: InvoiceSummary;
-  try {
-    invoice = await readRemindable(request.invoiceId);
-    assertNoLinks(invoice, request);
-    await assertNotSentToday(store, request.invoiceId);
-    await assertUnderDailyLimit(store);
-    await remind(store, request);
-  } catch (error) {
-    await store.release(requestId);
-    throw error;
-  }
-
-  const result: SendReminderResponse = { sentAt: new Date().toISOString() };
-  await store.logReminder({ invoiceId: invoice.id, tone: request.tone, sentAt: result.sentAt });
+async function recordSent(
+  store: Store,
+  { requestId, tone }: SendReminderRequest,
+  invoice: InvoiceSummary,
+  { sentAt }: SendReminderResponse,
+): Promise<void> {
+  await store.logReminder({ invoiceId: invoice.id, tone, sentAt });
   await store.addActivity({
     id: `reminder:${requestId}`,
     kind: "reminder_sent",
     invoiceId: invoice.id,
     invoiceNumber: invoice.number,
     clientName: invoice.client.name,
-    at: result.sentAt,
+    at: sentAt,
     amount: invoice.amount,
   });
   clearInvoiceCaches();
-  await store.complete(requestId, { ...result });
-  return result;
+}
+
+export function sendReminder(request: SendReminderRequest): Promise<SendReminderResponse> {
+  const { requestId, ...body } = request;
+  const store = getStore();
+  let invoice: InvoiceSummary | undefined;
+  return runClaimed(store, {
+    requestId,
+    body,
+    messages: {
+      conflict:
+        "This request ID was already used for a different reminder. Draft it again to send.",
+      inProgress: "This reminder is still being sent. Try again in a moment.",
+    },
+    readStored: fromStored,
+    run: async () => {
+      invoice = await readRemindable(request.invoiceId);
+      assertNoLinks(invoice, request);
+      await assertNotSentToday(store, request.invoiceId);
+      await assertUnderDailyLimit(store);
+      await remind(store, request);
+      return { sentAt: new Date().toISOString() };
+    },
+    afterRun: async (result) => {
+      if (invoice) await recordSent(store, request, invoice, result);
+    },
+  });
 }

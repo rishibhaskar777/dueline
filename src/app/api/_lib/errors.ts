@@ -1,7 +1,13 @@
+import { ClientNotFoundError } from "@/lib/clients/errors";
 import { ConfigError } from "@/lib/env";
 import { DemoResetLimitError, DemoUnavailableError } from "@/lib/demo/errors";
 import { RecipientNotAllowedError } from "@/lib/demo-guard";
-import { CreateOutcomeUnknownError, InvoiceNotFoundError } from "@/lib/invoices/errors";
+import {
+  CreateOutcomeUnknownError,
+  InvalidActionError,
+  InvoiceNotFoundError,
+  InvoiceStateError,
+} from "@/lib/invoices/errors";
 import { PayPalApiError, PayPalTimeoutError } from "@/lib/paypal/errors";
 import { InvalidReminderError, ReminderLimitError } from "@/lib/reminders/errors";
 import { DuplicateRequestError } from "@/lib/requests/errors";
@@ -16,7 +22,11 @@ export function failFromError(error: unknown): Response {
   if (error instanceof DemoResetLimitError) return fail(429, "rate_limited", error.message);
   if (error instanceof InvalidReminderError) return fail(400, "invalid_request", error.message);
   if (error instanceof ReminderLimitError) return fail(429, "rate_limited", error.message);
-  if (error instanceof InvoiceNotFoundError) return fail(404, "not_found", error.message);
+  if (error instanceof InvoiceNotFoundError || error instanceof ClientNotFoundError) {
+    return fail(404, "not_found", error.message);
+  }
+  if (error instanceof InvalidActionError) return fail(400, "invalid_request", error.message);
+  if (error instanceof InvoiceStateError) return fail(409, "invalid_state", error.message);
   if (error instanceof DuplicateRequestError) {
     return fail(409, "duplicate_request", error.message);
   }

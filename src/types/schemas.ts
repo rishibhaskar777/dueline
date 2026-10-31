@@ -70,6 +70,8 @@ export const createInvoiceRequestSchema = z.object({
 
 export type CreateInvoiceRequest = z.infer<typeof createInvoiceRequestSchema>;
 
+export const invoiceIdSchema = z.string().min(1).max(100);
+
 export const sendInvoiceRequestSchema = z.object({ requestId: requestIdSchema });
 
 export const demoSessionRequestSchema = z.object({ password: z.string().min(1).max(200) });
@@ -184,3 +186,32 @@ export const annualQuerySchema = z.object({
   fy: z.string().refine(isFinancialYear, "must be a financial year like 2026-27"),
   format: z.enum(["json", "csv"]).optional(),
 });
+
+// Keys hold only letters, digits and hyphens, but an address may carry accented letters encoded.
+function decodeKey(key: string): string {
+  try {
+    return decodeURIComponent(key);
+  } catch {
+    return key;
+  }
+}
+
+export const clientKeySchema = z.string().min(1).max(200).transform(decodeKey);
+
+export const clientNotesRequestSchema = z.object({ notes: z.string().max(1000) });
+
+export const cancelInvoiceRequestSchema = z.object({
+  requestId: requestIdSchema,
+  notifyClient: z.boolean().optional(),
+});
+
+export type CancelInvoiceRequest = z.infer<typeof cancelInvoiceRequestSchema>;
+
+export const recordPaymentRequestSchema = z.object({
+  requestId: requestIdSchema,
+  method: z.enum(["BANK_TRANSFER", "WIRE_TRANSFER", "OTHER"]),
+  paidOn: dateString,
+  note: z.string().max(200).optional(),
+});
+
+export type RecordPaymentRequest = z.infer<typeof recordPaymentRequestSchema>;

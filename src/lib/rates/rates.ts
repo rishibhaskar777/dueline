@@ -1,13 +1,36 @@
 import "server-only";
-import { today } from "@/lib/clock";
+import { addDays, today } from "@/lib/clock";
 import { getStore } from "@/lib/store";
+import type { Json } from "@/lib/store/store";
 import { z } from "zod";
-import { marketRatesSchema, type MarketRates, type Settings } from "@/types";
-import { fetchEcbRates, type EcbRates } from "./ecb";
+import {
+  currencySchema,
+  marketRatesSchema,
+  type MarketRates,
+  type RatesWidget,
+  type Settings,
+} from "@/types";
+import { fetchEcbRates, fetchEcbSeries, type EcbRates } from "./ecb";
+import { rateLines } from "./rate-trend";
 
 const HISTORICAL_TTL_SECONDS = 365 * 24 * 60 * 60;
+const TREND_DAYS = 30;
+const TREND_TTL_SECONDS = 24 * 60 * 60;
 
 const storedRatesSchema = z.object({ onDate: z.iso.date(), rates: marketRatesSchema });
+
+const ratesWidgetSchema = z.object({
+  onDate: z.iso.date(),
+  source: z.enum(["ecb", "manual"]),
+  hasAverage: z.boolean(),
+  lines: z.array(
+    z.object({
+      currency: currencySchema,
+      rate: z.number().positive(),
+      percentVsAverage: z.number().nullable(),
+    }),
+  ),
+});
 
 let inFlight: Promise<MarketRates | null> | undefined;
 
@@ -102,4 +125,49 @@ export async function getRatesOn(date: string, settings: Settings): Promise<Mark
 
   const found = (await storedRatesOn(date)) ?? (await fetchRatesOn(date));
   return found ? { ...found, source: "ecb" } : getMarketRates(settings);
+}
+
+function trendKey(date: string): string {
+  return `ecb-rate-trend:${date}`;
+}
+
+async function storedTrend(date: string): Promise<RatesWidget | null> {
+  try {
+    const parsed = ratesWidgetSchema.safeParse(await getStore().getCached(trendKey(date)));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchTrend(date: string): Promise<RatesWidget | null> {
+  try {
+    const series = await fetchEcbSeries(addDays(date, -TREND_DAYS), date);
+    if (series.length === 0) return null;
+    const widget = rateLines(series, currencySchema.options);
+    await getStore()
+      .putCached(trendKey(date), JSON.parse(JSON.stringify(widget)) as Json, TREND_TTL_SECONDS)
+      .catch(() => console.warn("Could not store the rate trend"));
+    return widget;
+  } catch (error) {
+    console.warn("Could not fetch the ECB rate history", {
+      reason: error instanceof Error ? error.name : "unknown",
+    });
+    return null;
+  }
+}
+
+// Today's rate of each currency against the average of the last 30 days, fetched once a day. When
+// the history cannot be had, or the rates are typed in by hand, it is today's rates alone.
+export async function getRatesWidget(settings: Settings): Promise<RatesWidget> {
+  if (settings.rateSource === "ecb") {
+    const date = today();
+    const trend = (await storedTrend(date)) ?? (await fetchTrend(date));
+    if (trend) return trend;
+  }
+  const market = await getMarketRates(settings);
+  return {
+    ...rateLines([{ onDate: market.onDate, rates: market.rates }], currencySchema.options),
+    source: market.source,
+  };
 }

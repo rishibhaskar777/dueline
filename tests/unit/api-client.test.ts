@@ -1,14 +1,19 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   ApiClientError,
+  cancelInvoice,
   createInvoice,
   exportRegisterCsvUrl,
   getDemoRecipient,
   getInvoices,
+  getClientDetail,
   getClientRisk,
+  getInvoiceDetail,
   getPurposeCodes,
   getReminders,
+  recordPayment,
   resetDemo,
+  saveClientNotes,
   sendInvoiceDraft,
   signIn,
   signOut,
@@ -67,6 +72,39 @@ describe("api client", () => {
       "/api/clients/risk?email=a%40b.example",
       "/api/clients/risk?email=a%40b.example&name=Okafor+%26+Reyes",
     ]);
+  });
+
+  it("reads and saves a client under by-key, so a client called risk is not the radar", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockImplementation(async () => Response.json({ notes: "Pays late." }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getClientDetail("risk");
+    await expect(saveClientNotes("a/b", "Pays late.")).resolves.toBe("Pays late.");
+
+    expect(fetchMock.mock.calls.map(([path]) => path)).toEqual([
+      "/api/clients/by-key/risk",
+      "/api/clients/by-key/a%2Fb/notes",
+    ]);
+    expect(fetchMock.mock.calls[1][1]).toMatchObject({ method: "PUT" });
+  });
+
+  it("posts a cancellation and a recorded payment to the invoice's own address", async () => {
+    const fetchMock = vi.fn().mockImplementation(async () => Response.json({}));
+    vi.stubGlobal("fetch", fetchMock);
+    const requestId = "3f2b8c1e-6a4d-4e8b-9c1a-2d5e7f9a0b1c";
+
+    await getInvoiceDetail("INV2/1");
+    await cancelInvoice("INV2/1", { requestId, notifyClient: false });
+    await recordPayment("INV2/1", { requestId, method: "OTHER", paidOn: "2026-11-03" });
+
+    expect(fetchMock.mock.calls.map(([path]) => path)).toEqual([
+      "/api/invoices/INV2%2F1",
+      "/api/invoices/INV2%2F1/cancel",
+      "/api/invoices/INV2%2F1/record-payment",
+    ]);
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({ requestId, notifyClient: false });
   });
 
   it("sends the browser to the sign-in page, keeping the page, when a call is unauthorized", async () => {

@@ -8,7 +8,9 @@ handlers talk to PayPal, Gemini, Postgres and the exchange-rate service.
 `GET /api/export-register`, `GET /api/exports/gstr1`, `GET /api/exports/annual`,
 `GET /api/profile`, `PUT /api/profile`, `GET /api/settings`, `PUT /api/settings`, `POST /api/payout-estimate`, `GET /api/activity`,
 `POST /api/invoices/extract`, `GET /api/purpose-codes`, `GET /api/demo/recipient`,
-`GET /api/clients/risk`, `GET /api/reminders`, `POST /api/reminders/draft`,
+`GET /api/clients/risk`, `GET /api/dashboard`, `GET /api/clients`, `GET /api/clients/by-key/{key}`,
+`PUT /api/clients/by-key/{key}/notes`, `GET /api/invoices/{id}`, `POST /api/invoices/{id}/cancel`,
+`POST /api/invoices/{id}/record-payment`, `GET /api/reminders`, `POST /api/reminders/draft`,
 `POST /api/reminders/send`, `POST /api/demo/reset`, `POST /api/webhooks/paypal` and the demo sign-in
 routes are built. No route answers from sample data.
 
@@ -78,7 +80,8 @@ in use (`rates.ts`). With the source "ecb" it uses the rates fetched today, othe
 own date. If the fetch fails it uses the latest stored rates, then the rates saved in settings. With
 the source "manual" it makes no request. `getRatesOn(date)` gives the ECB's rates for a past date: it
 reads them from the store's cache, fetches them once with Frankfurter's `date` parameter when they are
-not there, and falls back to the rates in use. Built. See
+not there, and falls back to the rates in use. `getRatesWidget` compares today's rates with the average of the last 30 days (`fetchEcbSeries` and the pure
+`rate-trend.ts`), once a day, kept in the store's cache. Built. See
 [decision 0007](decisions/0007-fees-and-rates.md) and [decision 0013](decisions/0013-export-register.md).
 
 **`settings.ts`** merges the saved settings over the defaults, so a row from an older version still
@@ -105,6 +108,21 @@ the cell quoting and formula protection all three CSV writers share. Built. See
 [decision 0013](decisions/0013-export-register.md) and
 [decision 0016](decisions/0016-business-profile-and-gst.md).
 
+**`insights/`** turns the invoice list into the dashboard widgets. `forecast.ts`, `fees-lost.ts` and
+`upcoming.ts` (upcoming due and late clients) are pure; `dashboard.ts` gathers the inputs for
+`GET /api/dashboard`. See [decision 0017](decisions/0017-money-views.md).
+
+**`clients/`** groups invoices into clients by the radar's rule (`group-clients.ts`), summarises a
+client (`summarise-client.ts`) and serves the client list, a client's page and their notes
+(`clients.ts`). Built.
+
+**`invoices/`** also holds the invoice page's side: `invoice-detail.ts` reads one invoice from PayPal and
+builds its history with `timeline.ts`, `invoice-actions.ts` says which actions a status allows, and
+`cancel-invoice.ts` and `record-payment.ts` run those two writes, and `reminders/send-reminder.ts` its
+send, through `requests/run-claimed.ts` (claim, run once, store the result, release on failure; an
+optional `afterRun` does the bookkeeping that must not release the claim). `payouts/load-summaries.ts` gives every
+screen the same summaries with rupees and risk levels. Built.
+
 **`profile.ts`** merges the saved business profile over the empty one, like `settings.ts`, so a row
 from an older version still reads. Invoice creation, the demo seed, reminder drafts and the draft
 extraction read it; nothing sends it to the AI. Built.
@@ -114,7 +132,7 @@ restores them afterwards. Pure functions. Built.
 
 **`store/`** defines a `Store` interface with Postgres and in-memory implementations and the SQL
 migrations. Besides requests, events, settings, rates and payouts, it keeps rate-limit counters and a
-small cache of JSON values with an expiry. Built. See [decision 0006](decisions/0006-storage.md).
+small cache of JSON values with an expiry, and private notes about each client. Built. See [decision 0006](decisions/0006-storage.md).
 
 ## Reading invoices
 
@@ -385,6 +403,26 @@ amount and sets the estimate (published fees) beside PayPal's actual fee, amount
 rupees, with the difference in words. When PayPal reported no exchange rate, the panel says the
 conversion is reported at withdrawal and the rupees use the ECB rate of the payment date (shown as
 "ECB rate of 30 Oct 2026", from `rateDate`) less PayPal's markup.
+
+## Money views
+
+**Receivables widgets.** The Receivables screen is a list of widgets: totals, forecast, due line, upcoming
+due, late clients, fees lost, rates, the invoice table and activity. `components/dashboard/` holds
+`dashboard-layout.ts` (the widget list and the pure helpers that validate, move, show, hide and reset a
+layout), `use-layout.ts` (the layout in `localStorage` under `dueline.layout.v1`, read and written in
+`try/catch`, the default layout whenever storage is unavailable) and `CustomisePanel`. The five new
+widgets read `GET /api/dashboard` through `use-dashboard.ts` and share `DashboardWidget`, which gives each
+one its loading, error and empty states. Nothing about the layout is on the server.
+
+**Clients.** `/clients` is an AG Grid of `ClientSummary` rows with a search box; a row opens
+`/clients/by-key/[key]`, which shows the risk badge and reason, three tiles, the client's invoices, a notes form
+and "New invoice for this client" (`/invoices/new?client=<name>`, checked on the page).
+
+**Invoice page.** `/invoices/[id]` shows the header (client link, number, status, amount, rupees with
+their source and rate date, the payer link with a copy button), the history, the details and the
+actions. Actions show only when the status allows them, and Record payment and Cancel open an inline
+panel with their own request ID. Duplicate opens `/invoices/new?duplicate=<id>`, which loads the invoice
+and fills the form. Receivables rows and the invoice panel link to the page.
 
 ## Late-payer radar
 

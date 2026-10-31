@@ -10,6 +10,7 @@ export const config = {
     "/api/:path*",
     "/receivables",
     "/invoices/:path*",
+    "/clients/:path*",
     "/nudges",
     "/export",
     "/profile",

@@ -20,3 +20,10 @@ export function isSameClient(
   if (other.name === undefined) return sameEmail;
   return normaliseName(client.name) === normaliseName(other.name) || (emailIdentifies && sameEmail);
 }
+
+// The key names a client in a page address, so it holds only letters, digits and hyphens.
+export function clientKey(name: string): string {
+  return normaliseName(name)
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "");
+}

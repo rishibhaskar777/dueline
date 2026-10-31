@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
@@ -58,6 +59,12 @@ function Body({ invoice }: { invoice: InvoiceSummary }) {
       ) : (
         !isPaidOutsidePayPal(invoice) && <EstimateComparison invoice={invoice} />
       )}
+      <Link
+        href={`/invoices/${encodeURIComponent(invoice.id)}`}
+        className={cn(buttonVariants({ variant: "outline" }), "w-fit")}
+      >
+        Open invoice page
+      </Link>
       {invoice.purposeCode && (
         <p className="text-sm">
           Purpose code <span className="font-medium">{invoice.purposeCode}</span>
