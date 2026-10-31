@@ -158,7 +158,7 @@ describe("templateReminder", () => {
     const text = templateReminder(facts, tone);
     expect(checkReminderText(facts, text)).toEqual(text);
     expect(text.message).toContain("Pay now");
-    expect(text.message.endsWith("Thank you")).toBe(true);
+    expect(text.message).not.toMatch(/thank you/i);
   });
 
   it("states the days overdue and does not invent fees", () => {
@@ -174,5 +174,13 @@ describe("templateReminder", () => {
     );
     expect(text.message.startsWith("Hi there,")).toBe(true);
     expect(hasLinkOrAddress(text.message, facts)).toBe(false);
+  });
+});
+
+describe("checkReminderText with the sign-off added afterwards", () => {
+  it("keeps room for the longest sign-off within the 900 characters the send route accepts", () => {
+    const longest = (length: number) => `INV-0044 ${"a".repeat(length - 9)}`;
+    expect(checkReminderText(facts, { ...good, message: longest(790) })).not.toBeNull();
+    expect(checkReminderText(facts, { ...good, message: longest(791) })).toBeNull();
   });
 });

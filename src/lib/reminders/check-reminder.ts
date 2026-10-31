@@ -1,5 +1,6 @@
 import { toMinorUnits } from "@/lib/money/decimal";
 import { withoutContacts, type ReminderFacts } from "./facts";
+import { SIGN_OFF_ROOM } from "./sign-off";
 
 export const REMINDER_LIMITS = {
   subject: { min: 5, max: 120 },
@@ -67,11 +68,16 @@ function within(text: string, { min, max }: { min: number; max: number }): boole
   return text.length >= min && text.length <= max;
 }
 
-// Returns the trimmed text when it is safe to show, otherwise null.
+// Returns the trimmed text when it is safe to show, otherwise null. The message is the body only;
+// the sign-off is added later, so room is kept for it.
 export function checkReminderText(facts: ReminderFacts, draft: ReminderText): ReminderText | null {
   const subject = draft.subject.trim();
   const message = draft.message.trim();
-  if (!within(subject, REMINDER_LIMITS.subject) || !within(message, REMINDER_LIMITS.message)) {
+  const body = {
+    min: REMINDER_LIMITS.message.min,
+    max: REMINDER_LIMITS.message.max - SIGN_OFF_ROOM,
+  };
+  if (!within(subject, REMINDER_LIMITS.subject) || !within(message, body)) {
     return null;
   }
   if (!message.includes(facts.invoiceNumber)) return null;

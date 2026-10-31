@@ -11,12 +11,12 @@ import { withoutContacts, type ReminderFacts } from "./facts";
 import { templateReminder } from "./templates";
 
 // Part of the cache key, so a draft written under older rules is not reused.
-const PROMPT_VERSION = "v1";
+const PROMPT_VERSION = "v2";
 const CACHE_TTL_SECONDS = 24 * 60 * 60;
 
 const modelReminderSchema = z.object({
   subject: z.string().describe("The email subject line, under 80 characters"),
-  message: z.string().describe("The email body, under 120 words, ending with Thank you"),
+  message: z.string().describe("The email body, under 120 words, without a sign-off or a name"),
 });
 
 interface DraftedText extends ReminderText {
@@ -45,7 +45,7 @@ function systemPrompt(tone: Tone): string {
     "Write polite, human, friendly Indian English in under 120 words.",
     "No threats, no legal language, and never invent fees, interest or deadlines other than the ones in the tone.",
     'Never include links or email addresses. Say that the PayPal email has a "Pay now" button.',
-    'Do not sign with a name. End the message with "Thank you".',
+    "Do not write a sign-off or a name. They are added afterwards.",
     "Greet the client by name when one is given.",
   ].join("\n");
 }
