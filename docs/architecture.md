@@ -11,7 +11,11 @@ handlers talk to PayPal, Gemini, Postgres and the exchange-rate service.
 `GET /api/clients/risk`, `GET /api/dashboard`, `GET /api/clients`, `GET /api/clients/by-key/{key}`,
 `PUT /api/clients/by-key/{key}/notes`, `GET /api/invoices/{id}`, `POST /api/invoices/{id}/cancel`,
 `POST /api/invoices/{id}/record-payment`, `GET /api/reminders`, `POST /api/reminders/draft`,
-`POST /api/reminders/send`, `POST /api/demo/reset`, `POST /api/webhooks/paypal` and the demo sign-in
+`POST /api/reminders/send`, `POST /api/demo/reset`, `POST /api/demo/prepare`, `GET /api/cron/daily`,
+`GET /api/queue`, `POST /api/queue/{id}/dismiss`, `GET /api/digest`, `GET /api/rate-alerts`,
+`GET /api/repeats`, `POST /api/repeats`, `PATCH /api/repeats/{id}`, `DELETE /api/repeats/{id}`,
+`GET /api/items`, `POST /api/items`, `DELETE /api/items/{id}`,
+`PUT /api/clients/by-key/{key}/language`, `POST /api/webhooks/paypal` and the demo sign-in
 routes are built. No route answers from sample data.
 
 ```mermaid
@@ -56,6 +60,14 @@ invoice" below and [decision 0011](decisions/0011-creating-and-sending-invoices.
 request hash, `claimRequest` (the claim and recovery logic, which takes over a request that was cut
 off) and `DuplicateRequestError`. **`demo-guard.ts`** holds the demo-mode check that a recipient is a
 PayPal sandbox buyer. **`in-batches.ts`** runs work a few items at a time, keeping the order.
+
+**`automation/`** holds what the daily run prepares: `daily-run.ts` (the run), `queue.ts` and
+`queue-items.ts`, `repeats.ts` with `repeat-dates.ts`, `library.ts`, `digest.ts` and `daily-digest.ts`,
+`rate-alerts.ts` and `rate-alert-status.ts`, and `cron-auth.ts`. Everything pure (dates, alerts, digest,
+the secret check) is separate from what reads the store, so it can be tested alone. Built. See "Daily
+preparation" below and [decision 0018](decisions/0018-automation-and-comfort.md).
+
+**`search.ts`** filters a list by the words typed, for the command palette and the item library.
 
 **`demo-access/`** holds the signed session token, the password comparison, the cookie settings, the
 safe `next` path and the rule that decides whether access is open, required or misconfigured. It
@@ -452,16 +464,17 @@ sequenceDiagram
   participant P as PayPal
   U->>R: Open Nudges (GET /api/reminders)
   R->>R: Overdue invoices from the cached list, most days late first, at most 10
-  loop two at a time
-    R->>S: Cached draft for invoice, tone, days late?
+  R->>S: Cached model draft for each invoice, tone, language, days late?
+  R-->>U: At once: the cached draft, or the template marked pending
+  loop each pending card, two requests at a time
+    U->>R: POST /api/reminders/draft (invoiceId, tone)
     alt not cached and allowance left
       R->>G: Facts only, no contact details
       G-->>R: subject, message
       R->>R: Check length, invoice number, amounts, no links
     end
-    R->>R: Model draft, or template when unusable
+    R-->>U: Model draft, or template when unusable
   end
-  R-->>U: Drafts in the suggested tone
   U->>R: Send (invoiceId, subject, message, tone, requestId)
   R->>S: Claim requestId with the body hash
   R->>P: Read the invoice
@@ -475,14 +488,16 @@ sequenceDiagram
 0. Whoever wrote the body, code ends every draft with the profile's sign-off and name (`withSignOff`),
    leaving room for it in the 900 characters; the model is told to write no sign-off.
 1. `GET /api/reminders` takes the invoices with PayPal status SENT, UNPAID or PARTIALLY_PAID that
-   are overdue, most days late first (at most 10), and drafts each in its suggested tone
+   are overdue, most days late first (at most 10), and answers each in its suggested tone
    (`suggestTone` from the days late and the reminders already sent, one step firmer for a client
-   who is a late payer), two model calls at a time. The response also carries `remindersLeftToday`
+   who is a late payer) and the client's reminder language, without calling the model: the cached
+   model draft (`cachedReminderText`) or the template with `pending: true`. The daily run fills the
+   cache with `prepareReminderDrafts`, two model calls at a time. The response also carries `remindersLeftToday`
    (`reminders/daily-limit.ts`): PayPal's two a day less the reminders in the store's log since
    India midnight, and 0 for the rest of that day once PayPal has answered 429 (the answer is
    remembered in the store's cache). The send route applies the same count before calling PayPal.
-2. `draftReminderText` first looks in the store's cache (24 hours, keyed by invoice, tone, days late
-   and the prompt version). Otherwise it reserves a call (the app's 400 a day; for
+2. `draftReminderText` first looks in the store's cache (24 hours, keyed by invoice, tone, language,
+   days late and the prompt version). Otherwise it reserves a call (the app's 400 a day; for
    `POST /api/reminders/draft` also 20 an hour per address) and asks `runWithFallback` for a
    structured `{ subject, message }`. The model sees the client's business name, invoice number,
    amount, dates, days late and the work, never an email address or phone number.
@@ -506,7 +521,11 @@ sequenceDiagram
    (`reminder:<requestId>`) is recorded, the invoice caches are cleared and the claim is completed
    with `sentAt`. A repeat of the request returns the stored `sentAt`.
 
-**Nudges screen.** `/nudges` renders `Nudges`, which loads the drafts and the invoices. Each card
+**Nudges screen.** `/nudges` renders `Nudges`: the Today list (`TodayQueue`, from `GET /api/queue`)
+and `NudgeList`, which loads the drafts and the invoices. `NudgeList` owns a `DraftQueue` that lets
+two `POST /api/reminders/draft` calls run at once; a card whose draft is pending joins it, shows
+"Improving the draft…", and takes the answer only if `improvedOutcome` says the text is still
+untouched and no send has started. Each card
 (`NudgeCard`) shows the client with a risk badge and reason, the invoice, the amount, the due date,
 the days late and the reminders already sent; a tone switch with the suggested tone marked; the
 editable subject and message with a note saying whether the AI or a template wrote it; and "Send
@@ -517,6 +536,57 @@ drafted until the user chooses. Each draft gets its own request ID, so a retry n
 overdue invoices the screen reads "No late invoices. Nothing to chase today." The sidebar shows no
 count on Nudges: it sits in the layout and shares no state with the screens, so a count would need
 its own request for the invoice list.
+
+## Daily preparation
+
+```mermaid
+sequenceDiagram
+  participant V as Vercel Cron
+  participant R as GET /api/cron/daily
+  participant S as Store
+  participant P as PayPal
+  participant G as Gemini
+  V->>R: Authorization: Bearer CRON_SECRET
+  R->>R: Constant-time secret check (401 otherwise)
+  R->>S: Claim daily-run:<India day>
+  alt already done
+    R-->>V: ran false, the stored digest
+  else new
+    R->>P: Reload the invoices
+    R->>G: Reminder drafts for overdue invoices, within the daily allowance
+    R->>S: Cache drafts, add queue items, move repeat dates on
+    R->>S: Store the digest, complete the claim
+    R-->>V: ran true, the digest
+  end
+```
+
+`runDailyPreparation` uses `runClaimed` with the request ID `daily-run:<India day>`, the same helper
+that guards invoice creation, so the once-a-day rule is the one idempotency rule of the app. The day
+is the real India day, not the demo clock's date. A failure releases the claim. Inside the run,
+`replaceQueueItems("reminder", ...)` swaps the reminder items for the current list,
+`addQueueItem` ignores an ID it has seen, and `prepareDueRepeats` adds a repeat's item before it
+moves the repeat's date on. Queue items stay until they are dismissed; a retainer item therefore
+survives later runs. The run calls only reads and the drafting code; no function that sends,
+creates or reminds is reachable from it, and a test checks the PayPal send functions are never called.
+
+`GET /api/digest` returns the digest stored under `daily-digest:<India day>` (in the store's cache),
+or builds it from the loaded invoices when the run has not happened. `GET /api/rate-alerts` evaluates
+the alerts in Settings against the rates in use and drives the sidebar badge and the optional browser
+notifications, which a client component polls once a minute while the app is open.
+
+`vercel.json` holds the one cron entry. `src/proxy.ts` lets `GET /api/cron/daily` through without the
+demo cookie, since Vercel Cron cannot send it or follow a redirect; the route checks `CRON_SECRET`
+itself. The Demo tools button calls `POST /api/demo/prepare`, which runs the same function.
+
+## Look and feel
+
+The colours are custom properties in `src/app/globals.css`, with a `.dark` block that redefines them.
+A script in the page head sets the class from the saved choice, or from the device on a first visit, and `ThemeToggle` (and the command palette) switch it with `toggleTheme`, which reveals the new theme as a growing circle where the browser supports view transitions. Components use the tokens
+(`bg-card`, `text-foreground`, `text-late`), the AG Grid theme and the SVG charts read them, and
+`tests/unit/theme-contrast.test.ts` checks the text pairs in both themes. Below 768 px the sidebar is
+a top bar (`SidebarShell`), `useIsPhone` swaps the grids for card lists and the due line pins its
+labels. The command palette (`CommandPalette`) builds its commands from the pages, the clients and
+the invoices (`buildCommands`) and searches them with `filterByQuery`.
 
 ## Demo story and reset
 
@@ -547,7 +617,7 @@ The feed shows a date instead of "N days ago" for anything a week old or more. S
 
 `src/proxy.ts` runs before every route in its matcher (the API and the six app screens). The
 landing page, the sign-in page and static files are not in the matcher. It lets `GET /api/health`,
-`POST /api/webhooks/paypal` and `/api/demo/session` through, and otherwise checks the
+`POST /api/webhooks/paypal`, `GET /api/cron/daily` and `/api/demo/session` through, and otherwise checks the
 `dueline_demo` cookie against `SESSION_SECRET`. It makes no database or PayPal call. Without a valid
 cookie an API route gets 401 `unauthorized` and a screen is redirected to `/demo?next=<path>`.
 
@@ -583,7 +653,8 @@ retries. `GET /api/activity` returns the latest 20 stored events.
 ## Deployment
 
 Dueline runs on Vercel's Hobby plan. `vercel.json` pins functions to `sin1` (Singapore), next to the
-Neon database, and Vercel detects the Next.js build itself. Secrets are set for the Production
+Neon database, and schedules one cron job (the daily preparation, once a day as the plan allows).
+Vercel detects the Next.js build itself. Secrets are set for the Production
 environment only, and preview deployments are protected by Vercel Authentication, so a preview has
 no PayPal or database access. Functions do not sleep. Migrations are run from a developer's
 computer with `npm run db:migrate` against the same Neon database. See

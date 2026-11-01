@@ -23,7 +23,9 @@ in memory. Read [docs/architecture.md](docs/architecture.md) and
    `PAYPAL_CLIENT_SECRET` and `PAYPAL_ENVIRONMENT=sandbox` are required. Set `SANDBOX_BUYER_EMAIL`
    to the US Personal sandbox account that pays demo invoices.
 2. If you set `DATABASE_URL` to Neon's pooled connection string, create the tables with
-   `npm run db:migrate`. It applies each file in `src/lib/store/migrations` once.
+   `npm run db:migrate`. It applies each file in `src/lib/store/migrations` once; migration 006
+   adds the daily queue, monthly repeats, the item library and a client's reminder language, and
+   007 changes the queue so items stay until they are acted on or dismissed.
 3. Check the connection with `npm run sandbox:check`. It creates and sends a USD 100.00 invoice to the
    sandbox buyer and prints the payer link. Pay it in a private window as the buyer, then run
    `npm run sandbox:check -- --invoice <id>` to see the payment and PayPal's own payout figures.
@@ -75,8 +77,10 @@ the Neon database.
 2. Add these environment variables for the Production environment only: `PAYPAL_CLIENT_ID`,
    `PAYPAL_CLIENT_SECRET`, `PAYPAL_ENVIRONMENT=sandbox`, `PAYPAL_WEBHOOK_ID` (a placeholder for
    now), `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_FALLBACK_MODEL`, `DATABASE_URL` (Neon's pooled
-   connection string), `DEMO_MODE=true`, `DEMO_PASSWORD`, `SESSION_SECRET` and
-   `SANDBOX_BUYER_EMAIL`. Preview deployments get none of them, so they show the "not configured"
+   connection string), `DEMO_MODE=true`, `DEMO_PASSWORD`, `SESSION_SECRET`, `CRON_SECRET` and
+   `SANDBOX_BUYER_EMAIL`. `CRON_SECRET` is any string of at least 16 characters (make one like the
+   session secret). Vercel sends it as `Authorization: Bearer <value>` to the daily job, and the job
+   answers 401 without it. Preview deployments get none of them, so they show the "not configured"
    page.
 3. Create the tables from your computer, against the same database, before the first deploy and
    before merging a change that adds a migration: set `DATABASE_URL` in `.env.local` and run
@@ -94,6 +98,33 @@ the Neon database.
 
 Vercel deploys the main branch to production and every other branch to a protected preview. The
 service does not sleep.
+
+`vercel.json` also schedules the daily preparation, `GET /api/cron/daily`, at `30 0 * * *` (00:30 UTC,
+06:00 India time). The Hobby plan runs a job at most once a day, so a faster schedule fails the
+deploy, and the run may start at any minute of that hour. Open the project's Cron Jobs tab in Vercel
+to see its runs or to run it by hand.
+
+### Running the daily job locally
+
+Set `CRON_SECRET` in `.env.local` (at least 16 characters), start the app with `npm run dev`, then in
+another terminal:
+
+```sh
+curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/daily
+```
+
+It answers `{ "ran": true, "digest": … }` the first time on each India day and `"ran": false` after
+that, which is the once-a-day rule at work. To run it again the same day, restart `npm run dev` with
+`DATABASE_URL` empty (the in-memory store forgets the marker). "Run today's preparation now" on Demo
+tools follows the same rule. The job writes drafts and queue entries only; it
+never sends anything.
+
+### App icons
+
+`public/icon.svg` is the mark. The PNG icons in `public/icons` and `public/apple-touch-icon.png` were
+rendered from it once (192 and 512 px, a full-bleed 512 px maskable one and the 180 px touch icon).
+If the mark changes, render them again with any tool that rasterises SVG and keep the same file
+names.
 
 ## Branches
 
