@@ -49,6 +49,7 @@ export function DueLineRowView({
   onHideTip,
 }: DueLineRowViewProps) {
   const { invoice } = row;
+  const onLeft = row.label.side === "left";
 
   // The spaces between the parts make the row's text read as one phrase. Its accessible name begins
   // with the same words, which keeps the visible label part of the name.
@@ -75,8 +76,7 @@ export function DueLineRowView({
       <div className="min-w-0 pr-3 max-md:sticky max-md:left-0 max-md:z-10 max-md:bg-card">
         <p className="truncate text-sm font-medium">{invoice.client.name}</p>{" "}
         <p className="truncate text-sm text-muted-foreground tabular-nums">
-          {row.sharesClientName && `${invoice.number} · `}
-          {formatMoney(invoice.amount)}
+          {invoice.number} · {formatMoney(invoice.amount)}
         </p>
       </div>{" "}
       <svg
@@ -130,10 +130,23 @@ export function DueLineRowView({
           strokeWidth={2}
           className={`${row.endMark === "filled" ? FILLS[row.endTone] : "fill-card"} ${STROKES[row.endTone]}`}
         />
+        {row.startsBeforeChart && (
+          <path
+            d={`M 8 ${LINE_Y - 5} L 2 ${LINE_Y} L 8 ${LINE_Y + 5}`}
+            fill="none"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={STROKES[row.segments[0].tone]}
+          />
+        )}
         <text
-          x={percent(row.statusAt)}
-          dx={row.end >= row.due ? AFTER_END_DOT_PX : AFTER_DUE_TICK_PX}
-          y={LINE_Y + 4}
+          x={percent(onLeft ? row.end : row.statusAt)}
+          dx={
+            onLeft ? -AFTER_END_DOT_PX : row.end >= row.due ? AFTER_END_DOT_PX : AFTER_DUE_TICK_PX
+          }
+          y={LINE_Y + 4 + row.label.dy}
+          textAnchor={onLeft ? "end" : "start"}
           className={`${STATUS_TEXT[row.statusTone]} text-xs`}
         >
           {row.statusText}

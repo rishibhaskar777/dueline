@@ -1,4 +1,4 @@
-import { formatDate } from "@/lib/format-date";
+import { formatDate, formatDayMonth } from "@/lib/format-date";
 import { formatMoney, formatRupees } from "@/lib/money/format";
 import type { DueLineRow } from "./due-line-layout";
 import { payoutSourceNote } from "./invoice-status";
@@ -35,6 +35,9 @@ export function DueLineTooltip({ target }: { target: TooltipTarget }) {
       <p className="text-muted-foreground">
         {invoice.number} · {invoice.client.name}
       </p>
+      {target.row.startsBeforeChart && (
+        <p className="mt-1">← Sent {formatDayMonth(invoice.issuedOn)}</p>
+      )}
       <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 tabular-nums">
         <dt className="text-muted-foreground">Amount</dt>
         <dd>{formatMoney(invoice.amount)}</dd>

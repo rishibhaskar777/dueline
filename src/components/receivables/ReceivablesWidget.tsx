@@ -1,4 +1,5 @@
 import type { WidgetId } from "@/components/dashboard/dashboard-layout";
+import { ChecklistWidget } from "@/components/dashboard/ChecklistWidget";
 import { FeesLostWidget } from "@/components/dashboard/FeesLostWidget";
 import { ForecastWidget } from "@/components/dashboard/ForecastWidget";
 import { LateClientsWidget } from "@/components/dashboard/LateClientsWidget";
@@ -32,6 +33,8 @@ export function ReceivablesWidget({
   const { state, retry } = dashboard;
 
   switch (id) {
+    case "checklist":
+      return <ChecklistWidget />;
     case "morning":
       return <MorningWidget />;
     case "totals":
