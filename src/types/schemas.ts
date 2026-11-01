@@ -258,24 +258,6 @@ export const saveLibraryItemRequestSchema = z.object({
 
 export const libraryItemIdSchema = z.uuid();
 
-const digestInvoiceSchema = z.object({
-  invoiceId: z.string(),
-  invoiceNumber: z.string(),
-  clientName: z.string(),
-  amount: moneySchema,
-});
-
-const triggeredRateAlertSchema = rateAlertSchema.extend({ rate: z.number() });
-
-export const dailyDigestSchema = z.object({
-  day: dateString,
-  paidSinceYesterday: z.array(digestInvoiceSchema),
-  newlyOverdue: z.array(digestInvoiceSchema),
-  dueSoon: z.array(digestInvoiceSchema),
-  preparedDrafts: z.number().int().min(0),
-  rateAlerts: z.array(triggeredRateAlertSchema),
-});
-
 export const hiddenInvoiceRequestSchema = z.object({
   invoiceId: invoiceIdSchema,
   hidden: z.boolean(),
