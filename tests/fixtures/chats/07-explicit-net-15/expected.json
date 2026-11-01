@@ -1,0 +1,18 @@
+{
+  "summary": "Net 15 terms stated in the middle of the chat",
+  "client": "Pinegrove Analytics",
+  "currency": "USD",
+  "items": [
+    {
+      "nameIncludes": "screen",
+      "quantity": 5,
+      "unitAmount": "220.00"
+    }
+  ],
+  "due": {
+    "rule": "net",
+    "days": 15
+  },
+  "warnings": [],
+  "contacts": ["billing@pinegrove-example.com"]
+}

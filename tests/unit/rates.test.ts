@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getMarketRates, getRatesOn } from "@/lib/rates/rates";
+import { getMarketRates, getRatesOn, getRatesWidget } from "@/lib/rates/rates";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
 import { DEFAULT_SETTINGS, type Settings } from "@/types";
@@ -153,5 +153,25 @@ describe("getRatesOn", () => {
       },
     };
     expect((await getRatesOn("2026-10-24", ecbSettings)).rates).toEqual(ECB_RATES);
+  });
+});
+
+describe("rates offline", () => {
+  beforeEach(() => stubEnv({ DUELINE_OFFLINE: "true", DEMO_TODAY: "2026-10-29" }));
+
+  it("answers with the saved rates, labelled manual, and never asks the ECB", async () => {
+    const fetch = vi.spyOn(globalThis, "fetch");
+
+    expect(await getMarketRates(ecbSettings)).toEqual({
+      rates: ecbSettings.marketRates,
+      onDate: ecbSettings.ratesUpdatedOn,
+      source: "manual",
+    });
+    expect(await getRatesOn("2026-10-20", ecbSettings)).toMatchObject({ source: "manual" });
+    expect(await getRatesWidget(ecbSettings)).toMatchObject({
+      source: "manual",
+      hasAverage: false,
+    });
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

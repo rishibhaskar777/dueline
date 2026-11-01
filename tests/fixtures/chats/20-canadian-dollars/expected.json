@@ -1,0 +1,18 @@
+{
+  "summary": "Canadian dollars written with the CA$ sign, priced per page",
+  "client": "Boreal Outfitters",
+  "currency": "CAD",
+  "items": [
+    {
+      "nameIncludes": "page",
+      "quantity": 5,
+      "unitAmount": "300.00"
+    }
+  ],
+  "due": {
+    "rule": "net",
+    "days": 15
+  },
+  "warnings": [],
+  "contacts": ["marc@boreal-example.com"]
+}

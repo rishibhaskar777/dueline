@@ -9,6 +9,26 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Offline mode: `npm run dev:offline` runs the whole app with no PayPal account, Gemini key or
+  database (open localhost:3000, password `offline`). PayPal is a simulation that holds the demo story
+  and four invoices paid through PayPal, invoices are drafted from a chat by a small parser, reminders
+  are templates, and rates are the saved ones. It refuses to run on Vercel or in production outside CI,
+  and the sidebar shows an "Offline demo" badge. `GET /api/health` reports `offline`. Fees and rates,
+  the rupee rates widget and the payout estimate call the rates "Saved rates (offline demo)".
+- End-to-end tests with Playwright in Chromium (`npm run test:e2e`) against the production build in
+  offline mode: the landing page and password, a chat to a sent invoice and a double click, a reminder
+  and a tone switch, the export register and its CSV, a bad GSTIN, the theme and the keyboard. Axe
+  checks six screens in both themes. CI runs them in a separate `e2e` job after `checks`.
+- An extraction accuracy check: 24 chats with expected answers (`tests/fixtures/chats`) and
+  `npm run ai:eval`, which runs the real model over them and writes `docs/evaluation/extraction.md`.
+  No report has been generated yet.
+- A full Content Security Policy: everything from this site, no framing, no plugins, forms post only
+  here. Scripts still allow inline code; [decision 0020](docs/decisions/0020-proof-and-hardening.md)
+  explains why a nonce cannot be used with prerendered pages.
+- Two design documents: [decision 0019](docs/decisions/0019-many-freelancers.md), a proposal for
+  serving many freelancers (not built), and diagrams of today's system and of that design in
+  `docs/architecture.md`.
+
 - A daily preparation each morning (06:00 India time, Vercel Cron). It writes reminder drafts for
   overdue invoices, lists the ones at least 3 days late (a setting) in a Today list at the top of
   Nudges with "Review and send" and "Dismiss for today". Items stay until acted on or dismissed;
@@ -32,7 +52,7 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   invoice, draft a reminder or toggle the theme, and "?" for the list of shortcuts.
 - A phone layout below 768 px (top bar with a menu, card lists instead of tables, the due line
   scrolling with its labels pinned, 44 px tap targets) and an installable app: a web manifest, icons
-  and a theme colour. There is no service worker and no offline mode.
+  and a theme colour. There is no service worker, so an installed copy still needs a connection.
 - `GET /api/cron/daily`, `POST /api/demo/prepare`, `GET /api/queue`, `POST /api/queue/{id}/dismiss`,
   `GET /api/digest`, `GET /api/rate-alerts`, `GET`/`POST` `/api/repeats`, `PATCH`/`DELETE`
   `/api/repeats/{id}`, `GET`/`POST` `/api/items`, `DELETE /api/items/{id}` and
@@ -99,6 +119,10 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- The sidebar scrolls inside itself on a short screen. Before, "Lock demo" could run below the dark
+  panel onto the light page, where its text could not be read.
+- Each row of the due line now has an accessible name that starts with the words shown on the row
+  (client, amount and status), then the date, so voice control and screen readers match the label.
 - The new invoice review screen no longer builds its purpose code list and client reading anew on
   every render.
 

@@ -16,6 +16,7 @@ const VARIABLES = [
   "SESSION_SECRET",
   "CRON_SECRET",
   "SANDBOX_BUYER_EMAIL",
+  "DUELINE_OFFLINE",
 ];
 
 export function stubEnv(values: Record<string, string> = {}): void {

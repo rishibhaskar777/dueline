@@ -1,0 +1,17 @@
+{
+  "summary": "An early-payment discount is mentioned; prices on the invoice stay the full prices",
+  "client": "Maple Row Studio",
+  "currency": "CAD",
+  "items": [
+    {
+      "nameIncludes": "landing",
+      "quantity": 2,
+      "unitAmount": "400.00"
+    }
+  ],
+  "due": {
+    "rule": "none"
+  },
+  "warnings": ["no_payment_terms"],
+  "contacts": ["gareth@maplerow-example.com"]
+}

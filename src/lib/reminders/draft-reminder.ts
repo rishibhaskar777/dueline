@@ -2,6 +2,7 @@ import "server-only";
 import { generateText, NoObjectGeneratedError, Output } from "ai";
 import { z } from "zod";
 import { AiUnavailableError, runWithFallback } from "@/lib/ai/model";
+import { isOffline } from "@/lib/env";
 import { AiQuotaError } from "@/lib/ai/quota";
 import { getStore } from "@/lib/store";
 import type { ReminderLanguage, Tone } from "@/types";
@@ -102,13 +103,14 @@ async function writeCache(key: string, value: ReminderText): Promise<void> {
 }
 
 // Null means there is no usable model answer and the template should be used. A per-address
-// limit is not that: the user is told to wait.
+// limit is not that: the user is told to wait. Offline mode has no model, so it is always null.
 async function askModel(
   facts: ReminderFacts,
   tone: Tone,
   language: ReminderLanguage,
   options: DraftOptions,
 ): Promise<ReminderText | null> {
+  if (isOffline()) return null;
   try {
     await options.beforeModelCall?.();
     const { output } = await runWithFallback((call) =>

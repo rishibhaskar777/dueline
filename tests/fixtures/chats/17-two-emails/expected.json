@@ -1,0 +1,17 @@
+{
+  "summary": "Two email addresses; the client to invoice is the first, the second is a copy",
+  "client": "Kestrel Logistics",
+  "currency": "USD",
+  "items": [
+    {
+      "nameIncludes": "redesign",
+      "quantity": 1,
+      "unitAmount": "3200.00"
+    }
+  ],
+  "due": {
+    "rule": "none"
+  },
+  "warnings": ["no_payment_terms"],
+  "contacts": ["ravi@kestrel-example.com", "books@kestrelaccounts-example.com"]
+}

@@ -18,16 +18,31 @@ handlers talk to PayPal, Gemini, Postgres and the exchange-rate service.
 `PUT /api/clients/by-key/{key}/language`, `POST /api/webhooks/paypal` and the demo sign-in
 routes are built. No route answers from sample data.
 
+## The system today
+
+One freelancer, one PayPal sandbox account, one deployment. In [offline mode](#offline-mode) the
+PayPal, Gemini, Frankfurter and Neon boxes are replaced by code inside the app.
+
 ```mermaid
 flowchart LR
-  Browser["Browser (screens)"] --> Client["api-client.ts"]
-  Client --> Routes["Next.js route handlers"]
-  Routes --> PayPal["PayPal Invoicing and Payments"]
-  Routes --> Gemini["Gemini"]
-  Routes --> Neon["Neon Postgres"]
-  Routes --> Rates["Frankfurter rates"]
-  PayPalEvents["PayPal webhooks"] --> Webhook["/api/webhooks/paypal"]
-  Webhook --> Routes
+  subgraph Browser
+    Screens["Screens (client components)"] --> Client["api-client.ts"]
+  end
+  subgraph Vercel["Vercel Hobby, Singapore (sin1)"]
+    Proxy["proxy.ts: demo cookie check"]
+    Routes["Route handlers in src/app/api"]
+    Cron["Vercel Cron: daily preparation, 06:00 India time"]
+  end
+  Client -->|"JSON over HTTPS"| Proxy
+  Proxy --> Routes
+  Cron -->|"Bearer CRON_SECRET"| Routes
+  Routes -->|"OAuth, Invoicing v2, webhook verification"| Invoicing["PayPal Invoicing and OAuth"]
+  Routes -->|"captures"| Payments["PayPal Payments"]
+  Routes -->|"fees when no capture"| Search["PayPal Transaction Search"]
+  Events["PayPal webhooks"] -->|"signed events"| Routes
+  Routes -->|"masked chat, reminder facts"| Gemini["Gemini"]
+  Routes -->|"daily rates"| ECB["Frankfurter, European Central Bank rates"]
+  Routes -->|"profile, settings, requests, queue, caches"| Neon[("Neon Postgres, Singapore")]
 ```
 
 ## Modules in `src/lib`
@@ -37,7 +52,9 @@ server, and it turns error responses into `ApiClientError`. Built.
 
 **`env.ts`** validates environment variables on the server and refuses to start unless
 `PAYPAL_ENVIRONMENT=sandbox`. `getEnv()` is called inside functions, never at the top of a module,
-so the production build works without secrets. Built.
+so the production build works without secrets. With `DUELINE_OFFLINE=true` it asks for no PayPal
+settings, ignores keys and the database URL, and refuses to run on Vercel or in production outside CI
+(see [Offline mode](#offline-mode)). `isOffline()` is what the seams read. Built.
 
 **`clock.ts`** returns today's date in Asia/Kolkata, or `DEMO_TODAY` when it is set. Every
 due-state and risk calculation uses it. It is server only. Built.
@@ -661,3 +678,75 @@ computer with `npm run db:migrate` against the same Neon database. See
 [decision 0009](decisions/0009-hosting-on-vercel.md),
 [decision 0008](decisions/0008-demo-access-and-deployment.md) and the "Deploying" section of
 CONTRIBUTING.md.
+
+## Offline mode
+
+`DUELINE_OFFLINE=true` runs the app with no accounts. `npm run dev:offline` starts the development
+server this way, and the end-to-end tests run the production build this way. See
+[decision 0020](decisions/0020-proof-and-hardening.md) for why and for what it cannot prove.
+
+| Seam              | Where                                      | Offline                                                        |
+| ----------------- | ------------------------------------------ | -------------------------------------------------------------- |
+| PayPal REST       | `paypal/rest.ts` (`paypalFetch`)           | `paypal/offline/transport.ts` maps the paths to the fake       |
+| PayPal payouts    | `paypal/payments.ts` (`getActualPayout`)   | The fake's captures, written when the story is seeded          |
+| Access token      | `paypal/token.ts`                          | A fixed token; the fake accepts any                            |
+| Invoice drafting  | `ai/extract-invoice.ts`                    | `ai/offline-extraction.ts`, then the same `checkModelDraft`    |
+| Reminder drafting | `reminders/draft-reminder.ts` (`askModel`) | No model, so the template is used                              |
+| Exchange rates    | `rates/rates.ts`                           | The rates saved in settings, reported as manual; no network    |
+| Storage           | `env.ts` drops `DATABASE_URL`              | The in-memory store                                            |
+| Webhook secret    | `env.ts` sets `PAYPAL_WEBHOOK_ID`          | The fake accepts a body whose signature is `offline-signature` |
+
+`paypal/offline/fake-paypal.ts` is the stand-in for PayPal's Invoicing API that the unit tests and
+offline mode share. `world.ts` holds the one instance of a process. On its first use it seeds the
+demo story through the same `seedDemo` the sandbox uses, then adds `paid-story.ts`: four invoices
+paid through PayPal with PayPal's own fee and rupee figures, three in the previous month and one
+recent, so the export register has rows. The seed's own PayPal calls skip the wait for the seed by
+running inside an `AsyncLocalStorage` scope.
+
+`GET /api/health` reports `offline: true` and the sidebar shows an "Offline demo" badge.
+
+## Content Security Policy
+
+`next.config.ts` sends one policy on every path: everything from this origin, `data:` images, inline
+styles and scripts, no framing, no plugins and forms that post only here. Inline scripts are allowed
+because the prerendered pages cannot carry a per-request nonce; the reasoning is in
+[decision 0020](decisions/0020-proof-and-hardening.md). `'unsafe-eval'` is added in development only.
+`tests/unit/next-config.test.ts` checks every directive and `tests/e2e/csp.spec.ts` visits each
+screen and fails on any browser message about the policy.
+
+`GET /api/purpose-codes` is the one data route that is prerendered: it reads a fixed list. Every other
+`GET` starts with `await connection()`, which `tests/unit/route-rendering.test.ts` enforces.
+
+## Tests
+
+| Kind          | Where                | What it covers                                                                                   |
+| ------------- | -------------------- | ------------------------------------------------------------------------------------------------ |
+| Unit          | `tests/unit`         | Logic, routes and components' models. No call reaches PayPal or Gemini                           |
+| End to end    | `tests/e2e`          | The production build in offline mode, in Chromium, with an axe check of 6 screens in both themes |
+| AI evaluation | `scripts/ai-eval.ts` | Real Gemini over `tests/fixtures/chats`; run by hand, never by a test or CI                      |
+
+`playwright.config.ts` builds the app, starts it on port 3000 with `DUELINE_OFFLINE`, `CI`, a fixed
+`DEMO_TODAY` and the offline password, signs in once (`sign-in.setup.ts`) and reuses the cookie.
+`src/lib/ai/score-extraction.ts` holds the comparison and report that `ai-eval.ts` uses, so a unit
+test can run it over stored model answers.
+
+## Serving many freelancers (a design, not built)
+
+Today's system serves one freelancer. [Decision 0019](decisions/0019-many-freelancers.md) sets out how
+it would serve many. Nothing in the diagram below exists yet.
+
+```mermaid
+flowchart LR
+  Freelancers["Many freelancers (browsers)"] --> Proxy["proxy.ts: session gives the tenant ID"]
+  Proxy --> Routes["Route handlers with a tenant context"]
+  Connect["Connect PayPal: Log in with PayPal and the invoicing permission"] --> Vault
+  Routes --> Vault["Token vault: each tenant's PayPal tokens, encrypted"]
+  Vault -->|"the tenant's own token"| PayPal["PayPal: each freelancer's business account"]
+  Routes --> TenantStore["storeFor(tenant)"]
+  TenantStore --> Neon[("Neon Postgres: tenant_id on every row, row-level security")]
+  Events["PayPal webhooks, one app-level endpoint"] --> Resolve["Find the tenant from the invoice index"]
+  Resolve --> Routes
+  Cron["Frequent cron: claims each tenant's daily run"] --> Routes
+  Routes -->|"per-tenant budget under one shared ceiling"| Gemini["Gemini"]
+  Routes -->|"shared, cached once a day"| ECB["Frankfurter, ECB rates"]
+```

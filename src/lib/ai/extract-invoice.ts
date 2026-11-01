@@ -2,6 +2,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { generateText, NoObjectGeneratedError, Output } from "ai";
 import { today } from "@/lib/clock";
+import { isOffline } from "@/lib/env";
 import { PURPOSE_CODES } from "@/lib/export/purpose-codes";
 import { maskContacts } from "@/lib/privacy/mask";
 import { getProfile } from "@/lib/profile";
@@ -9,6 +10,7 @@ import { getStore } from "@/lib/store";
 import type { ExtractResponse } from "@/types";
 import { checkModelDraft, modelDraftSchema, type ModelDraft } from "./check-draft";
 import { runWithFallback } from "./model";
+import { offlineModelDraft } from "./offline-extraction";
 
 const CACHE_TTL_SECONDS = 24 * 60 * 60;
 
@@ -24,6 +26,8 @@ export class ExtractionFailedError extends Error {
 interface ExtractOptions {
   // Runs once, just before a call to the model. It is skipped when a stored answer is reused.
   beforeModelCall?: () => Promise<void>;
+  // Neither reads nor writes stored answers, so the model is asked every time.
+  fresh?: boolean;
 }
 
 type ExtractedDraft = Omit<ExtractResponse, "risk">;
@@ -78,13 +82,20 @@ async function writeCache(key: string, value: ModelDraft): Promise<void> {
   }
 }
 
+// Everything the model is sent for a chat.
+export function extractionRequest(
+  masked: string,
+  date: string,
+): { system: string; prompt: string } {
+  return { system: systemPrompt(date), prompt: chatPrompt(masked) };
+}
+
 async function askModel(masked: string, date: string): Promise<ModelDraft> {
   try {
     const { output } = await runWithFallback((call) =>
       generateText({
         ...call,
-        system: systemPrompt(date),
-        prompt: chatPrompt(masked),
+        ...extractionRequest(masked, date),
         output: Output.object({
           schema: modelDraftSchema,
           name: "invoice_draft",
@@ -109,16 +120,18 @@ export async function extractInvoiceDraft(
   const date = today();
   const key = cacheKey(contacts.masked, date);
 
-  const cached = await readCache(key);
+  const cached = options.fresh ? null : await readCache(key);
   let guess = cached;
-  if (!guess) {
+  if (!guess && isOffline()) {
+    guess = offlineModelDraft(contacts.masked, date);
+  } else if (!guess) {
     await options.beforeModelCall?.();
     guess = await askModel(contacts.masked, date);
   }
 
   const { draft, warnings } = checkModelDraft(guess, { chat, contacts, today: date });
   if (draft.items.length === 0) throw new ExtractionFailedError();
-  if (!cached) await writeCache(key, guess);
+  if (!cached && !options.fresh) await writeCache(key, guess);
 
   // The SAC is the freelancer's own, so it never comes from the model.
   const { defaultSac } = await getProfile();

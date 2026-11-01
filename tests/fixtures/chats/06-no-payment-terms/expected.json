@@ -1,0 +1,22 @@
+{
+  "summary": "Australian dollars, three items, nothing said about when to pay",
+  "client": "Saltbush Ceramics",
+  "currency": "AUD",
+  "items": [
+    {
+      "nameIncludes": "photo",
+      "quantity": 40,
+      "unitAmount": "6.00"
+    },
+    {
+      "nameIncludes": "banner",
+      "quantity": 1,
+      "unitAmount": "120.00"
+    }
+  ],
+  "due": {
+    "rule": "none"
+  },
+  "warnings": ["no_payment_terms"],
+  "contacts": ["chloe@saltbush-example.com"]
+}

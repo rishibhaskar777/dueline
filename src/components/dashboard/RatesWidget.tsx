@@ -1,5 +1,7 @@
 import { formatDate } from "@/lib/format-date";
 import { describeAlert } from "@/lib/automation/rate-alerts";
+import { rateSourceLabel } from "@/components/shared/rate-source";
+import { useOffline } from "@/components/shared/use-offline";
 import { formatRate } from "@/lib/money/format";
 import type { RatesWidget as Rates, TriggeredRateAlert } from "@/types";
 import { DashboardWidget } from "./DashboardWidget";
@@ -12,6 +14,7 @@ function comparison(percent: number | null): string {
 }
 
 function Lines({ rates, alerts }: { rates: Rates; alerts: TriggeredRateAlert[] }) {
+  const offline = useOffline();
   return (
     <>
       <ul className="grid gap-1">
@@ -35,8 +38,7 @@ function Lines({ rates, alerts }: { rates: Rates; alerts: TriggeredRateAlert[] }
         ))}
       </ul>
       <p className="mt-3 text-xs text-muted-foreground">
-        {rates.source === "manual" ? "Rates you set by hand" : "European Central Bank rates"} of{" "}
-        {formatDate(rates.onDate)}.
+        {rateSourceLabel(rates.source, offline)} of {formatDate(rates.onDate)}.
         {!rates.hasAverage &&
           " The 30-day average is not available, so only today's rates are shown."}
       </p>

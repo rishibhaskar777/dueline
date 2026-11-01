@@ -1,0 +1,22 @@
+{
+  "summary": "Australian dollars with a currency code after the amount",
+  "client": "Wattle & Co",
+  "currency": "AUD",
+  "items": [
+    {
+      "nameIncludes": "template",
+      "quantity": 1,
+      "unitAmount": "450.00"
+    },
+    {
+      "nameIncludes": "layout",
+      "quantity": 2,
+      "unitAmount": "60.00"
+    }
+  ],
+  "due": {
+    "rule": "none"
+  },
+  "warnings": ["no_payment_terms"],
+  "contacts": ["jess@wattle-example.com"]
+}

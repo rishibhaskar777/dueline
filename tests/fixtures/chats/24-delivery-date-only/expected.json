@@ -1,0 +1,17 @@
+{
+  "summary": "A delivery deadline that is not a payment date",
+  "client": "Lantern Games",
+  "currency": "USD",
+  "items": [
+    {
+      "nameIncludes": "sprite",
+      "quantity": 8,
+      "unitAmount": "75.00"
+    }
+  ],
+  "due": {
+    "rule": "none"
+  },
+  "warnings": ["no_payment_terms"],
+  "contacts": ["sam@lanterngames-example.com"]
+}

@@ -1,0 +1,18 @@
+{
+  "summary": "Monthly retainer in euros with explicit net 30 terms",
+  "client": "Brauhaus Media GmbH",
+  "currency": "EUR",
+  "items": [
+    {
+      "nameIncludes": "retainer",
+      "quantity": 1,
+      "unitAmount": "1400.00"
+    }
+  ],
+  "due": {
+    "rule": "net",
+    "days": 30
+  },
+  "warnings": [],
+  "contacts": ["lena@brauhaus-media-example.com"]
+}

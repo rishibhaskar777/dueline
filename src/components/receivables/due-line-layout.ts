@@ -67,11 +67,6 @@ function lateDays(invoice: InvoiceSummary): number {
   return invoice.paidOn ? Math.max(0, daysBetween(invoice.dueOn, invoice.paidOn)) : 0;
 }
 
-function paidLateSuffix(invoice: InvoiceSummary): string {
-  const late = lateDays(invoice);
-  return late > 0 ? `, ${plural(late, "day")} late` : "";
-}
-
 function statusText(invoice: InvoiceSummary, today: string): string {
   if (invoice.dueState === "paid") {
     const late = lateDays(invoice);
@@ -83,12 +78,19 @@ function statusText(invoice: InvoiceSummary, today: string): string {
   return `${plural(-untilDue, "day")} late`;
 }
 
-function accessibleName(invoice: InvoiceSummary, status: string): string {
+// The row's own words come first and unbroken, then the date, so the visible text is part of the
+// name a screen reader or voice control user hears.
+function accessibleName(
+  invoice: InvoiceSummary,
+  status: string,
+  sharesClientName: boolean,
+): string {
   const when =
     invoice.dueState === "paid" && invoice.paidOn
-      ? `paid ${formatDate(invoice.paidOn)}${paidLateSuffix(invoice)}`
-      : `due ${formatDate(invoice.dueOn)}, ${status.toLowerCase()}`;
-  return `${invoice.client.name}, ${formatMoney(invoice.amount)}, ${when}`;
+      ? formatDate(invoice.paidOn)
+      : `due ${formatDate(invoice.dueOn)}`;
+  const figures = `${sharesClientName ? `${invoice.number} · ` : ""}${formatMoney(invoice.amount)}`;
+  return `${invoice.client.name} ${figures} ${status}, ${when}`;
 }
 
 function paidSegments(from: number, due: number, paidOn: number): Segment[] {
@@ -147,7 +149,7 @@ function buildRow(
     endTone,
     statusTone: paid && !paidLate ? "paid" : endTone,
     statusText: status,
-    accessibleName: accessibleName(invoice, status),
+    accessibleName: accessibleName(invoice, status, sharesClientName),
   };
 }
 

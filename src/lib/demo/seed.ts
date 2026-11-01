@@ -44,7 +44,7 @@ function buyerEmail(): string {
 }
 
 // A profile the freelancer saved is never replaced; the demo only fills in when there is none.
-async function ensureDemoProfile(date: string): Promise<Profile> {
+export async function ensureDemoProfile(date: string): Promise<Profile> {
   const store = getStore();
   if (!(await store.getProfile())) await store.saveProfile(buildDemoProfile(date));
   return getProfile();

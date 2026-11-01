@@ -1,0 +1,17 @@
+{
+  "summary": "The speaker is a person but the business to bill is named in brackets",
+  "client": "Copperline Fitness",
+  "currency": "USD",
+  "items": [
+    {
+      "nameIncludes": "email",
+      "quantity": 1,
+      "unitAmount": "2100.00"
+    }
+  ],
+  "due": {
+    "rule": "none"
+  },
+  "warnings": ["no_payment_terms"],
+  "contacts": ["hannah@copperline-example.com"]
+}

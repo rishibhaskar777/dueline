@@ -1,0 +1,18 @@
+{
+  "summary": "A price written with a thousands separator",
+  "client": "Ironbridge Capital",
+  "currency": "USD",
+  "items": [
+    {
+      "nameIncludes": "ui",
+      "quantity": 1,
+      "unitAmount": "2400.00"
+    }
+  ],
+  "due": {
+    "rule": "net",
+    "days": 30
+  },
+  "warnings": [],
+  "contacts": ["daniel@ironbridge-example.com"]
+}

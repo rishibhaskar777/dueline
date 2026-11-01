@@ -3,6 +3,21 @@
 Thanks for helping. Dueline is a PayPal sandbox project, so nothing here touches real money.
 Please read the [Code of Conduct](CODE_OF_CONDUCT.md) first.
 
+## Try it in two minutes
+
+You need Node.js 24 (`nvm use` reads `.nvmrc`) and no accounts.
+
+```bash
+npm ci
+npm run dev:offline
+```
+
+Open <http://localhost:3000>, choose "Open the demo" and use the password `offline`. The app runs
+whole: PayPal is a simulation that holds the demo story, a pasted chat is read by a small parser,
+reminders are templates and the exchange rates are saved ones. Nothing leaves your computer, and
+the sidebar says "Offline demo". Data lives in memory and starts fresh when the server restarts.
+Offline mode refuses to run on Vercel and in production outside CI.
+
 ## Local setup
 
 You need Node.js 24 (`nvm use` reads `.nvmrc`) and a PayPal sandbox account.
@@ -66,6 +81,45 @@ These scripts run outside Next.js, so they start with `tsx --conditions=react-se
 Set `DEMO_PASSWORD` and `SESSION_SECRET` in `.env.local` to try the sign-in screen locally. Make a
 secret with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. With no
 `DEMO_PASSWORD` the app is open in development. Both are required in production.
+
+## Checks and tests
+
+Before opening a pull request run `npm run format`, then `npm run format:check`, `npm run lint`,
+`npm run typecheck`, `npm test` and `npm run build`. CI runs the same five as the `checks` job.
+
+### End-to-end tests
+
+The browser tests need Chromium once on each computer:
+
+```bash
+npx playwright install chromium
+```
+
+On Linux add `--with-deps` to install the system libraries too, as CI does. Then:
+
+```bash
+npm run test:e2e
+```
+
+This builds the app, starts it on port 3000 in offline mode on a fixed demo date (4 Nov 2026) and
+runs the tests in `tests/e2e`, so port 3000 must be free: stop `npm run dev` first. The tests need
+no `.env.local`. A failed run leaves `playwright-report`; open it with
+`npx playwright show-report`. A test that fails a second time keeps a trace in the report. The
+accessibility test (axe) fails on serious or critical findings in either theme and lists lesser ones
+as annotations on the test.
+
+### Checking the drafting from chats
+
+```bash
+npm run ai:eval
+```
+
+This sends the 24 chats in `tests/fixtures/chats` to the real model (about 24 calls, counted against
+the app's daily allowance, with a pause between them), compares each answer with that chat's
+`expected.json` and writes `docs/evaluation/extraction.md`. It needs `GEMINI_API_KEY` and
+`GEMINI_MODEL` in `.env.local`. It is never run by `npm test` or by CI. To add a chat, make a folder
+with a `chat.txt` and an `expected.json` (see the existing ones); use made-up companies and
+`example.com` addresses.
 
 ## Deploying
 

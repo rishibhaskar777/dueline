@@ -44,6 +44,11 @@ export function StatusLine() {
 
   return (
     <div className="space-y-1 text-sm" role="status">
+      {health.offline && (
+        <p className="w-fit rounded-md bg-sidebar-accent px-2 py-0.5 text-xs font-medium text-sidebar-foreground">
+          Offline demo
+        </p>
+      )}
       <p className="flex items-center gap-2 text-sidebar-foreground">
         <span
           aria-hidden="true"
@@ -53,7 +58,11 @@ export function StatusLine() {
               : "size-2 rounded-full bg-late-on-dark"
           }
         />
-        {connected ? "PayPal sandbox connected" : "PayPal sandbox not connected"}
+        {health.offline
+          ? "Simulated PayPal sandbox"
+          : connected
+            ? "PayPal sandbox connected"
+            : "PayPal sandbox not connected"}
       </p>
       {problems
         .filter((problem) => connected || !problem.startsWith("PayPal"))

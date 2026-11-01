@@ -1,0 +1,22 @@
+{
+  "summary": "Plain USD job with a quantity and a unit price, no payment terms",
+  "client": "Cobalt Bakery",
+  "currency": "USD",
+  "items": [
+    {
+      "nameIncludes": "logo",
+      "quantity": 3,
+      "unitAmount": "150.00"
+    },
+    {
+      "nameIncludes": "colour",
+      "quantity": 1,
+      "unitAmount": "90.00"
+    }
+  ],
+  "due": {
+    "rule": "none"
+  },
+  "warnings": ["no_payment_terms"],
+  "contacts": ["maya@cobaltbakery-example.com"]
+}

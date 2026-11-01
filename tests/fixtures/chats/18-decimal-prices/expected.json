@@ -1,0 +1,22 @@
+{
+  "summary": "Prices with cents",
+  "client": "Quill Stationery",
+  "currency": "USD",
+  "items": [
+    {
+      "nameIncludes": "pack",
+      "quantity": 3,
+      "unitAmount": "49.99"
+    },
+    {
+      "nameIncludes": "setup",
+      "quantity": 1,
+      "unitAmount": "12.50"
+    }
+  ],
+  "due": {
+    "rule": "none"
+  },
+  "warnings": ["no_payment_terms"],
+  "contacts": ["beth@quill-example.com"]
+}

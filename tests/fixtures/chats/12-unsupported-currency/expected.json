@@ -1,0 +1,17 @@
+{
+  "summary": "Swiss francs are not a currency Dueline invoices in",
+  "client": "Alpenblick AG",
+  "currency": null,
+  "items": [
+    {
+      "nameIncludes": "icon",
+      "quantity": 1,
+      "unitAmount": "900.00"
+    }
+  ],
+  "due": {
+    "rule": "none"
+  },
+  "warnings": ["currency_not_found", "no_payment_terms"],
+  "contacts": ["reto@alpenblick-example.com"]
+}

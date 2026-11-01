@@ -37,6 +37,18 @@ describe("paypalFetch", () => {
     expect(spy.mock.calls[1][1]?.body).toBe('{"a":1}');
   });
 
+  it.each([undefined, "false"])(
+    "calls PayPal itself, never the offline stand-in, when DUELINE_OFFLINE is %s",
+    async (flag) => {
+      stubEnv(flag ? { DUELINE_OFFLINE: flag } : {});
+      const spy = mockPayPal(() => jsonResponse({ id: "INV2-1" }));
+
+      expect(await paypalFetch<{ id: string }>(PATH)).toEqual({ id: "INV2-1" });
+      expect(callsTo(spy, TOKEN_PATH)).toBe(1);
+      expect(callsTo(spy, PATH)).toBe(1);
+    },
+  );
+
   it("sends PayPal-Request-Id only when a request id is given", async () => {
     const spy = mockPayPal(() => jsonResponse({}));
     await paypalFetch(PATH, { method: "POST", requestId: "req-1" });

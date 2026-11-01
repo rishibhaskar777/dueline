@@ -1,0 +1,18 @@
+{
+  "summary": "Hinglish with net 7 terms",
+  "client": "Brook & Co",
+  "currency": "GBP",
+  "items": [
+    {
+      "nameIncludes": "page",
+      "quantity": 4,
+      "unitAmount": "180.00"
+    }
+  ],
+  "due": {
+    "rule": "net",
+    "days": 7
+  },
+  "warnings": [],
+  "contacts": ["emily@brookco-example.com"]
+}

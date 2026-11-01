@@ -2,6 +2,8 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
+import { OFFLINE_RATES_LABEL } from "@/components/shared/rate-source";
+import { useOffline } from "@/components/shared/use-offline";
 import { PayoutCalculator } from "@/components/settings/PayoutCalculator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -185,6 +187,7 @@ export function SettingsForm() {
   const [pending, setPending] = useState(false);
   const [saveError, setSaveError] = useState<SaveError | null>(null);
   const [savedCount, setSavedCount] = useState(0);
+  const offline = useOffline();
 
   useEffect(() => {
     let current = true;
@@ -305,9 +308,11 @@ export function SettingsForm() {
           manual={manual}
           invalidField={invalidField}
           caption={
-            manual
-              ? `Your own rates, last changed ${formatDate(settings.ratesUpdatedOn)}`
-              : `ECB rates of ${formatDate(settings.ratesUpdatedOn)}`
+            offline
+              ? `${OFFLINE_RATES_LABEL}, last changed ${formatDate(settings.ratesUpdatedOn)}`
+              : manual
+                ? `Your own rates, last changed ${formatDate(settings.ratesUpdatedOn)}`
+                : `ECB rates of ${formatDate(settings.ratesUpdatedOn)}`
           }
         />
 
