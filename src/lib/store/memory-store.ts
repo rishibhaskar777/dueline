@@ -8,7 +8,14 @@ import type {
   RepeatSchedule,
   Settings,
 } from "@/types";
-import type { ClaimResult, Json, ReminderLogEntry, Store, StoredRates } from "./store";
+import type {
+  ClaimResult,
+  DemoGeneration,
+  Json,
+  ReminderLogEntry,
+  Store,
+  StoredRates,
+} from "./store";
 
 interface IdempotencyRecord {
   bodyHash: string;
@@ -32,6 +39,9 @@ export function createMemoryStore(): Store {
   const queue = new Map<string, QueueItem>();
   const repeats = new Map<string, RepeatSchedule>();
   const library = new Map<string, LibraryItem>();
+  let generation: DemoGeneration | null = null;
+  const hidden = new Set<string>();
+  const bankReferences = new Map<string, string>();
 
   return {
     async claim(requestId, bodyHash): Promise<ClaimResult> {
@@ -70,7 +80,7 @@ export function createMemoryStore(): Store {
     },
 
     async addActivity(event): Promise<void> {
-      activity.set(event.id, event);
+      if (!activity.has(event.id)) activity.set(event.id, event);
     },
 
     async latestActivity(limit): Promise<ActivityEvent[]> {
@@ -86,7 +96,9 @@ export function createMemoryStore(): Store {
     },
 
     async countRemindersSince(since): Promise<number> {
-      return reminders.filter((entry) => Date.parse(entry.sentAt) >= Date.parse(since)).length;
+      return reminders.filter(
+        (entry) => entry.channel === "paypal" && Date.parse(entry.sentAt) >= Date.parse(since),
+      ).length;
     },
 
     async getSettings(): Promise<Settings | null> {
@@ -162,6 +174,32 @@ export function createMemoryStore(): Store {
 
     async deleteLibraryItem(id): Promise<boolean> {
       return library.delete(id);
+    },
+
+    async getDemoGeneration(): Promise<DemoGeneration | null> {
+      return generation;
+    },
+
+    async saveDemoGeneration(next): Promise<void> {
+      generation = next;
+    },
+
+    async listHiddenInvoices(): Promise<string[]> {
+      return [...hidden];
+    },
+
+    async setInvoiceHidden(invoiceId, isHidden): Promise<void> {
+      if (isHidden) hidden.add(invoiceId);
+      else hidden.delete(invoiceId);
+    },
+
+    async listBankReferences(): Promise<Record<string, string>> {
+      return Object.fromEntries(bankReferences);
+    },
+
+    async saveBankReference(invoiceId, reference): Promise<void> {
+      if (reference === null) bankReferences.delete(invoiceId);
+      else bankReferences.set(invoiceId, reference);
     },
 
     async hitRateLimit(key, windowSeconds): Promise<number> {

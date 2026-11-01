@@ -157,10 +157,16 @@ describe("activity and reminders", () => {
       invoiceId: "INV2-1",
       tone: "gentle",
       sentAt: "2026-10-10T00:00:00Z",
+      channel: "paypal",
     });
-    await store.logReminder({ invoiceId: "INV2-2", tone: "firm", sentAt: "2026-10-11T00:00:00Z" });
+    await store.logReminder({
+      invoiceId: "INV2-2",
+      tone: "firm",
+      sentAt: "2026-10-11T00:00:00Z",
+      channel: "paypal",
+    });
     expect(await store.reminderHistory("INV2-1")).toEqual([
-      { invoiceId: "INV2-1", tone: "gentle", sentAt: "2026-10-10T00:00:00Z" },
+      { invoiceId: "INV2-1", tone: "gentle", sentAt: "2026-10-10T00:00:00Z", channel: "paypal" },
     ]);
   });
 });

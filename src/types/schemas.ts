@@ -1,7 +1,8 @@
 import { z } from "zod";
+import { isCountryCode } from "@/lib/countries";
 import { isFinancialYear } from "@/lib/date-math";
 import { isPurposeCode } from "@/lib/export/purpose-codes";
-import { hasLinkOrAddress, REMINDER_LIMITS } from "@/lib/reminders/check-reminder";
+import { hasLinkOrAddress } from "@/lib/reminders/check-reminder";
 
 export const currencySchema = z.enum(["USD", "EUR", "GBP", "CAD", "AUD"]);
 
@@ -17,7 +18,7 @@ export const moneySchema = z.object({ currency: currencySchema, value: amountStr
 export const clientSchema = z.object({
   name: z.string().min(1).max(200),
   email: z.email(),
-  location: z.string().max(200).optional(),
+  country: z.string().refine(isCountryCode, "must be a supported country code").optional(),
 });
 
 export const sacSchema = z.string().regex(/^99[0-9]{4}$/, "must be 6 digits starting with 99");
@@ -96,11 +97,14 @@ export const draftReminderRequestSchema = z.object({
   language: reminderLanguageSchema.optional(),
 });
 
+export const reminderChannelSchema = z.enum(["paypal", "email"]);
+
+// "paypal" asks PayPal to email its own reminder. "email" only records that the freelancer sent their
+// drafted message from their own email; the words never come to the server.
 export const sendReminderRequestSchema = z.object({
   invoiceId: z.string().min(1),
-  subject: z.string().min(REMINDER_LIMITS.subject.min).max(REMINDER_LIMITS.subject.max),
-  message: z.string().min(REMINDER_LIMITS.message.min).max(REMINDER_LIMITS.message.max),
   tone: toneSchema,
+  channel: reminderChannelSchema,
   requestId: requestIdSchema,
 });
 
@@ -270,4 +274,19 @@ export const dailyDigestSchema = z.object({
   dueSoon: z.array(digestInvoiceSchema),
   preparedDrafts: z.number().int().min(0),
   rateAlerts: z.array(triggeredRateAlertSchema),
+});
+
+export const hiddenInvoiceRequestSchema = z.object({
+  invoiceId: invoiceIdSchema,
+  hidden: z.boolean(),
+});
+
+// The bank's FIRC or e-BRC number. An empty string clears it.
+export const bankReferenceRequestSchema = z.object({
+  invoiceId: invoiceIdSchema,
+  reference: z
+    .string()
+    .trim()
+    .max(40)
+    .regex(/^[A-Za-z0-9/-]*$/, "must be letters, digits, / and - only"),
 });
