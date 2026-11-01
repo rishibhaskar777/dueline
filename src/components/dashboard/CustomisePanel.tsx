@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { ToggleSwitch } from "@/components/shared/ToggleSwitch";
 import {
   moveWidget,
   setWidgetVisible,
@@ -24,38 +24,6 @@ interface CustomisePanelProps {
   layout: Layout;
   onChange: (layout: Layout) => void;
   onReset: () => void;
-}
-
-function VisibilitySwitch({
-  title,
-  visible,
-  onChange,
-}: {
-  title: string;
-  visible: boolean;
-  onChange: (visible: boolean) => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={visible}
-      aria-label={`Show ${title}`}
-      onClick={() => onChange(!visible)}
-      className={cn(
-        "relative h-6 w-11 shrink-0 rounded-full border transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-        visible ? "border-blue bg-blue" : "border-line bg-ground",
-      )}
-    >
-      <span
-        aria-hidden="true"
-        className={cn(
-          "absolute top-0.5 left-0.5 size-4.5 rounded-full bg-white shadow transition-transform motion-reduce:transition-none",
-          visible && "translate-x-5",
-        )}
-      />
-    </button>
-  );
 }
 
 export function CustomisePanel({
@@ -100,9 +68,9 @@ export function CustomisePanel({
               >
                 <ArrowDown aria-hidden="true" />
               </Button>
-              <VisibilitySwitch
-                title={widgetTitle(id)}
-                visible={visible}
+              <ToggleSwitch
+                label={`Show ${widgetTitle(id)}`}
+                checked={visible}
                 onChange={(next) => onChange(setWidgetVisible(layout, id, next))}
               />
             </li>

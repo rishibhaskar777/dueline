@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { NewInvoice } from "@/components/invoices/NewInvoice";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { clientSchema } from "@/types";
+import { clientSchema, repeatIdSchema } from "@/types";
 
 export const metadata: Metadata = { title: "New invoice" };
 
@@ -18,11 +18,13 @@ async function Form({ searchParams }: Pick<PageProps<"/invoices/new">, "searchPa
   const query = await searchParams;
   const name = nameSchema.safeParse(single(query.client)?.trim());
   const duplicate = single(query.duplicate)?.trim();
+  const repeat = repeatIdSchema.safeParse(single(query.repeat)?.trim());
   return (
     <NewInvoice
       prefill={{
         clientName: name.success ? name.data : null,
         duplicateId: duplicate && duplicate.length <= 100 ? duplicate : null,
+        repeatId: repeat.success ? repeat.data : null,
       }}
     />
   );

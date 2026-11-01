@@ -12,10 +12,7 @@ export function ActivityFeed({ events, today, freshEvents }: ActivityFeedProps) 
   const fresh = new Set(freshEvents.map((event) => event.id));
 
   return (
-    <section
-      aria-labelledby="activity-title"
-      className="rounded-xl border border-line bg-white p-6"
-    >
+    <section aria-labelledby="activity-title" className="rounded-xl border border-line bg-card p-6">
       <h2 id="activity-title" className="text-xl font-semibold">
         Activity
       </h2>

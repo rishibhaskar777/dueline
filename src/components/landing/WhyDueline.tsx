@@ -33,7 +33,7 @@ export function WhyDueline() {
         </h2>
         <ul className="mt-8 grid gap-6 md:grid-cols-3">
           {FEATURES.map(({ icon: Icon, title, text }) => (
-            <li key={title} className="rounded-xl border border-line bg-white p-6">
+            <li key={title} className="rounded-xl border border-line bg-card p-6">
               <Icon aria-hidden="true" className="size-6 text-blue" />
               <h3 className="mt-4 text-xl font-semibold">{title}</h3>
               <p className="mt-2 text-muted-foreground">{text}</p>

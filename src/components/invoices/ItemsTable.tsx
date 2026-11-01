@@ -8,11 +8,15 @@ import {
   type FieldErrors,
   type FormItem,
 } from "@/components/invoices/invoice-form";
+import { AddFromLibrary } from "@/components/library/AddFromLibrary";
+import { isBlankItem } from "@/components/library/library-input";
+import { SaveToLibraryButton } from "@/components/library/SaveToLibraryButton";
+import { useLibrary } from "@/components/library/use-library";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatMoney } from "@/lib/money/format";
-import type { CurrencyCode } from "@/types";
+import type { CurrencyCode, LibraryItem } from "@/types";
 
 interface RowInputProps {
   id: string;
@@ -53,8 +57,19 @@ interface ItemsTableProps {
 }
 
 export function ItemsTable({ items, currency, errors, defaultSac, onChange }: ItemsTableProps) {
+  const library = useLibrary();
   const update = (key: string, changes: Partial<FormItem>) =>
     onChange(items.map((item) => (item.key === key ? { ...item, ...changes } : item)));
+
+  function addFromLibrary(saved: LibraryItem): void {
+    const row: FormItem = {
+      ...newItem(saved.sac ?? defaultSac),
+      name: saved.name,
+      unitAmount: saved.unitAmount,
+    };
+    // A lone empty row is the starting point of a new invoice, so the item takes its place.
+    onChange(items.length === 1 && isBlankItem(items[0]) ? [row] : [...items, row]);
+  }
 
   return (
     <div>
@@ -78,8 +93,8 @@ export function ItemsTable({ items, currency, errors, defaultSac, onChange }: It
               <th scope="col" className="w-32 py-2 pr-3 text-right font-medium">
                 Line total
               </th>
-              <th scope="col" className="w-10 py-2">
-                <span className="sr-only">Remove</span>
+              <th scope="col" className="w-24 py-2">
+                <span className="sr-only">Actions</span>
               </th>
             </tr>
           </thead>
@@ -137,6 +152,12 @@ export function ItemsTable({ items, currency, errors, defaultSac, onChange }: It
                     {total ? formatMoney(total) : "—"}
                   </td>
                   <td className="py-2">
+                    <SaveToLibraryButton
+                      item={item}
+                      currency={currency}
+                      label={label.toLowerCase()}
+                      onSaved={library.reload}
+                    />
                     <Button
                       type="button"
                       variant="ghost"
@@ -155,15 +176,17 @@ export function ItemsTable({ items, currency, errors, defaultSac, onChange }: It
         </table>
       </div>
       <FieldError id="items-error" message={errors.items} />
-      <Button
-        type="button"
-        variant="outline"
-        className="mt-3"
-        onClick={() => onChange([...items, newItem(defaultSac)])}
-      >
-        <Plus aria-hidden data-icon="inline-start" />
-        Add item
-      </Button>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => onChange([...items, newItem(defaultSac)])}
+        >
+          <Plus aria-hidden data-icon="inline-start" />
+          Add item
+        </Button>
+        <AddFromLibrary items={library.items} currency={currency} onPick={addFromLibrary} />
+      </div>
     </div>
   );
 }

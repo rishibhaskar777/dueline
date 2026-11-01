@@ -42,7 +42,7 @@ export function ClientNotes({ clientKey, initial }: ClientNotesProps) {
     <form
       onSubmit={onSubmit}
       aria-labelledby="notes-title"
-      className="rounded-xl border border-line bg-white p-6"
+      className="rounded-xl border border-line bg-card p-6"
     >
       <h2 id="notes-title" className="text-xl font-semibold">
         Notes

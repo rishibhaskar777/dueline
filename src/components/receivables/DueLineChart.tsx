@@ -48,10 +48,7 @@ export function DueLineChart({ invoices, today, onOpen }: DueLineChartProps) {
   }
 
   return (
-    <section
-      aria-labelledby="due-line-title"
-      className="rounded-xl border border-line bg-white p-6"
-    >
+    <section aria-labelledby="due-line-title" className="rounded-xl border border-line bg-card p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="due-line-title" className="text-xl font-semibold">
           The due line
@@ -93,7 +90,7 @@ export function DueLineChart({ invoices, today, onOpen }: DueLineChartProps) {
                 x={`${layout.today * 100}%`}
                 y={11}
                 textAnchor="middle"
-                className="fill-navy text-xs font-semibold"
+                className="fill-foreground text-xs font-semibold"
               >
                 Today
               </text>

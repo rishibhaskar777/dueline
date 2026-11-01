@@ -20,7 +20,7 @@ import { WarningsPanel } from "@/components/invoices/WarningsPanel";
 import { Button } from "@/components/ui/button";
 import type { ClientRisk, Profile } from "@/types";
 
-const SECTION = "rounded-xl border border-line bg-white p-6";
+const SECTION = "rounded-xl border border-line bg-card p-6";
 
 interface ReviewStepProps {
   initial: {

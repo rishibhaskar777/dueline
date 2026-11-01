@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { ApiClientError, getSettings, saveSettings } from "@/lib/api-client";
 import { formatDate } from "@/lib/format-date";
+import { automationOf } from "./automation-form";
 import { currencySchema, type CurrencyCode, type Settings } from "@/types";
 
 const CURRENCIES = currencySchema.options;
@@ -47,7 +48,7 @@ function isNumber(text: string): boolean {
   return text.trim() !== "" && !Number.isNaN(Number(text));
 }
 
-function toSettings(form: FormValues, ratesUpdatedOn: string): Settings | null {
+function toSettings(form: FormValues, current: Settings): Settings | null {
   const numeric = [form.feePercent, form.fxMarkupPercent, ...Object.values(form.marketRates)];
   if (!numeric.every(isNumber)) return null;
 
@@ -59,7 +60,8 @@ function toSettings(form: FormValues, ratesUpdatedOn: string): Settings | null {
     marketRates: Object.fromEntries(
       CURRENCIES.map((code) => [code, Number(form.marketRates[code])]),
     ) as Record<CurrencyCode, number>,
-    ratesUpdatedOn,
+    ratesUpdatedOn: current.ratesUpdatedOn,
+    ...automationOf(current),
   };
 }
 
@@ -206,7 +208,7 @@ export function SettingsForm() {
 
   if (loadError) {
     return (
-      <div role="alert" className="max-w-xl rounded-xl border border-line bg-white p-6">
+      <div role="alert" className="max-w-xl rounded-xl border border-line bg-card p-6">
         <p className="text-late">{loadError}</p>
         <Button variant="outline" className="mt-4" onClick={() => setAttempt(attempt + 1)}>
           Try again
@@ -225,7 +227,7 @@ export function SettingsForm() {
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!form || !settings) return;
-    const next = toSettings(form, settings.ratesUpdatedOn);
+    const next = toSettings(form, settings);
     if (!next) {
       setSaveError({ field: "", message: "Enter a number in every fee and rate field." });
       return;
@@ -234,7 +236,8 @@ export function SettingsForm() {
     setPending(true);
     setSaveError(null);
     try {
-      const saved = await saveSettings(next);
+      // The automation settings have their own form, so the latest ones are read before saving.
+      const saved = await saveSettings({ ...next, ...automationOf(await getSettings()) });
       setSettings(saved);
       setForm(toForm(saved));
       setSavedCount((count) => count + 1);
@@ -251,7 +254,7 @@ export function SettingsForm() {
       <form
         onSubmit={onSubmit}
         aria-labelledby="fees-title"
-        className="rounded-xl border border-line bg-white p-6"
+        className="rounded-xl border border-line bg-card p-6"
       >
         <h2 id="fees-title" className="text-xl font-semibold">
           PayPal fees and rates

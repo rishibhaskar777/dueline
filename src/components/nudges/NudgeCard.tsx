@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { LanguageNote } from "./LanguageNote";
 import { NudgeHeader } from "./NudgeHeader";
-import { sentMessage, sourceNote, toneReason } from "./nudge-model";
+import { sentMessage, toneReason } from "./nudge-model";
+import { DraftStatus } from "./DraftStatus";
 import { ReplaceEditsPrompt } from "./ReplaceEditsPrompt";
 import { ToneSwitch } from "./ToneSwitch";
 import type { Nudge } from "./use-nudges";
-import { useNudgeDraft } from "./use-nudge-draft";
+import { useNudgeDraft, type ImproveDraft } from "./use-nudge-draft";
 
 const ALREADY_SENT_TODAY =
   "A reminder was already sent for this invoice today. Dueline sends one a day.";
@@ -18,19 +20,26 @@ const ALREADY_SENT_TODAY =
 interface NudgeCardProps extends Nudge {
   // PayPal's daily reminder limit is used up, so drafting stays open but sending is not.
   limitReached: boolean;
+  improve: ImproveDraft;
   onSent: () => void;
 }
 
-export function NudgeCard({ draft: initial, invoice, limitReached, onSent }: NudgeCardProps) {
+export function NudgeCard({
+  draft: initial,
+  invoice,
+  limitReached,
+  improve,
+  onSent,
+}: NudgeCardProps) {
   const id = useId();
-  const nudge = useNudgeDraft(initial, onSent);
-  const { draft, drafting, sending, closed, sentAt } = nudge;
+  const nudge = useNudgeDraft(initial, improve, onSent);
+  const { draft, drafting, sending, closed, sentAt, pendingRedraft } = nudge;
   const locked = drafting || sending || closed;
 
   return (
     <li
       id={`invoice-${encodeURIComponent(invoice.id)}`}
-      className="scroll-mt-6 rounded-xl border border-line bg-white p-6"
+      className="scroll-mt-6 rounded-xl border border-line bg-card p-6"
     >
       <NudgeHeader invoice={invoice} history={nudge.history} />
 
@@ -44,9 +53,16 @@ export function NudgeCard({ draft: initial, invoice, limitReached, onSent }: Nud
         {toneReason(invoice, draft) && (
           <p className="text-sm text-muted-foreground">{toneReason(invoice, draft)}</p>
         )}
-        {nudge.pendingTone && !locked && (
+        <LanguageNote
+          clientLanguage={nudge.clientLanguage}
+          language={draft.language}
+          disabled={locked}
+          onChange={nudge.switchLanguage}
+        />
+        {pendingRedraft && !locked && (
           <ReplaceEditsPrompt
-            tone={nudge.pendingTone}
+            tone={pendingRedraft.tone}
+            language={pendingRedraft.language}
             onReplace={nudge.replaceEdits}
             onKeepEditing={nudge.keepEditing}
           />
@@ -57,7 +73,7 @@ export function NudgeCard({ draft: initial, invoice, limitReached, onSent }: Nud
           </p>
         )}
 
-        <div className="grid gap-1.5" aria-busy={drafting}>
+        <div className="grid gap-1.5" aria-busy={drafting || nudge.improving}>
           <Label htmlFor={`${id}-subject`}>Subject</Label>
           <Input
             id={`${id}-subject`}
@@ -75,9 +91,7 @@ export function NudgeCard({ draft: initial, invoice, limitReached, onSent }: Nud
             disabled={locked}
             onChange={(event) => nudge.setMessage(event.target.value)}
           />
-          <p role="status" className="text-xs text-muted-foreground">
-            {drafting ? "Writing a new draft…" : sourceNote(draft.source)}
-          </p>
+          <DraftStatus nudge={nudge} />
         </div>
 
         <div className="flex flex-wrap items-center gap-4">

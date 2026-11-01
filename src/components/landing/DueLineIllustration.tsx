@@ -72,7 +72,14 @@ function InvoiceLine({ row }: { row: Row }) {
         <line x1={dueX} x2={endX} y1={y} y2={y} strokeWidth={3} className={STROKE[tone]} />
       )}
       <circle cx={sentX} cy={y} r={4} className="fill-blue" />
-      <line x1={dueX} x2={dueX} y1={y - 7} y2={y + 7} strokeWidth={2} className="stroke-navy" />
+      <line
+        x1={dueX}
+        x2={dueX}
+        y1={y - 7}
+        y2={y + 7}
+        strokeWidth={2}
+        className="stroke-foreground"
+      />
       <circle cx={endX} cy={y} r={5} className={FILL[tone]} />
     </g>
   );
@@ -80,7 +87,7 @@ function InvoiceLine({ row }: { row: Row }) {
 
 export function DueLineIllustration() {
   return (
-    <figure className="rounded-2xl bg-white p-5 text-foreground shadow-lg">
+    <figure className="rounded-2xl bg-card p-5 text-foreground shadow-lg">
       <svg viewBox="0 0 360 184" aria-hidden="true" className="w-full">
         <line
           x1={TODAY_X}

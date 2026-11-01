@@ -7,6 +7,7 @@ import {
   type InvoiceDraft,
   type Money,
   type Profile,
+  type RepeatSchedule,
 } from "@/types";
 
 const DEFAULT_DISCOUNT_PERCENT = "2";
@@ -262,5 +263,25 @@ export function formFromInvoice(
     })),
     purposeCode: invoice.purposeCode,
     includeLutNote: details.underLut,
+  };
+}
+
+// A draft prepared by a monthly repeat has the same client and items as the invoice it came from.
+// The due date and the note are chosen again, like for a copy.
+export function formFromRepeat(repeat: RepeatSchedule, defaultSac = ""): InvoiceForm {
+  return {
+    ...blankForm(defaultSac),
+    clientName: repeat.clientName,
+    clientEmail: repeat.clientEmail,
+    currency: repeat.currency,
+    items: repeat.items.map((item) => ({
+      key: crypto.randomUUID(),
+      name: item.name,
+      quantity: String(item.quantity),
+      unitAmount: item.unitAmount,
+      sac: item.sac ?? defaultSac,
+    })),
+    purposeCode: repeat.purposeCode,
+    includeLutNote: repeat.includeLutNote,
   };
 }

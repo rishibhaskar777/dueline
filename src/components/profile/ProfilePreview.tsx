@@ -12,7 +12,7 @@ export function ProfilePreview({ form }: { form: ProfileFormValues }) {
   const website = form.website.trim();
 
   return (
-    <section aria-labelledby="preview-title" className="rounded-xl border border-line bg-white p-6">
+    <section aria-labelledby="preview-title" className="rounded-xl border border-line bg-card p-6">
       <h2 id="preview-title" className="text-xl font-semibold">
         How your invoice header will look
       </h2>

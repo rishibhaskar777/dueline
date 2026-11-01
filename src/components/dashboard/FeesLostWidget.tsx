@@ -6,7 +6,7 @@ import type { DashboardState } from "./use-dashboard";
 function Figures({ fees }: { fees: FeesLost }) {
   return (
     <>
-      <p className="font-heading text-4xl font-semibold text-navy tabular-nums">
+      <p className="font-heading text-4xl font-semibold text-foreground tabular-nums">
         {formatRupees(fees.lostInr)}
       </p>
       <p className="mt-1 text-sm text-muted-foreground">

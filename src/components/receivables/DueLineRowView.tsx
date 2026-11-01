@@ -3,7 +3,8 @@ import { formatMoney } from "@/lib/money/format";
 import type { DueLineRow, SegmentTone } from "./due-line-layout";
 
 const ROW_HEIGHT = 44;
-export const ROW_COLUMNS = "grid grid-cols-[11rem_minmax(28rem,1fr)_6.5rem] items-center";
+export const ROW_COLUMNS =
+  "grid grid-cols-[11rem_minmax(28rem,1fr)_6.5rem] items-center max-md:grid-cols-[7.5rem_minmax(28rem,1fr)_6.5rem]";
 const LINE_Y = ROW_HEIGHT / 2;
 // Room the status text leaves after the end dot (radius and stroke) or the due tick, plus 6 px.
 const AFTER_END_DOT_PX = 12;
@@ -69,7 +70,7 @@ export function DueLineRowView({
       className={`${ROW_COLUMNS} cursor-pointer rounded-md outline-none hover:bg-ground focus-visible:ring-2 focus-visible:ring-ring`}
       style={{ height: ROW_HEIGHT }}
     >
-      <div className="min-w-0 pr-3">
+      <div className="min-w-0 pr-3 max-md:sticky max-md:left-0 max-md:z-10 max-md:bg-card">
         <p className="truncate text-sm font-medium">{invoice.client.name}</p>
         <p className="truncate text-sm text-muted-foreground tabular-nums">
           {row.sharesClientName && `${invoice.number} · `}
@@ -98,7 +99,7 @@ export function DueLineRowView({
           y1={0}
           y2={ROW_HEIGHT}
           strokeDasharray="3 3"
-          className="stroke-navy"
+          className="stroke-foreground"
         />
         {row.segments.map((segment) => (
           <line
@@ -118,14 +119,14 @@ export function DueLineRowView({
           y1={LINE_Y - 9}
           y2={LINE_Y + 9}
           strokeWidth={2}
-          className="stroke-navy"
+          className="stroke-foreground"
         />
         <circle
           cx={percent(row.end)}
           cy={LINE_Y}
           r={5}
           strokeWidth={2}
-          className={`${row.endMark === "filled" ? FILLS[row.endTone] : "fill-white"} ${STROKES[row.endTone]}`}
+          className={`${row.endMark === "filled" ? FILLS[row.endTone] : "fill-card"} ${STROKES[row.endTone]}`}
         />
         <text
           x={percent(row.statusAt)}

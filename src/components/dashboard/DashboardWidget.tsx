@@ -41,7 +41,7 @@ export function DashboardWidget(props: DashboardWidgetProps) {
     <section
       aria-labelledby={titleId}
       aria-busy={props.state.kind === "loading"}
-      className="rounded-xl border border-line bg-white p-6"
+      className="rounded-xl border border-line bg-card p-6"
     >
       <h2 id={titleId} className="text-xl font-semibold">
         {props.title}

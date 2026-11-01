@@ -9,7 +9,7 @@ interface LoadFailureProps {
 
 export function LoadFailure({ title, error, onRetry }: LoadFailureProps) {
   return (
-    <div role="alert" className="max-w-xl rounded-xl border border-line bg-white p-6">
+    <div role="alert" className="max-w-xl rounded-xl border border-line bg-card p-6">
       <h2 className="text-xl font-semibold">{title}</h2>
       <p className="mt-2 text-sm">{error.message}</p>
       {error.debugId && (

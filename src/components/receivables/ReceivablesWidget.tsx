@@ -2,6 +2,7 @@ import type { WidgetId } from "@/components/dashboard/dashboard-layout";
 import { FeesLostWidget } from "@/components/dashboard/FeesLostWidget";
 import { ForecastWidget } from "@/components/dashboard/ForecastWidget";
 import { LateClientsWidget } from "@/components/dashboard/LateClientsWidget";
+import { MorningWidget } from "@/components/dashboard/MorningWidget";
 import { RatesWidget } from "@/components/dashboard/RatesWidget";
 import { UpcomingDueWidget } from "@/components/dashboard/UpcomingDueWidget";
 import type { useDashboard } from "@/components/dashboard/use-dashboard";
@@ -31,6 +32,8 @@ export function ReceivablesWidget({
   const { state, retry } = dashboard;
 
   switch (id) {
+    case "morning":
+      return <MorningWidget />;
     case "totals":
       return <TotalsStrip totals={totals} />;
     case "forecast":

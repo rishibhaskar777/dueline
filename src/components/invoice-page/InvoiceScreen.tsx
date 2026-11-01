@@ -14,7 +14,7 @@ import { getInvoiceDetail } from "@/lib/api-client";
 
 function NotFound() {
   return (
-    <div className="max-w-xl rounded-xl border border-line bg-white p-6">
+    <div className="max-w-xl rounded-xl border border-line bg-card p-6">
       <h1 className="text-xl font-semibold">We couldn&apos;t find that invoice</h1>
       <p className="mt-2 text-sm">
         <Link href="/receivables" className="text-blue underline underline-offset-2">

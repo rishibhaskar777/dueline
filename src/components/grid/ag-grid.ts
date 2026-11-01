@@ -2,20 +2,21 @@ import { AllCommunityModule, ModuleRegistry, themeQuartz } from "ag-grid-communi
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+// The colours are the page's own tokens, so the grid follows the light and dark themes.
 export const gridTheme = themeQuartz.withParams({
   fontFamily: "var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif",
   fontSize: 14,
-  foregroundColor: "#0D1B2E",
-  backgroundColor: "#FFFFFF",
-  borderColor: "#DCE1E8",
-  accentColor: "#1F47C7",
-  headerBackgroundColor: "#F3F5F8",
-  headerTextColor: "#4F5B6E",
+  foregroundColor: "var(--foreground)",
+  backgroundColor: "var(--card)",
+  borderColor: "var(--line)",
+  accentColor: "var(--primary)",
+  headerBackgroundColor: "var(--ground)",
+  headerTextColor: "var(--muted-foreground)",
   headerFontWeight: 600,
-  rowHoverColor: "#F3F5F8",
+  rowHoverColor: "var(--ground)",
   headerHeight: 44,
   rowHeight: 52,
   wrapperBorderRadius: 0,
   wrapperBorder: false,
-  oddRowBackgroundColor: "#FFFFFF",
+  oddRowBackgroundColor: "var(--card)",
 });
