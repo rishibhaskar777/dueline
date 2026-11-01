@@ -95,6 +95,23 @@ describe("POST /api/demo/reset", () => {
     expect(paypal.clearInvoiceCaches).toHaveBeenCalledTimes(1);
   });
 
+  it("clears the queued reminders of the old story, and keeps the retainers", async () => {
+    const item = (id: string, kind: "reminder" | "repeat") => ({
+      id,
+      kind,
+      title: id,
+      detail: "",
+      invoiceId: kind === "reminder" ? "INV2-OLD" : null,
+      repeatId: kind === "repeat" ? "r1" : null,
+    });
+    await store.addQueueItem(item("reminder.INV2-OLD", "reminder"));
+    await store.addQueueItem(item("repeat.r1.2026-11-05", "repeat"));
+
+    await reset();
+
+    expect((await store.listQueue()).map(({ id }) => id)).toEqual(["repeat.r1.2026-11-05"]);
+  });
+
   it("keeps an invoice, sent or draft, that was created in the last 30 minutes", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-10-31T10:00:00Z"));
@@ -241,6 +258,22 @@ describe("reseedStaleDemo", () => {
     expect(
       [...fake.invoices.values()].filter((i) => i.detail.memo?.includes("dueline-demo:5:")),
     ).toHaveLength(STORY_SIZE);
+  });
+
+  it("clears the queued reminders when it starts a new generation", async () => {
+    await ageGenerationTo("2026-10-24");
+    await store.addQueueItem({
+      id: "reminder.INV2-OLD",
+      kind: "reminder",
+      title: "Remind Brightwell Labs about 0014",
+      detail: "",
+      invoiceId: "INV2-OLD",
+      repeatId: null,
+    });
+
+    await reseedStaleDemo();
+
+    expect(await store.listQueue()).toEqual([]);
   });
 
   it("is skipped and logged when the reset limit was hit", async () => {

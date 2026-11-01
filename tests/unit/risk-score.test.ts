@@ -79,6 +79,19 @@ describe("scoreClient", () => {
     });
   });
 
+  it("writes the average in whole days and keeps the exact value in the data", () => {
+    const score = scoreClient(
+      [
+        paidInvoice("2026-08-01", "2026-08-13"),
+        paidInvoice("2026-09-01", "2026-09-13"),
+        paidInvoice("2026-09-20", "2026-10-01"),
+      ],
+      TODAY,
+    );
+    expect(score.averageDaysLate).toBe(11.7);
+    expect(score.reason).toBe("Okafor & Reyes paid 3 of 3 invoices late, 12 days on average.");
+  });
+
   it("keeps two small delays on watch", () => {
     const score = scoreClient(
       [paidInvoice("2026-09-01", "2026-09-04"), paidInvoice("2026-10-01", "2026-10-04")],

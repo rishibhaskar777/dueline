@@ -9,7 +9,7 @@ import { runClaimed } from "@/lib/requests/run-claimed";
 import { getSettings } from "@/lib/settings";
 import { getStore } from "@/lib/store";
 import type { DailyRunResponse, InvoiceSummary, QueueItem, ReminderDraft } from "@/types";
-import { computeDigest, getDailyDigest, storeDigest } from "./daily-digest";
+import { getDailyDigest } from "./daily-digest";
 import { queueDay } from "./queue";
 import { reminderQueueItem } from "./queue-items";
 import { prepareDueRepeats } from "./repeats";
@@ -64,7 +64,6 @@ async function prepare(): Promise<void> {
   const reminders = (await getSettings()).prepareReminders ? await prepareReminders(day) : [];
   await getStore().replaceQueueItems("reminder", reminders);
   await prepareDueRepeats(today());
-  await storeDigest(await computeDigest());
 }
 
 // Once per India day, however many times it is asked for: a second call, a retry by the cron

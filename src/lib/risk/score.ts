@@ -1,4 +1,5 @@
 import { daysBetween } from "@/lib/date-math";
+import { formatDays } from "@/lib/format-days";
 import type { ClientRisk, InvoiceSummary, RiskLevel } from "@/types";
 
 type ClientScore = Omit<ClientRisk, "clientEmail" | "clientName">;
@@ -45,26 +46,22 @@ function levelOf(late: Reading[], averageDaysLate: number): RiskLevel {
   return "watch";
 }
 
-function days(count: number): string {
-  return `${count} ${count === 1 ? "day" : "days"}`;
-}
-
 function reasonOf(name: string, readings: Reading[], late: Reading[], average: number): string {
   if (readings.length === 0) return "No earlier invoices to this client.";
   if (late.length === 0) return `${name} has paid on time.`;
   if (late.every(({ daysLate }) => daysLate <= MINOR_LATE_DAYS)) {
-    return `${name} has never been more than ${days(MINOR_LATE_DAYS)} late.`;
+    return `${name} has never been more than ${formatDays(MINOR_LATE_DAYS)} late.`;
   }
 
   const overdue = late.filter(isOverdueNow);
   if (overdue.length === late.length) {
     return overdue.length === 1
-      ? `${name} has one invoice ${days(overdue[0].daysLate)} overdue.`
-      : `${name} has ${overdue.length} invoices overdue, ${days(average)} late on average.`;
+      ? `${name} has one invoice ${formatDays(overdue[0].daysLate)} overdue.`
+      : `${name} has ${overdue.length} invoices overdue, ${formatDays(average)} late on average.`;
   }
   const verb = overdue.length === 0 ? "paid" : "was late on";
   const noun = overdue.length === 0 ? "invoices late" : "invoices";
-  return `${name} ${verb} ${late.length} of ${readings.length} ${noun}, ${days(average)} on average.`;
+  return `${name} ${verb} ${late.length} of ${readings.length} ${noun}, ${formatDays(average)} on average.`;
 }
 
 // The invoices are one client's, so the name in the reason is the first invoice's.

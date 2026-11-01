@@ -711,13 +711,15 @@ day done and answers `ran: false`. A run that fails releases the claim and can b
    `remindAfterDays` days late and has not been reminded today (with `prepareReminders` off it
    clears them);
 3. turns each monthly repeat that has come due into a queue item (see "Monthly repeats");
-4. records the digest (see "Digest and rate alerts").
+4. answers with the digest (see "Digest and rate alerts"), which is worked out then and not stored.
 
 It never creates, sends or reminds anything in PayPal. The Today list on Nudges shows the queue.
 Items stay until the freelancer acts on them or dismisses them, not only for the day they were
 prepared. "Review and send" opens the Nudges card or New invoice. A reminder item is refreshed by each
 daily run, so an invoice that was paid or is no longer overdue drops out; "Dismiss for today" removes
-it and the next run brings it back if the invoice is still overdue. A retainer item stays until its
+it and the next run brings it back if the invoice is still overdue. A reminder item is also dropped
+and deleted whenever the queue is read and its invoice is not shown, is paid or is no longer overdue,
+and a demo reset or re-seed clears the reminder items. A retainer item stays until its
 draft is sent or dismissed, and "Dismiss" removes it for good because its schedule has already moved
 on.
 
@@ -742,8 +744,9 @@ replaced by the item. Profile lists the items and lets the freelancer rename or 
 
 - **Digest.** The "This morning" widget at the top of Receivables shows what has happened since
   yesterday: invoices paid yesterday or today, invoices overdue by 3 days or fewer, invoices due in the
-  next 3 days, the number of drafts prepared, and triggered rate alerts. It shows the digest the
-  morning run stored, or works the same figures out when the run has not happened. Like every
+  next 3 days, the number of drafts prepared, and triggered rate alerts. The figures are worked out
+  each time it is read, from the shown invoices and the queue, so a cancelled or paid invoice is
+  never listed. Like every
   widget it can be hidden and moved with Customise; the layout lives in the browser.
 - **Rate alerts.** Settings holds up to three alerts such as "USD above ₹96" or "EUR below ₹100". An
   alert is triggered while the rate in use (the ECB's, or the freelancer's own when set by hand) is
@@ -842,10 +845,10 @@ the same invoice and kind reuses.
   Clients, the late-payer radar, the forecast, fees lost, the export register, GSTR-1, the year
   summary, Activity, search, the digest and the reminder drafts) reads one rule, `isShownInDemo`.
   Shown: invoices of the current story generation; invoices created through Dueline (the
-  `dueline-request:` memo); and any invoice paid through PayPal that carries a Dueline marker,
-  whatever its generation, because a real payment is the strongest proof. Hidden: invoices with no
-  Dueline marker (made in PayPal's dashboard), older-generation story invoices that were not paid
-  through PayPal, cancelled invoices and invoices hidden with `POST /api/demo/hidden-invoices`.
+  `dueline-request:` memo); and any invoice paid through PayPal (status `PAID`), whatever its
+  marker or generation, because a real payment is the strongest proof. Hidden: unpaid invoices and
+  invoices recorded as paid outside PayPal that have no Dueline marker (made in PayPal's dashboard),
+  older-generation story invoices that were not paid through PayPal, cancelled invoices and invoices hidden with `POST /api/demo/hidden-invoices`.
   Outside demo mode nothing is hidden. The invoice page of a hidden invoice still opens.
 - **Daily re-seed.** The daily run starts a new generation when the current one is 7 or more days old
   (by `today()`), so the story does not age out. It only cancels the open story invoices of older

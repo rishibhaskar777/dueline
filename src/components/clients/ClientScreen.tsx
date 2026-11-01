@@ -12,6 +12,7 @@ import { useToday } from "@/components/shared/use-today";
 import { buttonVariants } from "@/components/ui/button";
 import { getClientDetail } from "@/lib/api-client";
 import { countryName } from "@/lib/countries";
+import { formatDays, wholeDays } from "@/lib/format-days";
 import { formatRupees } from "@/lib/money/format";
 import { ClientNotes } from "./ClientNotes";
 import { ClientRepeats } from "./ClientRepeats";
@@ -65,7 +66,7 @@ export function ClientScreen({ clientKey }: { clientKey: string }) {
               client.email,
               countryName(client.country),
               client.paySpeed &&
-                `pays in ${client.paySpeed.averageDays} days on average, ${client.paySpeed.onTimePercent}% on time`,
+                `pays in ${formatDays(client.paySpeed.averageDays)} on average, ${client.paySpeed.onTimePercent}% on time`,
             ]
               .filter(Boolean)
               .join(" · ")}
@@ -91,7 +92,7 @@ export function ClientScreen({ clientKey }: { clientKey: string }) {
         />
         <StatTile
           label="Average days late"
-          value={client.averageDaysLate > 0 ? String(client.averageDaysLate) : "–"}
+          value={client.averageDaysLate > 0 ? String(wholeDays(client.averageDaysLate)) : "–"}
           note="On invoices paid late or overdue"
         />
       </dl>

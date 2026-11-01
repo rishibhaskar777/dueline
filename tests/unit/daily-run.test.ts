@@ -115,12 +115,12 @@ describe("the daily preparation", () => {
 
   it("does the work once a day, however often it is asked", async () => {
     await runDailyPreparation();
-    const loads = paypal.loadInvoices.mock.calls.length;
+    const preparations = paypal.clearInvoiceCaches.mock.calls.length;
 
     const again = await runDailyPreparation();
     expect(again.ran).toBe(false);
     expect(await listQueue()).toHaveLength(2);
-    expect(paypal.loadInvoices).toHaveBeenCalledTimes(loads);
+    expect(paypal.clearInvoiceCaches).toHaveBeenCalledTimes(preparations);
   });
 
   it("hides a dismissed reminder until the next run", async () => {
@@ -154,6 +154,37 @@ describe("the daily preparation", () => {
     await runDailyPreparation();
 
     expect((await listQueue()).map(({ invoiceId }) => invoiceId)).toEqual([brightwell.id]);
+  });
+
+  it("drops and deletes a queued reminder whose invoice was cancelled", async () => {
+    await runDailyPreparation();
+    serve({ ...okafor, paypalStatus: "CANCELLED" }, brightwell);
+
+    expect((await listQueue()).map(({ invoiceId }) => invoiceId)).toEqual([brightwell.id]);
+    expect((await store.listQueue()).map(({ invoiceId }) => invoiceId)).toEqual([brightwell.id]);
+  });
+
+  it("drops and deletes a queued reminder whose invoice was paid or is no longer overdue", async () => {
+    await runDailyPreparation();
+    serve(
+      { ...okafor, dueState: "paid", paypalStatus: "PAID", paidOn: TODAY },
+      {
+        ...brightwell,
+        dueState: "on_time",
+        daysLate: 0,
+      },
+    );
+
+    expect(await listQueue()).toEqual([]);
+    expect(await store.listQueue()).toEqual([]);
+  });
+
+  it("keeps a retainer, which has no invoice, whatever the invoices are", async () => {
+    await store.saveRepeat(retainer);
+    await runDailyPreparation();
+    serve();
+
+    expect((await listQueue()).map(({ kind }) => kind)).toEqual(["repeat"]);
   });
 
   it("clears the reminders when the setting is switched off, and keeps the retainers", async () => {
@@ -246,6 +277,22 @@ describe("the digest", () => {
     );
     expect(digest.paidSinceYesterday).toHaveLength(1);
     expect(await getDailyDigest()).toEqual(digest);
+  });
+
+  it("ignores an invoice cancelled after the run, and counts only the drafts still valid", async () => {
+    await runDailyPreparation();
+    serve(
+      { ...brightwell, paypalStatus: "CANCELLED" },
+      { ...northpine, paypalStatus: "CANCELLED" },
+      okafor,
+    );
+
+    const digest = await getDailyDigest();
+
+    expect(digest.preparedDrafts).toBe(1);
+    expect(digest.newlyOverdue).toEqual([]);
+    expect(JSON.stringify(digest)).not.toContain(brightwell.number);
+    expect(JSON.stringify(digest)).not.toContain(northpine.number);
   });
 
   it("is worked out on demand when the run has not happened", async () => {

@@ -580,12 +580,12 @@ sequenceDiagram
   R->>R: Constant-time secret check (401 otherwise)
   R->>S: Claim daily-run:<India day>
   alt already done
-    R-->>V: ran false, the stored digest
+    R-->>V: ran false, the digest
   else new
     R->>P: Reload the invoices
     R->>G: Reminder drafts for overdue invoices, within the daily allowance
     R->>S: Cache drafts, add queue items, move repeat dates on
-    R->>S: Store the digest, complete the claim
+    R->>S: Complete the claim
     R-->>V: ran true, the digest
   end
 ```
@@ -599,8 +599,10 @@ moves the repeat's date on. Queue items stay until they are dismissed; a retaine
 survives later runs. The run calls only reads and the drafting code; no function that sends,
 creates or reminds is reachable from it, and a test checks the PayPal send functions are never called.
 
-`GET /api/digest` returns the digest stored under `daily-digest:<India day>` (in the store's cache),
-or builds it from the loaded invoices when the run has not happened. `GET /api/rate-alerts` evaluates
+`GET /api/digest` builds the digest from the shown invoices and the queue each time it is read; it is
+not stored. `listQueue` checks every reminder item against the shown invoices and deletes the ones
+whose invoice is not shown, is paid or is no longer overdue, and `seedNewGeneration` clears the
+reminder items when a reset or the weekly re-seed starts a new generation. `GET /api/rate-alerts` evaluates
 the alerts in Settings against the rates in use and drives the sidebar badge and the optional browser
 notifications, which a client component polls once a minute while the app is open.
 
