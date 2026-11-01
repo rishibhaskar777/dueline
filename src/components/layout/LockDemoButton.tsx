@@ -23,7 +23,7 @@ export function LockDemoButton() {
       type="button"
       onClick={lock}
       disabled={pending}
-      className="w-fit rounded-md text-sm text-sidebar-foreground underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-sidebar-ring disabled:opacity-50"
+      className="flex min-h-11 w-fit items-center rounded-md text-sm text-sidebar-foreground underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-sidebar-ring disabled:opacity-50"
     >
       Lock demo
     </button>

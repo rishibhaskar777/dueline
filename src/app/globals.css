@@ -15,6 +15,7 @@
   --color-paid: var(--paid);
   --color-due-soon: var(--due-soon);
   --color-late: var(--late);
+  --color-paid-on-dark: var(--paid-on-dark);
   --color-late-on-dark: var(--late-on-dark);
   --color-ground: var(--ground);
   --color-line: var(--line);
@@ -63,6 +64,7 @@
   --paid: #0b7a5c;
   --due-soon: #a35c00;
   --late: #b3261e;
+  --paid-on-dark: #3ccb9c;
   --late-on-dark: #ffb4ab;
   --ground: #f3f5f8;
   --line: #dce1e8;
@@ -100,6 +102,49 @@
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgb(255 255 255 / 12%);
   --sidebar-ring: var(--blue-light);
+}
+
+.dark {
+  --blue: #8ea8ff;
+  --paid: #3ccb9c;
+  --due-soon: #f0a83a;
+  --late: #ff8a80;
+  --ground: #0a1220;
+  --line: #2a3a52;
+  --muted-text: #a3afc2;
+
+  --background: var(--ground);
+  --foreground: #e6ebf3;
+  --card: #121f33;
+  --card-foreground: var(--foreground);
+  --popover: #16253b;
+  --popover-foreground: var(--foreground);
+  --primary: var(--blue);
+  --primary-foreground: #0d1b2e;
+  --secondary: #1b2a41;
+  --secondary-foreground: var(--foreground);
+  --muted: #1b2a41;
+  --muted-foreground: var(--muted-text);
+  --accent: #1b2a41;
+  --accent-foreground: var(--foreground);
+  --destructive: var(--late);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--blue);
+  --sidebar: #070e19;
+  --sidebar-primary: var(--blue);
+  --sidebar-primary-foreground: #0d1b2e;
+}
+
+/* The new theme grows over the old one as a circle; the script sets the circle's size. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-new(root) {
+  z-index: 1;
 }
 
 @layer base {

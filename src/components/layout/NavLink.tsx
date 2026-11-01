@@ -25,7 +25,7 @@ export function NavLink({ href, icon, children }: NavLinkProps) {
       )}
     >
       {icon}
-      {children}
+      <span className="flex flex-1 items-center gap-2">{children}</span>
     </Link>
   );
 }
