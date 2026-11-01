@@ -40,6 +40,15 @@ export interface DemoGeneration {
   seededOn: string;
 }
 
+export interface ClientAlias {
+  fromKey: string;
+  intoKey: string;
+  fromName: string;
+  fromEmail: string;
+}
+
+export type AppFlag = "export_downloaded" | "checklist_dismissed";
+
 export interface Store {
   claim(requestId: string, bodyHash: string): Promise<ClaimResult>;
   complete(requestId: string, result: Json): Promise<void>;
@@ -101,6 +110,15 @@ export interface Store {
   listBankReferences(): Promise<Record<string, string>>;
   // A null reference clears it.
   saveBankReference(invoiceId: string, reference: string | null): Promise<void>;
+
+  // Clients merged into another, by the merged client's key. Undone by deleting the entry.
+  listClientAliases(): Promise<ClientAlias[]>;
+  saveClientAlias(alias: ClientAlias): Promise<void>;
+  deleteClientAlias(fromKey: string): Promise<boolean>;
+
+  // One-off facts about the app, such as "export_downloaded". Setting one twice changes nothing.
+  hasFlag(name: AppFlag): Promise<boolean>;
+  setFlag(name: AppFlag): Promise<void>;
 
   hitRateLimit(key: string, windowSeconds: number): Promise<number>;
 

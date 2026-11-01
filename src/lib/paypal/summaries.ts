@@ -1,4 +1,5 @@
 import "server-only";
+import { applyAliases } from "@/lib/clients/aliases";
 import { today } from "@/lib/clock";
 import { inBatches } from "@/lib/in-batches";
 import { getStore } from "@/lib/store";
@@ -136,8 +137,7 @@ export async function findInvoiceByMemo(memo: string): Promise<PayPalInvoice | u
   );
 }
 
-// Rupee figures are filled in later, so a settings change shows up without waiting for PayPal.
-export function loadInvoices(): Promise<LoadedInvoice[]> {
+function loadCached(): Promise<LoadedInvoice[]> {
   if (finished && Date.now() - finished.loadedAt < RESULT_TTL_MS) {
     return Promise.resolve(finished.invoices);
   }
@@ -154,4 +154,11 @@ export function loadInvoices(): Promise<LoadedInvoice[]> {
     inFlight = load;
   }
   return inFlight;
+}
+
+// Rupee figures are filled in later, so a settings change shows up without waiting for PayPal.
+// Merged clients are applied after the cache, so a merge shows at once.
+export async function loadInvoices(): Promise<LoadedInvoice[]> {
+  const [loaded, aliases] = await Promise.all([loadCached(), getStore().listClientAliases()]);
+  return applyAliases(loaded, aliases);
 }

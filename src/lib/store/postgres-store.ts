@@ -17,6 +17,7 @@ import {
 } from "@/types";
 import type {
   ClaimResult,
+  ClientAlias,
   DemoGeneration,
   Json,
   ReminderLogEntry,
@@ -309,6 +310,41 @@ export function createPostgresStore(sql: Sql): Store {
       await sql`
         insert into bank_receipts (invoice_id, reference) values (${invoiceId}, ${reference})
         on conflict (invoice_id) do update set reference = excluded.reference, updated_at = now()`;
+    },
+
+    async listClientAliases(): Promise<ClientAlias[]> {
+      const rows = await sql<
+        { from_key: string; into_key: string; from_name: string; from_email: string }[]
+      >`select from_key, into_key, from_name, from_email from client_aliases order by created_at`;
+      return rows.map((row) => ({
+        fromKey: row.from_key,
+        intoKey: row.into_key,
+        fromName: row.from_name,
+        fromEmail: row.from_email,
+      }));
+    },
+
+    async saveClientAlias(alias): Promise<void> {
+      await sql`
+        insert into client_aliases (from_key, into_key, from_name, from_email)
+        values (${alias.fromKey}, ${alias.intoKey}, ${alias.fromName}, ${alias.fromEmail})
+        on conflict (from_key) do update set
+          into_key = excluded.into_key, from_name = excluded.from_name,
+          from_email = excluded.from_email`;
+    },
+
+    async deleteClientAlias(fromKey): Promise<boolean> {
+      const rows = await sql`delete from client_aliases where from_key = ${fromKey} returning 1`;
+      return rows.length > 0;
+    },
+
+    async hasFlag(name): Promise<boolean> {
+      const rows = await sql`select 1 from app_flags where name = ${name}`;
+      return rows.length > 0;
+    },
+
+    async setFlag(name): Promise<void> {
+      await sql`insert into app_flags (name) values (${name}) on conflict (name) do nothing`;
     },
 
     async hitRateLimit(key, windowSeconds): Promise<number> {

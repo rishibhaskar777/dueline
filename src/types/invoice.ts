@@ -42,6 +42,7 @@ export interface InvoiceSummary {
   purposeCode: string | null;
   payLink: string;
   riskLevel: RiskLevel | null;
+  mergedFrom?: string; // set when the client was merged into another: the name on the PayPal invoice
 }
 
 export interface Totals {

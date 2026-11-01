@@ -53,6 +53,7 @@ export function ClientsScreen() {
             id="client-search"
             type="search"
             autoComplete="off"
+            placeholder="Client name"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             className="w-56 max-md:w-full"

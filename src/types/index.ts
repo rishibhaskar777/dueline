@@ -1,6 +1,7 @@
 export * from "./activity";
 export * from "./api";
 export * from "./automation";
+export * from "./checklist";
 export * from "./clients";
 export * from "./export";
 export * from "./health";

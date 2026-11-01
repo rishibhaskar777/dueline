@@ -11,15 +11,23 @@ export function summariseClient(
   today: string,
 ): ClientSummary {
   const unpaid = invoices.filter(({ dueState }) => dueState !== "paid");
+  // A merged client keeps its own email and country: only its own invoices speak for it.
+  const own = invoices.some(({ mergedFrom }) => !mergedFrom)
+    ? invoices.filter(({ mergedFrom }) => !mergedFrom)
+    : invoices;
   const paidDates = invoices.flatMap(({ paidOn }) => (paidOn ? [paidOn] : []));
   return {
     key,
     name,
-    email: invoices[0].client.email,
-    country: invoices.find(({ client }) => client.country)?.client.country ?? null,
+    email: own[0].client.email,
+    country: own.find(({ client }) => client.country)?.client.country ?? null,
     paySpeed: computePaySpeed(invoices, today),
     riskLevel: score.invoicesConsidered > 0 ? score.level : null,
-    riskReason: reasonWithBasis(score.reason, score.invoicesConsidered),
+    riskReason: reasonWithBasis(
+      score.reason,
+      score.invoicesConsidered,
+      invoices.some(({ mergedFrom }) => mergedFrom),
+    ),
     invoices: invoices.length,
     billedInr: sumInr(invoices.map(({ payoutInr }) => payoutInr)),
     outstandingInr: sumInr(unpaid.map(({ payoutInr }) => payoutInr)),
