@@ -3,6 +3,7 @@ import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import Link from "next/link";
 import { RiskBadge } from "@/components/shared/RiskBadge";
 import { formatDate } from "@/lib/format-date";
+import { wholeDays } from "@/lib/format-days";
 import { formatRupees } from "@/lib/money/format";
 import type { ClientSummary } from "@/types";
 
@@ -47,7 +48,7 @@ export const clientColumns: ColDef<ClientSummary>[] = [
   {
     headerName: "Average days late",
     field: "averageDaysLate",
-    valueFormatter: ({ value }) => (value > 0 ? String(value) : "–"),
+    valueFormatter: ({ value }) => (value > 0 ? String(wholeDays(value)) : "–"),
     type: "rightAligned",
     cellClass: "tabular-nums",
     width: 170,
