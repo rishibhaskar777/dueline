@@ -131,6 +131,17 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Invoices paid through PayPal are shown in the demo whether or not they carry a Dueline marker, unless
+  the owner hid them. The early sandbox invoices had no marker, so the real payments disappeared and
+  "What getting paid costs" said none came through PayPal. A payment recorded outside PayPal still
+  needs a marker.
+- After a demo reset, Nudges "Today" and the Receivables "This morning" card no longer list invoices
+  that were cancelled, paid or are no longer overdue. A queued reminder is checked against the shown
+  invoices whenever the queue is read and deleted when it no longer applies, the reset and the weekly
+  re-seed clear the queued reminders, and the morning card is worked out from the shown invoices each
+  time instead of being stored.
+- Averages of days are written in whole days wherever text shows them ("12 days on average", not
+  "11.7"). The exact value stays in the data.
 - The sidebar scrolls inside itself on a short screen. Before, "Lock demo" could run below the dark
   panel onto the light page, where its text could not be read.
 - Each row of the due line now has an accessible name that starts with the words shown on the row

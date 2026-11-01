@@ -24,9 +24,12 @@ stay there and the visibility rule decides what is shown.
 
 **One visibility rule.** `isShownInDemo` is the only place that decides what a demo screen or export
 shows: the current generation of the story; invoices made through Dueline's create flow; and any invoice
-paid through PayPal that carries a Dueline marker, whatever its generation. Everything else is hidden:
+paid through PayPal (status `PAID`), whatever its marker or generation. Everything else is hidden:
 invoices without a Dueline marker, older generations that were not paid through PayPal, cancelled
-invoices and invoices the owner hid. Every list (Receivables, the due line, Clients, the radar, the
+invoices and invoices the owner hid. The paid rule does not need a marker because the early sandbox
+scripts made real payments (Tandem Health $900, the $100 sandbox check) before every invoice carried
+one, and hiding them told a judge that nothing had come through PayPal. A payment recorded outside
+PayPal (`MARKED_AS_PAID`) is not that proof and still follows the marker rules. Every list (Receivables, the due line, Clients, the radar, the
 forecast, fees lost, the register, GSTR-1, the year summary, Activity, search, the digest, the reminder
 drafts) loads its invoices through `loadVisibleInvoices`, so risk scores and totals are computed from the
 same set the screen shows.
@@ -41,6 +44,17 @@ is not deleted and still opens by its link, which is how it is shown again.
 cancels open story invoices of older generations, never any other invoice, and it waits for the same
 ten-minute slot as a manual reset, logging a skip when the slot is taken. A demo that has never been
 reset has no generation to age, so the run leaves it alone until someone presses reset once.
+
+**The queue and the morning card follow the shown invoices.** A reset cancels invoices, so a queued
+reminder or a stored digest could name one that no longer exists. Reading the queue now checks every
+reminder item against the shown invoices and deletes the ones whose invoice is not shown, is paid or
+is no longer overdue, so Nudges, the count and the morning card agree. A new generation (a reset or
+the weekly re-seed) clears the queued reminders; retainer items belong to a schedule, not to the
+story, and stay. The digest is no longer stored: it is worked out from the shown invoices and the
+cleaned queue each time, so it cannot hold an invoice number that has gone stale.
+
+**Averages are shown in whole days.** The exact average stays in the data; every sentence and figure
+that shows one ("12 days on average") uses the one helper in `src/lib/format-days.ts`.
 
 **Seeded history is honest.** Seeding writes the story's own activity rows (`sent`, `paid`) on the
 story's dates with fixed ids, so a later webhook for the same invoice and kind reuses the row rather
