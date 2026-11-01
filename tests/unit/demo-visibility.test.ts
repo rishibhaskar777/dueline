@@ -55,10 +55,22 @@ describe("isShownInDemo", () => {
     expect(isShownInDemo(invoice("dueline-offline:halden", "PAID"), GENERATION, none)).toBe(true);
   });
 
-  it("hides an invoice with no Dueline marker, even a paid one", () => {
+  it("hides an open invoice with no Dueline marker", () => {
     expect(isShownInDemo(invoice(""), GENERATION, none)).toBe(false);
-    expect(isShownInDemo(invoice("", "PAID"), GENERATION, none)).toBe(false);
     expect(isShownInDemo(invoice("Sandbox", "SENT"), GENERATION, none)).toBe(false);
+  });
+
+  it("shows an invoice paid through PayPal even with no marker", () => {
+    expect(isShownInDemo(invoice("", "PAID"), GENERATION, none)).toBe(true);
+    expect(isShownInDemo(invoice("Sandbox check", "PAID"), GENERATION, none)).toBe(true);
+  });
+
+  it("hides an unmarked invoice paid through PayPal when the owner hid it", () => {
+    expect(isShownInDemo(invoice("", "PAID"), GENERATION, new Set(["INV2-A"]))).toBe(false);
+  });
+
+  it("hides an unmarked invoice marked as paid outside PayPal", () => {
+    expect(isShownInDemo(invoice("", "MARKED_AS_PAID"), GENERATION, none)).toBe(false);
   });
 
   it("hides cancelled invoices and the ones the owner hid, whatever their marker", () => {
