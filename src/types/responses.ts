@@ -1,8 +1,9 @@
+import type { LibraryItem, QueueItem, RepeatSchedule, TriggeredRateAlert } from "./automation";
 import type { ClientSummary } from "./clients";
 import type { ActivityEvent } from "./activity";
 import type { InvoiceDraft, InvoiceSummary, Totals } from "./invoice";
 import type { PurposeCode } from "./export";
-import type { ReminderDraft } from "./reminder";
+import type { ReminderDraft, ReminderLanguage } from "./reminder";
 import type { ClientRisk } from "./risk";
 
 export interface InvoicesResponse {
@@ -63,4 +64,28 @@ export interface ClientsResponse {
 
 export interface ClientNotesResponse {
   notes: string;
+}
+
+export interface QueueResponse {
+  items: QueueItem[];
+}
+
+export interface DismissQueueResponse {
+  dismissed: true;
+}
+
+export interface RepeatsResponse {
+  repeats: RepeatSchedule[];
+}
+
+export interface LibraryItemsResponse {
+  items: LibraryItem[];
+}
+
+export interface RateAlertsResponse {
+  alerts: TriggeredRateAlert[];
+}
+
+export interface ClientLanguageResponse {
+  language: ReminderLanguage;
 }

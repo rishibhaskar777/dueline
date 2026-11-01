@@ -53,6 +53,8 @@ export const requestIdSchema = z.uuid();
 
 export const toneSchema = z.enum(["gentle", "firm", "final"]);
 
+export const reminderLanguageSchema = z.enum(["en", "de", "fr", "es", "nl", "pt", "hi"]);
+
 export const extractRequestSchema = z.object({ chat: z.string().min(1).max(6000) });
 
 export const payoutEstimateRequestSchema = z.object({ amount: moneySchema });
@@ -91,6 +93,7 @@ export const clientRiskQuerySchema = z.object({
 export const draftReminderRequestSchema = z.object({
   invoiceId: z.string().min(1),
   tone: toneSchema,
+  language: reminderLanguageSchema.optional(),
 });
 
 export const sendReminderRequestSchema = z.object({
@@ -126,6 +129,12 @@ export const marketRatesSchema = z.object({
   AUD: marketRate,
 });
 
+export const rateAlertSchema = z.object({
+  currency: currencySchema,
+  direction: z.enum(["above", "below"]),
+  threshold: marketRate,
+});
+
 export const settingsSchema = z.object({
   feePercent: z.number().min(0).max(10),
   fixedFees: fixedFeesSchema,
@@ -133,6 +142,9 @@ export const settingsSchema = z.object({
   rateSource: z.enum(["ecb", "manual"]),
   marketRates: marketRatesSchema,
   ratesUpdatedOn: dateString,
+  prepareReminders: z.boolean(),
+  remindAfterDays: z.number().int().min(1).max(60),
+  rateAlerts: z.array(rateAlertSchema).max(3),
 });
 
 export const gstinSchema = z
@@ -215,3 +227,47 @@ export const recordPaymentRequestSchema = z.object({
 });
 
 export type RecordPaymentRequest = z.infer<typeof recordPaymentRequestSchema>;
+
+export const clientLanguageRequestSchema = z.object({ language: reminderLanguageSchema });
+
+export const queueItemIdSchema = z.string().min(1).max(200);
+
+export const repeatsQuerySchema = z.object({ client: clientKeySchema.optional() });
+
+export const createRepeatRequestSchema = z.object({
+  invoiceId: invoiceIdSchema,
+  dayOfMonth: z.number().int().min(1).max(28),
+  requestId: requestIdSchema,
+});
+
+export const updateRepeatRequestSchema = z.object({ paused: z.boolean() });
+
+export const repeatIdSchema = z.uuid();
+
+export const saveLibraryItemRequestSchema = z.object({
+  id: z.uuid().optional(),
+  name: z.string().trim().min(1).max(200),
+  unitAmount: amountString,
+  currency: currencySchema,
+  sac: sacSchema.nullable(),
+});
+
+export const libraryItemIdSchema = z.uuid();
+
+const digestInvoiceSchema = z.object({
+  invoiceId: z.string(),
+  invoiceNumber: z.string(),
+  clientName: z.string(),
+  amount: moneySchema,
+});
+
+const triggeredRateAlertSchema = rateAlertSchema.extend({ rate: z.number() });
+
+export const dailyDigestSchema = z.object({
+  day: dateString,
+  paidSinceYesterday: z.array(digestInvoiceSchema),
+  newlyOverdue: z.array(digestInvoiceSchema),
+  dueSoon: z.array(digestInvoiceSchema),
+  preparedDrafts: z.number().int().min(0),
+  rateAlerts: z.array(triggeredRateAlertSchema),
+});

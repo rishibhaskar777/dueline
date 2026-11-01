@@ -1,3 +1,4 @@
+import type { TriggeredRateAlert } from "./automation";
 import type { CurrencyCode, Money } from "./money";
 import type { RiskLevel } from "./risk";
 
@@ -59,4 +60,5 @@ export interface DashboardResponse {
   upcomingDue: UpcomingDue[];
   lateClients: LateClient[];
   rates: RatesWidget;
+  rateAlerts: TriggeredRateAlert[];
 }

@@ -155,13 +155,16 @@ export interface ClientRisk {
 
 // src/types/reminder.ts
 export type Tone = "gentle" | "firm" | "final";
+export type ReminderLanguage = "en" | "de" | "fr" | "es" | "nl" | "pt" | "hi";
 export interface ReminderDraft {
   invoiceId: string;
   tone: Tone;
   suggestedTone: Tone; // by days late and reminders sent, one step firmer for a late payer
+  language: ReminderLanguage; // the client's saved reminder language, or the one asked for
   subject: string;
   message: string;
   source: "ai" | "template"; // template when AI is unavailable, the daily cap is reached or the output failed a check
+  pending: boolean; // true on GET /api/reminders when this is the template and the model has not been asked yet; POST /api/reminders/draft always answers false
   history: { tone: Tone; sentAt: string }[]; // reminders Dueline sent for this invoice, oldest first
 }
 
@@ -185,6 +188,9 @@ export interface Settings {
   rateSource: "ecb" | "manual"; // ecb = daily European Central Bank rate via Frankfurter
   marketRates: Record<CurrencyCode, number>; // rupees per unit; used as-is when rateSource is "manual"
   ratesUpdatedOn: string; // date of the rates in use
+  prepareReminders: boolean; // default true: the daily run writes reminder drafts
+  remindAfterDays: number; // default 3, whole days 1 to 60: an overdue invoice joins the Today queue at this many days late
+  rateAlerts: RateAlert[]; // at most 3, default none
 }
 // Defaults: PayPal India's published fees for international commercial payments, from
 // paypal.com/in/webapps/mpp/merchant-fees, checked on 29 Oct 2026.
@@ -270,6 +276,7 @@ export interface DashboardResponse {
   upcomingDue: UpcomingDue[];
   lateClients: LateClient[];
   rates: RatesWidget;
+  rateAlerts: TriggeredRateAlert[]; // the freelancer's alerts that today's rates trigger
 }
 
 // src/types/clients.ts
@@ -289,6 +296,7 @@ export interface ClientDetail {
   invoices: InvoiceSummary[]; // newest first
   risk: ClientRisk;
   notes: string; // "" until saved
+  language: ReminderLanguage; // "en" until saved, kept beside the notes
 }
 
 // src/types/invoice-detail.ts
@@ -314,6 +322,70 @@ export interface InvoiceDetails {
   actions: { remind: boolean; recordPayment: boolean; cancel: boolean }; // valid for the status
 }
 export type PaymentMethod = "BANK_TRANSFER" | "WIRE_TRANSFER" | "OTHER";
+
+// src/types/automation.ts, what the daily run prepares
+export type RateDirection = "above" | "below";
+export interface RateAlert {
+  currency: CurrencyCode;
+  direction: RateDirection;
+  threshold: number; // rupees per unit, above 0 and below 1,000
+}
+export interface TriggeredRateAlert extends RateAlert {
+  rate: number; // the rate that triggered it
+}
+export type QueueKind = "reminder" | "repeat";
+export interface QueueItem {
+  id: string; // "reminder.<invoiceId>" or "repeat.<repeatId>.<date>"
+  kind: QueueKind;
+  title: string; // e.g. "Retainer for Halden Coffee Co. is ready to send"
+  detail: string;
+  invoiceId: string | null; // set for a reminder: the Nudges card to open
+  repeatId: string | null; // set for a repeat: New invoice is opened with ?repeat=<repeatId>
+}
+export interface DigestInvoice {
+  invoiceId: string;
+  invoiceNumber: string;
+  clientName: string;
+  amount: Money;
+}
+export interface DailyDigest {
+  day: string; // the date the app is using
+  paidSinceYesterday: DigestInvoice[]; // paid yesterday or today
+  newlyOverdue: DigestInvoice[]; // overdue by 3 days or fewer
+  dueSoon: DigestInvoice[]; // due within 3 days
+  preparedDrafts: number; // items in the queue
+  rateAlerts: TriggeredRateAlert[];
+}
+export interface RepeatItem {
+  name: string;
+  quantity: number;
+  unitAmount: string;
+  sac: string | null;
+}
+export interface RepeatSchedule {
+  id: string; // the request ID that created it
+  clientKey: string;
+  clientName: string;
+  clientEmail: string;
+  currency: CurrencyCode;
+  items: RepeatItem[];
+  purposeCode: string | null;
+  includeLutNote: boolean;
+  dayOfMonth: number; // 1 to 28
+  nextOn: string; // the next date a draft is prepared
+  paused: boolean;
+}
+export interface LibraryItem {
+  id: string;
+  name: string;
+  unitAmount: string;
+  currency: CurrencyCode;
+  sac: string | null;
+}
+export interface DailyRunResponse {
+  ran: boolean; // false when today's preparation had already run
+  digest: DailyDigest;
+}
 
 // src/types/api.ts
 export interface ApiError {
@@ -342,13 +414,27 @@ export interface ApiError {
 | `POST /api/demo/session`                            | `{ password: string }` (1 to 200 chars)                                                          | `204` and sets the `dueline_demo` cookie                                                                                                                           | Public. `401 unauthorized` for a wrong password; `429 rate_limited` after 10 attempts in 15 minutes from one address                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `DELETE /api/demo/session`                          | none                                                                                             | `204` and clears the cookie                                                                                                                                        | Public                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `GET /api/clients/risk?email=&name=`                | none                                                                                             | `ClientRisk`                                                                                                                                                       | `name` is optional. The client's invoices are those whose business name matches after trimming, collapsing spaces and ignoring case, or, outside demo mode, whose recipient email matches; in demo mode (every client shares the sandbox buyer's email) only the name counts. Without `name` the email decides. Used on the review screen and in the invoice panel. See "Late-payer radar"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `GET /api/reminders`                                | none                                                                                             | `{ drafts: ReminderDraft[], remindersLeftToday: number }`                                                                                                          | One draft per overdue invoice (sent, unpaid or partly paid), in its suggested tone, most days late first, at most 10. `remindersLeftToday` is PayPal's two a day less the reminders in Dueline's log since India midnight, and 0 for the rest of the India day once PayPal has answered 429. See "Reminders"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `POST /api/reminders/draft`                         | `{ invoiceId: string, tone: Tone }`                                                              | `ReminderDraft`                                                                                                                                                    | Re-drafts one overdue invoice in another tone. `404 not_found` for an unknown invoice, `400 invalid_request` when it is paid or not overdue. 20 drafts an hour per address (`429 rate_limited`). See "Reminders"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `GET /api/reminders`                                | none                                                                                             | `{ drafts: ReminderDraft[], remindersLeftToday: number }`                                                                                                          | Answers at once, without waiting for the model. One draft per overdue invoice (sent, unpaid or partly paid), in its suggested tone and the client's reminder language, most days late first, at most 10. A draft the model wrote earlier (cached for 24 hours, which the daily run fills) comes back as it is with `pending: false`; otherwise the template comes back with `pending: true`, and the screen asks `POST /api/reminders/draft` for a better one. `remindersLeftToday` is PayPal's two a day less the reminders in Dueline's log since India midnight, and 0 for the rest of the India day once PayPal has answered 429. See "Reminders"                                                                                                                                                                                                                                                          |
+| `POST /api/reminders/draft`                         | `{ invoiceId: string, tone: Tone, language?: ReminderLanguage }`                                 | `ReminderDraft`                                                                                                                                                    | Writes one overdue invoice in a tone, calling the model when no cached draft exists, and always answers `pending: false`. `language` overrides the client's saved language for this draft only. `404 not_found` for an unknown invoice, `400 invalid_request` when it is paid or not overdue. 20 drafts an hour per address (`429 rate_limited`). See "Reminders"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `POST /api/reminders/send`                          | `{ invoiceId: string, subject: string, message: string, tone: Tone, requestId: string }`         | `{ sentAt: string }`                                                                                                                                               | Sends through PayPal's invoice reminder, which carries the invoice and its Pay now link. `subject` is 5 to 120 and `message` 20 to 900 characters, with no links or email addresses, not counting the client's business name or the work description (`400 invalid_request`: "The subject must not contain links or email addresses." or the same for the message; a length error names the field). A repeated `requestId` returns the stored `sentAt`. See "Reminders"                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `GET /api/dashboard`                                | none                                                                                             | `DashboardResponse`                                                                                                                                                | Every widget of Receivables beyond the totals and the invoice list. See "Money views"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `GET /api/clients`                                  | none                                                                                             | `{ clients: ClientSummary[] }`                                                                                                                                     | One row per client, most outstanding first. Grouping is the late-payer radar's. See "Money views"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `GET /api/clients/by-key/{key}`                     | none                                                                                             | `ClientDetail`                                                                                                                                                     | `404 not_found` for a key no invoice maps to                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `PUT /api/clients/by-key/{key}/notes`               | `{ notes: string }` (0 to 1,000 chars)                                                           | `{ notes: string }`                                                                                                                                                | Private notes, stored in Postgres (memory without a database). `404 not_found` for an unknown key                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `PUT /api/clients/by-key/{key}/language`            | `{ language: ReminderLanguage }`                                                                 | `{ language: ReminderLanguage }`                                                                                                                                   | The language new reminder drafts for this client are written in, kept beside the client's notes. `404 not_found` for an unknown key. See "Reminder languages"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `GET /api/cron/daily`                               | none                                                                                             | `DailyRunResponse`                                                                                                                                                 | Called once a day by Vercel Cron with `Authorization: Bearer <CRON_SECRET>`, not with the demo cookie. `401 unauthorized` for a missing or wrong secret, or when `CRON_SECRET` is not set. Once per India day: a repeat answers `ran: false` with the stored digest. Writes drafts and queue entries only; nothing is sent to PayPal or a client. See "Daily preparation"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `POST /api/demo/prepare`                            | none                                                                                             | `DailyRunResponse`                                                                                                                                                 | The same preparation as the cron job, for the "Run today's preparation now" button on Demo tools. Demo mode only (`404 not_found` otherwise), behind the demo cookie, with the same once-a-day rule                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `GET /api/queue`                                    | none                                                                                             | `{ items: QueueItem[] }`                                                                                                                                           | Every item that has not been removed, in the order it was prepared                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `POST /api/queue/{id}/dismiss`                      | none                                                                                             | `{ dismissed: true }`                                                                                                                                              | Removes the item. A reminder item returns with the next daily run if the invoice is still overdue; a retainer item does not. `404 not_found` for an unknown item                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `GET /api/digest`                                   | none                                                                                             | `DailyDigest`                                                                                                                                                      | What the morning run recorded for today, or the same figures worked out now when it has not run. See "Digest and rate alerts"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `GET /api/rate-alerts`                              | none                                                                                             | `{ alerts: TriggeredRateAlert[] }`                                                                                                                                 | The alerts in Settings that the rates in use trigger now. A rate exactly at the threshold does not trigger it                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `GET /api/repeats?client=<key>`                     | none                                                                                             | `{ repeats: RepeatSchedule[] }`                                                                                                                                    | Every monthly repeat, or the ones of one client. See "Monthly repeats"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `POST /api/repeats`                                 | `{ invoiceId: string, dayOfMonth: number, requestId: string }`                                   | `RepeatSchedule`                                                                                                                                                   | Saves a schedule from an invoice: its client, items, currency, purpose code, SAC and LUT are read from PayPal, not taken from the request. `dayOfMonth` is a whole number from 1 to 28; the first date is the next one after today. A repeated `requestId` returns the saved schedule. `400 invalid_request` for an invoice with no items                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `PATCH /api/repeats/{id}`                           | `{ paused: boolean }`                                                                            | `RepeatSchedule`                                                                                                                                                   | Pauses or resumes a schedule. Resuming moves a date that has passed on to the next one, so a resumed schedule does not fire at once. `404 not_found` for an unknown ID                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `DELETE /api/repeats/{id}`                          | none                                                                                             | `204`                                                                                                                                                              | Deletes a schedule. Drafts it already prepared stay in the queue. `404 not_found` for an unknown ID                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `GET /api/items`                                    | none                                                                                             | `{ items: LibraryItem[] }`                                                                                                                                         | The item library, by name. See "Item library"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `POST /api/items`                                   | `{ id?: string, name: string, unitAmount: string, currency: CurrencyCode, sac: string \| null }` | `LibraryItem`                                                                                                                                                      | Saves an item. With an `id` it changes that item (a rename or a new price, `404 not_found` if it is gone). Without one, an item with the same name (ignoring case) and currency is updated instead of repeated. `name` is 1 to 200 characters, `unitAmount` a positive amount with at most 2 decimals, `sac` six digits starting with 99. The library holds 50 items (`400 invalid_request` beyond that)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `DELETE /api/items/{id}`                            | none                                                                                             | `204`                                                                                                                                                              | Deletes an item. `404 not_found` for an unknown ID                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `GET /api/invoices/{id}`                            | none                                                                                             | `{ invoice: InvoiceSummary, timeline: TimelineEvent[], reminders: { tone: Tone, sentAt: string }[], details: InvoiceDetails }`                                     | Newest timeline event first. Works for cancelled invoices too. `404 not_found` for an unknown id                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `POST /api/invoices/{id}/cancel`                    | `{ requestId: string, notifyClient?: boolean }`                                                  | `{ cancelled: true, notified: boolean }`                                                                                                                           | Cancels a sent, unpaid invoice in PayPal. The client is emailed only when `notifyClient` is true, and then the demo guard applies. `409 invalid_state` for a paid, cancelled or unsent invoice. A repeated `requestId` returns the stored result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `POST /api/invoices/{id}/record-payment`            | `{ requestId: string, method: PaymentMethod, paidOn: string, note?: string }`                    | `{ recorded: true, paidOn: string }`                                                                                                                               | Records a payment made outside PayPal (type `EXTERNAL`). `paidOn` must not be in the future or before the invoice date (`400 invalid_request`); `note` is up to 200 characters. `409 invalid_state` for a paid, cancelled or unsent invoice. The invoice then counts as paid outside PayPal                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
@@ -382,9 +468,10 @@ Every failure returns a non-2xx status and an `ApiError`:
 A shared demo password protects a public deployment. `POST /api/demo/session` checks it and sets a
 signed cookie named `dueline_demo` (HttpOnly, SameSite=Lax, Path=/, 7 days, Secure in production).
 
-- Every `/api` route needs the cookie, except `GET /api/health`, `POST /api/webhooks/paypal` and
-  `/api/demo/session`. Without it the route answers `401 unauthorized` with "Enter the demo password
-  to continue."
+- Every `/api` route needs the cookie, except `GET /api/health`, `POST /api/webhooks/paypal`,
+  `GET /api/cron/daily` and `/api/demo/session`. Without it the route answers `401 unauthorized`
+  with "Enter the demo password to continue." The cron route is left out because Vercel Cron cannot
+  send the cookie or follow a redirect; it checks `CRON_SECRET` itself.
 - The screens `/receivables`, `/clients`, `/invoices`, `/nudges`, `/export`, `/profile`, `/settings` and `/demo-tools` redirect to
   `/demo?next=<path>`. The landing page stays public.
 - Access is on when `DEMO_PASSWORD` is set. In production `DEMO_PASSWORD` and `SESSION_SECRET` are
@@ -462,7 +549,13 @@ invoice that is open and not yet due says nothing yet.
   result: subject 5 to 120 characters, message 20 to 900, the invoice number present, any money
   amount equal to the invoice amount, and no links or email addresses. The client's business name and the invoice's work description are removed first, so a client called "Acme.io" is not a link. Otherwise, and when AI is
   unavailable or the app's daily allowance is used up, a template written in code is used.
-  `source` says which. Drafts are cached for 24 hours per invoice, tone and days late.
+  `source` says which. Drafts are cached for 24 hours per invoice, tone, language and days late.
+- **Fast first answer.** `GET /api/reminders` never calls the model. It returns the cached model
+  draft when there is one and otherwise the template with `pending: true`. The Nudges screen then asks
+  `POST /api/reminders/draft` for each pending card, one card at a time and two requests in flight at
+  most, shows "Improving the draft…" on those cards, and replaces the text only if the user has not
+  edited it; if they have, their text is kept and the card says so. Sending stays possible on a
+  template draft.
 - **Limits.** Drafts that call the model count towards the app's 400 calls a day, and
   `POST /api/reminders/draft` allows 20 an hour per address. PayPal allows two reminders a day per
   caller, and Dueline sends at most one per invoice per India day.
@@ -509,10 +602,102 @@ invoice that is open and not yet due says nothing yet.
 - **Layout.** Which widgets Receivables shows, and in what order, is kept in the browser
   (`localStorage`), not on the server.
 
+## Reminder languages
+
+A client's reminder language is one of English, German, French, Spanish, Dutch, Portuguese and Hindi
+(`en`, `de`, `fr`, `es`, `nl`, `pt`, `hi`), set on the client page and kept beside the client's notes.
+English is the default.
+
+- Drafts, from the model or from the templates (which exist for every language and tone), are written
+  in that language. The sign-off follows it when the profile's sign-off is the default "Thank you";
+  one the freelancer wrote is kept.
+- The same checks apply, with money read the way the language writes it: the invoice number is
+  present, every amount equals the invoice amount in that language's number format ("12.500,50 USD" in
+  German, "12 500,50 USD" in French, "12,34,567.00 USD" in Hindi), and there are no links or email
+  addresses. A draft that fails them is replaced by the template.
+- A card in another language says "Written in German." and offers "Write in English", and back.
+  The choice is for that draft only: `POST /api/reminders/draft` takes a `language` that overrides the
+  saved one without saving it.
+
+## Daily preparation
+
+`GET /api/cron/daily` runs once a day (Vercel Cron, `30 0 * * *`, which is 06:00 India time; the
+Hobby plan allows one run a day and may start it at any minute of that hour). It is claimed under the
+request ID `daily-run:<India day>`, so a repeat, a retry by the cron service or the demo button finds the
+day done and answers `ran: false`. A run that fails releases the claim and can be run again. It:
+
+1. reloads the invoices from PayPal;
+2. when `prepareReminders` is on, writes and caches a reminder draft for every overdue invoice (at
+   most 10, two model calls at a time, templates once the app's daily allowance is used up), and
+   replaces the queue's reminder items with one for each overdue invoice that is at least
+   `remindAfterDays` days late and has not been reminded today (with `prepareReminders` off it
+   clears them);
+3. turns each monthly repeat that has come due into a queue item (see "Monthly repeats");
+4. records the digest (see "Digest and rate alerts").
+
+It never creates, sends or reminds anything in PayPal. The Today list on Nudges shows the queue.
+Items stay until the freelancer acts on them or dismisses them, not only for the day they were
+prepared. "Review and send" opens the Nudges card or New invoice. A reminder item is refreshed by each
+daily run, so an invoice that was paid or is no longer overdue drops out; "Dismiss for today" removes
+it and the next run brings it back if the invoice is still overdue. A retainer item stays until its
+draft is sent or dismissed, and "Dismiss" removes it for good because its schedule has already moved
+on.
+
+## Monthly repeats
+
+"Repeat monthly" on an invoice page saves a schedule: the client, items, currency, purpose code, SAC
+and LUT choice of that invoice, a day of the month from 1 to 28, and the next date. On that date the
+daily run adds a queue item "Retainer for Halden Coffee Co. is ready to send". It links to
+`/invoices/new?repeat=<id>`, which opens the review step filled in, with the due date left to choose;
+the freelancer sends it with the usual flow. The next date moves on only after the queue item exists,
+so an interrupted run is finished by the next one without a second item. A schedule that fell behind
+makes one item, not one for every month it missed. The client page lists the client's repeats with
+Pause, Resume and Delete.
+
+## Item library
+
+On New invoice, "Save to library" on an item row stores its name, unit price, currency and SAC, and
+"Add from library" searches the saved items in the invoice's currency and adds one. A lone empty row is
+replaced by the item. Profile lists the items and lets the freelancer rename or delete them.
+
+## Digest and rate alerts
+
+- **Digest.** The "This morning" widget at the top of Receivables shows what has happened since
+  yesterday: invoices paid yesterday or today, invoices overdue by 3 days or fewer, invoices due in the
+  next 3 days, the number of drafts prepared, and triggered rate alerts. It shows the digest the
+  morning run stored, or works the same figures out when the run has not happened. Like every
+  widget it can be hidden and moved with Customise; the layout lives in the browser.
+- **Rate alerts.** Settings holds up to three alerts such as "USD above ₹96" or "EUR below ₹100". An
+  alert is triggered while the rate in use (the ECB's, or the freelancer's own when set by hand) is
+  beyond its threshold. Triggered alerts are marked on the Rates widget, counted by a badge on "Fees and
+  rates" in the sidebar, and listed in the digest.
+- **Browser notifications.** "Notify me in this browser" asks the browser for permission only when the
+  switch is turned on, and the choice is kept in that browser. While Dueline is open it checks once a
+  minute and shows a notification for an alert that has just been triggered or a payment that has just
+  arrived. There are no emails, no WhatsApp and no push service.
+
+## Look and feel
+
+- **Theme.** Light, Dark and "Match my system", chosen with the switch in the sidebar and kept in the
+  browser. The colours are tokens in `src/app/globals.css` for both themes; the AG Grid theme and the
+  charts read them. Text tokens keep 4.5:1 contrast on their surfaces in both themes (a test checks
+  it).
+- **Command palette.** Ctrl+K (Cmd+K on a Mac), or the Search button, opens a dialog to go to any page,
+  open a client or an invoice by typing, start "New invoice", "Draft a reminder for …" or "Toggle
+  theme". The arrow keys move through the results, Enter chooses and Esc closes. "?" lists the
+  shortcuts.
+- **Phones.** Below 768 px the sidebar is a bar along the top with a menu button, widgets stack,
+  Receivables, Clients and the export register are lists of cards, the due line scrolls sideways with
+  its client labels pinned, and buttons and fields are at least 44 px tall.
+- **Installable.** `manifest.webmanifest` (name Dueline, navy theme colour, icons made from
+  `public/icon.svg`) and an apple touch icon let a phone or browser install it. There is no service
+  worker and no offline mode.
+
 ## Demo tools
 
 In demo mode the sidebar links to `/demo-tools` ("Demo tools"), a page behind the demo cookie like
-the other screens that holds the "Reset the demo" button. Outside demo mode the link is hidden and
+the other screens that holds the "Reset the demo" button and the "Run today's preparation now" button
+(`POST /api/demo/prepare`). Outside demo mode the link is hidden and
 the page says the tools are available only in demo mode. When `remindersLeftToday` is 0, Nudges shows
 "Today's PayPal reminder limit for the demo account is used up. Drafts still work; sending resumes
 tomorrow." and disables the send buttons.
