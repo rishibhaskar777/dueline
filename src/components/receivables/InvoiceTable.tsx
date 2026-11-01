@@ -26,6 +26,8 @@ interface InvoiceTableProps {
 }
 
 const defaultColDef = { sortable: true, resizable: true, suppressMovable: true };
+// The columns share the width the page gives them, so none is pushed out of sight on a laptop.
+const autoSizeStrategy = { type: "fitGridWidth" } as const;
 
 export function InvoiceTable({ invoices, today, onOpen }: InvoiceTableProps) {
   const [search, setSearch] = useState("");
@@ -47,6 +49,7 @@ export function InvoiceTable({ invoices, today, onOpen }: InvoiceTableProps) {
             id="invoice-search"
             type="search"
             autoComplete="off"
+            placeholder="Client, invoice or work"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             className="w-56 max-md:w-full"
@@ -74,6 +77,7 @@ export function InvoiceTable({ invoices, today, onOpen }: InvoiceTableProps) {
           theme={gridTheme}
           rowData={rows}
           columnDefs={invoiceColumns}
+          autoSizeStrategy={autoSizeStrategy}
           context={context}
           defaultColDef={defaultColDef}
           quickFilterText={search}
@@ -82,7 +86,9 @@ export function InvoiceTable({ invoices, today, onOpen }: InvoiceTableProps) {
           domLayout="autoHeight"
           onRowClicked={({ data }) => data && onOpen(data)}
           onCellKeyDown={({ event, data }) => {
-            if (event instanceof KeyboardEvent && event.key === "Enter" && data) onOpen(data);
+            if (!(event instanceof KeyboardEvent) || event.key !== "Enter" || !data) return;
+            if (event.target instanceof Element && event.target.closest("a")) return;
+            onOpen(data);
           }}
           overlayNoRowsTemplate="No invoices match."
         />

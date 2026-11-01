@@ -4,3 +4,10 @@ export class ClientNotFoundError extends Error {
     this.name = "ClientNotFoundError";
   }
 }
+
+export class ClientMergeError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ClientMergeError";
+  }
+}

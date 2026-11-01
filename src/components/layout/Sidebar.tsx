@@ -5,6 +5,7 @@ import { PaletteButton } from "@/components/palette/PaletteButton";
 import { DemoToolsLink } from "./DemoToolsLink";
 import { LockDemoButton } from "./LockDemoButton";
 import { NavLink } from "./NavLink";
+import { NudgesLink } from "./NudgesLink";
 import { RateAlertBadge } from "./RateAlertBadge";
 import { SidebarShell } from "./SidebarShell";
 import { StatusLine } from "./StatusLine";
@@ -45,9 +46,7 @@ export function Sidebar() {
               </NavLink>
             </li>
             <li>
-              <NavLink href="/nudges" icon={<MailWarning {...iconProps} />}>
-                Nudges
-              </NavLink>
+              <NudgesLink icon={<MailWarning {...iconProps} />} />
             </li>
             <li>
               <NavLink href="/export" icon={<FileUp {...iconProps} />}>

@@ -1,10 +1,7 @@
 import { formatMoney } from "@/lib/money/format";
 import type { InvoiceDetailResponse } from "@/types";
 
-export function InvoiceDetailsCard({
-  invoice,
-  details,
-}: Pick<InvoiceDetailResponse, "invoice" | "details">) {
+export function InvoiceDetailsCard({ details }: Pick<InvoiceDetailResponse, "details">) {
   return (
     <section aria-labelledby="details-title" className="rounded-xl border border-line bg-card p-6">
       <h2 id="details-title" className="text-xl font-semibold">
@@ -40,19 +37,6 @@ export function InvoiceDetailsCard({
         </tbody>
       </table>
       <dl className="mt-4 grid gap-2 text-sm">
-        <div>
-          <dt className="text-muted-foreground">Purpose code</dt>
-          <dd>
-            {invoice.purposeCode ?? "None chosen"}
-            {invoice.purposeCode && (
-              <span className="text-muted-foreground"> · Suggestion, confirm with your CA</span>
-            )}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">LUT</dt>
-          <dd>{details.underLut ? "Exported under a Letter of Undertaking" : "Not under LUT"}</dd>
-        </div>
         {details.note && (
           <div>
             <dt className="text-muted-foreground">Note on the invoice</dt>

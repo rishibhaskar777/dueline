@@ -17,9 +17,9 @@ export function describeTimelineEvent(event: TimelineEvent): string {
     case "reminder":
       return reminderText(event);
     case "due":
-      return "Payment due";
+      return "Payment due date";
     case "overdue":
-      return "Became overdue";
+      return "Became overdue, still unpaid";
     case "paid":
       return event.via === "outside_paypal" ? "Paid outside PayPal" : "Paid through PayPal";
     case "cancelled":

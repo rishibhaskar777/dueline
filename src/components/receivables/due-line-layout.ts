@@ -2,6 +2,7 @@ import { addDays, daysBetween } from "@/lib/date-math";
 import { formatDate } from "@/lib/format-date";
 import { formatMoney } from "@/lib/money/format";
 import type { InvoiceSummary } from "@/types";
+import { estimateLabelWidth, placeEndLabel, type LabelPlacement } from "./label-placement";
 
 // The default view covers this many days back and ahead of today; older invoices are one click away.
 export const HISTORY_DAYS = 60;
@@ -30,8 +31,9 @@ export interface DueLineRow {
   end: number;
   // Where the status text starts: after whichever is further right, the line's end or its due tick.
   statusAt: number;
-  // Another row in the chart has the same client name, so the invoice number tells them apart.
-  sharesClientName: boolean;
+  // The line began before the chart's first date, so it is drawn from the left edge with an arrow.
+  startsBeforeChart: boolean;
+  label: LabelPlacement;
   endMark: "filled" | "open";
   endTone: SegmentTone;
   statusTone: SegmentTone;
@@ -80,17 +82,12 @@ function statusText(invoice: InvoiceSummary, today: string): string {
 
 // The row's own words come first and unbroken, then the date, so the visible text is part of the
 // name a screen reader or voice control user hears.
-function accessibleName(
-  invoice: InvoiceSummary,
-  status: string,
-  sharesClientName: boolean,
-): string {
+function accessibleName(invoice: InvoiceSummary, status: string): string {
   const when =
     invoice.dueState === "paid" && invoice.paidOn
       ? formatDate(invoice.paidOn)
       : `due ${formatDate(invoice.dueOn)}`;
-  const figures = `${sharesClientName ? `${invoice.number} · ` : ""}${formatMoney(invoice.amount)}`;
-  return `${invoice.client.name} ${figures} ${status}, ${when}`;
+  return `${invoice.client.name} ${invoice.number} · ${formatMoney(invoice.amount)} ${status}, ${when}`;
 }
 
 function paidSegments(from: number, due: number, paidOn: number): Segment[] {
@@ -120,10 +117,9 @@ function unpaidSegments(
 function buildRow(
   invoice: InvoiceSummary,
   today: string,
-  scale: { at: (date: string) => number; axisPx: number },
-  sharesClientName: boolean,
+  scale: { at: (date: string) => number; axisPx: number; origin: string },
 ): DueLineRow {
-  const { at, axisPx } = scale;
+  const { at, axisPx, origin } = scale;
   const from = at(invoice.issuedOn);
   const due = at(invoice.dueOn);
   const paid = invoice.dueState === "paid";
@@ -137,19 +133,27 @@ function buildRow(
   const status = statusText(invoice, today);
   const endTone = segments[segments.length - 1].tone;
   const paidLate = paid && lateDays(invoice) > 0;
+  const statusAt = Math.max(finish, due);
 
   return {
     invoice,
     segments,
     due,
     end: finish,
-    statusAt: Math.max(finish, due),
-    sharesClientName,
+    statusAt,
+    startsBeforeChart: invoice.issuedOn < origin,
+    label: placeEndLabel({
+      rightStartPx: statusAt * axisPx,
+      endPx: finish * axisPx,
+      widthPx: estimateLabelWidth(status),
+      axisPx,
+      marksPx: [at(today) * axisPx, due * axisPx],
+    }),
     endMark: paid ? "filled" : "open",
     endTone,
     statusTone: paid && !paidLate ? "paid" : endTone,
     statusText: status,
-    accessibleName: accessibleName(invoice, status, sharesClientName),
+    accessibleName: accessibleName(invoice, status),
   };
 }
 
@@ -208,17 +212,10 @@ export function layoutDueLine(
     });
   }
 
-  const nameCounts = new Map<string, number>();
-  for (const { client } of shown) {
-    nameCounts.set(client.name, (nameCounts.get(client.name) ?? 0) + 1);
-  }
-
   return {
     today: todayAt,
     ticks,
-    rows: shown.map((invoice) =>
-      buildRow(invoice, today, { at, axisPx }, (nameCounts.get(invoice.client.name) ?? 0) > 1),
-    ),
+    rows: shown.map((invoice) => buildRow(invoice, today, { at, axisPx, origin })),
     olderCount: older.length,
   };
 }

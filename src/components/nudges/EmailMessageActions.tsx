@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useDemoMode } from "@/components/demo/use-demo-mode";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { EmailPreviewPanel } from "./EmailPreviewPanel";
 import { emailLinks } from "./nudge-email";
 
 interface EmailMessageActionsProps {
@@ -31,6 +32,7 @@ export function EmailMessageActions({
 }: EmailMessageActionsProps) {
   const inDemo = useDemoMode();
   const [prepared, setPrepared] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
   const links = emailLinks(to, subject, message, payLink);
 
@@ -49,8 +51,8 @@ export function EmailMessageActions({
     <div className="grid max-w-md gap-2">
       <p className="text-sm font-medium">Send my message</p>
       <p className="text-sm text-muted-foreground">
-        Sends the message above from your own email, with the invoice&apos;s Pay here link added at
-        the end.
+        Sends the message above from your own email, with the invoice&apos;s Pay here link added
+        before your sign-off.
       </p>
       {inDemo && (
         <p className="text-sm text-muted-foreground">
@@ -87,7 +89,25 @@ export function EmailMessageActions({
         <Button type="button" variant="outline" disabled={disabled} onClick={() => void copy()}>
           Copy message
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          aria-expanded={previewing}
+          aria-controls="email-preview"
+          onClick={() => setPreviewing((value) => !value)}
+        >
+          {previewing ? "Hide preview" : "Preview"}
+        </Button>
       </div>
+      {previewing && (
+        <EmailPreviewPanel
+          id="email-preview"
+          to={to}
+          subject={subject}
+          message={message}
+          payLink={payLink}
+        />
+      )}
       {sentToday && (
         <p className="text-sm text-muted-foreground">
           A message from your email was already recorded today.

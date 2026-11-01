@@ -1,4 +1,5 @@
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { RiskBadge } from "@/components/shared/RiskBadge";
 import { SourceTag } from "@/components/shared/SourceTag";
@@ -18,14 +19,31 @@ function StatusCell({ data, context }: Params) {
   return data ? <StatusBadge invoice={data} today={(context as GridContext).today} /> : null;
 }
 
+// The risk badge sits under the name, so a long name keeps its whole width and every column fits.
 function ClientCell({ data }: Params) {
   if (!data) return null;
   const flagged = data.riskLevel === "watch" || data.riskLevel === "late_payer";
   return (
-    <span className="flex items-center gap-2">
-      <span className="truncate">{data.client.name}</span>
+    <span className="flex h-full flex-col items-start justify-center gap-0.5 leading-tight">
+      <span className="max-w-full truncate" title={data.client.name}>
+        {data.client.name}
+      </span>
       {flagged && data.riskLevel && <RiskBadge level={data.riskLevel} />}
     </span>
+  );
+}
+
+function NumberCell({ data }: Params) {
+  if (!data) return null;
+  return (
+    <Link
+      href={`/invoices/${encodeURIComponent(data.id)}`}
+      onClick={(event) => event.stopPropagation()}
+      aria-label={`Open invoice ${data.number}`}
+      className="text-blue underline underline-offset-2"
+    >
+      {data.number}
+    </Link>
   );
 }
 
@@ -39,7 +57,7 @@ function PayoutCell({ data }: Params) {
   );
 }
 
-function OpenCell({ data }: Params) {
+function PayPalCell({ data }: Params) {
   if (!data || data.dueState === "paid") return null;
   return (
     <a
@@ -47,33 +65,26 @@ function OpenCell({ data }: Params) {
       target="_blank"
       rel="noopener noreferrer"
       onClick={(event) => event.stopPropagation()}
-      aria-label={`Open invoice ${data.number} on PayPal (opens in a new tab)`}
-      className="text-blue underline underline-offset-2"
+      aria-label={`View invoice ${data.number} on PayPal (opens in a new tab)`}
+      className="group inline-flex items-center gap-1 text-blue"
     >
-      Open
+      <ExternalLink aria-hidden="true" className="size-4" />
+      <span className="sr-only group-hover:not-sr-only group-focus-visible:not-sr-only">View</span>
     </a>
-  );
-}
-
-function PageCell({ data }: Params) {
-  if (!data) return null;
-  return (
-    <Link
-      href={`/invoices/${encodeURIComponent(data.id)}`}
-      onClick={(event) => event.stopPropagation()}
-      aria-label={`Open invoice page for ${data.number}`}
-      className="text-blue underline underline-offset-2"
-    >
-      Open invoice page
-    </Link>
   );
 }
 
 // Work, issue date and purpose code live in the invoice panel. They stay in the grid, hidden, so the
 // search still finds them.
 export const invoiceColumns: ColDef<InvoiceSummary>[] = [
-  { headerName: "Invoice", field: "number", width: 110, pinned: "left" },
-  { headerName: "Client", field: "client.name", cellRenderer: ClientCell, flex: 1, minWidth: 200 },
+  { headerName: "Invoice", field: "number", cellRenderer: NumberCell, width: 110, minWidth: 100 },
+  {
+    headerName: "Client",
+    field: "client.name",
+    cellRenderer: ClientCell,
+    width: 200,
+    minWidth: 140,
+  },
   {
     headerName: "Amount",
     valueGetter: ({ data }) => (data ? Number(data.amount.value) : 0),
@@ -81,6 +92,7 @@ export const invoiceColumns: ColDef<InvoiceSummary>[] = [
     type: "rightAligned",
     cellClass: "tabular-nums",
     width: 120,
+    minWidth: 100,
   },
   {
     headerName: "To your bank",
@@ -88,13 +100,15 @@ export const invoiceColumns: ColDef<InvoiceSummary>[] = [
     valueFormatter: ({ value }) => (typeof value === "number" ? formatRupees(value) : ""),
     cellRenderer: PayoutCell,
     type: "rightAligned",
-    width: 200,
+    width: 180,
+    minWidth: 150,
   },
   {
     headerName: "Due",
     field: "dueOn",
     valueFormatter: ({ value }) => formatDate(value),
     width: 120,
+    minWidth: 105,
   },
   {
     headerName: "Status",
@@ -102,6 +116,7 @@ export const invoiceColumns: ColDef<InvoiceSummary>[] = [
       data ? statusLabel(data, (context as GridContext).today) : "",
     cellRenderer: StatusCell,
     width: 180,
+    minWidth: 140,
   },
   {
     headerName: "Days late",
@@ -110,20 +125,15 @@ export const invoiceColumns: ColDef<InvoiceSummary>[] = [
     type: "rightAligned",
     cellClass: "tabular-nums",
     width: 100,
+    minWidth: 85,
   },
   {
     headerName: "PayPal",
     colId: "open",
     sortable: false,
-    cellRenderer: OpenCell,
-    width: 80,
-  },
-  {
-    headerName: "Details",
-    colId: "page",
-    sortable: false,
-    cellRenderer: PageCell,
-    width: 170,
+    cellRenderer: PayPalCell,
+    width: 100,
+    minWidth: 85,
   },
   { headerName: "Work", field: "work", hide: true },
   { headerName: "Issued", field: "issuedOn", hide: true },

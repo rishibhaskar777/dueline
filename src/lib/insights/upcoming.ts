@@ -38,7 +38,11 @@ export function lateClients(groups: ClientGroup[]): LateClient[] {
           daysLate: Math.max(...overdue.map(({ daysLate }) => daysLate)),
           overdueInr: overdue.reduce((sum, { payoutInr }) => sum + (payoutInr ?? 0), 0),
           riskLevel: group.score.invoicesConsidered > 0 ? group.score.level : null,
-          reason: reasonWithBasis(group.score.reason, group.score.invoicesConsidered),
+          reason: reasonWithBasis(
+            group.score.reason,
+            group.score.invoicesConsidered,
+            group.invoices.some(({ mergedFrom }) => mergedFrom),
+          ),
         },
       ];
     })

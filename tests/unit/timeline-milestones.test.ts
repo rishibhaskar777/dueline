@@ -113,9 +113,11 @@ describe("the due and overdue milestones", () => {
   });
 
   it("describes both milestones in plain words", () => {
-    expect(describeTimelineEvent({ id: "due", kind: "due", at: "2026-08-15" })).toBe("Payment due");
+    expect(describeTimelineEvent({ id: "due", kind: "due", at: "2026-08-15" })).toBe(
+      "Payment due date",
+    );
     expect(describeTimelineEvent({ id: "overdue", kind: "overdue", at: "2026-08-16" })).toBe(
-      "Became overdue",
+      "Became overdue, still unpaid",
     );
   });
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { publishOverdueCount } from "@/components/layout/overdue-count";
 import { getActivity, getHealth, getInvoices } from "@/lib/api-client";
 import type { HealthResponse } from "@/types";
 import { createPoller, type Poller } from "./poll-scheduler";
@@ -39,6 +40,7 @@ export function useReceivables(): Receivables {
             slow || !health ? getHealth() : health,
           ]);
           health = loadedHealth;
+          publishOverdueCount(totals.overdueCount);
           if (active) {
             setState((previous) =>
               applyRefresh(previous, { invoices, totals, events, health: loadedHealth }),

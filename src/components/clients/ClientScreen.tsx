@@ -16,6 +16,8 @@ import { formatDays, wholeDays } from "@/lib/format-days";
 import { formatRupees } from "@/lib/money/format";
 import { ClientNotes } from "./ClientNotes";
 import { ClientRepeats } from "./ClientRepeats";
+import { MergeClient } from "./MergeClient";
+import { MergedClients } from "./MergedClients";
 import { ReminderLanguageCard } from "./ReminderLanguageCard";
 
 function NotFound() {
@@ -46,7 +48,7 @@ export function ClientScreen({ clientKey }: { clientKey: string }) {
     );
   }
 
-  const { client, invoices, notes, language } = state.data;
+  const { client, invoices, notes, language, merged } = state.data;
   return (
     <div className="grid gap-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
@@ -100,6 +102,13 @@ export function ClientScreen({ clientKey }: { clientKey: string }) {
       <ClientRepeats clientKey={client.key} />
       <ReminderLanguageCard clientKey={client.key} initial={language} />
       <ClientNotes clientKey={client.key} initial={notes} />
+      <MergedClients
+        clientKey={client.key}
+        clientName={client.name}
+        merged={merged}
+        onChanged={reload}
+      />
+      <MergeClient client={client} hasMerged={merged.length > 0} />
     </div>
   );
 }

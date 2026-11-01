@@ -1,9 +1,11 @@
 import "server-only";
+import { resolveClientName } from "@/lib/clients/aliases";
 import { today } from "@/lib/clock";
 import { getEnv } from "@/lib/env";
 import { loadVisibleInvoices } from "@/lib/demo/visible-invoices";
 import type { ClientRisk, InvoiceSummary, RiskLevel } from "@/types";
 import type { Lateness } from "@/lib/reminders/tone";
+import { getStore } from "@/lib/store";
 import { isSameClient } from "./client-key";
 import { scoreClient } from "./score";
 
@@ -12,9 +14,11 @@ export const emailIdentifiesClient = (): boolean => !getEnv().DEMO_MODE;
 
 export async function getClientRisk(email: string, name?: string): Promise<ClientRisk> {
   const identifies = emailIdentifiesClient();
-  const invoices = (await loadVisibleInvoices())
-    .map(({ summary }) => summary)
-    .filter(({ client }) => isSameClient(client, { email, name }, identifies));
+  const summaries = (await loadVisibleInvoices()).map(({ summary }) => summary);
+  const resolved = resolveClientName(name, await getStore().listClientAliases(), summaries);
+  const invoices = summaries.filter(({ client }) =>
+    isSameClient(client, { email, name: resolved }, identifies),
+  );
   const first = invoices[0]?.client;
 
   return {

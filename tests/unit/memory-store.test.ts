@@ -222,3 +222,38 @@ describe("settings, rates and payouts", () => {
     await expect(store.ping()).resolves.toBeUndefined();
   });
 });
+
+describe("client aliases", () => {
+  const alias = {
+    fromKey: "maya-studio",
+    intoKey: "okafor-reyes",
+    fromName: "Maya Studio",
+    fromEmail: "maya@new.example",
+  };
+
+  it("keeps a merge until it is deleted", async () => {
+    expect(await store.listClientAliases()).toEqual([]);
+    await store.saveClientAlias(alias);
+    expect(await store.listClientAliases()).toEqual([alias]);
+
+    expect(await store.deleteClientAlias("maya-studio")).toBe(true);
+    expect(await store.deleteClientAlias("maya-studio")).toBe(false);
+    expect(await store.listClientAliases()).toEqual([]);
+  });
+
+  it("points a client at one other client at a time", async () => {
+    await store.saveClientAlias(alias);
+    await store.saveClientAlias({ ...alias, intoKey: "northpine-studio" });
+    expect(await store.listClientAliases()).toEqual([{ ...alias, intoKey: "northpine-studio" }]);
+  });
+});
+
+describe("app flags", () => {
+  it("remembers a flag once it is set, and setting it twice changes nothing", async () => {
+    expect(await store.hasFlag("export_downloaded")).toBe(false);
+    await store.setFlag("export_downloaded");
+    await store.setFlag("export_downloaded");
+    expect(await store.hasFlag("export_downloaded")).toBe(true);
+    expect(await store.hasFlag("checklist_dismissed")).toBe(false);
+  });
+});

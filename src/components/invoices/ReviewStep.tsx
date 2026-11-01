@@ -13,6 +13,7 @@ import {
   type InvoiceForm,
 } from "@/components/invoices/invoice-form";
 import { ItemsTable } from "@/components/invoices/ItemsTable";
+import { RiskRadar } from "@/components/invoices/RiskRadar";
 import { SendResult } from "@/components/invoices/SendResult";
 import { useFormReferences } from "@/components/invoices/use-form-references";
 import { useSubmitInvoice } from "@/components/invoices/use-submit-invoice";
@@ -81,6 +82,14 @@ export function ReviewStep({ initial, profile, onCreateAnother }: ReviewStepProp
           <ClientFields form={form} update={update} errors={errors} demoEmail={demoEmail} />
         </section>
 
+        <RiskRadar
+          clientName={form.clientName}
+          clientEmail={form.clientEmail}
+          known={known}
+          form={form}
+          update={update}
+        />
+
         <section aria-labelledby="items-title" className={SECTION}>
           <h2 id="items-title" className="text-xl font-semibold">
             Items
@@ -112,7 +121,7 @@ export function ReviewStep({ initial, profile, onCreateAnother }: ReviewStepProp
           </div>
         </section>
 
-        <DiscountSection form={form} update={update} errors={errors} known={known} />
+        <DiscountSection form={form} update={update} errors={errors} />
       </div>
 
       <div className="grid gap-4 lg:sticky lg:top-6">

@@ -17,7 +17,7 @@ function names(invoices: DigestInvoice[]): string {
     .slice(0, SHOWN)
     .map(
       ({ clientName, invoiceNumber, amount }) =>
-        `${clientName} ${invoiceNumber} (${formatMoney(amount)})`,
+        `Invoice ${invoiceNumber} · ${clientName} (${formatMoney(amount)})`,
     );
   const more = invoices.length - SHOWN;
   return more > 0 ? `${shown.join(", ")} and ${more} more` : shown.join(", ");

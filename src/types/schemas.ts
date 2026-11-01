@@ -216,6 +216,8 @@ export const clientKeySchema = z.string().min(1).max(200).transform(decodeKey);
 
 export const clientNotesRequestSchema = z.object({ notes: z.string().max(1000) });
 
+export const mergeClientRequestSchema = z.object({ into: clientKeySchema });
+
 export const cancelInvoiceRequestSchema = z.object({
   requestId: requestIdSchema,
   notifyClient: z.boolean().optional(),
@@ -270,5 +272,7 @@ export const bankReferenceRequestSchema = z.object({
     .string()
     .trim()
     .max(40)
-    .regex(/^[A-Za-z0-9/-]*$/, "must be letters, digits, / and - only"),
+    .regex(/^[A-Za-z0-9/-]*$/),
 });
+
+export const BANK_REFERENCE_MESSAGE = "Use letters, digits, / and - only, up to 40 characters.";

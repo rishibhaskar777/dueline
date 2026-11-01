@@ -2,7 +2,7 @@ import { StatTile } from "@/components/shared/StatTile";
 import { formatMonth } from "@/lib/format-date";
 import { formatMoney, formatRupees } from "@/lib/money/format";
 import type { ExportRegister } from "@/types";
-import { describeRupeeSplit } from "./register-text";
+import { describeRupees } from "./register-text";
 
 export function RegisterSummary({ register }: { register: ExportRegister }) {
   const { rows, outsideRows, missingPurposeCodes } = register;
@@ -17,7 +17,7 @@ export function RegisterSummary({ register }: { register: ExportRegister }) {
       <StatTile
         label="Rupees received"
         value={formatRupees(register.totalInr)}
-        note={describeRupeeSplit(register)}
+        note={describeRupees(register)}
       />
       <StatTile
         label="Foreign totals"

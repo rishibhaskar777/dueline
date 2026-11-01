@@ -44,7 +44,14 @@ export function InvoiceSummaryCard({ totals }: InvoiceSummaryCardProps) {
         )}
         {totals && estimate && (
           <>
-            <p className="font-medium tabular-nums">
+            <dl className="divide-y divide-line">
+              <FactRow label="PayPal fee" value={`− ${formatMoney(estimate.fee)}`} />
+              <FactRow
+                label="Conversion loss"
+                value={`− ${formatRupees(estimate.lossInr)} (${estimate.lossPercent}%)`}
+              />
+            </dl>
+            <p className="mt-2 font-medium tabular-nums">
               About {formatRupees(estimate.netInr)} reaches your bank
             </p>
             <p className="mt-1 text-xs text-muted-foreground">

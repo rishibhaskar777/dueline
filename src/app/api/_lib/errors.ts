@@ -4,7 +4,7 @@ import {
   QueueItemNotFoundError,
   RepeatNotFoundError,
 } from "@/lib/automation/errors";
-import { ClientNotFoundError } from "@/lib/clients/errors";
+import { ClientMergeError, ClientNotFoundError } from "@/lib/clients/errors";
 import { ConfigError } from "@/lib/env";
 import { DemoResetLimitError, DemoUnavailableError } from "@/lib/demo/errors";
 import { RecipientNotAllowedError } from "@/lib/demo-guard";
@@ -39,7 +39,9 @@ export function failFromError(error: unknown): Response {
     return fail(404, "not_found", error.message);
   }
   if (error instanceof InvalidActionError) return fail(400, "invalid_request", error.message);
-  if (error instanceof InvoiceStateError) return fail(409, "invalid_state", error.message);
+  if (error instanceof InvoiceStateError || error instanceof ClientMergeError) {
+    return fail(409, "invalid_state", error.message);
+  }
   if (error instanceof DuplicateRequestError) {
     return fail(409, "duplicate_request", error.message);
   }

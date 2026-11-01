@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback } from "react";
 import { InvoiceActions } from "@/components/invoice-page/InvoiceActions";
 import { InvoiceDetailsCard } from "@/components/invoice-page/InvoiceDetailsCard";
+import { InvoiceFacts } from "@/components/invoice-page/InvoiceFacts";
 import { InvoiceHeader } from "@/components/invoice-page/InvoiceHeader";
 import { Timeline } from "@/components/invoice-page/Timeline";
 import { LoadFailure } from "@/components/shared/LoadFailure";
@@ -43,9 +44,10 @@ export function InvoiceScreen({ invoiceId }: { invoiceId: string }) {
   return (
     <div className="grid gap-6">
       <InvoiceHeader invoice={invoice} clientKey={details.clientKey} today={today} />
+      <InvoiceFacts invoice={invoice} details={details} today={today} />
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="grid gap-6">
-          <InvoiceDetailsCard invoice={invoice} details={details} />
+          <InvoiceDetailsCard details={details} />
           <InvoiceActions invoice={invoice} details={details} today={today} onChanged={reload} />
         </div>
         <Timeline events={timeline} />

@@ -41,3 +41,10 @@ const monthYear = new Intl.DateTimeFormat("en-IN", {
 export function formatMonth(month: string): string {
   return monthYear.format(new Date(`${month}-01T00:00:00Z`));
 }
+
+const monthOnly = new Intl.DateTimeFormat("en-IN", { month: "long", timeZone: "UTC" });
+
+// "November", or "November 2025" when the year is needed.
+export function formatMonthName(month: string, withYear: boolean): string {
+  return withYear ? formatMonth(month) : monthOnly.format(new Date(`${month}-01T00:00:00Z`));
+}

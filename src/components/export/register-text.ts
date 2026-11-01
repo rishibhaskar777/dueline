@@ -1,18 +1,26 @@
+import { formatMonthName } from "@/lib/format-date";
 import { formatRupees } from "@/lib/money/format";
 import type { ExportRegister } from "@/types";
 
-// Only the parts that exist are named, so a month with no estimates does not say "estimated ₹0".
-export function describeRupeeSplit({
-  paypalFiraInr,
+// One note under the one rupee figure, never the figure again. A bank transfer is worked out at the
+// ECB rate of the payment date, so it counts as estimated.
+export function describeRupees({
+  totalInr,
+  paypalInr,
   estimatedInr,
   bankInr,
 }: ExportRegister): string {
-  const parts = [
-    paypalFiraInr > 0 ? `PayPal FIRA ${formatRupees(paypalFiraInr)}` : null,
-    estimatedInr > 0 ? `of which estimated ${formatRupees(estimatedInr)}` : null,
-    bankInr > 0 ? `bank transfers ${formatRupees(bankInr)}` : null,
-  ].filter((part): part is string => part !== null);
-  return parts.length > 0 ? parts.join(" · ") : "No rupees to report";
+  if (totalInr === 0) return "No rupees to report";
+  const estimated = estimatedInr + bankInr;
+  if (paypalInr === 0) return "All estimated";
+  if (estimated === 0) return "All from PayPal";
+  return `${formatRupees(paypalInr)} from PayPal, ${formatRupees(estimated)} estimated`;
+}
+
+// Said when the register opens on an earlier month because the current one has no payments.
+export function fallbackNote(currentMonth: string, latestMonth: string): string {
+  const sameYear = currentMonth.slice(0, 4) === latestMonth.slice(0, 4);
+  return `No payments in ${formatMonthName(currentMonth, false)} yet. Showing ${formatMonthName(latestMonth, !sameYear)}, the latest month with payments.`;
 }
 
 export const FIRA_GUIDE_URL = "https://www.paypal.com/in/brc/article/paypal-monthly-digital-firc";

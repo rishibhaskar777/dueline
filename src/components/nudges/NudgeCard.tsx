@@ -28,6 +28,7 @@ interface NudgeCardProps extends Nudge {
 export function NudgeCard({
   draft: initial,
   invoice,
+  paySpeed,
   limitReached,
   improve,
   onSent,
@@ -43,7 +44,7 @@ export function NudgeCard({
       id={`invoice-${encodeURIComponent(invoice.id)}`}
       className="scroll-mt-6 rounded-xl border border-line bg-card p-6"
     >
-      <NudgeHeader invoice={invoice} history={nudge.history} />
+      <NudgeHeader invoice={invoice} paySpeed={paySpeed} history={nudge.history} />
 
       <div className="mt-5 grid gap-4">
         <ToneSwitch

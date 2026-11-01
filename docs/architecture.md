@@ -387,6 +387,9 @@ life. If the server holds a request (`duplicate_request`, `paypal_timeout`) and 
 the form, a `duplicate_request` answer is replaced by "These details changed after the invoice was
 submitted…" with a "Create another" button that starts over with a new request ID. The result panel offers "Retry sending" with its own request ID for a draft that was not sent.
 
+**Screens that answer.** `useDiscountOffer` links the radar to the one discount control. The radar renders
+under the Client card. The summary card reads the same payout estimate as Fees and rates.
+
 ## Receivables screen
 
 `/receivables` renders a server component with the header and a "New invoice" link, and one client
@@ -438,6 +441,16 @@ amount and sets the estimate (published fees) beside PayPal's actual fee, amount
 rupees, with the difference in words. When PayPal reported no exchange rate, the panel says the
 conversion is reported at withdrawal and the rupees use the ECB rate of the payment date (shown as
 "ECB rate of 30 Oct 2026", from `rateDate`) less PayPal's markup.
+
+## Merged clients, the checklist and shared state
+
+A merge is a row in `client_aliases` (migration 009). `loadInvoices` applies the aliases after its cache
+(`applyAliases`, pure, in `lib/clients/aliases.ts`), so every list built on it sees one client; the
+radar also maps a typed name through them (`resolveClientName`). `checkMerge` refuses chains.
+`app_flags` holds "export_downloaded" (set when the register's CSV is served) and "checklist_dismissed".
+`GET /api/checklist` ticks the first-run items from the profile, settings, the invoices and those flags.
+The sidebar's overdue count is a small store (`overdue-count.ts`) that the Receivables poll publishes to.
+The due line places end labels with `placeEndLabel` (`label-placement.ts`).
 
 ## Money views
 

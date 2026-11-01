@@ -9,7 +9,9 @@ import type {
   Settings,
 } from "@/types";
 import type {
+  AppFlag,
   ClaimResult,
+  ClientAlias,
   DemoGeneration,
   Json,
   ReminderLogEntry,
@@ -42,6 +44,8 @@ export function createMemoryStore(): Store {
   let generation: DemoGeneration | null = null;
   const hidden = new Set<string>();
   const bankReferences = new Map<string, string>();
+  const aliases = new Map<string, ClientAlias>();
+  const flags = new Set<AppFlag>();
 
   return {
     async claim(requestId, bodyHash): Promise<ClaimResult> {
@@ -200,6 +204,26 @@ export function createMemoryStore(): Store {
     async saveBankReference(invoiceId, reference): Promise<void> {
       if (reference === null) bankReferences.delete(invoiceId);
       else bankReferences.set(invoiceId, reference);
+    },
+
+    async listClientAliases(): Promise<ClientAlias[]> {
+      return [...aliases.values()];
+    },
+
+    async saveClientAlias(alias): Promise<void> {
+      aliases.set(alias.fromKey, alias);
+    },
+
+    async deleteClientAlias(fromKey): Promise<boolean> {
+      return aliases.delete(fromKey);
+    },
+
+    async hasFlag(name): Promise<boolean> {
+      return flags.has(name);
+    },
+
+    async setFlag(name): Promise<void> {
+      flags.add(name);
     },
 
     async hitRateLimit(key, windowSeconds): Promise<number> {

@@ -166,6 +166,7 @@ describe("timeline text", () => {
 describe("formFromInvoice", () => {
   const details: InvoiceDetails = {
     clientKey: "okafor-reyes",
+    clientPaySpeed: null,
     items: [
       {
         name: "Logo",

@@ -1,102 +1,91 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { saveBankReference } from "@/lib/api-client";
+import { AgGridReact } from "ag-grid-react";
+import { gridTheme } from "@/components/grid/ag-grid";
+import { useIsPhone } from "@/components/shared/use-phone";
 import { formatDate } from "@/lib/format-date";
 import { formatMoney, formatRupees } from "@/lib/money/format";
 import type { ExportOutsideRow } from "@/types";
+import { BankReferenceInput } from "./BankReferenceInput";
+import { bankColumns } from "./bank-columns";
 
-function BankTransferRow({ row }: { row: ExportOutsideRow }) {
-  const [saved, setSaved] = useState(row.bankReference ?? "");
-  const [typed, setTyped] = useState(saved);
-  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
-  const [busy, setBusy] = useState(false);
+const defaultColDef = { sortable: true, resizable: true, suppressMovable: true };
 
-  async function save(): Promise<void> {
-    setBusy(true);
-    setMessage(null);
-    try {
-      const stored = await saveBankReference(row.invoiceId, typed.trim());
-      setSaved(stored ?? "");
-      setTyped(stored ?? "");
-      setMessage({ ok: true, text: stored ? "Saved." : "Cleared." });
-    } catch (error) {
-      setMessage({
-        ok: false,
-        text: error instanceof Error ? error.message : "Could not save the reference.",
-      });
-    } finally {
-      setBusy(false);
-    }
-  }
+interface BankTransfersProps {
+  rows: ExportOutsideRow[];
+  paypalFiraInr: number;
+  bankInr: number;
+}
 
-  const inputId = `bank-reference-${row.invoiceId}`;
+function BankCards({ rows }: { rows: ExportOutsideRow[] }) {
   return (
-    <li className="grid gap-2 py-3 text-sm">
-      <span className="flex flex-wrap justify-between gap-2">
-        <span className="font-medium">
-          {row.clientName} · {row.invoiceNumber}
-        </span>
-        <span className="tabular-nums">
-          {formatMoney(row.foreign)} · {formatRupees(row.inrReceived)} · paid{" "}
-          {formatDate(row.paidOn)}
-        </span>
-      </span>
-      <span className="flex flex-wrap items-end gap-2">
-        <span className="grid gap-1">
-          <Label htmlFor={inputId}>FIRC or e-BRC number</Label>
-          <Input
-            id={inputId}
-            value={typed}
-            maxLength={40}
-            autoComplete="off"
-            onChange={(event) => setTyped(event.target.value)}
-          />
-        </span>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={busy || typed.trim() === saved}
-          onClick={() => void save()}
-        >
-          Save reference
-        </Button>
-        {!saved && <span className="text-due-soon">Reference missing</span>}
-        {message && (
-          <span
-            role={message.ok ? "status" : "alert"}
-            className={message.ok ? undefined : "text-late"}
-          >
-            {message.text}
+    <ul className="grid gap-3 px-4 pb-4">
+      {rows.map((row) => (
+        <li key={row.invoiceId} className="grid gap-2 rounded-lg border border-line p-3 text-sm">
+          <span className="flex justify-between gap-2">
+            <span className="font-medium">{row.clientName}</span>
+            <span className="text-muted-foreground">{row.invoiceNumber}</span>
           </span>
-        )}
-      </span>
-    </li>
+          <span className="flex justify-between gap-2 tabular-nums">
+            <span>{formatMoney(row.foreign)}</span>
+            <span>{formatRupees(row.inrReceived)}</span>
+          </span>
+          <span className="text-muted-foreground">Paid {formatDate(row.paidOn)}</span>
+          <BankReferenceInput
+            invoiceId={row.invoiceId}
+            invoiceNumber={row.invoiceNumber}
+            initial={row.bankReference}
+          />
+        </li>
+      ))}
+    </ul>
   );
 }
 
 // Payments recorded as bank transfers have no PayPal FIRA. The bank's FIRC or e-BRC is their proof, so
 // the number is kept here and goes into the CSV for the CA.
-export function BankTransfers({ rows }: { rows: ExportOutsideRow[] }) {
+export function BankTransfers({ rows, paypalFiraInr, bankInr }: BankTransfersProps) {
+  const phone = useIsPhone();
   if (rows.length === 0) return null;
 
   return (
-    <section aria-labelledby="bank-title" className="rounded-xl border border-line bg-card p-6">
-      <h2 id="bank-title" className="text-xl font-semibold">
-        Bank transfers
-      </h2>
-      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-        Recorded as paid outside PayPal, so they are not on PayPal&apos;s FIRA. Add the number from
-        your bank&apos;s FIRC or e-BRC for each one. Rupees are at the ECB rate of the payment date.
-      </p>
-      <ul className="mt-2 divide-y divide-line">
-        {rows.map((row) => (
-          <BankTransferRow key={row.invoiceId} row={row} />
-        ))}
-      </ul>
+    <section aria-labelledby="bank-title" className="rounded-xl border border-line bg-card">
+      <div className="p-6">
+        <h2 id="bank-title" className="text-xl font-semibold">
+          Bank transfers
+        </h2>
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          Recorded as paid outside PayPal, so they are not on PayPal&apos;s FIRA. Type the number
+          from your bank&apos;s FIRC or e-BRC in each row; Enter or leaving the box saves it, Escape
+          undoes the change. Rupees are at the ECB rate of the payment date.
+        </p>
+        <dl aria-label="Totals by proof" className="mt-4 flex flex-wrap gap-x-10 gap-y-3">
+          <div>
+            <dt className="text-sm text-muted-foreground">On PayPal&apos;s FIRA</dt>
+            <dd className="font-heading text-2xl font-semibold tabular-nums">
+              {formatRupees(paypalFiraInr)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-sm text-muted-foreground">By bank transfer</dt>
+            <dd className="font-heading text-2xl font-semibold tabular-nums">
+              {formatRupees(bankInr)}
+            </dd>
+          </div>
+        </dl>
+      </div>
+      {phone ? (
+        <BankCards rows={rows} />
+      ) : (
+        <AgGridReact<ExportOutsideRow>
+          theme={gridTheme}
+          rowData={rows}
+          columnDefs={bankColumns}
+          defaultColDef={defaultColDef}
+          getRowId={({ data }) => data.invoiceId}
+          domLayout="autoHeight"
+        />
+      )}
     </section>
   );
 }

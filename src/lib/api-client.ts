@@ -4,6 +4,7 @@ import type {
   ApiError,
   BankReferenceResponse,
   CancelInvoiceResponse,
+  Checklist,
   ClientDetail,
   ClientLanguageResponse,
   ClientNotesResponse,
@@ -25,6 +26,7 @@ import type {
   InvoicesResponse,
   LibraryItem,
   LibraryItemsResponse,
+  MergeClientResponse,
   Money,
   PaymentMethod,
   PayoutEstimate,
@@ -114,6 +116,14 @@ export function getHealth(): Promise<HealthResponse> {
   return requestJson("/api/health");
 }
 
+export function getChecklist(): Promise<Checklist> {
+  return requestJson("/api/checklist");
+}
+
+export async function dismissChecklist(): Promise<void> {
+  await request("/api/checklist/dismiss", { method: "POST" });
+}
+
 export function getInvoices(): Promise<InvoicesResponse> {
   return requestJson("/api/invoices");
 }
@@ -169,6 +179,20 @@ export async function getClients(): Promise<ClientSummary[]> {
 
 export function getClientDetail(key: string): Promise<ClientDetail> {
   return requestJson(`/api/clients/by-key/${encodeURIComponent(key)}`);
+}
+
+export function mergeClient(from: string, into: string): Promise<MergeClientResponse> {
+  return requestJson(
+    `/api/clients/by-key/${encodeURIComponent(from)}/merge`,
+    jsonInit("POST", { into }),
+  );
+}
+
+export async function unmergeClient(into: string, from: string): Promise<void> {
+  await request(
+    `/api/clients/by-key/${encodeURIComponent(into)}/merged/${encodeURIComponent(from)}`,
+    { method: "DELETE" },
+  );
 }
 
 export async function saveClientNotes(

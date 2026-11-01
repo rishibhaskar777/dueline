@@ -1,3 +1,4 @@
+import type { PaySpeed } from "./insights";
 import type { InvoiceSummary } from "./invoice";
 import type { Money } from "./money";
 import type { ReminderChannel, Tone } from "./reminder";
@@ -23,6 +24,7 @@ export interface InvoiceItem {
 
 export interface InvoiceDetails {
   clientKey: string;
+  clientPaySpeed: PaySpeed | null;
   items: InvoiceItem[];
   note: string;
   underLut: boolean;

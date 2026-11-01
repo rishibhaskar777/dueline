@@ -18,10 +18,18 @@ export interface ClientSummary {
   lastPaidOn: string | null;
 }
 
+// A client merged into another: its invoices count as the other client's in Dueline's views.
+export interface MergedClient {
+  key: string;
+  name: string;
+  email: string;
+}
+
 export interface ClientDetail {
   client: ClientSummary;
   invoices: InvoiceSummary[];
   risk: ClientRisk;
   notes: string;
   language: ReminderLanguage;
+  merged: MergedClient[]; // the clients merged into this one, oldest merge first
 }

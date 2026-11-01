@@ -1,5 +1,6 @@
 export const WIDGETS = [
   { id: "morning", title: "This morning", wide: true },
+  { id: "checklist", title: "Getting started", wide: true },
   { id: "totals", title: "Totals", wide: true },
   { id: "forecast", title: "Forecast", wide: false },
   { id: "dueLine", title: "Due line", wide: true },

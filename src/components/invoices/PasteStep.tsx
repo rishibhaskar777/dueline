@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { SAMPLE_CHAT } from "@/components/invoices/sample-chat";
+import { CHAT_PLACEHOLDER, SAMPLE_CHAT } from "@/components/invoices/sample-chat";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,9 +74,13 @@ export function PasteStep({ onDrafted }: PasteStepProps) {
           maxLength={MAX_CHAT_LENGTH}
           value={chat}
           onChange={(event) => setChat(event.target.value)}
-          aria-describedby="chat-count"
+          placeholder={CHAT_PLACEHOLDER}
+          aria-describedby="chat-hint chat-count"
           className="min-h-48"
         />
+        <p id="chat-hint" className="text-xs text-muted-foreground">
+          Emails and phone numbers are hidden before the AI reads the chat.
+        </p>
         <p id="chat-count" className="text-xs text-muted-foreground tabular-nums">
           {chat.length.toLocaleString("en-IN")} of {MAX_CHAT_LENGTH.toLocaleString("en-IN")}{" "}
           characters

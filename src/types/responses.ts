@@ -62,6 +62,11 @@ export interface ClientsResponse {
   clients: ClientSummary[];
 }
 
+export interface MergeClientResponse {
+  from: string;
+  into: string;
+}
+
 export interface ClientNotesResponse {
   notes: string;
 }

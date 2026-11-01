@@ -4,18 +4,21 @@ import { RiskBadge } from "@/components/shared/RiskBadge";
 import { RiskReason } from "@/components/shared/RiskReason";
 import { useClientRisk, type KnownRisk } from "@/components/shared/use-client-risk";
 import { Button } from "@/components/ui/button";
-import type { ClientRisk } from "@/types";
+import type { InvoiceForm } from "./invoice-form";
+import { useDiscountOffer } from "./use-discount-offer";
 
 interface RiskRadarProps {
   clientName: string;
   clientEmail: string;
   // What the server read for the client in the chat, so the first view needs no second request.
   known: KnownRisk;
-  onOffer: (suggestion: NonNullable<ClientRisk["suggestion"]>) => void;
+  form: InvoiceForm;
+  update: (changes: Partial<InvoiceForm>) => void;
 }
 
-export function RiskRadar({ clientName, clientEmail, known, onOffer }: RiskRadarProps) {
+export function RiskRadar({ clientName, clientEmail, known, form, update }: RiskRadarProps) {
   const risk = useClientRisk(clientEmail, clientName, known);
+  const { applied, offer } = useDiscountOffer(form, risk?.suggestion ?? null, update);
   if (!risk || risk.invoicesConsidered === 0) return null;
 
   if (risk.level === "reliable") {
@@ -38,16 +41,17 @@ export function RiskRadar({ clientName, clientEmail, known, onOffer }: RiskRadar
       <p className="mt-2 text-sm">
         <RiskReason risk={risk} />
       </p>
-      {suggestion && (
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-4"
-          onClick={() => onOffer(suggestion)}
-        >
-          Offer {suggestion.percent}% if paid within {suggestion.withinDays} days
-        </Button>
-      )}
+      {suggestion &&
+        (applied ? (
+          <p role="status" className="mt-4 text-sm font-medium text-paid">
+            Offered: {suggestion.percent}% if paid within {suggestion.withinDays} days. Change or
+            remove it under Early-payment discount.
+          </p>
+        ) : (
+          <Button type="button" variant="outline" className="mt-4" onClick={offer}>
+            Offer {suggestion.percent}% if paid within {suggestion.withinDays} days
+          </Button>
+        ))}
     </section>
   );
 }

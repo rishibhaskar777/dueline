@@ -4,16 +4,18 @@ import { RiskBadge } from "@/components/shared/RiskBadge";
 import { RiskReason } from "@/components/shared/RiskReason";
 import { useClientRisk } from "@/components/shared/use-client-risk";
 import { formatDate } from "@/lib/format-date";
+import { formatDays } from "@/lib/format-days";
 import { formatMoney } from "@/lib/money/format";
-import type { InvoiceSummary, ReminderDraft } from "@/types";
+import type { InvoiceSummary, PaySpeed, ReminderDraft } from "@/types";
 import { daysLateLabel, historyLabel } from "./nudge-model";
 
 interface NudgeHeaderProps {
   invoice: InvoiceSummary;
+  paySpeed: PaySpeed | null;
   history: ReminderDraft["history"];
 }
 
-export function NudgeHeader({ invoice, history }: NudgeHeaderProps) {
+export function NudgeHeader({ invoice, paySpeed, history }: NudgeHeaderProps) {
   const risk = useClientRisk(invoice.client.email, invoice.client.name);
 
   return (
@@ -37,6 +39,12 @@ export function NudgeHeader({ invoice, history }: NudgeHeaderProps) {
           {daysLateLabel(invoice.daysLate)}
         </span>
       </p>
+      {paySpeed && (
+        <p className="mt-1 text-sm text-muted-foreground">
+          Average days to get paid: {formatDays(paySpeed.averageDays)}, {paySpeed.onTimePercent}% on
+          time
+        </p>
+      )}
       {history.length > 0 && (
         <ul className="mt-2 text-sm text-muted-foreground">
           {history.map((entry) => (
