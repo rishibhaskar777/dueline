@@ -11,9 +11,10 @@ export async function POST(req: Request): Promise<Response> {
   if (!parsed.ok) return parsed.response;
 
   try {
-    const { invoiceId, tone } = parsed.data;
+    const { invoiceId, tone, language } = parsed.data;
     return ok<ReminderDraft>(
       await draftReminderFor(invoiceId, tone, {
+        language,
         beforeModelCall: () => reserveReminderDraft(addressOf(req)),
       }),
     );

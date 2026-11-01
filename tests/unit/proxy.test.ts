@@ -43,6 +43,7 @@ describe("public routes", () => {
   it.each([
     ["GET", "/api/health"],
     ["POST", "/api/webhooks/paypal"],
+    ["GET", "/api/cron/daily"],
     ["POST", "/api/demo/session"],
     ["DELETE", "/api/demo/session"],
   ])("lets %s %s through without a cookie", async (method, path) => {
@@ -52,6 +53,8 @@ describe("public routes", () => {
   it("does not open other methods on those paths", async () => {
     expect((await proxy(request("/api/webhooks/paypal"))).status).toBe(401);
     expect((await proxy(request("/api/health", { method: "POST" }))).status).toBe(401);
+    expect((await proxy(request("/api/cron/daily", { method: "POST" }))).status).toBe(401);
+    expect((await proxy(request("/api/cron/other"))).status).toBe(401);
   });
 });
 

@@ -94,6 +94,7 @@ describe("GET /api/dashboard", () => {
       "feesLost",
       "forecast",
       "lateClients",
+      "rateAlerts",
       "rates",
       "upcomingDue",
     ]);
