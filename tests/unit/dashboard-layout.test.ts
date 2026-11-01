@@ -62,13 +62,15 @@ describe("parseLayout", () => {
 
 describe("moveWidget, setWidgetVisible and resetLayout", () => {
   it("moves a widget up or down one place", () => {
-    expect(ids(moveWidget(DEFAULT_LAYOUT, "forecast", -1)).slice(0, 3)).toEqual([
+    expect(ids(moveWidget(DEFAULT_LAYOUT, "forecast", -1)).slice(0, 4)).toEqual([
       "morning",
+      "checklist",
       "forecast",
       "totals",
     ]);
-    expect(ids(moveWidget(DEFAULT_LAYOUT, "totals", 1)).slice(0, 3)).toEqual([
+    expect(ids(moveWidget(DEFAULT_LAYOUT, "totals", 1)).slice(0, 4)).toEqual([
       "morning",
+      "checklist",
       "forecast",
       "totals",
     ]);
