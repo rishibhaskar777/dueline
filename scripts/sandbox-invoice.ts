@@ -65,10 +65,6 @@ export async function createAndSendSandboxInvoice(
     });
   }
 
-  await sendInvoice(
-    draft.id,
-    { subject: `Invoice ${invoiceNumber}`, note: "Sandbox invoice. No real money moves." },
-    crypto.randomUUID(),
-  );
+  await sendInvoice(draft.id, crypto.randomUUID());
   return { invoice: draft, pastDatesAccepted };
 }

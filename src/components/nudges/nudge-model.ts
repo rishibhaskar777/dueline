@@ -1,8 +1,7 @@
 import { todayInKolkata } from "@/lib/date-math";
 import { formatDayMonth } from "@/lib/format-date";
 import { languageInfo } from "@/lib/reminders/languages";
-import { suggestTone } from "@/lib/reminders/tone";
-import type { InvoiceSummary, ReminderDraft, ReminderLanguage, Tone } from "@/types";
+import type { ReminderChannel, ReminderDraft, ReminderLanguage, Tone } from "@/types";
 
 export const TONE_LABELS: Record<Tone, string> = {
   gentle: "Gentle",
@@ -22,14 +21,21 @@ export function daysLateLabel(daysLate: number): string {
   return `${daysLate} ${daysLate === 1 ? "day" : "days"} late`;
 }
 
-export function historyLabel({ tone, sentAt }: SentReminder): string {
-  return `${TONE_LABELS[tone]} reminder sent ${formatDayMonth(todayInKolkata(new Date(sentAt)))}`;
+export function historyLabel({ tone, sentAt, channel }: SentReminder): string {
+  const how = channel === "email" ? "message sent from your email" : "reminder sent through PayPal";
+  return `${TONE_LABELS[tone]} ${how} ${formatDayMonth(todayInKolkata(new Date(sentAt)))}`;
 }
 
-// Dueline sends one reminder per invoice per India day, whatever the demo clock says.
-export function wasSentToday(history: SentReminder[], now: Date = new Date()): boolean {
+// One reminder per invoice per channel per India day, whatever the demo clock says.
+export function sentTodayVia(
+  history: SentReminder[],
+  channel: ReminderChannel,
+  now: Date = new Date(),
+): boolean {
   const today = todayInKolkata(now);
-  return history.some(({ sentAt }) => todayInKolkata(new Date(sentAt)) === today);
+  return history.some(
+    (entry) => entry.channel === channel && todayInKolkata(new Date(entry.sentAt)) === today,
+  );
 }
 
 type DraftText = Pick<ReminderDraft, "subject" | "message">;
@@ -58,8 +64,11 @@ export function replaceEditsQuestion(tone: Tone, language: ReminderLanguage = "e
     : `Replace your edits with a ${draft} in ${languageInfo(language).name}?`;
 }
 
-export function sentMessage(sentAt: string): string {
-  return `Sent at ${clock.format(new Date(sentAt))}. PayPal emailed the client with a Pay now link.`;
+export function sentMessage(sentAt: string, channel: ReminderChannel): string {
+  const time = clock.format(new Date(sentAt));
+  return channel === "email"
+    ? `Recorded at ${time}: you sent your message from your own email.`
+    : `Sent at ${time}. PayPal emailed the client its standard reminder with a Pay now button.`;
 }
 
 export function sourceNote(source: ReminderDraft["source"]): string {
@@ -73,12 +82,4 @@ export const IMPROVING_NOTE = "Improving the draft…";
 export const KEPT_EDITS_NOTE = "A better draft was ready, but your edits were kept.";
 
 export const LIMIT_REACHED_NOTICE =
-  "Today's PayPal reminder limit for the demo account is used up. Drafts still work; sending resumes tomorrow.";
-
-// Says so when the client's record is what made the suggestion firmer than the days alone would.
-export function toneReason(invoice: InvoiceSummary, draft: ReminderDraft): string | null {
-  if (invoice.riskLevel !== "late_payer") return null;
-  if (suggestTone(invoice.daysLate, draft.history, null) === draft.suggestedTone) return null;
-  const tone = TONE_LABELS[draft.suggestedTone].toLowerCase();
-  return `Suggested ${tone} because ${invoice.client.name} is a late payer.`;
-}
+  "Today's PayPal reminder limit for the demo account is used up. Drafts and your own email still work; PayPal reminders resume tomorrow.";

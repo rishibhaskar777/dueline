@@ -30,9 +30,6 @@ type NewInvoice = Omit<CreateInvoiceRequest, "requestId">;
 const INVOICE_CONFLICT =
   "This request ID was already used for different details. Check Receivables before creating the invoice again.";
 
-const SEND_NOTE =
-  "Thank you for your business. You can pay securely with PayPal using the link in this email.";
-
 function toStored(result: CreateInvoiceResponse): Json {
   return JSON.parse(JSON.stringify(result)) as Json;
 }
@@ -49,10 +46,6 @@ function fromStored(value: Json): CreateInvoiceResponse {
     return value as unknown as CreateInvoiceResponse;
   }
   throw new Error("The stored result of this request cannot be read.");
-}
-
-function sendMessage(invoice: PayPalInvoice): { subject: string; note: string } {
-  return { subject: `Invoice ${invoice.detail.invoice_number}`, note: SEND_NOTE };
 }
 
 async function createDraft(input: NewInvoice, requestId: string): Promise<PayPalInvoice> {
@@ -94,7 +87,7 @@ async function sendCreated(
 ): Promise<CreateInvoiceResponse> {
   if (draft.status === "DRAFT") {
     try {
-      await sendInvoice(draft.id, sendMessage(draft), requestId);
+      await sendInvoice(draft.id, requestId);
     } catch (error) {
       if (error instanceof PayPalApiError || error instanceof PayPalTimeoutError) {
         return { invoice: summarise(draft), sent: false };
@@ -154,7 +147,7 @@ export async function sendExistingDraft(
     const invoice = await getInvoice(invoiceId);
     if (invoice.status === "DRAFT") {
       assertSandboxBuyers(recipientsOf(invoice));
-      await sendInvoice(invoiceId, sendMessage(invoice), requestId);
+      await sendInvoice(invoiceId, requestId);
     }
     const current = invoice.status === "DRAFT" ? await getInvoice(invoiceId) : invoice;
     clearInvoiceCaches();

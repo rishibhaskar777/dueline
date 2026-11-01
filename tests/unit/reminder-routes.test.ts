@@ -47,10 +47,8 @@ const overdue = overdueInvoice("2026-10-26", 5);
 
 const sendBody = {
   invoiceId: unpaid.id,
-  subject: "A quick reminder about invoice INV-0101",
-  message:
-    "Hi Tandem Health team,\n\nInvoice INV-0101 is overdue. Please use Pay now.\n\nThank you",
   tone: "gentle",
+  channel: "paypal",
   requestId,
 };
 
@@ -69,6 +67,7 @@ function load(...summaries: ReturnType<typeof overdueInvoice>[]): void {
       amountDue: summary.amount,
       underLut: false,
       paymentId: null,
+      marker: "dueline-request:test",
     })),
   );
 }
@@ -126,10 +125,10 @@ describe("GET /api/reminders", () => {
 
   it("counts the reminders sent today and PayPal's own refusal against the daily limit", async () => {
     const now = new Date().toISOString();
-    await store.logReminder({ invoiceId: "a", tone: "gentle", sentAt: now });
+    await store.logReminder({ invoiceId: "a", tone: "gentle", sentAt: now, channel: "paypal" });
     expect((await (await list()).json()).remindersLeftToday).toBe(1);
 
-    await store.logReminder({ invoiceId: "b", tone: "gentle", sentAt: now });
+    await store.logReminder({ invoiceId: "b", tone: "gentle", sentAt: now, channel: "paypal" });
     expect((await (await list()).json()).remindersLeftToday).toBe(0);
   });
 
@@ -204,9 +203,9 @@ describe("POST /api/reminders/send", () => {
   });
 
   it.each([
-    ["subject", { subject: "Hi" }],
-    ["message", { message: "Too short" }],
     ["tone", { tone: undefined }],
+    ["channel", { channel: "sms" }],
+    ["requestId", { requestId: "not-a-uuid" }],
   ])("answers 400 naming the %s when it breaks the rules", async (field, change) => {
     const response = await send(post("/api/reminders/send", { ...sendBody, ...change }));
     expect(response.status).toBe(400);
@@ -216,16 +215,9 @@ describe("POST /api/reminders/send", () => {
     expect(paypal.remindInvoice).not.toHaveBeenCalled();
   });
 
-  it.each([
-    ["message", { message: "Please pay at https://pay.example.org today, thank you." }],
-    ["message", { message: "Please write to ana@okafor.example about invoice INV-0101." }],
-    ["subject", { subject: "Pay at www.pay.example.org" }],
-  ])("answers 400 naming the %s when it holds a link or an address", async (field, change) => {
-    const response = await send(post("/api/reminders/send", { ...sendBody, ...change }));
-    expect(response.status).toBe(400);
-    const { code, message } = await errorOf(response);
-    expect(code).toBe("invalid_request");
-    expect(message).toBe(`The ${field} must not contain links or email addresses.`);
+  it("accepts a message sent from the freelancer's email", async () => {
+    const response = await send(post("/api/reminders/send", { ...sendBody, channel: "email" }));
+    expect(response.status).toBe(200);
     expect(paypal.remindInvoice).not.toHaveBeenCalled();
   });
 
@@ -250,7 +242,7 @@ describe("POST /api/reminders/send", () => {
     );
     expect(second.status).toBe(429);
     expect((await errorOf(second)).message).toBe(
-      "A reminder was already sent today for this invoice.",
+      "A PayPal reminder was already sent today for this invoice.",
     );
   });
 
@@ -267,8 +259,8 @@ describe("POST /api/reminders/send", () => {
 
   it("refuses without calling PayPal once the day's two reminders are logged", async () => {
     const now = new Date().toISOString();
-    await store.logReminder({ invoiceId: "a", tone: "gentle", sentAt: now });
-    await store.logReminder({ invoiceId: "b", tone: "gentle", sentAt: now });
+    await store.logReminder({ invoiceId: "a", tone: "gentle", sentAt: now, channel: "paypal" });
+    await store.logReminder({ invoiceId: "b", tone: "gentle", sentAt: now, channel: "paypal" });
 
     const response = await send(post("/api/reminders/send", sendBody));
 

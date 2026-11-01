@@ -26,25 +26,22 @@ export function createDraftInvoice(
   });
 }
 
-export async function sendInvoice(
-  id: string,
-  message: { subject: string; note: string },
-  requestId: string,
-): Promise<void> {
+// PayPal ignores a subject and note on this call and writes its own email, so none is sent. What the
+// client reads on the invoice itself (its note, terms, items) is part of the invoice.
+export async function sendInvoice(id: string, requestId: string): Promise<void> {
   await paypalFetch<void>(`/v2/invoicing/invoices/${encodeURIComponent(id)}/send`, {
     method: "POST",
     requestId,
-    body: { send_to_invoicer: false, send_to_recipient: true, ...message },
+    body: { send_to_invoicer: false, send_to_recipient: true },
   });
 }
 
-export async function remindInvoice(
-  id: string,
-  message: { subject: string; note: string },
-): Promise<void> {
+// PayPal emails its standard reminder with a Pay now button; a subject or note given here is not
+// honored, so none is sent.
+export async function remindInvoice(id: string): Promise<void> {
   await paypalFetch<void>(`/v2/invoicing/invoices/${encodeURIComponent(id)}/remind`, {
     method: "POST",
-    body: { send_to_invoicer: false, send_to_recipient: true, ...message },
+    body: { send_to_invoicer: false, send_to_recipient: true },
   });
 }
 

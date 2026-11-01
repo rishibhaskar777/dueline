@@ -2,7 +2,7 @@
 
 import { useRef, useState, type RefObject } from "react";
 import { sendReminder } from "@/lib/api-client";
-import type { ReminderDraft } from "@/types";
+import type { ReminderChannel, ReminderDraft } from "@/types";
 
 export function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : "Something went wrong. Try again in a moment.";
@@ -10,9 +10,8 @@ export function messageOf(error: unknown): string {
 
 interface ReminderToSend {
   draft: ReminderDraft;
-  subject: string;
-  message: string;
-  // One ID per draft, reused for every retry of it, so PayPal never gets two reminders from one.
+  channel: ReminderChannel;
+  // One ID per draft and channel, reused for every retry, so one draft is never recorded twice.
   requestId: string;
 }
 
@@ -37,7 +36,7 @@ export function useSendReminder(
   const [sentAt, setSentAt] = useState<string | null>(null);
   const started = useRef(false);
 
-  async function send({ draft, subject, message, requestId }: ReminderToSend): Promise<void> {
+  async function send({ draft, channel, requestId }: ReminderToSend): Promise<void> {
     if (sending) return;
     setSending(true);
     started.current = true;
@@ -45,14 +44,13 @@ export function useSendReminder(
     try {
       const sent = await sendReminder({
         invoiceId: draft.invoiceId,
-        subject,
-        message,
         tone: draft.tone,
+        channel,
         requestId,
       });
       setSentAt(sent.sentAt);
       onSent();
-      setHistory((previous) => [...previous, { tone: draft.tone, sentAt: sent.sentAt }]);
+      setHistory((previous) => [...previous, { tone: draft.tone, sentAt: sent.sentAt, channel }]);
     } catch (error) {
       started.current = false;
       setSendError(messageOf(error));

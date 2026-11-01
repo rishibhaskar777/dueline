@@ -6,11 +6,8 @@ import {
   replaceEditsQuestion,
   sentMessage,
   sourceNote,
-  toneReason,
-  wasSentToday,
+  sentTodayVia,
 } from "@/components/nudges/nudge-model";
-import { tandemInvoice } from "@/mocks/fixtures";
-import type { InvoiceSummary, ReminderDraft, Tone } from "@/types";
 
 describe("nudge model", () => {
   it("labels days late", () => {
@@ -19,25 +16,34 @@ describe("nudge model", () => {
   });
 
   it("labels a sent reminder with its tone and its India date", () => {
-    expect(historyLabel({ tone: "gentle", sentAt: "2026-10-31T06:00:00Z" })).toBe(
-      "Gentle reminder sent 31 Oct",
-    );
+    expect(
+      historyLabel({ tone: "gentle", sentAt: "2026-10-31T06:00:00Z", channel: "paypal" }),
+    ).toBe("Gentle reminder sent through PayPal 31 Oct");
     // 20:00 UTC on 30 Oct is already 31 Oct in India.
-    expect(historyLabel({ tone: "final", sentAt: "2026-10-30T20:00:00Z" })).toBe(
-      "Final reminder sent 31 Oct",
+    expect(historyLabel({ tone: "final", sentAt: "2026-10-30T20:00:00Z", channel: "paypal" })).toBe(
+      "Final reminder sent through PayPal 31 Oct",
     );
   });
 
-  it("tells whether a reminder went out today in India", () => {
+  it("tells whether a reminder went out today in India, channel by channel", () => {
     const now = new Date("2026-10-31T09:00:00Z");
-    expect(wasSentToday([{ tone: "gentle", sentAt: "2026-10-31T03:00:00Z" }], now)).toBe(true);
-    expect(wasSentToday([{ tone: "gentle", sentAt: "2026-10-30T03:00:00Z" }], now)).toBe(false);
-    expect(wasSentToday([], now)).toBe(false);
+    const today = [
+      { tone: "gentle" as const, sentAt: "2026-10-31T03:00:00Z", channel: "paypal" as const },
+    ];
+    expect(sentTodayVia(today, "paypal", now)).toBe(true);
+    expect(sentTodayVia(today, "email", now)).toBe(false);
+    expect(sentTodayVia([{ ...today[0], sentAt: "2026-10-30T03:00:00Z" }], "paypal", now)).toBe(
+      false,
+    );
+    expect(sentTodayVia([], "paypal", now)).toBe(false);
   });
 
   it("reports the time of sending in India time", () => {
-    expect(sentMessage("2026-10-31T15:12:00Z")).toBe(
-      "Sent at 8:42 pm. PayPal emailed the client with a Pay now link.",
+    expect(sentMessage("2026-10-31T15:12:00Z", "paypal")).toBe(
+      "Sent at 8:42 pm. PayPal emailed the client its standard reminder with a Pay now button.",
+    );
+    expect(sentMessage("2026-10-31T15:12:00Z", "email")).toBe(
+      "Recorded at 8:42 pm: you sent your message from your own email.",
     );
   });
 
@@ -72,32 +78,5 @@ describe("nudge model", () => {
         "Replace your edits with a Firm draft in German?",
       );
     });
-  });
-});
-
-describe("toneReason", () => {
-  const lateInvoice = { ...tandemInvoice, daysLate: 3, riskLevel: "late_payer" } as InvoiceSummary;
-  const draft = (suggestedTone: Tone): ReminderDraft => ({
-    invoiceId: lateInvoice.id,
-    tone: suggestedTone,
-    suggestedTone,
-    language: "en",
-    subject: "A quick reminder",
-    message: "Please pay when you can.",
-    source: "template",
-    pending: false,
-    history: [],
-  });
-
-  it("says the client's record made the suggestion firmer", () => {
-    expect(toneReason(lateInvoice, draft("firm"))).toBe(
-      `Suggested firm because ${lateInvoice.client.name} is a late payer.`,
-    );
-  });
-
-  it("says nothing when the days alone give the same tone, or the client is not a late payer", () => {
-    expect(toneReason({ ...lateInvoice, daysLate: 25 }, draft("final"))).toBeNull();
-    expect(toneReason({ ...lateInvoice, riskLevel: "watch" }, draft("gentle"))).toBeNull();
-    expect(toneReason({ ...lateInvoice, riskLevel: null }, draft("gentle"))).toBeNull();
   });
 });

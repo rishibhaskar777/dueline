@@ -9,14 +9,16 @@ import { runClaimed } from "@/lib/requests/run-claimed";
 import { getStore } from "@/lib/store";
 import type { Json, Store } from "@/lib/store/store";
 import type { InvoiceSummary, SendReminderRequest, SendReminderResponse } from "@/types";
-import { hasLinkOrAddress } from "./check-reminder";
-import { InvalidReminderError, ReminderLimitError } from "./errors";
+import { ReminderLimitError } from "./errors";
 import { recordPayPalLimit, remindersLeftToday } from "./daily-limit";
 import { assertRemindable } from "./overdue";
 
 const PAYPAL_LIMIT_MESSAGE =
   "PayPal allows two reminders a day for this account. Try again tomorrow.";
-const SENT_TODAY_MESSAGE = "A reminder was already sent today for this invoice.";
+const SENT_TODAY_MESSAGES = {
+  paypal: "A PayPal reminder was already sent today for this invoice.",
+  email: "A message from your email was already recorded today for this invoice.",
+};
 
 function fromStored(value: Json): SendReminderResponse {
   if (typeof value === "object" && value !== null && !Array.isArray(value)) {
@@ -25,12 +27,17 @@ function fromStored(value: Json): SendReminderResponse {
   throw new Error("The stored result of this request cannot be read.");
 }
 
-async function readRemindable(invoiceId: string): Promise<InvoiceSummary> {
+// An email goes from the freelancer's own account, so the demo guard has no recipient of ours to
+// check; a PayPal reminder is emailed by PayPal and the guard applies.
+async function readRemindable(
+  invoiceId: string,
+  channel: SendReminderRequest["channel"],
+): Promise<InvoiceSummary> {
   try {
     const invoice = await getInvoice(invoiceId);
     const summary = summarise(invoice);
     assertRemindable(summary);
-    assertSandboxBuyers(recipientsOf(invoice));
+    if (channel === "paypal") assertSandboxBuyers(recipientsOf(invoice));
     return summary;
   } catch (error) {
     if (error instanceof PayPalApiError && error.status === 404) throw new InvoiceNotFoundError();
@@ -38,24 +45,20 @@ async function readRemindable(invoiceId: string): Promise<InvoiceSummary> {
   }
 }
 
-// The schema cannot know the client's name, which may look like a domain, so the links are
-// checked here once the invoice is read.
-function assertNoLinks(summary: InvoiceSummary, { subject, message }: SendReminderRequest): void {
-  const own = { clientName: summary.client.name, work: summary.work };
-  if (hasLinkOrAddress(subject, own)) {
-    throw new InvalidReminderError("The subject must not contain links or email addresses.");
-  }
-  if (hasLinkOrAddress(message, own)) {
-    throw new InvalidReminderError("The message must not contain links or email addresses.");
-  }
-}
-
-// PayPal's limit counts real days, so the demo clock does not apply here.
-async function assertNotSentToday(store: Store, invoiceId: string): Promise<void> {
+// One reminder per invoice, per channel, per India day; PayPal's limit counts real days, so the demo
+// clock does not apply here.
+async function assertNotSentToday(
+  store: Store,
+  invoiceId: string,
+  channel: SendReminderRequest["channel"],
+): Promise<void> {
   const today = todayInKolkata();
   const sent = await store.reminderHistory(invoiceId);
-  if (sent.some(({ sentAt }) => todayInKolkata(new Date(sentAt)) === today)) {
-    throw new ReminderLimitError(SENT_TODAY_MESSAGE);
+  const again = sent.some(
+    (entry) => entry.channel === channel && todayInKolkata(new Date(entry.sentAt)) === today,
+  );
+  if (again) {
+    throw new ReminderLimitError(SENT_TODAY_MESSAGES[channel]);
   }
 }
 
@@ -65,9 +68,9 @@ async function assertUnderDailyLimit(store: Store): Promise<void> {
   if ((await remindersLeftToday(store)) === 0) throw new ReminderLimitError(PAYPAL_LIMIT_MESSAGE);
 }
 
-async function remind(store: Store, request: SendReminderRequest): Promise<void> {
+async function remind(store: Store, invoiceId: string): Promise<void> {
   try {
-    await remindInvoice(request.invoiceId, { subject: request.subject, note: request.message });
+    await remindInvoice(invoiceId);
   } catch (error) {
     if (error instanceof PayPalApiError && error.status === 429) {
       await recordPayPalLimit(store);
@@ -79,14 +82,14 @@ async function remind(store: Store, request: SendReminderRequest): Promise<void>
 
 async function recordSent(
   store: Store,
-  { requestId, tone }: SendReminderRequest,
+  { requestId, tone, channel }: SendReminderRequest,
   invoice: InvoiceSummary,
   { sentAt }: SendReminderResponse,
 ): Promise<void> {
-  await store.logReminder({ invoiceId: invoice.id, tone, sentAt });
+  await store.logReminder({ invoiceId: invoice.id, tone, sentAt, channel });
   await store.addActivity({
     id: `reminder:${requestId}`,
-    kind: "reminder_sent",
+    kind: channel === "paypal" ? "reminder_sent" : "email_sent",
     invoiceId: invoice.id,
     invoiceNumber: invoice.number,
     clientName: invoice.client.name,
@@ -96,6 +99,8 @@ async function recordSent(
   clearInvoiceCaches();
 }
 
+// "paypal" asks PayPal to send its standard reminder. "email" is the freelancer saying they sent their
+// own message; nothing is sent from here. Both count for the tone of the next reminder.
 export function sendReminder(request: SendReminderRequest): Promise<SendReminderResponse> {
   const { requestId, ...body } = request;
   const store = getStore();
@@ -110,11 +115,12 @@ export function sendReminder(request: SendReminderRequest): Promise<SendReminder
     },
     readStored: fromStored,
     run: async () => {
-      invoice = await readRemindable(request.invoiceId);
-      assertNoLinks(invoice, request);
-      await assertNotSentToday(store, request.invoiceId);
-      await assertUnderDailyLimit(store);
-      await remind(store, request);
+      invoice = await readRemindable(request.invoiceId, request.channel);
+      await assertNotSentToday(store, request.invoiceId, request.channel);
+      if (request.channel === "paypal") {
+        await assertUnderDailyLimit(store);
+        await remind(store, request.invoiceId);
+      }
       return { sentAt: new Date().toISOString() };
     },
     afterRun: async (result) => {
