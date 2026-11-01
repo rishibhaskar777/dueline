@@ -45,8 +45,9 @@ export function NudgeList() {
   return (
     <div className="grid gap-4">
       <p className="max-w-3xl text-sm text-muted-foreground">
-        PayPal sends each reminder from your account with the invoice and a Pay now button. PayPal
-        allows two reminders a day.
+        PayPal can email its standard reminder from your account, with a Pay now button, and PayPal
+        writes the wording. Or send your own message from your email. PayPal allows two reminders a
+        day. Nothing is sent until you press a button.
       </p>
       {limitReached && (
         <p role="status" className="max-w-3xl rounded-xl border border-line bg-ground p-4 text-sm">

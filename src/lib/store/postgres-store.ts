@@ -9,12 +9,20 @@ import {
   type Money,
   type Profile,
   type QueueItem,
+  type ReminderChannel,
   type ReminderLanguage,
   type RepeatSchedule,
   type Settings,
   type Tone,
 } from "@/types";
-import type { ClaimResult, Json, ReminderLogEntry, Store, StoredRates } from "./store";
+import type {
+  ClaimResult,
+  DemoGeneration,
+  Json,
+  ReminderLogEntry,
+  Store,
+  StoredRates,
+} from "./store";
 
 type Sql = postgres.Sql;
 
@@ -136,19 +144,26 @@ export function createPostgresStore(sql: Sql): Store {
 
     async logReminder(entry): Promise<void> {
       await sql`
-        insert into reminder_log (invoice_id, tone, sent_at)
-        values (${entry.invoiceId}, ${entry.tone}, ${entry.sentAt})`;
+        insert into reminder_log (invoice_id, tone, sent_at, channel)
+        values (${entry.invoiceId}, ${entry.tone}, ${entry.sentAt}, ${entry.channel})`;
     },
 
     async reminderHistory(invoiceId): Promise<ReminderLogEntry[]> {
-      const rows = await sql<{ tone: Tone; sent_at: Date }[]>`
-        select tone, sent_at from reminder_log where invoice_id = ${invoiceId} order by sent_at`;
-      return rows.map((row) => ({ invoiceId, tone: row.tone, sentAt: row.sent_at.toISOString() }));
+      const rows = await sql<{ tone: Tone; sent_at: Date; channel: ReminderChannel }[]>`
+        select tone, sent_at, channel from reminder_log
+        where invoice_id = ${invoiceId} order by sent_at`;
+      return rows.map((row) => ({
+        invoiceId,
+        tone: row.tone,
+        sentAt: row.sent_at.toISOString(),
+        channel: row.channel,
+      }));
     },
 
     async countRemindersSince(since): Promise<number> {
       const [row] = await sql<{ count: string }[]>`
-        select count(*) from reminder_log where sent_at >= ${since}`;
+        select count(*) from reminder_log
+        where channel = 'paypal' and sent_at >= ${since}`;
       return Number(row?.count ?? 0);
     },
 
@@ -248,6 +263,52 @@ export function createPostgresStore(sql: Sql): Store {
     async deleteLibraryItem(id): Promise<boolean> {
       const deleted = await sql`delete from library_items where id = ${id} returning id`;
       return deleted.length > 0;
+    },
+
+    async getDemoGeneration(): Promise<DemoGeneration | null> {
+      const [row] = await sql<{ generation: number; seeded_on: string }[]>`
+        select generation, to_char(seeded_on, 'YYYY-MM-DD') as seeded_on
+        from demo_generation where id = 1`;
+      return row ? { id: row.generation, seededOn: row.seeded_on } : null;
+    },
+
+    async saveDemoGeneration(generation): Promise<void> {
+      await sql`
+        insert into demo_generation (id, generation, seeded_on)
+        values (1, ${generation.id}, ${generation.seededOn})
+        on conflict (id) do update set
+          generation = excluded.generation, seeded_on = excluded.seeded_on, updated_at = now()`;
+    },
+
+    async listHiddenInvoices(): Promise<string[]> {
+      const rows = await sql<{ invoice_id: string }[]>`select invoice_id from demo_hidden_invoices`;
+      return rows.map((row) => row.invoice_id);
+    },
+
+    async setInvoiceHidden(invoiceId, hidden): Promise<void> {
+      if (hidden) {
+        await sql`
+          insert into demo_hidden_invoices (invoice_id) values (${invoiceId})
+          on conflict (invoice_id) do nothing`;
+      } else {
+        await sql`delete from demo_hidden_invoices where invoice_id = ${invoiceId}`;
+      }
+    },
+
+    async listBankReferences(): Promise<Record<string, string>> {
+      const rows = await sql<{ invoice_id: string; reference: string }[]>`
+        select invoice_id, reference from bank_receipts`;
+      return Object.fromEntries(rows.map((row) => [row.invoice_id, row.reference]));
+    },
+
+    async saveBankReference(invoiceId, reference): Promise<void> {
+      if (reference === null) {
+        await sql`delete from bank_receipts where invoice_id = ${invoiceId}`;
+        return;
+      }
+      await sql`
+        insert into bank_receipts (invoice_id, reference) values (${invoiceId}, ${reference})
+        on conflict (invoice_id) do update set reference = excluded.reference, updated_at = now()`;
     },
 
     async hitRateLimit(key, windowSeconds): Promise<number> {

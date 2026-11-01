@@ -54,7 +54,14 @@ export interface RatesWidget {
   lines: RateLine[];
 }
 
+export interface PaySpeed {
+  averageDays: number;
+  onTimePercent: number;
+  invoices: number;
+}
+
 export interface DashboardResponse {
+  paySpeed: PaySpeed | null;
   forecast: Forecast;
   feesLost: FeesLost;
   upcomingDue: UpcomingDue[];

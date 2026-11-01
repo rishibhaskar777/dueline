@@ -2,13 +2,13 @@ import { StatTile } from "@/components/shared/StatTile";
 import { formatRupees } from "@/lib/money/format";
 import type { Totals } from "@/types";
 
-function PaidNote({ outsideInr }: { outsideInr: number }) {
+function PaidNote({ totals }: { totals: Totals }) {
   return (
     <>
-      Rupees from paid invoices
-      {outsideInr > 0 && (
+      {formatRupees(totals.paidLast30PayPalInr)} through PayPal
+      {totals.paidLast30OutsideInr > 0 && (
         <span className="mt-1 block text-xs">
-          plus {formatRupees(outsideInr)} recorded outside PayPal
+          and {formatRupees(totals.paidLast30OutsideInr)} recorded outside PayPal
         </span>
       )}
     </>
@@ -32,9 +32,9 @@ export function TotalsStrip({ totals }: { totals: Totals }) {
         tone="late"
       />
       <StatTile
-        label="Paid this month"
-        value={formatRupees(totals.paidThisMonthPayPalInr)}
-        note={<PaidNote outsideInr={totals.paidThisMonthOutsideInr} />}
+        label="Paid in the last 30 days"
+        value={formatRupees(totals.paidLast30Inr)}
+        note={<PaidNote totals={totals} />}
       />
     </dl>
   );

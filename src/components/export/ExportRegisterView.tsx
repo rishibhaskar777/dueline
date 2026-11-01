@@ -8,7 +8,7 @@ import { ESTIMATE_LABEL } from "@/lib/export/tax-notes";
 import { financialYearOf } from "@/lib/date-math";
 import { AnnualSummaryDialog } from "./AnnualSummaryDialog";
 import { MonthPicker } from "./MonthPicker";
-import { RecordedOutside } from "./RecordedOutside";
+import { BankTransfers } from "./BankTransfers";
 import { FIRA_EXPLAINER, FIRA_GUIDE_URL } from "./register-text";
 import { RegisterSummary } from "./RegisterSummary";
 import { EmptyRegister, RegisterSkeleton } from "./RegisterStates";
@@ -33,20 +33,15 @@ function RegisterBody({ month, state, onRetry }: RegisterBodyProps) {
     );
   }
   const { register } = state;
-  if (register.rows.length === 0) {
-    return (
-      <>
-        <EmptyRegister month={month} />
-        <RecordedOutside numbers={register.recordedOutsidePayPal} />
-      </>
-    );
+  if (register.rows.length === 0 && register.outsideRows.length === 0) {
+    return <EmptyRegister month={month} />;
   }
 
   return (
     <>
       <RegisterSummary register={register} />
-      <RegisterTable rows={register.rows} />
-      <RecordedOutside numbers={register.recordedOutsidePayPal} />
+      {register.rows.length > 0 && <RegisterTable rows={register.rows} />}
+      <BankTransfers rows={register.outsideRows} />
     </>
   );
 }

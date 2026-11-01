@@ -20,7 +20,7 @@ export const brightwellInvoice: InvoiceSummary = {
   client: {
     name: engagements.brightwellLanding.clientName,
     email: "accounts@brightwell.example.com",
-    location: "London, United Kingdom",
+    country: "GB",
   },
   work: engagements.brightwellLanding.work,
   amount: engagements.brightwellLanding.amount,
@@ -45,7 +45,7 @@ export const okaforInvoice: InvoiceSummary = {
   client: {
     name: engagements.okaforGuidelines.clientName,
     email: "accounts@okaforreyes.example.com",
-    location: "Lisbon, Portugal",
+    country: "PT",
   },
   work: engagements.okaforGuidelines.work,
   amount: engagements.okaforGuidelines.amount,
@@ -70,7 +70,7 @@ export const northpineInvoice: InvoiceSummary = {
   client: {
     name: engagements.northpineKit.clientName,
     email: "billing@northpine.example.com",
-    location: "Toronto, Canada",
+    country: "CA",
   },
   work: engagements.northpineKit.work,
   amount: engagements.northpineKit.amount,
@@ -95,7 +95,7 @@ export const tandemInvoice: InvoiceSummary = {
   client: {
     name: engagements.tandemDeck.clientName,
     email: "finance@tandemhealth.example.com",
-    location: "Boston, United States",
+    country: "US",
   },
   work: engagements.tandemDeck.work,
   amount: engagements.tandemDeck.amount,
@@ -120,7 +120,7 @@ export const haldenLabelsInvoice: InvoiceSummary = {
   client: {
     name: "Halden Coffee Co.",
     email: "mike@haldencoffee.example",
-    location: "Austin, United States",
+    country: "US",
   },
   work: "Coffee bag labels",
   amount: { currency: "USD", value: "450.00" },
@@ -153,7 +153,7 @@ export const haldenMenuInvoice: InvoiceSummary = {
   client: {
     name: engagements.haldenMenu.clientName,
     email: "mike@haldencoffee.example",
-    location: "Austin, United States",
+    country: "US",
   },
   work: engagements.haldenMenu.work,
   amount: engagements.haldenMenu.amount,
@@ -185,8 +185,9 @@ export const totals: Totals = {
   outstandingInr: 228187,
   overdueInr: 132587,
   overdueCount: 2,
-  paidThisMonthPayPalInr: 58441,
-  paidThisMonthOutsideInr: 0,
+  paidLast30Inr: 58441,
+  paidLast30PayPalInr: 58441,
+  paidLast30OutsideInr: 0,
 };
 
 export const settings: Settings = {
@@ -224,7 +225,7 @@ export const extraction: ExtractResponse = {
     client: {
       name: "Halden Coffee Co.",
       email: "mike@haldencoffee.example",
-      location: "Austin, United States",
+      country: "US",
     },
     currency: "USD",
     dueOn: "2026-11-13",
@@ -332,12 +333,15 @@ export const exportRegister: ExportRegister = {
       transactionId: "5GX12345AB6789012",
     },
   ],
+  latestMonthWithPayments: "2026-10",
+  outsideRows: [],
   totalInr: 58441,
+  paypalFiraInr: 58441,
+  bankInr: 0,
   totalsByCurrency: [{ currency: "USD", value: "730.00" }],
   paypalInr: 35617,
   estimatedInr: 22824,
   missingPurposeCodes: 0,
-  recordedOutsidePayPal: [],
 };
 
 export const health: HealthResponse = {

@@ -2,6 +2,7 @@ import type {
   ActivityResponse,
   AnnualSummary,
   ApiError,
+  BankReferenceResponse,
   CancelInvoiceResponse,
   ClientDetail,
   ClientLanguageResponse,
@@ -19,6 +20,7 @@ import type {
   ExportRegister,
   ExtractResponse,
   HealthResponse,
+  HiddenInvoiceResponse,
   InvoiceDetailResponse,
   InvoicesResponse,
   LibraryItem,
@@ -264,6 +266,24 @@ export function getExportRegister(month: string): Promise<ExportRegister> {
 
 export function exportRegisterCsvUrl(month: string): string {
   return `/api/export-register?month=${encodeURIComponent(month)}&format=csv`;
+}
+
+export async function saveBankReference(
+  invoiceId: string,
+  reference: string,
+): Promise<BankReferenceResponse["reference"]> {
+  const saved = await requestJson<BankReferenceResponse>(
+    "/api/export-register/bank-reference",
+    jsonInit("PUT", { invoiceId, reference }),
+  );
+  return saved.reference;
+}
+
+export function setInvoiceHidden(
+  invoiceId: string,
+  hidden: boolean,
+): Promise<HiddenInvoiceResponse> {
+  return requestJson("/api/demo/hidden-invoices", jsonInit("POST", { invoiceId, hidden }));
 }
 
 export function resetDemo(): Promise<DemoResetResponse> {

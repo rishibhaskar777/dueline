@@ -1,8 +1,9 @@
 import "server-only";
 import { today } from "@/lib/clock";
 import { getEnv } from "@/lib/env";
-import { loadInvoices } from "@/lib/paypal/summaries";
+import { loadVisibleInvoices } from "@/lib/demo/visible-invoices";
 import type { ClientRisk, InvoiceSummary, RiskLevel } from "@/types";
+import type { Lateness } from "@/lib/reminders/tone";
 import { isSameClient } from "./client-key";
 import { scoreClient } from "./score";
 
@@ -11,7 +12,7 @@ export const emailIdentifiesClient = (): boolean => !getEnv().DEMO_MODE;
 
 export async function getClientRisk(email: string, name?: string): Promise<ClientRisk> {
   const identifies = emailIdentifiesClient();
-  const invoices = (await loadInvoices())
+  const invoices = (await loadVisibleInvoices())
     .map(({ summary }) => summary)
     .filter(({ client }) => isSameClient(client, { email, name }, identifies));
   const first = invoices[0]?.client;
@@ -24,16 +25,20 @@ export async function getClientRisk(email: string, name?: string): Promise<Clien
 }
 
 // Only clients with something to judge are listed, so a missing id means "no history".
-export function riskLevelsById(summaries: InvoiceSummary[]): Map<string, RiskLevel> {
+export function riskScoresById(summaries: InvoiceSummary[]): Map<string, Lateness> {
   const identifies = emailIdentifiesClient();
   const date = today();
-  const levels = new Map<string, RiskLevel>();
+  const scores = new Map<string, Lateness>();
   for (const summary of summaries) {
     const theirs = summaries.filter(({ client }) =>
       isSameClient(client, summary.client, identifies),
     );
-    const score = scoreClient(theirs, date);
-    if (score.invoicesConsidered > 0) levels.set(summary.id, score.level);
+    const { invoicesConsidered, level, lateCount } = scoreClient(theirs, date);
+    if (invoicesConsidered > 0) scores.set(summary.id, { level, lateCount, invoicesConsidered });
   }
-  return levels;
+  return scores;
+}
+
+export function riskLevelsById(summaries: InvoiceSummary[]): Map<string, RiskLevel> {
+  return new Map([...riskScoresById(summaries)].map(([id, { level }]) => [id, level]));
 }

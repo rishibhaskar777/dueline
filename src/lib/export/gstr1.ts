@@ -1,7 +1,7 @@
 import "server-only";
 import type { Gstr1Row } from "@/lib/export/gstr1-csv";
 import { convertToPaise } from "@/lib/money/payout";
-import { loadInvoices } from "@/lib/paypal/summaries";
+import { loadVisibleInvoices } from "@/lib/demo/visible-invoices";
 import { getRatesOn } from "@/lib/rates/rates";
 import { getSettings } from "@/lib/settings";
 import type { MarketRates } from "@/types";
@@ -12,7 +12,7 @@ const IGST_RATE = 18;
 // Its rupee value is the ECB rate of that date. The ECB publishes nothing at weekends, so the rate
 // can be that of the last working day before it.
 export async function buildGstr1(month: string): Promise<Gstr1Row[]> {
-  const [loaded, settings] = await Promise.all([loadInvoices(), getSettings()]);
+  const [loaded, settings] = await Promise.all([loadVisibleInvoices(), getSettings()]);
   const issued = loaded.filter(({ summary }) => summary.issuedOn.slice(0, 7) === month);
 
   // One request per date, however many invoices were issued on it.

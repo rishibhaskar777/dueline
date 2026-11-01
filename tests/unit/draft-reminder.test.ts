@@ -32,6 +32,7 @@ const facts: ReminderFacts = {
   issuedOn: "2026-10-01",
   dueOn: "2026-10-10",
   daysLate: 21,
+  remindersSent: 0,
 };
 
 const goodAnswer = {

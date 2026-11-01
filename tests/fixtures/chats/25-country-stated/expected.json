@@ -1,0 +1,18 @@
+{
+  "summary": "The client says which city they are in, so the country is kept",
+  "client": "Casa Verde Studio",
+  "country": "PT",
+  "currency": "EUR",
+  "items": [
+    {
+      "nameIncludes": "illustration",
+      "quantity": 1,
+      "unitAmount": "480.00"
+    }
+  ],
+  "due": {
+    "rule": "none"
+  },
+  "warnings": ["no_payment_terms"],
+  "contacts": ["sofia@casaverde-example.com"]
+}

@@ -10,7 +10,7 @@ export type PayoutSource = "paypal" | "estimate" | "outside_paypal";
 export interface Client {
   name: string;
   email: string;
-  location?: string;
+  country?: string;
 }
 
 export interface ActualPayout {
@@ -48,8 +48,9 @@ export interface Totals {
   outstandingInr: number;
   overdueInr: number;
   overdueCount: number;
-  paidThisMonthPayPalInr: number;
-  paidThisMonthOutsideInr: number;
+  paidLast30Inr: number;
+  paidLast30PayPalInr: number;
+  paidLast30OutsideInr: number;
 }
 
 export interface LineItem {

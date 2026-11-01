@@ -16,7 +16,14 @@ vi.mock("@/lib/store", () => ({ getStore: () => holder.store }));
 vi.mock("@/lib/paypal/summaries", () => ({ loadInvoices: paypal.loadInvoices }));
 
 function loaded(summary: InvoiceSummary, underLut = false): LoadedInvoice {
-  return { summary, amountDue: summary.amount, underLut, sac: null, paymentId: null };
+  return {
+    summary,
+    amountDue: summary.amount,
+    underLut,
+    sac: null,
+    paymentId: null,
+    marker: "dueline-request:test",
+  };
 }
 
 function invoice(overrides: Partial<InvoiceSummary>): InvoiceSummary {

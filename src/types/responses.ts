@@ -89,3 +89,13 @@ export interface RateAlertsResponse {
 export interface ClientLanguageResponse {
   language: ReminderLanguage;
 }
+
+export interface HiddenInvoiceResponse {
+  invoiceId: string;
+  hidden: boolean;
+}
+
+export interface BankReferenceResponse {
+  invoiceId: string;
+  reference: string | null;
+}

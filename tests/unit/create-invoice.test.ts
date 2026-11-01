@@ -101,14 +101,7 @@ describe("createAndSendInvoice", () => {
       invoice_date: "2026-10-30",
       memo: requestMemo(requestId, input.draft.purposeCode),
     });
-    expect(paypal.sendInvoice).toHaveBeenCalledWith(
-      "INV2-NEW",
-      {
-        subject: "Invoice INV-0101",
-        note: "Thank you for your business. You can pay securely with PayPal using the link in this email.",
-      },
-      expect.any(String),
-    );
+    expect(paypal.sendInvoice).toHaveBeenCalledWith("INV2-NEW", expect.any(String));
     expect(paypal.getInvoice).toHaveBeenCalledWith("INV2-NEW");
     expect(paypal.clearInvoiceCaches).toHaveBeenCalledTimes(1);
   });
@@ -270,11 +263,7 @@ describe("createAndSendInvoice", () => {
       const result = await createAndSendInvoice(input, requestId);
       expect(paypal.findInvoiceByMemo).toHaveBeenCalledWith(requestMemo(requestId));
       expect(paypal.createDraftInvoice).toHaveBeenCalledTimes(1);
-      expect(paypal.sendInvoice).toHaveBeenCalledWith(
-        "INV2-NEW",
-        expect.anything(),
-        expect.any(String),
-      );
+      expect(paypal.sendInvoice).toHaveBeenCalledWith("INV2-NEW", expect.any(String));
       expect(result.sent).toBe(true);
     });
 
@@ -330,11 +319,7 @@ describe("sendExistingDraft", () => {
     paypal.getInvoice.mockResolvedValueOnce(draftInvoice).mockResolvedValueOnce(sentInvoice);
 
     const result = await sendExistingDraft("INV2-NEW", otherRequestId);
-    expect(paypal.sendInvoice).toHaveBeenCalledWith(
-      "INV2-NEW",
-      expect.objectContaining({ subject: "Invoice INV-0101" }),
-      otherRequestId,
-    );
+    expect(paypal.sendInvoice).toHaveBeenCalledWith("INV2-NEW", otherRequestId);
     expect(result).toMatchObject({ sent: true, invoice: { paypalStatus: "SENT" } });
     expect(paypal.clearInvoiceCaches).toHaveBeenCalledTimes(1);
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { LibraryManager } from "@/components/library/LibraryManager";
+import { ConnectPayPalCard } from "@/components/profile/ConnectPayPalCard";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { useProfile } from "@/components/profile/use-profile";
 import { LoadFailure } from "@/components/shared/LoadFailure";
@@ -13,6 +14,7 @@ export function ProfileScreen() {
     return (
       <div className="grid gap-6">
         <ProfileForm initial={profile} />
+        <ConnectPayPalCard />
         <LibraryManager />
       </div>
     );

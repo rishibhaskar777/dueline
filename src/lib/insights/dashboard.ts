@@ -9,6 +9,7 @@ import { getSettingsAndRates } from "@/lib/settings";
 import type { DashboardResponse } from "@/types";
 import { feesLostFrom } from "./fees-lost";
 import { buildForecast } from "./forecast";
+import { computePaySpeed } from "./pay-speed";
 import { lateClients, upcomingDue } from "./upcoming";
 
 export async function buildDashboard(): Promise<DashboardResponse> {
@@ -23,6 +24,10 @@ export async function buildDashboard(): Promise<DashboardResponse> {
   );
 
   return {
+    paySpeed: computePaySpeed(
+      inputs.map(({ invoice }) => invoice),
+      date,
+    ),
     forecast: buildForecast(inputs, date),
     feesLost: feesLostFrom(annual),
     upcomingDue: upcomingDue(

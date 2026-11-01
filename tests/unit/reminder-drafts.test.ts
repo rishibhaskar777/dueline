@@ -31,6 +31,7 @@ function load(summaries: InvoiceSummary[]): void {
       amountDue: summary.amount,
       underLut: false,
       paymentId: null,
+      marker: "dueline-request:test",
     })),
   );
 }
@@ -68,7 +69,7 @@ describe("listReminderDrafts", () => {
     expect(drafts.every((draft) => draft.source === "template")).toBe(true);
   });
 
-  it("suggests a tone one step firmer for a late payer, and says which it started from", async () => {
+  it("starts a late payer at firm instead of gentle, and says which facts led to it", async () => {
     const first = overdueInvoice("2026-10-11", 20);
     const second = overdueInvoice("2026-10-22", 9);
     const watched = overdueInvoice("2026-10-26", 5, BRIGHTWELL);
@@ -76,9 +77,12 @@ describe("listReminderDrafts", () => {
 
     const drafts = await listReminderDrafts();
     const toneOf = (id: string) => drafts.find((draft) => draft.invoiceId === id)?.suggestedTone;
-    expect(toneOf(first.id)).toBe("final");
-    expect(toneOf(second.id)).toBe("final");
+    expect(toneOf(first.id)).toBe("firm");
+    expect(toneOf(second.id)).toBe("firm");
     expect(toneOf(watched.id)).toBe("gentle");
+    const reasonOf = (id: string) => drafts.find((draft) => draft.invoiceId === id)?.reason;
+    expect(reasonOf(second.id)).toBe("Suggested firm: 9 days late, and late on 2 of 2 invoices.");
+    expect(reasonOf(watched.id)).toBe("Suggested gentle: 5 days late.");
   });
 
   it("returns an empty list when nothing is overdue", async () => {
@@ -104,17 +108,19 @@ describe("listReminderDrafts", () => {
       invoiceId: invoice.id,
       tone: "firm",
       sentAt: "2026-10-29T05:00:00Z",
+      channel: "paypal",
     });
     await store.logReminder({
       invoiceId: invoice.id,
       tone: "gentle",
       sentAt: "2026-10-27T05:00:00Z",
+      channel: "paypal",
     });
 
     const [draft] = await listReminderDrafts();
     expect(draft.history).toEqual([
-      { tone: "gentle", sentAt: "2026-10-27T05:00:00Z" },
-      { tone: "firm", sentAt: "2026-10-29T05:00:00Z" },
+      { tone: "gentle", sentAt: "2026-10-27T05:00:00Z", channel: "paypal" },
+      { tone: "firm", sentAt: "2026-10-29T05:00:00Z", channel: "paypal" },
     ]);
     expect(draft.suggestedTone).toBe("final");
     expect(draft.tone).toBe("final");
@@ -189,7 +195,8 @@ describe("draftReminderFor", () => {
     load([invoice]);
     const draft = await draftReminderFor(invoice.id, "final", {});
     expect(draft).toMatchObject({ invoiceId: invoice.id, tone: "final", suggestedTone: "gentle" });
-    expect(draft.subject).toContain("Final reminder");
+    expect(draft.subject).toContain("payment needed");
+    expect(draft.subject).not.toMatch(/final|last/i);
   });
 
   it("refuses an unknown invoice", async () => {

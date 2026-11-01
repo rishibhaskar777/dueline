@@ -44,7 +44,12 @@ function clientOf(invoice: PayPalInvoice): InvoiceSummary["client"] {
   const billing = invoice.primary_recipients?.[0]?.billing_info;
   const email = billing?.email_address ?? "";
   const person = [billing?.name?.given_name, billing?.name?.surname].filter(Boolean).join(" ");
-  return { name: billing?.business_name || person || email, email };
+  const country = billing?.address?.country_code;
+  return {
+    name: billing?.business_name || person || email,
+    email,
+    ...(country ? { country } : {}),
+  };
 }
 
 // PayPal's payment_date is a plain date in PayPal's own time zone, so the payment's timestamp is

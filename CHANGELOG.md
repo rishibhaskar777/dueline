@@ -9,6 +9,12 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- The demo story now has generations. Pressing "Reset the demo" starts a new one dated from today, and the daily run starts one after 7 days, so the story never ages out. Old open story invoices are cancelled; invoices without a Dueline marker, older story invoices that were not paid through PayPal, cancelled invoices and invoices hidden with "Hide from the demo" (invoice page, demo mode only) are left out of every screen and export. The story gains a second Halden Coffee Co. invoice, a country for every client, the LUT line and SAC on its invoices, one past gentle reminder, and its own Activity rows and invoice histories on the story's dates. Invoice histories also show when each invoice fell due and when it became overdue ([decision 0021](docs/decisions/0021-demo-generations-and-human-reminders.md)).
+- Receivables shows "Paid in the last 30 days" (through PayPal and recorded outside PayPal), and the dashboard data and each client carry how long clients take to pay and how many pay on time.
+- The export register lists bank transfers beside PayPal's payments, with a place for the bank's FIRC or e-BRC number. The CSV for the CA has a Proof column, and the totals keep PayPal FIRA rupees and bank rupees apart. The register reports the newest month with payments.
+- A client country: read from the chat when it states one, chosen on the review screen, sent to PayPal as the billing country, and shown in the export register.
+- A "Connect your PayPal" card on Profile describing the next step for many freelancers.
+
 - Offline mode: `npm run dev:offline` runs the whole app with no PayPal account, Gemini key or
   database (open localhost:3000, password `offline`). PayPal is a simulation that holds the demo story
   and four invoices paid through PayPal, invoices are drafted from a chat by a small parser, reminders
@@ -78,6 +84,12 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- A reminder card allows one PayPal reminder and one message from your own email per invoice per day, instead of one in all. After either, the other stays available, and the card closes for the day only when both have been used. PayPal's two-a-day limit still counts only PayPal reminders; the tone rules count both.
+- Nudges no longer pretends PayPal sends the drafted words (PayPal ignores a subject and note on its reminder and send calls). Each card has "Send PayPal reminder" (PayPal's standard reminder with a Pay now button; PayPal writes the wording) and "Send my message", which opens the drafted subject and message in the freelancer's own email, in Gmail or on the clipboard, addressed to the client with the invoice's pay link at the end. "I sent it" records that message in the reminder history, Activity and the tone rules, and PayPal's daily limit counts only PayPal's reminders. Invoice sends no longer carry a subject or note either.
+- A final-tone reminder reached only by being more than 30 days late no longer calls itself the final or last reminder, in any language; it asks for payment within 3 days or a date.
+- Reminders read like a person wrote them: a greeting line, short paragraphs and a sign-off with the name and business name. A draft whose words contradict its tone is replaced by the template. The suggested tone is final only after two reminders or beyond 30 days, a late payer's first nudge is firm, and every suggestion says why.
+- "Paid this month" is now "Paid in the last 30 days".
+- Migration 008 adds `demo_generation`, `demo_hidden_invoices` and `bank_receipts`.
 - Nudges opens at once. `GET /api/reminders` no longer waits for the model: each overdue invoice comes
   back with the draft the model wrote earlier, or the template marked `pending`. The screen asks for
   better drafts one card at a time and replaces the text only if it has not been edited. The draft

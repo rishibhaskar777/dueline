@@ -168,6 +168,8 @@ export function offlineModelDraft(masked: string, today: string): ModelDraft {
   return {
     clientName: clientIn(masked),
     clientEmail: /\[EMAIL_\d+\]/.exec(masked)?.[0] ?? null,
+    clientCountry: null,
+    countryQuote: null,
     currency,
     dueOn: dueDateIn(masked, today),
     items,

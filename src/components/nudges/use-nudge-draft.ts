@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { draftReminder } from "@/lib/api-client";
-import type { ReminderDraft, ReminderLanguage, Tone } from "@/types";
-import { hasEdits, improvedOutcome, wasSentToday } from "./nudge-model";
+import type { ReminderChannel, ReminderDraft, ReminderLanguage, Tone } from "@/types";
+import { hasEdits, improvedOutcome, sentTodayVia } from "./nudge-model";
 import { messageOf, useSendReminder } from "./use-send-reminder";
 
 export type ImproveDraft = (
@@ -40,7 +40,9 @@ interface NudgeDraft {
   sendError: string | null;
   sentAt: string | null;
   pendingRedraft: PendingRedraft | null;
-  // Dueline sends one reminder per invoice a day, so a card that already sent one is closed.
+  // Dueline sends one reminder per invoice per channel a day.
+  sentVia: Record<ReminderChannel, boolean>;
+  // Both channels were used today, so nothing more can be sent.
   closed: boolean;
   setSubject: (subject: string) => void;
   setMessage: (message: string) => void;
@@ -48,7 +50,7 @@ interface NudgeDraft {
   switchLanguage: (language: ReminderLanguage) => void;
   replaceEdits: () => void;
   keepEditing: () => void;
-  send: () => void;
+  send: (channel: ReminderChannel) => void;
 }
 
 // What is in the boxes right now, kept in a ref too for answers that arrive later.
@@ -75,12 +77,16 @@ function useTypedText(initial: ReminderDraft): {
 // from one draft but a fresh draft can be sent.
 interface ShownDraft {
   draft: ReminderDraft;
-  requestId: string;
+  requestIds: Record<ReminderChannel, string>;
   // Each request for a draft starts a turn, and only the latest turn's answer is used.
   startTurn: () => number;
   isLatest: (turn: number) => boolean;
   show: (next: ReminderDraft) => void;
   keep: (update: (current: ReminderDraft) => ReminderDraft) => void;
+}
+
+function newRequestIds(): Record<ReminderChannel, string> {
+  return { paypal: crypto.randomUUID(), email: crypto.randomUUID() };
 }
 
 function useShownDraft(
@@ -89,19 +95,19 @@ function useShownDraft(
   clearSendError: () => void,
 ): ShownDraft {
   const [draft, setDraft] = useState(initial);
-  const [requestId, setRequestId] = useState(() => crypto.randomUUID());
+  const [requestIds, setRequestIds] = useState(newRequestIds);
   const turns = useRef(0);
 
   function show(next: ReminderDraft): void {
     setDraft(next);
     setText({ subject: next.subject, message: next.message });
-    setRequestId(crypto.randomUUID());
+    setRequestIds(newRequestIds());
     clearSendError();
   }
 
   return {
     draft,
-    requestId,
+    requestIds,
     startTurn: () => ++turns.current,
     isLatest: (turn) => turn === turns.current,
     show,
@@ -245,10 +251,15 @@ export function useNudgeDraft(
   );
   const flow = useRedraftFlow(shown, typed, sender.sending, cancel);
 
-  function send(): void {
+  const sentVia = {
+    paypal: sentTodayVia(sender.history, "paypal"),
+    email: sentTodayVia(sender.history, "email"),
+  };
+
+  function send(channel: ReminderChannel): void {
     if (flow.drafting) return;
     flow.keepEditing();
-    void sender.send({ draft: shown.draft, ...text, requestId: shown.requestId });
+    void sender.send({ draft: shown.draft, channel, requestId: shown.requestIds[channel] });
   }
 
   return {
@@ -261,7 +272,8 @@ export function useNudgeDraft(
     sending: sender.sending,
     sendError: sender.sendError,
     sentAt: sender.sentAt,
-    closed: sender.sentAt !== null || wasSentToday(sender.history),
+    sentVia,
+    closed: sentVia.paypal && sentVia.email,
     setSubject: (subject) => setText({ ...typed.current, subject }),
     setMessage: (message) => setText({ ...typed.current, message }),
     send,

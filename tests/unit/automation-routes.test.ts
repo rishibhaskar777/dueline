@@ -64,6 +64,7 @@ beforeEach(() => {
       underLut: false,
       sac: null,
       paymentId: null,
+      marker: "dueline-request:test",
     })),
   );
   vi.spyOn(console, "warn").mockImplementation(() => {});

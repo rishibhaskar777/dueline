@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { addDays } from "@/lib/clock";
+import { isCountryCode } from "@/lib/countries";
 import { isPurposeCode } from "@/lib/export/purpose-codes";
 import { fromMinorUnits, toMinorUnits } from "@/lib/money/decimal";
 import { unmask, type ContactMap } from "@/lib/privacy/mask";
@@ -8,6 +9,8 @@ import { currencySchema, type CurrencyCode, type InvoiceDraft, type LineItem } f
 export const modelDraftSchema = z.object({
   clientName: z.string(),
   clientEmail: z.string().nullable(),
+  clientCountry: z.string().nullable(),
+  countryQuote: z.string().nullable(),
   currency: z.string().nullable(),
   dueOn: z.string().nullable(),
   items: z.array(
@@ -176,6 +179,16 @@ function checkPurpose(
   };
 }
 
+// The country is kept only when its code is on the list and the words it came from are in the chat.
+// The words are not checked to mean that country, so the freelancer confirms it on the review screen.
+function checkCountry(raw: ModelDraft, chat: string): string | undefined {
+  const code = (raw.clientCountry ?? "").trim().toUpperCase();
+  const quote = raw.countryQuote ?? "";
+  return isCountryCode(code) && quote.trim() !== "" && quoteIsInChat(quote, chat)
+    ? code
+    : undefined;
+}
+
 export function checkModelDraft(raw: ModelDraft, input: CheckInput): CheckedDraft {
   const warnings: string[] = [];
   const { contacts } = input;
@@ -193,13 +206,14 @@ export function checkModelDraft(raw: ModelDraft, input: CheckInput): CheckedDraf
   const currency = checkCurrency(raw.currency, warnings);
   const dueOn = checkDueOn(raw.dueOn, input.today, warnings);
   const email = checkEmail(raw.clientEmail, contacts, warnings);
+  const country = checkCountry(raw, input.chat);
 
   const { purposeCode, purposeReason } = checkPurpose(raw, contacts);
   const note = cleanText(raw.note, contacts, MAX_NOTE_LENGTH);
 
   return {
     draft: {
-      client: { name, email },
+      client: { name, email, ...(country ? { country } : {}) },
       currency,
       dueOn,
       items,

@@ -116,9 +116,27 @@ export function createFakePayPal() {
       read(id);
       calls.reminded.push(id);
     },
-    recordExternalPayment: async (id: string, payment: { paymentDate: string }): Promise<void> => {
+    recordExternalPayment: async (
+      id: string,
+      payment: { paymentDate: string; method?: string },
+    ): Promise<void> => {
       calls.payments.push({ id, paymentDate: payment.paymentDate });
       change(id, "MARKED_AS_PAID");
+      const paid = read(id);
+      invoices.set(id, {
+        ...paid,
+        payments: {
+          paid_amount: paid.amount,
+          transactions: [
+            {
+              payment_id: `EXTERNAL-${id}`,
+              payment_date: payment.paymentDate,
+              method: payment.method ?? "BANK_TRANSFER",
+              amount: paid.amount,
+            },
+          ],
+        },
+      });
     },
     cancelInvoice: async (id: string): Promise<void> => {
       calls.cancelled.push(id);

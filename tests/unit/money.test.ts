@@ -44,22 +44,24 @@ describe("computeTotals", () => {
       outstandingInr: 1750.25,
       overdueInr: 1000,
       overdueCount: 2,
-      paidThisMonthPayPalInr: 0,
-      paidThisMonthOutsideInr: 0,
+      paidLast30Inr: 0,
+      paidLast30PayPalInr: 0,
+      paidLast30OutsideInr: 0,
     });
   });
 
-  it("totals this month's paid invoices from their payout figures", () => {
+  it("totals the invoices paid in the last 30 days from their payout figures", () => {
     const totals = computeTotals(
       [
         invoice({ dueState: "paid", payoutInr: 35617, paidOn: "2026-10-15" }),
         invoice({ dueState: "paid", payoutInr: 22219, paidOn: "2026-10-07" }),
-        invoice({ dueState: "paid", payoutInr: 99999, paidOn: "2026-09-30" }),
+        invoice({ dueState: "paid", payoutInr: 99999, paidOn: "2026-09-17" }),
       ],
       "2026-10-17",
     );
-    expect(totals.paidThisMonthPayPalInr).toBe(57836);
-    expect(totals.paidThisMonthOutsideInr).toBe(0);
+    expect(totals.paidLast30Inr).toBe(57836);
+    expect(totals.paidLast30PayPalInr).toBe(57836);
+    expect(totals.paidLast30OutsideInr).toBe(0);
     expect(totals.outstandingInr).toBe(0);
   });
 
@@ -88,13 +90,23 @@ describe("computeTotals", () => {
           dueState: "paid",
           payoutInr: 77777,
           payoutSource: "outside_paypal",
-          paidOn: "2026-09-02",
+          paidOn: "2026-09-12",
         }),
       ],
       "2026-10-17",
     );
-    expect(totals.paidThisMonthPayPalInr).toBe(57836);
-    expect(totals.paidThisMonthOutsideInr).toBe(50000);
+    expect(totals.paidLast30PayPalInr).toBe(57836);
+    expect(totals.paidLast30OutsideInr).toBe(50000);
+    expect(totals.paidLast30Inr).toBe(107836);
+  });
+
+  it("counts the last 30 days as today and the 29 before, in India time", () => {
+    const paidOn = (day: string) => invoice({ dueState: "paid", payoutInr: 100, paidOn: day });
+    const totals = computeTotals(
+      [paidOn("2026-09-18"), paidOn("2026-09-17"), paidOn("2026-10-17"), paidOn("2026-10-18")],
+      "2026-10-17",
+    );
+    expect(totals.paidLast30Inr).toBe(200);
   });
 
   it("returns zeros for no invoices", () => {
@@ -102,8 +114,9 @@ describe("computeTotals", () => {
       outstandingInr: 0,
       overdueInr: 0,
       overdueCount: 0,
-      paidThisMonthPayPalInr: 0,
-      paidThisMonthOutsideInr: 0,
+      paidLast30Inr: 0,
+      paidLast30PayPalInr: 0,
+      paidLast30OutsideInr: 0,
     });
   });
 });

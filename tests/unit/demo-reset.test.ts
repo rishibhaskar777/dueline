@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/demo/reset/route";
+import { reseedStaleDemo } from "@/lib/demo/reset";
 import { demoMemo } from "@/lib/demo/story";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
@@ -33,8 +34,9 @@ vi.mock("@/lib/paypal/summaries", () => ({
 let store: Store;
 vi.mock("@/lib/store", () => ({ getStore: () => store }));
 
-const STORY_SIZE = 8;
-const HISTORY_SIZE = 4;
+const STORY_SIZE = 9;
+const HISTORY_SIZE = 5;
+const OPEN_STORY_SIZE = STORY_SIZE - HISTORY_SIZE;
 
 let fake: FakePayPal;
 
@@ -64,32 +66,32 @@ afterEach(() => {
 });
 
 describe("POST /api/demo/reset", () => {
-  it("cancels open invoices outside the story, deletes drafts and leaves paid ones alone", async () => {
+  it("cancels open invoices, including the story's older ones, deletes drafts and leaves paid ones alone", async () => {
     const sent = fake.add("SENT", "dueline-request:one");
     const unpaid = fake.add("UNPAID");
     const draft = fake.add("DRAFT", "dueline-request:two");
     const paid = fake.add("PAID");
     const outside = fake.add("MARKED_AS_PAID");
     const partly = fake.add("PARTIALLY_PAID");
-    const storyOpen = fake.add("SENT", demoMemo("tandem-pitch-deck"));
+    const storyOpen = fake.add("SENT", demoMemo(1, "tandem-pitch-deck"));
 
     const response = await reset();
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
-      cancelled: 2,
+      cancelled: 3,
       deleted: 1,
-      created: STORY_SIZE - 1,
-      skipped: 1,
+      created: STORY_SIZE,
+      skipped: 0,
       failed: 0,
       kept: 0,
     });
-    expect(fake.calls.cancelled).toEqual([sent.id, unpaid.id]);
+    expect(fake.calls.cancelled).toEqual([storyOpen.id, sent.id, unpaid.id]);
     expect(fake.calls.deleted).toEqual([draft.id]);
     expect(fake.statusOf(paid.id)).toBe("PAID");
     expect(fake.statusOf(outside.id)).toBe("MARKED_AS_PAID");
     expect(fake.statusOf(partly.id)).toBe("PARTIALLY_PAID");
-    expect(fake.statusOf(storyOpen.id)).toBe("SENT");
+    expect(fake.statusOf(storyOpen.id)).toBe("CANCELLED");
     expect(paypal.clearInvoiceCaches).toHaveBeenCalledTimes(1);
   });
 
@@ -137,22 +139,30 @@ describe("POST /api/demo/reset", () => {
     expect(fake.calls.payments).toHaveLength(HISTORY_SIZE);
   });
 
-  it("creates nothing the second time", async () => {
+  it("starts a new generation each time: the open story invoices are cancelled and the whole story is made again", async () => {
     await reset();
-    store = createMemoryStore();
-    const before = fake.invoices.size;
+    expect(await store.getDemoGeneration()).toEqual({ id: 1, seededOn: "2026-10-31" });
+    await store.hitRateLimit("demo-reset", 0);
+    store = Object.assign(createMemoryStore(), {
+      getDemoGeneration: store.getDemoGeneration,
+      saveDemoGeneration: store.saveDemoGeneration,
+    });
 
     const response = await reset();
 
     expect(await response.json()).toEqual({
-      cancelled: 0,
+      cancelled: OPEN_STORY_SIZE,
       deleted: 0,
-      created: 0,
-      skipped: STORY_SIZE,
+      created: STORY_SIZE,
+      skipped: 0,
       failed: 0,
       kept: 0,
     });
-    expect(fake.invoices.size).toBe(before);
+    expect(await store.getDemoGeneration()).toEqual({ id: 2, seededOn: "2026-10-31" });
+    const paidStory = [...fake.invoices.values()].filter(
+      (invoice) => invoice.status === "MARKED_AS_PAID",
+    );
+    expect(paidStory).toHaveLength(HISTORY_SIZE * 2);
   });
 
   it("allows one reset every ten minutes and says how long is left", async () => {
@@ -191,5 +201,70 @@ describe("POST /api/demo/reset", () => {
     const response = await reset();
 
     expect(await response.json()).toMatchObject({ created: STORY_SIZE - 1, failed: 1 });
+  });
+});
+
+describe("reseedStaleDemo", () => {
+  async function ageGenerationTo(seededOn: string): Promise<void> {
+    await store.saveDemoGeneration({ id: 4, seededOn });
+  }
+
+  it("does nothing while the generation is 6 days old", async () => {
+    await ageGenerationTo("2026-10-25");
+
+    await reseedStaleDemo();
+
+    expect(await store.getDemoGeneration()).toEqual({ id: 4, seededOn: "2026-10-25" });
+    expect(paypal.listInvoicesInFull).not.toHaveBeenCalled();
+  });
+
+  it("does nothing when no generation has been seeded yet", async () => {
+    await reseedStaleDemo();
+    expect(paypal.listInvoicesInFull).not.toHaveBeenCalled();
+  });
+
+  it("starts a new generation at 7 days, cancels only the open story invoices of older ones", async () => {
+    await ageGenerationTo("2026-10-24");
+    const oldOpen = fake.add("SENT", demoMemo(4, "tandem-pitch-deck"));
+    const oldPaid = fake.add("MARKED_AS_PAID", demoMemo(4, "okafor-logo-refresh"));
+    const other = fake.add("SENT", "dueline-request:mine");
+    const draft = fake.add("DRAFT", "dueline-request:draft");
+
+    await reseedStaleDemo();
+
+    expect(await store.getDemoGeneration()).toEqual({ id: 5, seededOn: "2026-10-31" });
+    expect(fake.calls.cancelled).toEqual([oldOpen.id]);
+    expect(fake.calls.deleted).toEqual([]);
+    expect(fake.statusOf(oldPaid.id)).toBe("MARKED_AS_PAID");
+    expect(fake.statusOf(other.id)).toBe("SENT");
+    expect(fake.statusOf(draft.id)).toBe("DRAFT");
+    expect(
+      [...fake.invoices.values()].filter((i) => i.detail.memo?.includes("dueline-demo:5:")),
+    ).toHaveLength(STORY_SIZE);
+  });
+
+  it("is skipped and logged when the reset limit was hit", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await ageGenerationTo("2026-10-24");
+    await store.hitRateLimit("demo-reset", 600);
+    await store.putCached("demo-reset", Date.now(), 600);
+
+    await reseedStaleDemo();
+
+    expect(await store.getDemoGeneration()).toEqual({ id: 4, seededOn: "2026-10-24" });
+    expect(paypal.listInvoicesInFull).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith("Demo re-seed skipped", {
+      reason: "reset_limit",
+      generation: 4,
+    });
+  });
+
+  it("does nothing outside demo mode", async () => {
+    stubEnv({ DEMO_MODE: "false" });
+    await ageGenerationTo("2026-10-01");
+
+    await reseedStaleDemo();
+
+    expect(paypal.listInvoicesInFull).not.toHaveBeenCalled();
   });
 });

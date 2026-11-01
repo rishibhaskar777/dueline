@@ -47,7 +47,7 @@ describe("groupClients and summariseClient", () => {
 
   it("totals what was billed and what is outstanding, in rupees", () => {
     const [okafor] = groupClients(invoices, false, TODAY);
-    expect(summariseClient(okafor)).toMatchObject({
+    expect(summariseClient(okafor, TODAY)).toMatchObject({
       key: "okafor-reyes",
       name: "Okafor & Reyes",
       invoices: 3,
@@ -60,11 +60,11 @@ describe("groupClients and summariseClient", () => {
 
   it("says how many invoices a short history rests on", () => {
     const [okafor, brightwell] = groupClients(invoices, false, TODAY);
-    const summary = summariseClient(brightwell);
+    const summary = summariseClient(brightwell, TODAY);
     expect(summary.riskLevel).toBeNull();
     expect(summary.riskReason).toBe("No earlier invoices to this client.");
     expect(summary.lastPaidOn).toBeNull();
-    expect(summariseClient(okafor).riskReason).toContain("Based on 3 invoices.");
+    expect(summariseClient(okafor, TODAY).riskReason).toContain("Based on 3 invoices.");
   });
 
   it("groups by email too when an email identifies a client", () => {

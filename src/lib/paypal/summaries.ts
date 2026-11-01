@@ -11,6 +11,8 @@ import type { PayPalInvoice } from "./types";
 
 export interface LoadedInvoice {
   summary: InvoiceSummary;
+  // The first word of the invoice's private memo, which says where the invoice came from.
+  marker: string;
   amountDue: Money;
   underLut: boolean;
   // SAC of the invoice's first item, from its private memo.
@@ -98,6 +100,7 @@ async function loadFresh(): Promise<LoadedInvoice[]> {
         ? [
             {
               summary,
+              marker: markerOf(invoice.detail.memo),
               amountDue: amountDueOf(invoice, summary.amount),
               underLut: isUnderLut(invoice),
               sac: sacOf(invoice.detail.memo),

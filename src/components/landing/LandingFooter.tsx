@@ -1,4 +1,4 @@
-const REPOSITORY = "https://github.com/rishibhaskar777/dueline";
+import { REPOSITORY_URL } from "@/lib/repository";
 
 export function LandingFooter() {
   return (
@@ -8,7 +8,7 @@ export function LandingFooter() {
           Built for the PayPal AI Hackathon 2026. Runs on the PayPal sandbox; no real money moves.
         </p>
         <a
-          href={REPOSITORY}
+          href={REPOSITORY_URL}
           rel="noopener noreferrer"
           className="rounded-md font-medium text-white underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-white/60"
         >

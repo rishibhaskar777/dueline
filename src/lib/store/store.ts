@@ -6,6 +6,7 @@ import type {
   Profile,
   QueueItem,
   QueueKind,
+  ReminderChannel,
   ReminderLanguage,
   RepeatSchedule,
   Settings,
@@ -24,12 +25,19 @@ export interface ReminderLogEntry {
   invoiceId: string;
   tone: Tone;
   sentAt: string;
+  channel: ReminderChannel;
 }
 
 export interface StoredRates {
   rates: Record<CurrencyCode, number>;
   onDate: string; // date the rates are for, as published by the ECB
   fetchedOn: string; // day Dueline fetched them
+}
+
+// The demo story is seeded again as a new generation; the id counts them and seededOn is the day.
+export interface DemoGeneration {
+  id: number;
+  seededOn: string;
 }
 
 export interface Store {
@@ -48,7 +56,8 @@ export interface Store {
 
   logReminder(entry: ReminderLogEntry): Promise<void>;
   reminderHistory(invoiceId: string): Promise<ReminderLogEntry[]>;
-  // Reminders sent for any invoice at or after this ISO timestamp.
+  // Reminders PayPal sent, for any invoice, at or after this ISO timestamp. An email the freelancer
+  // sent themselves does not count against PayPal's daily limit.
   countRemindersSince(since: string): Promise<number>;
 
   getSettings(): Promise<Settings | null>;
@@ -80,6 +89,18 @@ export interface Store {
   listLibraryItems(): Promise<LibraryItem[]>;
   saveLibraryItem(item: LibraryItem): Promise<void>;
   deleteLibraryItem(id: string): Promise<boolean>;
+
+  getDemoGeneration(): Promise<DemoGeneration | null>;
+  saveDemoGeneration(generation: DemoGeneration): Promise<void>;
+
+  // Invoices the demo owner chose to hide from every screen and export.
+  listHiddenInvoices(): Promise<string[]>;
+  setInvoiceHidden(invoiceId: string, hidden: boolean): Promise<void>;
+
+  // The bank's FIRC or e-BRC number for an invoice paid outside PayPal, by invoice id.
+  listBankReferences(): Promise<Record<string, string>>;
+  // A null reference clears it.
+  saveBankReference(invoiceId: string, reference: string | null): Promise<void>;
 
   hitRateLimit(key: string, windowSeconds: number): Promise<number>;
 

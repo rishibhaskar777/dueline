@@ -7,6 +7,7 @@ import {
   nextInvoiceNumber,
   recordExternalPayment,
   sendInvoice,
+  remindInvoice,
 } from "@/lib/paypal/invoices";
 import type { PayPalInvoice, PayPalInvoiceInput } from "@/lib/paypal/types";
 import { clearAccessToken } from "@/lib/paypal/token";
@@ -67,16 +68,25 @@ describe("PayPal invoices", () => {
     expect(headers["PayPal-Request-Id"]).toBe("req-1");
   });
 
+  it("asks PayPal to send its standard reminder, with no subject or note", async () => {
+    const spy = mockPayPal(() => new Response(null, { status: 202 }));
+    await remindInvoice("INV2-NEW");
+    const [url, init] = spy.mock.calls[1];
+    expect(String(url)).toContain("/v2/invoicing/invoices/INV2-NEW/remind");
+    expect(JSON.parse(String(init?.body))).toEqual({
+      send_to_invoicer: false,
+      send_to_recipient: true,
+    });
+  });
+
   it("sends a draft to the recipient", async () => {
     const spy = mockPayPal(() => new Response(null, { status: 202 }));
-    await sendInvoice("INV2-NEW", { subject: "Invoice", note: "Thanks" }, "req-2");
+    await sendInvoice("INV2-NEW", "req-2");
     const [url, init] = spy.mock.calls[1];
     expect(String(url)).toContain("/v2/invoicing/invoices/INV2-NEW/send");
     expect(JSON.parse(String(init?.body))).toEqual({
       send_to_invoicer: false,
       send_to_recipient: true,
-      subject: "Invoice",
-      note: "Thanks",
     });
   });
 

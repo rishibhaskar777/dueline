@@ -1,6 +1,11 @@
 import { formatDate, formatTimestamp } from "@/lib/format-date";
 import type { TimelineEvent } from "@/types";
 
+function reminderText({ tone, channel }: TimelineEvent): string {
+  const how = channel === "email" ? "Message sent from your email" : "Reminder sent through PayPal";
+  return tone ? `${how} (${tone} tone)` : how;
+}
+
 export function describeTimelineEvent(event: TimelineEvent): string {
   switch (event.kind) {
     case "created":
@@ -10,7 +15,11 @@ export function describeTimelineEvent(event: TimelineEvent): string {
     case "viewed":
       return "Your client viewed the invoice";
     case "reminder":
-      return event.tone ? `Reminder sent (${event.tone} tone)` : "Reminder sent";
+      return reminderText(event);
+    case "due":
+      return "Payment due";
+    case "overdue":
+      return "Became overdue";
     case "paid":
       return event.via === "outside_paypal" ? "Paid outside PayPal" : "Paid through PayPal";
     case "cancelled":

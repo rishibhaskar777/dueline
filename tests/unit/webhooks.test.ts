@@ -68,7 +68,7 @@ function capturedPayout(): void {
 }
 
 beforeEach(() => {
-  stubEnv({ PAYPAL_WEBHOOK_ID: "WH-ID", DEMO_TODAY: "2026-10-29" });
+  stubEnv({ PAYPAL_WEBHOOK_ID: "WH-ID", DEMO_TODAY: "2026-10-29", DEMO_MODE: "false" });
   clearAccessToken();
   vi.mocked(clearInvoiceCaches).mockClear();
   sdk.getCapturedPayment.mockReset();
@@ -235,7 +235,11 @@ describe("POST /api/webhooks/paypal processing", () => {
 
   it("dates a demo-story invoice's sent event by its invoice date and its paid event by its payment date", async () => {
     capturedPayout();
-    const story = { ...paid, detail: { ...paid.detail, memo: "dueline-demo:okafor-logo-refresh" } };
+    const story = {
+      ...paid,
+      status: "MARKED_AS_PAID" as const,
+      detail: { ...paid.detail, memo: "dueline-demo:okafor-logo-refresh" },
+    };
     servePayPal("SUCCESS", () => jsonResponse(story));
 
     await webhook(delivery(rawEvent("WH-S1", "INVOICING.INVOICE.SENT")));
@@ -243,9 +247,32 @@ describe("POST /api/webhooks/paypal processing", () => {
 
     const events = await getStore().latestActivity(50);
     const at = (id: string) => events.find((event) => event.id === id)?.at;
-    // The invoice is dated 2 Oct and paid on 15 Oct; both events happen at 09:00 India time.
-    expect(at("WH-S1")).toBe("2026-10-02T03:30:00.000Z");
-    expect(at("WH-S2")).toBe("2026-10-15T03:30:00.000Z");
+    // The invoice is dated 2 Oct and paid on 15 Oct; both events happen at 09:00 India time. A story
+    // invoice's rows have the seed's ids, so a webhook adds no second row.
+    expect(at("demo:0:okafor-logo-refresh:sent")).toBe("2026-10-02T03:30:00.000Z");
+    expect(at("demo:0:okafor-logo-refresh:paid")).toBe("2026-10-15T03:30:00.000Z");
+    expect(events.some(({ id }) => id === "WH-S1" || id === "WH-S2")).toBe(false);
+  });
+
+  it("adds no second row for a story invoice whose sent and paid rows the seed already wrote", async () => {
+    capturedPayout();
+    const story = {
+      ...paid,
+      detail: { ...paid.detail, memo: "dueline-demo:2:okafor-logo-refresh" },
+    };
+    servePayPal("SUCCESS", () => jsonResponse(story));
+    const row = {
+      ...activity[0],
+      id: "demo:2:okafor-logo-refresh:sent",
+      kind: "sent" as const,
+      at: "2026-10-02T03:30:00.000Z",
+    };
+    await getStore().addActivity(row);
+
+    await webhook(delivery(rawEvent("WH-S5", "INVOICING.INVOICE.SENT")));
+
+    const rows = (await getStore().latestActivity(50)).filter(({ id }) => id === row.id);
+    expect(rows).toEqual([row]);
   });
 
   it("never places a demo-story event after the moment PayPal reported it", async () => {
@@ -258,7 +285,7 @@ describe("POST /api/webhooks/paypal processing", () => {
 
     await webhook(delivery(rawEvent("WH-S3", "INVOICING.INVOICE.SENT")));
 
-    const sent = (await getStore().latestActivity(50)).find((event) => event.id === "WH-S3");
+    const sent = (await getStore().latestActivity(50)).find((event) => event.id.endsWith(":sent"));
     expect(sent?.at).toBe("2026-10-29T03:30:00.000Z");
   });
 

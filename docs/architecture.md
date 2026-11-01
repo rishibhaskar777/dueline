@@ -227,9 +227,15 @@ fails.
 `GET /api/export-register?month=YYYY-MM` rejects a month after the current one (400), then
 `buildExportRegister` takes the loaded invoices (the same cached list as receivables) and keeps those
 that are paid or marked as paid and whose `paidOn`, the India date, is in the month. A partly paid
-invoice is left out. An invoice marked as paid outside PayPal is not a row and not in any total; its
-number goes into `recordedOutsidePayPal`, which the screen shows under the table and the CSV adds
-after the rows. Each becomes a row: the foreign amount, PayPal's fee, net and transaction ID when
+invoice is left out. An invoice marked as paid outside PayPal is a bank transfer: it becomes an
+`outsideRows` entry with no PayPal fee, net or transaction ID and with the `bankReference` (the
+bank's FIRC or e-BRC number) saved for it in the `bank_receipts` table through
+`PUT /api/export-register/bank-reference`. The screen lists them under the table with an editable
+reference, the totals report PayPal FIRA rupees, bank rupees and both together, and the CSV has both
+kinds of row with a `Proof` column (`PayPal FIRA`, `Bank FIRC/e-BRC <reference>` or `Bank, reference
+missing`). The invoices come from `loadVisibleInvoices`, so what the demo hides is not in it.
+`latestMonthWithPayments` is the newest month, up to the current one, with a paid invoice. Each
+PayPal payment becomes a row: the foreign amount, PayPal's fee, net and transaction ID when
 PayPal's figures were found, and the rupees, which come from `resolvePayouts` like the receivables
 screen's (PayPal's `netInr` rounded to whole rupees, else the rate of the paid date less the
 markup; the row carries the rate and its date). Rows are sorted by
@@ -502,19 +508,22 @@ sequenceDiagram
   R-->>U: sentAt
 ```
 
-0. Whoever wrote the body, code ends every draft with the profile's sign-off and name (`withSignOff`),
-   leaving room for it in the 900 characters; the model is told to write no sign-off.
+0. Whoever wrote the body, code ends every draft with the profile's sign-off, name and business name
+   (`withSignOff`), leaving room for it in the 900 characters; the model is told to write no sign-off.
+   Every body also goes through `normaliseMessage` (greeting on its own line, paragraphs of one or two
+   sentences) and, for a model's draft, through `contradictingPhrase` (`check-tone.ts`), which sends a
+   draft whose words contradict its tone back to the template.
 1. `GET /api/reminders` takes the invoices with PayPal status SENT, UNPAID or PARTIALLY_PAID that
    are overdue, most days late first (at most 10), and answers each in its suggested tone
-   (`suggestTone` from the days late and the reminders already sent, one step firmer for a client
-   who is a late payer) and the client's reminder language, without calling the model: the cached
+   (`suggestTone` from the days late and the reminders already sent: final only after two reminders
+   or beyond 30 days, and a late payer's gentle becomes firm) and the client's reminder language, without calling the model: the cached
    model draft (`cachedReminderText`) or the template with `pending: true`. The daily run fills the
    cache with `prepareReminderDrafts`, two model calls at a time. The response also carries `remindersLeftToday`
    (`reminders/daily-limit.ts`): PayPal's two a day less the reminders in the store's log since
    India midnight, and 0 for the rest of that day once PayPal has answered 429 (the answer is
    remembered in the store's cache). The send route applies the same count before calling PayPal.
 2. `draftReminderText` first looks in the store's cache (24 hours, keyed by invoice, tone, language,
-   days late and the prompt version). Otherwise it reserves a call (the app's 400 a day; for
+   days late, the reminders already sent and the prompt version). Otherwise it reserves a call (the app's 400 a day; for
    `POST /api/reminders/draft` also 20 an hour per address) and asks `runWithFallback` for a
    structured `{ subject, message }`. The model sees the client's business name, invoice number,
    amount, dates, days late and the work, never an email address or phone number.
@@ -545,9 +554,13 @@ two `POST /api/reminders/draft` calls run at once; a card whose draft is pending
 untouched and no send has started. Each card
 (`NudgeCard`) shows the client with a risk badge and reason, the invoice, the amount, the due date,
 the days late and the reminders already sent; a tone switch with the suggested tone marked; the
-editable subject and message with a note saying whether the AI or a template wrote it; and "Send
-reminder through PayPal" (disabled with a calm banner when no PayPal reminders are left today; drafting still works).
-When a late payer's record made the suggestion firmer, the card says "Suggested firm because Okafor & Reyes is a late payer." Switching tone calls `POST /api/reminders/draft`; when the subject or message was edited, the card
+editable subject and message with a note saying whether the AI or a template wrote it; "Send
+PayPal reminder" (disabled with a calm banner when no PayPal reminders are left today; drafting still
+works), which has PayPal email its standard reminder and sends no words of ours, because PayPal
+ignores them; and "Send my message" (`EmailMessageActions`), which builds a `mailto:` link, a Gmail
+compose link and a copy of the message with the invoice's pay link added by `nudge-email.ts`. Opening
+or copying records nothing; "I sent it" posts `channel: "email"`, which only logs the reminder.
+The card shows `ReminderDraft.reason`, which names the facts behind the suggestion ("Suggested firm: 8 days late, and late on 3 of 3 invoices."); the Today queue item carries the same text. Switching tone calls `POST /api/reminders/draft`; when the subject or message was edited, the card
 first asks "Replace your edits with a Firm draft?" with "Replace" and "Keep editing", and nothing is
 drafted until the user chooses. Each draft gets its own request ID, so a retry never sends twice. After a send the card is closed for the day. Without
 overdue invoices the screen reads "No late invoices. Nothing to chase today." The sidebar shows no
@@ -607,28 +620,51 @@ the invoices (`buildCommands`) and searches them with `filterByQuery`.
 
 ## Demo story and reset
 
-`src/lib/demo/story.ts` is pure data and a builder, and owns the story's client names, work, amounts and purpose codes
-(`engagements`), which the sample data in `src/mocks` imports so nothing under `src/lib` or `src/app`
-depends on it; `buildDemoStory(today)` turns day offsets into
-the dates of eight invoices, each with a key and the memo `dueline-demo:<key>`. `seed.ts` (`seedDemo`)
-reads every invoice in full, creates and sends the keys PayPal lacks through `invoice-body.ts`, and
-records the history ones as paid with `recordExternalPayment`. It returns one row per invoice
-(`created`, `repaired`, `skipped` or `failed`). `npm run seed` prints that table. An invoice paid
-outside PayPal has no actual payout (`getActualPayout` skips it), so its rupees are estimated.
+`src/lib/demo/story.ts` is pure data and a builder, and owns the story's client names, countries,
+work, amounts and purpose codes (`engagements`), which the sample data in `src/mocks` imports so
+nothing under `src/lib` or `src/app` depends on it; `buildDemoStory(today)` turns day offsets into
+the dates of nine invoices, each with a key, a country, an optional past reminder and the memo
+`dueline-demo:<generation>:<key>`. `seed.ts` (`seedDemo(generation)`) reads every invoice in full,
+creates and sends the keys PayPal lacks through `invoice-body.ts` (with the LUT line, the default SAC
+and the client's billing country), records the history ones as paid with `recordExternalPayment`, and
+writes the story's own history: a `sent` and a `paid` activity row with the ids
+`demo:<generation>:<key>:sent` and `:paid` at 09:00 India time on the story's dates, and the one past
+gentle reminder in the reminder log (Dueline's log only; nothing goes to PayPal). It returns one row
+per invoice (`created`, `repaired`, `skipped` or `failed`). `seedNewGeneration` records the next
+generation (`demo_generation`: id and the day it was seeded) and seeds it. `npm run seed` prints the
+table. An invoice paid outside PayPal has no actual payout (`getActualPayout` skips it), so its
+rupees are estimated.
 
 `POST /api/demo/reset` calls `resetDemo` in `reset.ts`: in demo mode only, it claims the single
-ten-minute slot in the store, cancels the sent or unpaid invoices that are not in the story, deletes
-drafts, runs `seedDemo`, clears the invoice caches and returns the counts. An invoice created in
-the last 30 minutes (PayPal's `create_time`) (or one whose creation time PayPal did not report) is never cancelled or deleted and is counted in `kept`,
-so a judge in the middle of an invoice does not lose it to another judge's reset. The "Demo" card
-(`DemoCard`) lives on its own page, `/demo-tools`, which the sidebar links to only when `GET
-/api/demo/recipient` succeeds (`useDemoMode`); it asks for confirmation inline and shows the result
-line.
+ten-minute slot in the store, cancels the open story invoices (all older than the generation about to
+start), cancels the other sent or unpaid invoices, deletes drafts, runs `seedNewGeneration`, clears
+the invoice caches and returns the counts. A non-story invoice created in the last 30 minutes (PayPal's
+`create_time`) (or one whose creation time PayPal did not report) is never cancelled or deleted and is
+counted in `kept`, so a judge in the middle of an invoice does not lose it to another judge's reset.
+The daily run calls `reseedStaleDemo`: once the current generation is 7 days old it starts a new one,
+cancelling only the open story invoices of older generations, behind the same ten-minute slot. The
+"Demo" card (`DemoCard`) lives on its own page, `/demo-tools`, which the sidebar links to only when
+`GET /api/demo/recipient` succeeds (`useDemoMode`); it asks for confirmation inline and shows the
+result line.
 
-The story invoices' webhook events are dated by the story: a "sent" event at the invoice date and a
-"paid" event at the payment date (09:00 India time, never after the time PayPal reported), so the
-activity feed does not show eight months of history as having happened at the moment of seeding.
-The feed shows a date instead of "N days ago" for anything a week old or more. See [decision 0015](decisions/0015-demo-story-and-reset.md).
+**What the demo shows.** `visibility.ts` holds one pure function, `isShownInDemo(invoice, generation,
+hiddenIds)`, and `visible-invoices.ts` (`loadVisibleInvoices`) applies it to the loaded invoices.
+Receivables (`loadSummaries`), the dashboard, Clients, the radar, the export register, GSTR-1, the
+year summary, the digest, the daily run and the reminder drafts all read through it, and
+`activity-feed.ts` filters the feed the same way. The rule is in the contract. With no generation
+stored the current one is 0, so the earlier story stays on show until the first reset. Invoices are
+hidden by hand with `POST /api/demo/hidden-invoices` (`demo_hidden_invoices`); the invoice page still
+opens for a hidden invoice and carries the button to show it again.
+
+**Dates of the story's events.** `story-events.ts` owns `storyEventAt`, shared by the webhook path and
+the Activity read path: a story invoice's `sent` event is at its issue date and a `paid` event of a
+payment recorded outside PayPal at its paid date (09:00 India time, never after the time reported).
+The webhook for a story invoice reuses the seed's row id, so it adds no second row, and
+`GET /api/activity` moves rows stored with the real time onto the story's dates when it reads them, so
+no data migration is needed. `buildTimeline` uses the same moments for a story invoice's `created`
+and `sent`, and adds `due` and `overdue` milestones to every invoice. The feed shows a date instead of
+"N days ago" for anything a week old or more. See [decision 0015](decisions/0015-demo-story-and-reset.md)
+and [decision 0021](decisions/0021-demo-generations-and-human-reminders.md).
 
 ## Demo access
 

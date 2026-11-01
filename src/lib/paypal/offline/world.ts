@@ -13,9 +13,9 @@ let ready: Promise<void> | undefined;
 
 async function seed(): Promise<void> {
   // Loaded here because the demo seed calls back into the PayPal client that calls this module.
-  const { ensureDemoProfile, seedDemo } = await import("@/lib/demo/seed");
+  const { ensureDemoProfile, seedNewGeneration } = await import("@/lib/demo/seed");
   await ensureDemoProfile(today());
-  const rows = await seedDemo();
+  const { rows } = await seedNewGeneration();
   if (rows.some((row) => row.result === "failed")) {
     throw new Error("The offline demo story could not be created.");
   }

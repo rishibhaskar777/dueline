@@ -41,12 +41,11 @@ const otherRequestId = "9a1c7e52-0b3d-4f6a-8d2e-5c4b3a291807";
 const unpaid = unpaidFixture as PayPalInvoice;
 const request: SendReminderRequest = {
   invoiceId: unpaid.id,
-  subject: "A quick reminder about invoice INV-0101",
-  message:
-    "Hi Tandem Health team,\n\nInvoice INV-0101 is overdue. Please use Pay now.\n\nThank you",
   tone: "gentle",
+  channel: "paypal",
   requestId,
 };
+const emailRequest: SendReminderRequest = { ...request, channel: "email" };
 
 function rejection(status: number): PayPalApiError {
   return new PayPalApiError({
@@ -68,16 +67,13 @@ beforeEach(() => {
 
 afterEach(() => vi.useRealTimers());
 
-describe("sendReminder", () => {
-  it("sends through PayPal, logs the reminder and records the activity", async () => {
+describe("sendReminder through PayPal", () => {
+  it("asks PayPal for its standard reminder, logs it and records the activity", async () => {
     const { sentAt } = await sendReminder(request);
 
-    expect(paypal.remindInvoice).toHaveBeenCalledWith(unpaid.id, {
-      subject: request.subject,
-      note: request.message,
-    });
+    expect(paypal.remindInvoice).toHaveBeenCalledWith(unpaid.id);
     expect(await store.reminderHistory(unpaid.id)).toEqual([
-      { invoiceId: unpaid.id, tone: "gentle", sentAt },
+      { invoiceId: unpaid.id, tone: "gentle", sentAt, channel: "paypal" },
     ]);
     expect(await store.latestActivity(5)).toEqual([
       {
@@ -102,11 +98,12 @@ describe("sendReminder", () => {
     expect(paypal.remindInvoice).not.toHaveBeenCalled();
   });
 
-  it("refuses the same request ID with a different message", async () => {
+  it("refuses the same request ID with a different tone or channel", async () => {
     await sendReminder(request);
-    await expect(
-      sendReminder({ ...request, message: "A different message entirely." }),
-    ).rejects.toBeInstanceOf(DuplicateRequestError);
+    await expect(sendReminder({ ...request, tone: "firm" })).rejects.toBeInstanceOf(
+      DuplicateRequestError,
+    );
+    await expect(sendReminder(emailRequest)).rejects.toBeInstanceOf(DuplicateRequestError);
   });
 
   it("refuses a paid invoice", async () => {
@@ -140,31 +137,6 @@ describe("sendReminder", () => {
     await expect(sendReminder(request)).resolves.toHaveProperty("sentAt");
   });
 
-  it("does not take the client's business name for a link", async () => {
-    paypal.getInvoice.mockResolvedValue({
-      ...unpaid,
-      primary_recipients: [
-        {
-          billing_info: { email_address: "buyer@personal.example.com", business_name: "Acme.io" },
-        },
-      ],
-    });
-    const message =
-      "Hi Acme.io team,\n\nInvoice INV-0101 is overdue. Please use Pay now.\n\nThank you";
-    await expect(sendReminder({ ...request, message })).resolves.toHaveProperty("sentAt");
-    expect(paypal.remindInvoice).toHaveBeenCalledTimes(1);
-  });
-
-  it("refuses a link, naming the field, and lets the request ID be used again", async () => {
-    const linked = { ...request, message: `${request.message} Pay at https://pay.example.org` };
-    await expect(sendReminder(linked)).rejects.toThrow(
-      "The message must not contain links or email addresses.",
-    );
-    expect(paypal.remindInvoice).not.toHaveBeenCalled();
-
-    await expect(sendReminder(request)).resolves.toHaveProperty("sentAt");
-  });
-
   it("refuses a recipient that is not a sandbox buyer before reminding", async () => {
     paypal.getInvoice.mockResolvedValue({
       ...unpaid,
@@ -182,7 +154,9 @@ describe("sendReminder", () => {
       (caught: unknown) => caught,
     );
     expect(error).toBeInstanceOf(ReminderLimitError);
-    expect((error as Error).message).toBe("A reminder was already sent today for this invoice.");
+    expect((error as Error).message).toBe(
+      "A PayPal reminder was already sent today for this invoice.",
+    );
     expect(paypal.remindInvoice).not.toHaveBeenCalled();
   });
 
@@ -191,6 +165,7 @@ describe("sendReminder", () => {
       invoiceId: unpaid.id,
       tone: "gentle",
       sentAt: new Date(Date.now() - 36 * 60 * 60 * 1000).toISOString(),
+      channel: "paypal",
     });
     await expect(sendReminder({ ...request, tone: "firm" })).resolves.toHaveProperty("sentAt");
   });
@@ -212,5 +187,64 @@ describe("sendReminder", () => {
     paypal.remindInvoice.mockRejectedValueOnce(rejection(500));
     await expect(sendReminder(request)).rejects.toBeInstanceOf(PayPalApiError);
     await expect(sendReminder(request)).resolves.toHaveProperty("sentAt");
+  });
+});
+
+describe("sendReminder for a message sent from the freelancer's email", () => {
+  it("records it without asking PayPal, and without counting against PayPal's limit", async () => {
+    const { sentAt } = await sendReminder(emailRequest);
+
+    expect(paypal.remindInvoice).not.toHaveBeenCalled();
+    expect(await store.reminderHistory(unpaid.id)).toEqual([
+      { invoiceId: unpaid.id, tone: "gentle", sentAt, channel: "email" },
+    ]);
+    expect(await store.latestActivity(5)).toMatchObject([
+      { id: `reminder:${requestId}`, kind: "email_sent", invoiceId: unpaid.id },
+    ]);
+    expect(await store.countRemindersSince("2000-01-01T00:00:00Z")).toBe(0);
+  });
+
+  it("is not held to the sandbox-buyer guard, since Dueline sends nothing", async () => {
+    paypal.getInvoice.mockResolvedValue({
+      ...unpaid,
+      primary_recipients: [{ billing_info: { email_address: "client@acme.example" } }],
+    });
+    await expect(sendReminder(emailRequest)).resolves.toHaveProperty("sentAt");
+  });
+
+  it("allows one message per invoice per day, and says so", async () => {
+    await sendReminder(emailRequest);
+
+    const error = await sendReminder({ ...emailRequest, requestId: otherRequestId }).catch(
+      (caught: unknown) => caught,
+    );
+    expect(error).toBeInstanceOf(ReminderLimitError);
+    expect((error as Error).message).toBe(
+      "A message from your email was already recorded today for this invoice.",
+    );
+  });
+
+  it("allows a PayPal reminder after an email the same day, and an email after a PayPal reminder", async () => {
+    await sendReminder(emailRequest);
+    await expect(sendReminder({ ...request, requestId: otherRequestId })).resolves.toHaveProperty(
+      "sentAt",
+    );
+    expect(paypal.remindInvoice).toHaveBeenCalledTimes(1);
+    expect((await store.reminderHistory(unpaid.id)).map(({ channel }) => channel)).toEqual([
+      "email",
+      "paypal",
+    ]);
+
+    store = createMemoryStore();
+    await sendReminder(request);
+    await expect(
+      sendReminder({ ...emailRequest, requestId: otherRequestId }),
+    ).resolves.toHaveProperty("sentAt");
+    expect(await store.countRemindersSince("2000-01-01T00:00:00Z")).toBe(1);
+  });
+
+  it("still refuses a paid invoice", async () => {
+    paypal.getInvoice.mockResolvedValue(paidFixture);
+    await expect(sendReminder(emailRequest)).rejects.toThrow("This invoice is already paid.");
   });
 });

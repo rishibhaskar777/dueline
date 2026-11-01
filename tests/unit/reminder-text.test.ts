@@ -18,6 +18,7 @@ const facts: ReminderFacts = {
   issuedOn: "2026-10-01",
   dueOn: "2026-10-10",
   daysLate: 7,
+  remindersSent: 0,
 };
 
 const good: ReminderText = {
@@ -40,16 +41,18 @@ describe("suggestTone", () => {
     expect(suggestTone(3, [sent("gentle")], null)).toBe("firm");
   });
 
-  it("is final beyond 20 days late or after two reminders", () => {
-    expect(suggestTone(21, [], null)).toBe("final");
+  it("is final only after two reminders or more than 30 days late", () => {
     expect(suggestTone(3, [sent("gentle"), sent("firm")], null)).toBe("final");
-    expect(suggestTone(25, [sent("gentle")], null)).toBe("final");
+    expect(suggestTone(31, [], null)).toBe("final");
+    expect(suggestTone(30, [], null)).toBe("firm");
+    expect(suggestTone(25, [sent("gentle")], null)).toBe("firm");
   });
 
-  it("moves a late payer one step firmer and stops at final", () => {
+  it("moves a late payer from gentle to firm, never straight to final", () => {
     expect(suggestTone(3, [], "late_payer")).toBe("firm");
-    expect(suggestTone(10, [], "late_payer")).toBe("final");
-    expect(suggestTone(25, [], "late_payer")).toBe("final");
+    expect(suggestTone(8, [], "late_payer")).toBe("firm");
+    expect(suggestTone(25, [], "late_payer")).toBe("firm");
+    expect(suggestTone(31, [], "late_payer")).toBe("final");
   });
 
   it("keeps the tone for a client to watch, a reliable client or no history", () => {
@@ -180,7 +183,7 @@ describe("templateReminder", () => {
 describe("checkReminderText with the sign-off added afterwards", () => {
   it("keeps room for the longest sign-off within the 900 characters the send route accepts", () => {
     const longest = (length: number) => `INV-0044 ${"a".repeat(length - 9)}`;
-    expect(checkReminderText(facts, { ...good, message: longest(790) })).not.toBeNull();
-    expect(checkReminderText(facts, { ...good, message: longest(791) })).toBeNull();
+    expect(checkReminderText(facts, { ...good, message: longest(670) })).not.toBeNull();
+    expect(checkReminderText(facts, { ...good, message: longest(671) })).toBeNull();
   });
 });

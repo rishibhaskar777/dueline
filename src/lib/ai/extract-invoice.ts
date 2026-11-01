@@ -44,6 +44,7 @@ function systemPrompt(date: string): string {
     `Today's date is ${date}. Use it to resolve words like "Friday the 30th".`,
     'dueOn is when the client must pay, as YYYY-MM-DD. Use it only when the chat states payment terms, like "pay by", "net 15" or "payment due". A date by which the client wants the work delivered ("get it to us by Friday", "deliver by", "deadline") is not a payment date. Give dueOn as null when the chat states no payment terms.',
     "Email addresses and phone numbers in the chat are replaced by placeholders such as [EMAIL_1]. Give clientEmail as the placeholder, or null. Never write an address yourself.",
+    "Give clientCountry as the ISO 3166-1 alpha-2 code of the country the client is in, like PT, and countryQuote as the exact words from the chat that say so, like 'we are in Lisbon'. Use null for both when the chat does not say. Never guess from the currency alone.",
     "Give currency as USD, EUR, GBP, CAD or AUD, or null if the chat does not say. Give each unitAmount as the price of one unit, like 120.00, without a currency symbol.",
     "Suggest one purpose code for the work from this list, with a one-line reason, or null for both:",
     codes,

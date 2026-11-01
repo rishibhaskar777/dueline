@@ -1,5 +1,6 @@
 import type { ReminderLanguage, Tone } from "@/types";
 import type { ReminderText } from "./check-reminder";
+import { FINAL_AFTER_REMINDERS } from "./tone";
 
 interface TemplateParts {
   number: string;
@@ -149,6 +150,46 @@ const hindi: Pack = {
   }),
 };
 
+// The final tone also applies to an invoice more than 30 days late that was never chased. Such a message
+// asks for payment within 3 days but does not call itself the final or last reminder; only the packs
+// above do, and only when two reminders have really been sent.
+type Notice = (p: TemplateParts, days: string) => ReminderText;
+
+const NOTICES: Record<ReminderLanguage, Notice> = {
+  en: (p, days) => ({
+    subject: `Invoice ${p.number} is ${days} overdue: payment needed`,
+    message: `${p.greeting}
+
+Invoice ${p.number} for ${p.owed}${p.work} was due on ${p.due} and is now ${days} overdue. I have not yet received a payment or a date for one.
+
+Please pay it within the next 3 days using the Pay now button in the PayPal email, or reply with the date you expect to pay.`,
+  }),
+  de: (p, days) => ({
+    subject: `Rechnung ${p.number}: Zahlung erforderlich (seit ${days} überfällig)`,
+    message: `${p.greeting}\n\nRechnung ${p.number} über ${p.owed}${p.work} war am ${p.due} fällig und ist seit ${days} überfällig. Eine Zahlung oder einen Zahlungstermin habe ich noch nicht erhalten.\n\nBitte zahlen Sie innerhalb der nächsten 3 Tage über die Schaltfläche „Pay now“ in der PayPal-E-Mail, oder nennen Sie mir das Datum, an dem Sie zahlen werden.`,
+  }),
+  fr: (p, days) => ({
+    subject: `Facture ${p.number} : paiement nécessaire (${days} de retard)`,
+    message: `${p.greeting}\n\nLa facture ${p.number} d'un montant de ${p.owed}${p.work} était due le ${p.due} et a ${days} de retard. Je n'ai reçu ni paiement ni date de paiement.\n\nMerci de la régler dans les 3 jours avec le bouton « Pay now » de l'e-mail PayPal, ou de m'indiquer la date de paiement prévue.`,
+  }),
+  es: (p, days) => ({
+    subject: `Factura ${p.number}: se necesita el pago (${days} de retraso)`,
+    message: `${p.greeting}\n\nLa factura ${p.number} por ${p.owed}${p.work} vencía el ${p.due} y lleva ${days} de retraso. Todavía no he recibido el pago ni una fecha de pago.\n\nPor favor, págela en los próximos 3 días con el botón «Pay now» del correo de PayPal, o indíqueme la fecha en que prevé pagar.`,
+  }),
+  nl: (p, days) => ({
+    subject: `Factuur ${p.number}: betaling nodig (${days} te laat)`,
+    message: `${p.greeting}\n\nFactuur ${p.number} van ${p.owed}${p.work} moest op ${p.due} betaald zijn en is nu ${days} te laat. Ik heb nog geen betaling of betaaldatum van u ontvangen.\n\nBetaal de factuur binnen 3 dagen met de knop "Pay now" in de PayPal-e-mail, of laat me weten op welke datum u verwacht te betalen.`,
+  }),
+  pt: (p, days) => ({
+    subject: `Fatura ${p.number}: pagamento necessário (${days} de atraso)`,
+    message: `${p.greeting}\n\nA fatura ${p.number} no valor de ${p.owed}${p.work} venceu em ${p.due} e está com ${days} de atraso. Ainda não recebi o pagamento nem uma data de pagamento.\n\nPor favor, pague-a nos próximos 3 dias com o botão "Pay now" do e-mail do PayPal ou diga-me em que data pretende pagar.`,
+  }),
+  hi: (p, days) => ({
+    subject: `इनवॉइस ${p.number}: भुगतान आवश्यक (${days} से बकाया)`,
+    message: `${p.greeting}\n\n${p.owed}${p.work} का इनवॉइस ${p.number} ${p.due} को देय था और अब ${days} से बकाया है। अभी तक न भुगतान मिला है और न ही भुगतान की तारीख।\n\nकृपया इसे अगले 3 दिनों में PayPal ईमेल के "Pay now" बटन से चुका दें, या बताइए कि आप किस तारीख तक भुगतान करेंगे।`,
+  }),
+};
+
 const PACKS: Record<ReminderLanguage, Pack> = {
   en: english,
   de: german,
@@ -166,6 +207,8 @@ interface PackFacts {
   due: string;
   daysLate: number;
   name: string | null;
+  // Reminders already sent for the invoice.
+  remindersSent: number;
 }
 
 export function packTemplate(
@@ -181,5 +224,9 @@ export function packTemplate(
     due: facts.due,
     greeting: pack.hello(facts.name),
   };
-  return pack[tone](parts, pack.days(facts.daysLate));
+  const days = pack.days(facts.daysLate);
+  if (tone === "final" && facts.remindersSent < FINAL_AFTER_REMINDERS) {
+    return NOTICES[language](parts, days);
+  }
+  return pack[tone](parts, days);
 }

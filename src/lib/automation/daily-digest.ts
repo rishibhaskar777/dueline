@@ -1,6 +1,6 @@
 import "server-only";
 import { today } from "@/lib/clock";
-import { loadInvoices } from "@/lib/paypal/summaries";
+import { loadVisibleInvoices } from "@/lib/demo/visible-invoices";
 import { getStore } from "@/lib/store";
 import type { Json } from "@/lib/store/store";
 import { dailyDigestSchema, type DailyDigest } from "@/types";
@@ -16,7 +16,7 @@ function digestKey(): string {
 
 export async function computeDigest(): Promise<DailyDigest> {
   const [loaded, queued, rateAlerts] = await Promise.all([
-    loadInvoices(),
+    loadVisibleInvoices(),
     listQueue(),
     triggeredRateAlerts(),
   ]);

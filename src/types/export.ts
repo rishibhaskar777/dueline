@@ -25,15 +25,22 @@ export interface ExportRegisterRow {
   transactionId: string | null;
 }
 
+export type ExportOutsideRow = Omit<ExportRegisterRow, "fee" | "net" | "transactionId"> & {
+  bankReference: string | null;
+};
+
 export interface ExportRegister {
   month: string;
+  latestMonthWithPayments: string | null;
   rows: ExportRegisterRow[];
+  outsideRows: ExportOutsideRow[];
   totalInr: number;
+  paypalFiraInr: number;
+  bankInr: number;
   totalsByCurrency: Money[];
   paypalInr: number;
   estimatedInr: number;
   missingPurposeCodes: number;
-  recordedOutsidePayPal: string[];
 }
 
 export interface AnnualSummary {

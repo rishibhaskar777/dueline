@@ -10,10 +10,16 @@ export interface ReminderFacts {
   issuedOn: string;
   dueOn: string;
   daysLate: number;
+  // Reminders Dueline has already sent for this invoice.
+  remindersSent: number;
 }
 
 // The amount is what is still owed, which is less than the invoice total for a part-paid invoice.
-export function factsOf(summary: InvoiceSummary, amountDue: Money): ReminderFacts {
+export function factsOf(
+  summary: InvoiceSummary,
+  amountDue: Money,
+  remindersSent: number,
+): ReminderFacts {
   return {
     invoiceId: summary.id,
     invoiceNumber: summary.number,
@@ -23,6 +29,7 @@ export function factsOf(summary: InvoiceSummary, amountDue: Money): ReminderFact
     issuedOn: summary.issuedOn,
     dueOn: summary.dueOn,
     daysLate: summary.daysLate,
+    remindersSent,
   };
 }
 

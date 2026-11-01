@@ -6,12 +6,12 @@ function dayCount(count: number): string {
 }
 
 // One item per invoice, so each daily run can swap the old list for the current one.
-export function reminderQueueItem(invoice: InvoiceSummary): QueueItem {
+export function reminderQueueItem(invoice: InvoiceSummary, reason: string): QueueItem {
   return {
     id: `reminder.${invoice.id}`,
     kind: "reminder",
     title: `Remind ${invoice.client.name} about ${invoice.number}`,
-    detail: `${formatMoney(invoice.amount)}, ${dayCount(invoice.daysLate)} late. A draft is ready to review.`,
+    detail: `${formatMoney(invoice.amount)}, ${dayCount(invoice.daysLate)} late. ${reason} A draft is ready to review.`,
     invoiceId: invoice.id,
     repeatId: null,
   };

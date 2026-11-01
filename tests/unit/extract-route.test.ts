@@ -107,6 +107,7 @@ describe("POST /api/invoices/extract", () => {
         amountDue: summary.amount,
         underLut: false,
         paymentId: null,
+        marker: "dueline-request:test",
       })),
     );
     modelAnswers(haldenGuess);
