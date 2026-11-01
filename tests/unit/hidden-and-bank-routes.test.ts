@@ -97,10 +97,13 @@ describe("PUT /api/export-register/bank-reference", () => {
   });
 
   it.each(["has space", "semi;colon", "=1+1", "a".repeat(41)])(
-    "refuses the reference %j",
+    "refuses the reference %j in plain words, without the field name",
     async (reference) => {
       const response = await putBankReference(request({ invoiceId: "INV2-B", reference }));
       expect(response.status).toBe(400);
+      expect((await response.json()).error.message).toBe(
+        "Use letters, digits, / and - only, up to 40 characters.",
+      );
       expect(paypal.getInvoice).not.toHaveBeenCalled();
     },
   );

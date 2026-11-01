@@ -3,16 +3,20 @@ import { fail } from "@/app/api/_lib/respond";
 
 type Parsed<T> = { ok: true; data: T } | { ok: false; response: Response };
 
-function invalid<T>(error: z.ZodError): Parsed<T> {
+// `plain` gives a field its own complete message, which is shown without the field's name.
+type PlainMessages = Record<string, string>;
+
+function invalid<T>(error: z.ZodError, plain: PlainMessages = {}): Parsed<T> {
   const issue = error.issues[0];
   const field = issue.path.join(".");
-  const message = field ? `${field}: ${issue.message}` : issue.message;
+  const message = plain[field] ?? (field ? `${field}: ${issue.message}` : issue.message);
   return { ok: false, response: fail(400, "invalid_request", message) };
 }
 
 export async function parseBody<S extends z.ZodType>(
   req: Request,
   schema: S,
+  plain?: PlainMessages,
 ): Promise<Parsed<z.infer<S>>> {
   let json: unknown;
   try {
@@ -21,7 +25,7 @@ export async function parseBody<S extends z.ZodType>(
     return { ok: false, response: fail(400, "invalid_request", "The request body must be JSON.") };
   }
   const result = schema.safeParse(json);
-  return result.success ? { ok: true, data: result.data } : invalid(result.error);
+  return result.success ? { ok: true, data: result.data } : invalid(result.error, plain);
 }
 
 export function parseQuery<S extends z.ZodType>(req: Request, schema: S): Parsed<z.infer<S>> {

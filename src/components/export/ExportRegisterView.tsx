@@ -2,8 +2,9 @@
 
 import { Download } from "lucide-react";
 import { LoadFailure } from "@/components/shared/LoadFailure";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { exportRegisterCsvUrl, gstr1CsvUrl } from "@/lib/api-client";
+import { formatMonth } from "@/lib/format-date";
 import { ESTIMATE_LABEL } from "@/lib/export/tax-notes";
 import { financialYearOf } from "@/lib/date-math";
 import { AnnualSummaryDialog } from "./AnnualSummaryDialog";
@@ -41,13 +42,21 @@ function RegisterBody({ month, state, onRetry }: RegisterBodyProps) {
     <>
       <RegisterSummary register={register} />
       {register.rows.length > 0 && <RegisterTable rows={register.rows} />}
-      <BankTransfers rows={register.outsideRows} />
+      <BankTransfers
+        rows={register.outsideRows}
+        paypalFiraInr={register.paypalFiraInr}
+        bankInr={register.bankInr}
+      />
     </>
   );
 }
 
 export function ExportRegisterView() {
-  const { month, currentMonth, state, setMonth, retry } = useExportRegister();
+  const { month, currentMonth, state, note, setMonth, retry } = useExportRegister();
+  const noRows =
+    state.kind === "ready" &&
+    state.register.rows.length === 0 &&
+    state.register.outsideRows.length === 0;
 
   if (!month || !currentMonth) {
     return state.kind === "error" ? (
@@ -62,10 +71,17 @@ export function ExportRegisterView() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <MonthPicker month={month} currentMonth={currentMonth} onChange={setMonth} />
         <div className="flex flex-wrap gap-3">
-          <a href={exportRegisterCsvUrl(month)} className={buttonVariants({ size: "lg" })}>
-            <Download aria-hidden="true" />
-            Download CSV for your CA
-          </a>
+          {noRows ? (
+            <Button type="button" size="lg" disabled aria-describedby="csv-reason">
+              <Download aria-hidden="true" />
+              Download CSV for your CA
+            </Button>
+          ) : (
+            <a href={exportRegisterCsvUrl(month)} className={buttonVariants({ size: "lg" })}>
+              <Download aria-hidden="true" />
+              Download CSV for your CA
+            </a>
+          )}
           <a
             href={gstr1CsvUrl(month)}
             className={buttonVariants({ variant: "outline", size: "lg" })}
@@ -76,6 +92,16 @@ export function ExportRegisterView() {
           <AnnualSummaryDialog fy={financialYearOf(month)} />
         </div>
       </div>
+      {note && (
+        <p role="status" className="max-w-2xl text-sm font-medium">
+          {note}
+        </p>
+      )}
+      {noRows && (
+        <p id="csv-reason" className="max-w-2xl text-sm text-muted-foreground">
+          The CSV for your CA is off because no invoices were paid in {formatMonth(month)}.
+        </p>
+      )}
       <p className="max-w-2xl text-sm text-muted-foreground">
         {FIRA_EXPLAINER}{" "}
         <a
