@@ -8,6 +8,7 @@ import {
   TODAY_LABEL_CLEARANCE_PX,
 } from "@/components/receivables/due-line-layout";
 import { addDays, daysBetween } from "@/lib/date-math";
+import { formatMoney } from "@/lib/money/format";
 import { haldenLabelsInvoice, tandemInvoice } from "@/mocks/fixtures";
 import type { InvoiceSummary } from "@/types";
 
@@ -43,7 +44,7 @@ describe("layoutDueLine", () => {
     expect(row.segments[0].tone).toBe("paid");
     expect(row.endMark).toBe("filled");
     expect(row.statusText).toBe("Paid");
-    expect(row.accessibleName).toBe("Halden Coffee Co., $450.00, paid 15 Oct 2026");
+    expect(row.accessibleName).toBe("Halden Coffee Co. $450.00 Paid, 15 Oct 2026");
   });
 
   it("turns the part after the due date late when an invoice was paid late", () => {
@@ -64,7 +65,7 @@ describe("layoutDueLine", () => {
     expect(row.endTone).toBe("late");
     expect(row.statusTone).toBe("late");
     expect(row.statusText).toBe("Paid 5 days late");
-    expect(row.accessibleName).toContain("paid 15 Oct 2026, 5 days late");
+    expect(row.accessibleName).toBe("Tandem Health $900.00 Paid 5 days late, 15 Oct 2026");
   });
 
   it("keeps Paid green for an invoice paid on its due date", () => {
@@ -144,7 +145,7 @@ describe("layoutDueLine", () => {
       "2026-10-30",
       false,
     ).rows;
-    expect(row.accessibleName).toBe("Halden Coffee Co., $441.00, due 13 Nov 2026, due in 14 days");
+    expect(row.accessibleName).toBe("Halden Coffee Co. $441.00 Due in 14 days, due 13 Nov 2026");
   });
 
   it("lays out a single invoice", () => {
@@ -288,6 +289,18 @@ describe("layoutDueLine", () => {
       false,
     ).rows;
     expect(rows.map((row) => row.sharesClientName)).toEqual([false, true, true]);
+  });
+
+  it("starts the accessible name with the words shown on the row, number included", () => {
+    const rows = layoutDueLine(
+      [invoice({ id: "a", number: "INV-1" }), invoice({ id: "b", number: "INV-2" })],
+      "2026-10-30",
+      false,
+    ).rows;
+    for (const row of rows) {
+      const shown = `${row.invoice.client.name} ${row.invoice.number} · ${formatMoney(row.invoice.amount)} ${row.statusText}`;
+      expect(row.accessibleName.startsWith(shown)).toBe(true);
+    }
   });
 
   it("returns an empty layout without invoices", () => {

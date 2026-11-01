@@ -50,6 +50,8 @@ export function DueLineRowView({
 }: DueLineRowViewProps) {
   const { invoice } = row;
 
+  // The spaces between the parts make the row's text read as one phrase. Its accessible name begins
+  // with the same words, which keeps the visible label part of the name.
   return (
     <div
       role="button"
@@ -71,12 +73,12 @@ export function DueLineRowView({
       style={{ height: ROW_HEIGHT }}
     >
       <div className="min-w-0 pr-3 max-md:sticky max-md:left-0 max-md:z-10 max-md:bg-card">
-        <p className="truncate text-sm font-medium">{invoice.client.name}</p>
+        <p className="truncate text-sm font-medium">{invoice.client.name}</p>{" "}
         <p className="truncate text-sm text-muted-foreground tabular-nums">
           {row.sharesClientName && `${invoice.number} · `}
           {formatMoney(invoice.amount)}
         </p>
-      </div>
+      </div>{" "}
       <svg
         aria-hidden="true"
         width="100%"

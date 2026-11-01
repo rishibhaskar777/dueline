@@ -16,7 +16,7 @@ export function SidebarShell({ brand, children }: SidebarShellProps) {
   const [open, setOpen] = useState(false);
 
   return (
-    <aside className="sticky top-0 z-30 flex flex-col bg-sidebar md:h-screen md:w-64 md:shrink-0 md:gap-6 md:p-5">
+    <aside className="sticky top-0 z-30 flex flex-col bg-sidebar md:h-screen md:w-64 md:shrink-0 md:gap-6 md:overflow-y-auto md:p-5">
       <div className="flex items-center justify-between px-4 py-2 md:p-0">
         {brand}
         <div className="flex items-center md:hidden">
