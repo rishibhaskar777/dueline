@@ -49,6 +49,7 @@ function serve(...summaries: InvoiceSummary[]): void {
       underLut: false,
       sac: null,
       paymentId: null,
+      marker: "dueline-request:test",
     })),
   );
 }
@@ -170,6 +171,7 @@ describe("the daily preparation", () => {
       invoiceId: okafor.id,
       tone: "gentle",
       sentAt: "2026-11-04T20:00:00Z",
+      channel: "paypal",
     });
     await runDailyPreparation();
     expect((await listQueue()).map(({ invoiceId }) => invoiceId)).toEqual([brightwell.id]);

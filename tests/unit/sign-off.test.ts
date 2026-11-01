@@ -31,10 +31,38 @@ describe("withSignOff", () => {
     expect(withSignOff(sentence, EMPTY_PROFILE)).toBe(`${sentence}\n\nThank you`);
   });
 
-  it("leaves room for the longest sign-off and name the profile allows", () => {
+  it("adds the business name on its own line when it differs from the name", () => {
+    const both = { ...riya, businessName: "Riya Sharma Design" };
+    expect(withSignOff(body, both)).toBe(`${body}
+
+Thank you,
+Riya Sharma
+Riya Sharma Design`);
+  });
+
+  it("does not repeat a business name that is the name again", () => {
+    expect(withSignOff(body, { ...riya, businessName: "riya sharma" })).toBe(
+      `${body}
+
+Thank you,
+Riya Sharma`,
+    );
+  });
+
+  it("writes a business name alone when there is no personal name", () => {
+    expect(withSignOff(body, { ...EMPTY_PROFILE, businessName: "Riya Sharma Design" })).toBe(
+      `${body}
+
+Thank you,
+Riya Sharma Design`,
+    );
+  });
+
+  it("leaves room for the longest sign-off, name and business name the profile allows", () => {
     const longest = withSignOff("", {
       ...EMPTY_PROFILE,
       yourName: "n".repeat(60),
+      businessName: "b".repeat(120),
       signOff: "s".repeat(40),
     });
     expect(longest.length).toBeLessThanOrEqual(SIGN_OFF_ROOM);

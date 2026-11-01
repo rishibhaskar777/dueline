@@ -22,6 +22,7 @@ const facts: ReminderFacts = {
   issuedOn: "2026-10-01",
   dueOn: "2026-10-15",
   daysLate: 9,
+  remindersSent: 0,
 };
 
 const TONES: Tone[] = ["gentle", "firm", "final"];

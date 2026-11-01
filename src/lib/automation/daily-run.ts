@@ -1,8 +1,10 @@
 import "server-only";
 import { today } from "@/lib/clock";
 import { todayInKolkata } from "@/lib/date-math";
+import { reseedStaleDemo } from "@/lib/demo/reset";
 import { prepareReminderDrafts } from "@/lib/reminders/reminder-drafts";
-import { clearInvoiceCaches, loadInvoices } from "@/lib/paypal/summaries";
+import { loadVisibleInvoices } from "@/lib/demo/visible-invoices";
+import { clearInvoiceCaches } from "@/lib/paypal/summaries";
 import { runClaimed } from "@/lib/requests/run-claimed";
 import { getSettings } from "@/lib/settings";
 import { getStore } from "@/lib/store";
@@ -28,27 +30,36 @@ function dueForReminder(
   invoices: InvoiceSummary[],
   afterDays: number,
   day: string,
-): InvoiceSummary[] {
+): { invoice: InvoiceSummary; draft: ReminderDraft }[] {
   return drafts
     .filter((draft) => !wasRemindedToday(draft, day))
-    .flatMap((draft) => invoices.filter(({ id }) => id === draft.invoiceId))
-    .filter(({ daysLate }) => daysLate >= afterDays);
+    .flatMap((draft) =>
+      invoices.filter(({ id }) => id === draft.invoiceId).map((invoice) => ({ invoice, draft })),
+    )
+    .filter(({ invoice }) => invoice.daysLate >= afterDays);
 }
 
 async function prepareReminders(day: string): Promise<QueueItem[]> {
   const [drafts, loaded, { remindAfterDays }] = await Promise.all([
     prepareReminderDrafts(),
-    loadInvoices(),
+    loadVisibleInvoices(),
     getSettings(),
   ]);
   const summaries = loaded.map(({ summary }) => summary);
-  return dueForReminder(drafts, summaries, remindAfterDays, day).map(reminderQueueItem);
+  return dueForReminder(drafts, summaries, remindAfterDays, day).map(({ invoice, draft }) =>
+    reminderQueueItem(invoice, draft.reason),
+  );
 }
 
 // The reminder items are the current list, so an invoice that was paid or is no longer overdue
 // drops out. Switching the morning reminders off clears them too.
 async function prepare(): Promise<void> {
   const day = queueDay();
+  try {
+    await reseedStaleDemo();
+  } catch {
+    console.error("Re-seeding the demo story failed");
+  }
   clearInvoiceCaches();
   const reminders = (await getSettings()).prepareReminders ? await prepareReminders(day) : [];
   await getStore().replaceQueueItems("reminder", reminders);

@@ -22,6 +22,8 @@ export function noObjectError(): NoObjectGeneratedError {
 export const haldenGuess: ModelDraft = {
   clientName: "Halden Coffee Co.",
   clientEmail: "[EMAIL_1]",
+  clientCountry: null,
+  countryQuote: null,
   currency: "USD",
   dueOn: null,
   items: [
