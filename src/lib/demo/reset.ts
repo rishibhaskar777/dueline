@@ -1,4 +1,6 @@
 import "server-only";
+import { today } from "@/lib/clock";
+import { daysBetween } from "@/lib/date-math";
 import { getEnv } from "@/lib/env";
 import { cancelInvoice, deleteDraftInvoice } from "@/lib/paypal/invoices";
 import { clearInvoiceCaches, listInvoicesInFull } from "@/lib/paypal/summaries";
@@ -6,7 +8,7 @@ import type { PayPalInvoice } from "@/lib/paypal/types";
 import { getStore } from "@/lib/store";
 import type { DemoResetResponse } from "@/types";
 import { DemoResetLimitError, DemoUnavailableError } from "./errors";
-import { seedDemo } from "./seed";
+import { seedNewGeneration } from "./seed";
 import { isDemoMemo } from "./story";
 
 const RESET_KEY = "demo-reset";
@@ -21,15 +23,23 @@ function isRecentInvoice(invoice: PayPalInvoice, now: number = Date.now()): bool
   return Number.isNaN(created) || now - created < RECENT_INVOICE_MINUTES * 60_000;
 }
 
+const isOpen = (invoice: PayPalInvoice): boolean => OPEN_STATUSES.includes(invoice.status);
+
+// Story invoices that are still open belong to an older generation once a new one starts, and are
+// cancelled. Paid ones stay in PayPal, where they cannot be removed; the visibility rule hides them.
+async function cancelOpenStory(invoices: PayPalInvoice[]): Promise<number> {
+  const open = invoices.filter((invoice) => isOpen(invoice) && isDemoMemo(invoice.detail.memo));
+  for (const invoice of open) await cancelInvoice(invoice.id);
+  return open.length;
+}
+
 // Paid, marked-as-paid and partly paid invoices are never in these lists, so they are never touched.
-async function clearOpenInvoices(): Promise<
-  Pick<DemoResetResponse, "cancelled" | "deleted" | "kept">
-> {
-  const invoices = await listInvoicesInFull();
+async function clearOtherInvoices(
+  invoices: PayPalInvoice[],
+): Promise<Pick<DemoResetResponse, "cancelled" | "deleted" | "kept">> {
   const clearable = invoices.filter(
     (invoice) =>
-      invoice.status === "DRAFT" ||
-      (OPEN_STATUSES.includes(invoice.status) && !isDemoMemo(invoice.detail.memo)),
+      invoice.status === "DRAFT" || (isOpen(invoice) && !isDemoMemo(invoice.detail.memo)),
   );
   const kept = clearable.filter((invoice) => isRecentInvoice(invoice));
   const toCancel = clearable.filter(
@@ -62,13 +72,54 @@ export async function resetDemo(): Promise<DemoResetResponse> {
   if (!getEnv().DEMO_MODE) throw new DemoUnavailableError();
   await claimReset();
 
-  const { cancelled, deleted, kept } = await clearOpenInvoices();
-  const rows = await seedDemo();
+  const invoices = await listInvoicesInFull();
+  const olderStory = await cancelOpenStory(invoices);
+  const others = await clearOtherInvoices(invoices);
+  const { generation, rows } = await seedNewGeneration();
   clearInvoiceCaches();
 
   const created = rows.filter((row) => row.result === "created" || row.result === "repaired");
   const skipped = rows.filter((row) => row.result === "skipped");
   const failed = rows.length - created.length - skipped.length;
-  console.info("Demo reset", { cancelled, deleted, kept, created: created.length, failed });
-  return { cancelled, deleted, created: created.length, skipped: skipped.length, failed, kept };
+  const cancelled = others.cancelled + olderStory;
+  console.info("Demo reset", {
+    generation,
+    cancelled,
+    deleted: others.deleted,
+    kept: others.kept,
+    created: created.length,
+    failed,
+  });
+  return {
+    cancelled,
+    deleted: others.deleted,
+    created: created.length,
+    skipped: skipped.length,
+    failed,
+    kept: others.kept,
+  };
+}
+
+const RESEED_AFTER_DAYS = 7;
+
+// The story is dated from the day it was seeded, so it ages. A week on it is seeded again as a new
+// generation. This only cancels the open invoices of older generations and never touches any other
+// invoice, and it waits its turn behind the reset limit.
+export async function reseedStaleDemo(): Promise<void> {
+  if (!getEnv().DEMO_MODE) return;
+  const current = await getStore().getDemoGeneration();
+  if (!current || daysBetween(current.seededOn, today()) < RESEED_AFTER_DAYS) return;
+
+  try {
+    await claimReset();
+  } catch (error) {
+    if (!(error instanceof DemoResetLimitError)) throw error;
+    console.warn("Demo re-seed skipped", { reason: "reset_limit", generation: current.id });
+    return;
+  }
+  const cancelled = await cancelOpenStory(await listInvoicesInFull());
+  const { generation, rows } = await seedNewGeneration();
+  clearInvoiceCaches();
+  const failed = rows.filter((row) => row.result === "failed").length;
+  console.info("Demo re-seeded", { generation, cancelled, created: rows.length - failed, failed });
 }

@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { useDemoMode } from "@/components/demo/use-demo-mode";
 import type { InvoiceDetailResponse } from "@/types";
+import { HideFromDemoButton } from "./HideFromDemoButton";
 import { CancelPanel } from "./CancelPanel";
 import { RecordPaymentPanel } from "./RecordPaymentPanel";
 import { RepeatPanel } from "./RepeatPanel";
@@ -18,6 +20,7 @@ interface InvoiceActionsProps extends Pick<InvoiceDetailResponse, "invoice" | "d
 export function InvoiceActions({ invoice, details, today, onChanged }: InvoiceActionsProps) {
   const [panel, setPanel] = useState<Panel>(null);
   const { actions } = details;
+  const inDemo = useDemoMode();
   const id = encodeURIComponent(invoice.id);
 
   function done(): void {
@@ -54,6 +57,13 @@ export function InvoiceActions({ invoice, details, today, onChanged }: InvoiceAc
           >
             Record a payment outside PayPal
           </Button>
+        )}
+        {inDemo && (
+          <HideFromDemoButton
+            invoiceId={invoice.id}
+            hidden={details.hiddenFromDemo}
+            onChanged={onChanged}
+          />
         )}
         {actions.cancel && (
           <Button type="button" variant="outline" onClick={() => setPanel("cancel")}>

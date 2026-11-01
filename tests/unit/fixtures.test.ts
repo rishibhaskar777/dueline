@@ -89,8 +89,8 @@ describe("fixtures", () => {
     expect(totals.outstandingInr).toBe(sum(unpaid));
     expect(totals.overdueInr).toBe(sum(overdue));
     expect(totals.overdueCount).toBe(overdue.length);
-    expect(totals.paidThisMonthPayPalInr).toBe(exportRegister.totalInr);
-    expect(totals.paidThisMonthOutsideInr).toBe(0);
+    expect(totals.paidLast30PayPalInr).toBe(exportRegister.paypalFiraInr);
+    expect(totals.paidLast30OutsideInr).toBe(exportRegister.bankInr);
   });
 
   it("has an export register that matches the paid invoices", () => {

@@ -57,7 +57,8 @@ export function DemoCard() {
         <div role="group" aria-label="Confirm the reset" className="mt-4">
           <p className="text-sm">
             This cancels invoices created during the demo, except any made in the last 30 minutes,
-            and restores the sample clients. Paid invoices stay.
+            and starts the sample clients again, dated from today. Paid invoices stay, but the older
+            sample ones leave the screens.
           </p>
           <div className="mt-3 flex gap-2">
             <Button onClick={reset} disabled={step === "working"}>

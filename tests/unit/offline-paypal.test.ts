@@ -71,13 +71,13 @@ beforeAll(() => {
 describe("offline PayPal", () => {
   it("seeds the demo story and the PayPal-paid invoices once, however many ask first", async () => {
     const [first, second] = await Promise.all([listInvoices(), listInvoices()]);
-    expect(first).toHaveLength(12);
-    expect(second).toHaveLength(12);
+    expect(first).toHaveLength(13);
+    expect(second).toHaveLength(13);
 
     const statuses = first.map((invoice) => invoice.status).sort();
     expect(statuses.filter((status) => status === "SENT")).toHaveLength(4);
     expect(statuses.filter((status) => status === "PAID")).toHaveLength(4);
-    expect(statuses.filter((status) => status === "MARKED_AS_PAID")).toHaveLength(4);
+    expect(statuses.filter((status) => status === "MARKED_AS_PAID")).toHaveLength(5);
   });
 
   it("saves the demo profile for the freelancer", async () => {
@@ -99,7 +99,7 @@ describe("offline PayPal", () => {
     // 2 x 120.00 + 45.50 = 285.50, less the 10% invoice discount.
     expect(draft.amount).toEqual({ currency_code: "USD", value: "256.95" });
 
-    await sendInvoice(draft.id, { subject: "Invoice", note: "Thanks" }, "req-1");
+    await sendInvoice(draft.id, "req-1");
     const sent = await getInvoice(draft.id);
     expect(sent.status).toBe("SENT");
     expect(sent.detail.metadata?.recipient_view_url).toContain(draft.id);
@@ -108,8 +108,8 @@ describe("offline PayPal", () => {
 
   it("reminds and cancels a sent invoice and deletes a draft", async () => {
     const sent = await createDraftInvoice(draftBody("req-2"), "req-2");
-    await sendInvoice(sent.id, { subject: "Invoice", note: "Thanks" }, "req-2");
-    await remindInvoice(sent.id, { subject: "Reminder", note: "Please pay" });
+    await sendInvoice(sent.id, "req-2");
+    await remindInvoice(sent.id);
     expect((await offlinePayPal()).calls.reminded).toContain(sent.id);
     await cancelInvoice(sent.id);
     expect((await getInvoice(sent.id)).status).toBe("CANCELLED");
@@ -121,7 +121,7 @@ describe("offline PayPal", () => {
 
   it("marks an invoice as paid when a payment is recorded outside PayPal", async () => {
     const sent = await createDraftInvoice(draftBody("req-4"), "req-4");
-    await sendInvoice(sent.id, { subject: "Invoice", note: "Thanks" }, "req-4");
+    await sendInvoice(sent.id, "req-4");
     await recordExternalPayment(sent.id, { paymentDate: TODAY, note: "Bank transfer" });
     expect((await getInvoice(sent.id)).status).toBe("MARKED_AS_PAID");
   });

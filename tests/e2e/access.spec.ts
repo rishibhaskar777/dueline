@@ -29,7 +29,7 @@ test.describe("landing page and demo access", () => {
     const totals = page.getByLabel("Totals");
     await expect(totals).toContainText("Outstanding");
     await expect(totals).toContainText("Overdue");
-    await expect(totals).toContainText("Paid this month");
+    await expect(totals).toContainText("Paid in the last 30 days");
     await expect(totals).toContainText("₹");
     await expect(page.getByRole("heading", { name: "The due line" })).toBeVisible();
     await expect(page.getByText("Offline demo", { exact: true })).toBeVisible();
