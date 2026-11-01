@@ -264,7 +264,12 @@ describe("POST /api/invoices/{id}/record-payment", () => {
 
 describe("GET /api/invoices/{id}", () => {
   it("returns the invoice, its history and the actions its status allows", async () => {
-    await store.logReminder({ invoiceId: id, tone: "gentle", sentAt: "2026-11-02T04:00:00.000Z" });
+    await store.logReminder({
+      invoiceId: id,
+      tone: "gentle",
+      sentAt: "2026-11-02T04:00:00.000Z",
+      channel: "paypal",
+    });
     paypal.getInvoice.mockResolvedValue({
       ...unpaid,
       items: [
@@ -283,10 +288,14 @@ describe("GET /api/invoices/{id}", () => {
     expect(body.invoice).toMatchObject({ id, number: "INV-0101", dueState: "overdue" });
     expect(body.timeline.map((event: { kind: string }) => event.kind)).toEqual([
       "reminder",
+      "overdue",
+      "due",
       "created",
       "sent",
     ]);
-    expect(body.reminders).toEqual([{ tone: "gentle", sentAt: "2026-11-02T04:00:00.000Z" }]);
+    expect(body.reminders).toEqual([
+      { tone: "gentle", sentAt: "2026-11-02T04:00:00.000Z", channel: "paypal" },
+    ]);
     expect(body.details).toMatchObject({
       clientKey: "tandem-health",
       note: "Thank you for your business.",

@@ -34,7 +34,12 @@ describe("describeEvent", () => {
     expect(describeEvent(paid)).toBe("Halden Coffee Co. paid $450.00");
     expect(describeEvent(viewed)).toBe("Tandem Health viewed invoice INV-0046");
     expect(describeEvent(overdue)).toBe("Invoice INV-0043 to Brightwell Labs is overdue");
-    expect(describeEvent(reminder)).toBe("Reminder for invoice INV-0044 sent to Okafor & Reyes");
+    expect(describeEvent(reminder)).toBe(
+      "Reminder sent through PayPal for invoice INV-0044 to Okafor & Reyes",
+    );
+    expect(describeEvent({ ...reminder, kind: "email_sent" })).toBe(
+      "Message sent from your email for invoice INV-0044 to Okafor & Reyes",
+    );
     expect(describeEvent({ ...paid, kind: "sent" })).toBe(
       "Invoice INV-0042 sent to Halden Coffee Co.",
     );

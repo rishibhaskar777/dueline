@@ -31,14 +31,15 @@ const viewed = (id: string, at: string): ActivityEvent => ({
 describe("buildTimeline", () => {
   it("lists created, sent, reminders and views newest first", () => {
     const events = buildTimeline({
+      today: "2026-08-01",
       invoice: raw("SENT", {
         create_time: "2026-08-01T05:00:00Z",
         first_sent_time: "2026-08-01T05:02:00Z",
       }),
       summary: overdueInvoice("2026-08-15", 20),
       reminders: [
-        { tone: "gentle", sentAt: "2026-08-20T04:00:00Z" },
-        { tone: "firm", sentAt: "2026-08-28T04:00:00Z" },
+        { tone: "gentle", sentAt: "2026-08-20T04:00:00Z", channel: "paypal" },
+        { tone: "firm", sentAt: "2026-08-28T04:00:00Z", channel: "paypal" },
       ],
       activity: [viewed("v1", "2026-08-02T09:00:00Z")],
     });
@@ -55,6 +56,7 @@ describe("buildTimeline", () => {
 
   it("tells a payment through PayPal from one made outside it", () => {
     const through = buildTimeline({
+      today: "2026-08-01",
       invoice: raw("PAID"),
       summary: paidInvoice("2026-08-15", "2026-08-20"),
       reminders: [],
@@ -63,6 +65,7 @@ describe("buildTimeline", () => {
     expect(through[0]).toMatchObject({ kind: "paid", via: "paypal", at: "2026-08-20" });
 
     const outside = buildTimeline({
+      today: "2026-08-01",
       invoice: raw("MARKED_AS_PAID"),
       summary: { ...paidInvoice("2026-08-15", "2026-08-20"), paypalStatus: "MARKED_AS_PAID" },
       reminders: [],
@@ -84,12 +87,19 @@ describe("buildTimeline", () => {
         transactionId: "CAP-1",
       },
     };
-    const [paid] = buildTimeline({ invoice: raw("PAID"), summary, reminders: [], activity: [] });
+    const [paid] = buildTimeline({
+      today: "2026-08-01",
+      invoice: raw("PAID"),
+      summary,
+      reminders: [],
+      activity: [],
+    });
     expect(paid.at).toBe("2026-08-20T03:30:00Z");
   });
 
   it("marks a cancelled invoice and leaves a draft unsent", () => {
     const cancelled = buildTimeline({
+      today: "2026-08-01",
       invoice: raw("CANCELLED", { last_update_time: "2026-09-01T10:00:00Z" }),
       summary: overdueInvoice("2026-08-15", 20),
       reminders: [],
@@ -98,6 +108,7 @@ describe("buildTimeline", () => {
     expect(cancelled[0]).toMatchObject({ kind: "cancelled", at: "2026-09-01T10:00:00Z" });
 
     const draft = buildTimeline({
+      today: "2026-08-01",
       invoice: raw("DRAFT"),
       summary: overdueInvoice("2026-08-15", 20),
       reminders: [],
@@ -108,6 +119,7 @@ describe("buildTimeline", () => {
 
   it("falls back to the issue date when PayPal gives no sent time", () => {
     const events = buildTimeline({
+      today: "2026-08-01",
       invoice: raw("SENT"),
       summary: overdueInvoice("2026-08-15", 20),
       reminders: [],
@@ -119,9 +131,24 @@ describe("buildTimeline", () => {
 
 describe("timeline text", () => {
   it("describes each event in plain words", () => {
-    expect(describeTimelineEvent({ id: "a", kind: "reminder", at: "x", tone: "firm" })).toBe(
-      "Reminder sent (firm tone)",
-    );
+    expect(
+      describeTimelineEvent({
+        id: "a",
+        kind: "reminder",
+        at: "x",
+        tone: "firm",
+        channel: "paypal",
+      }),
+    ).toBe("Reminder sent through PayPal (firm tone)");
+    expect(
+      describeTimelineEvent({
+        id: "a",
+        kind: "reminder",
+        at: "x",
+        tone: "gentle",
+        channel: "email",
+      }),
+    ).toBe("Message sent from your email (gentle tone)");
     expect(describeTimelineEvent({ id: "a", kind: "paid", at: "x", via: "outside_paypal" })).toBe(
       "Paid outside PayPal",
     );
@@ -150,6 +177,7 @@ describe("formFromInvoice", () => {
     ],
     note: "SUPPLY MEANT FOR EXPORT",
     underLut: true,
+    hiddenFromDemo: false,
     actions: { remind: false, recordPayment: false, cancel: false },
   };
 

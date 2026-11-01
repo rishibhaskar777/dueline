@@ -1,4 +1,5 @@
 import "server-only";
+import { today } from "@/lib/clock";
 import { InvoiceNotFoundError } from "@/lib/invoices/errors";
 import { PayPalApiError } from "@/lib/paypal/errors";
 import { getInvoice } from "@/lib/paypal/invoices";
@@ -39,34 +40,38 @@ async function readInvoice(id: string): Promise<PayPalInvoice> {
   }
 }
 
-// Listed invoices carry their rupees; a cancelled one is not listed, so it has none.
+// Listed invoices carry their rupees; a cancelled one is not listed, so it has none. An invoice
+// hidden from the demo still has a page, so that it can be shown again.
 async function summaryOf(invoice: PayPalInvoice): Promise<InvoiceSummary> {
   const listed = (await loadSummaries()).find(({ id }) => id === invoice.id);
-  return listed ?? summarise(invoice);
+  const hidden = listed ?? (await loadSummaries(true)).find(({ id }) => id === invoice.id);
+  return hidden ?? summarise(invoice);
 }
 
 export async function getInvoiceDetail(id: string): Promise<InvoiceDetailResponse> {
   const invoice = await readInvoice(id);
   const store = getStore();
-  const [summary, history, events] = await Promise.all([
+  const [summary, history, events, hiddenIds] = await Promise.all([
     summaryOf(invoice),
     store.reminderHistory(id),
     store.latestActivity(ACTIVITY_LOOKBACK),
+    store.listHiddenInvoices(),
   ]);
   const reminders = history
-    .map(({ tone, sentAt }) => ({ tone, sentAt }))
+    .map(({ tone, sentAt, channel }) => ({ tone, sentAt, channel }))
     .sort((a, b) => a.sentAt.localeCompare(b.sentAt));
   const activity = events.filter(({ invoiceId }) => invoiceId === id);
 
   return {
     invoice: summary,
-    timeline: buildTimeline({ invoice, summary, reminders, activity }),
+    timeline: buildTimeline({ invoice, summary, reminders, activity, today: today() }),
     reminders,
     details: {
       clientKey: clientKey(summary.client.name),
       items: itemsOf(invoice),
       note: invoice.detail.note ?? "",
       underLut: isUnderLut(invoice),
+      hiddenFromDemo: hiddenIds.includes(id),
       actions: availableActions(summary),
     },
   };

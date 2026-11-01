@@ -1,9 +1,11 @@
 import "server-only";
 import { z } from "zod";
 import { today } from "@/lib/clock";
-import { isDemoMemo } from "@/lib/demo/story";
+import { storyMarkerOf } from "@/lib/demo/story";
+import { storyActivityId, storyEventAt } from "@/lib/demo/story-events";
+import { markerOf } from "./memo";
 import { getStore } from "@/lib/store";
-import type { ActivityKind, InvoiceSummary } from "@/types";
+
 import { getInvoice } from "./invoices";
 import { toInvoiceSummary } from "./map";
 import { getActualPayout } from "./payments";
@@ -38,7 +40,7 @@ export function parseWebhookEvent(rawBody: string): WebhookEvent | null {
 }
 
 const INVOICE_EVENT_PREFIX = "INVOICING.INVOICE.";
-const ACTIVITY_KINDS: Record<string, ActivityKind> = {
+const ACTIVITY_KINDS: Record<string, "paid" | "sent"> = {
   "INVOICING.INVOICE.PAID": "paid",
   "INVOICING.INVOICE.SENT": "sent",
 };
@@ -46,17 +48,6 @@ const ACTIVITY_KINDS: Record<string, ActivityKind> = {
 function happenedAt(event: WebhookEvent): string {
   const reported = event.create_time ? new Date(event.create_time) : undefined;
   return (reported && !Number.isNaN(reported.getTime()) ? reported : new Date()).toISOString();
-}
-
-const STORY_EVENT_HOUR = "09:00:00+05:30";
-
-// A demo-story invoice is created today but stands for work done earlier, so its events happened on
-// the story's dates. An event is never placed in the future.
-function storyEventAt(kind: ActivityKind, summary: InvoiceSummary, reported: string): string {
-  const date = kind === "paid" ? summary.paidOn : summary.issuedOn;
-  if (!date) return reported;
-  const story = new Date(`${date}T${STORY_EVENT_HOUR}`);
-  return story.getTime() < Date.parse(reported) ? story.toISOString() : reported;
 }
 
 // The event only says that something changed; PayPal's current invoice is what Dueline believes.
@@ -72,15 +63,15 @@ async function refreshInvoice(event: WebhookEvent, invoiceId: string): Promise<v
 
   const summary = toInvoiceSummary(invoice, today(), payout);
   if (!summary) return;
+  // A story invoice shares its row ids with the seed, so a webhook for it adds no second row.
+  const story = storyMarkerOf(markerOf(invoice.detail.memo));
   await store.addActivity({
-    id: event.id,
+    id: story ? storyActivityId(story.generation, story.key, kind) : event.id,
     kind,
     invoiceId: summary.id,
     invoiceNumber: summary.number,
     clientName: summary.client.name,
-    at: isDemoMemo(invoice.detail.memo)
-      ? storyEventAt(kind, summary, happenedAt(event))
-      : happenedAt(event),
+    at: story ? storyEventAt(kind, summary, happenedAt(event)) : happenedAt(event),
     amount: summary.amount,
   });
 }
