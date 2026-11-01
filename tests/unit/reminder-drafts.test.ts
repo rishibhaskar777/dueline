@@ -2,7 +2,11 @@ import { generateText } from "ai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { InvalidReminderError } from "@/lib/reminders/errors";
 import { InvoiceNotFoundError } from "@/lib/invoices/errors";
-import { draftReminderFor, listReminderDrafts } from "@/lib/reminders/reminder-drafts";
+import {
+  draftReminderFor,
+  listReminderDrafts,
+  prepareReminderDrafts,
+} from "@/lib/reminders/reminder-drafts";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
 import { EMPTY_PROFILE, type InvoiceSummary } from "@/types";
@@ -135,7 +139,7 @@ describe("listReminderDrafts", () => {
       >;
     });
 
-    await listReminderDrafts();
+    await prepareReminderDrafts();
     expect(generateText).toHaveBeenCalledTimes(6);
     expect(most).toBe(2);
   });
@@ -149,8 +153,9 @@ describe("listReminderDrafts", () => {
     for (let call = 1; call <= 400; call++) await store.hitRateLimit("ai-calls:2026-10-31", 86_400);
     load([overdueInvoice("2026-10-20", 11)]);
 
-    const [draft] = await listReminderDrafts();
+    const [draft] = await prepareReminderDrafts();
     expect(draft.source).toBe("template");
+    expect(draft.pending).toBe(false);
     expect(generateText).not.toHaveBeenCalled();
   });
 });
