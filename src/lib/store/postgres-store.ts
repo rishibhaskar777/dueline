@@ -5,8 +5,12 @@ import {
   type ActivityEvent,
   type ActualPayout,
   type CurrencyCode,
+  type LibraryItem,
   type Money,
   type Profile,
+  type QueueItem,
+  type ReminderLanguage,
+  type RepeatSchedule,
   type Settings,
   type Tone,
 } from "@/types";
@@ -53,6 +57,15 @@ function toActivityEvent(row: ActivityRow): ActivityEvent {
     at: row.at.toISOString(),
     ...(row.amount ? { amount: row.amount } : {}),
   };
+}
+
+async function insertQueueItem(sql: Sql, item: QueueItem): Promise<boolean> {
+  const inserted = await sql`
+    insert into queue_items (id, kind, item)
+    values (${item.id}, ${item.kind}, ${toJson(sql, item)})
+    on conflict (id) do nothing
+    returning id`;
+  return inserted.length > 0;
 }
 
 export function createPostgresStore(sql: Sql): Store {
@@ -171,6 +184,70 @@ export function createPostgresStore(sql: Sql): Store {
       await sql`
         insert into client_notes (client_key, notes) values (${clientKey}, ${notes})
         on conflict (client_key) do update set notes = excluded.notes, updated_at = now()`;
+    },
+
+    async getClientLanguage(clientKey): Promise<ReminderLanguage> {
+      const [row] = await sql<{ language: ReminderLanguage }[]>`
+        select language from client_notes where client_key = ${clientKey}`;
+      return row?.language ?? "en";
+    },
+
+    async saveClientLanguage(clientKey, language): Promise<void> {
+      await sql`
+        insert into client_notes (client_key, notes, language) values (${clientKey}, '', ${language})
+        on conflict (client_key) do update set language = excluded.language, updated_at = now()`;
+    },
+
+    addQueueItem: (item) => insertQueueItem(sql, item),
+
+    async replaceQueueItems(kind, items): Promise<void> {
+      await sql`delete from queue_items where kind = ${kind}`;
+      for (const item of items) await insertQueueItem(sql, item);
+    },
+
+    async listQueue(): Promise<QueueItem[]> {
+      const rows = await sql<{ item: QueueItem }[]>`
+        select item from queue_items order by created_at, id`;
+      return rows.map((row) => row.item);
+    },
+
+    async removeQueueItem(id): Promise<boolean> {
+      const removed = await sql`delete from queue_items where id = ${id} returning id`;
+      return removed.length > 0;
+    },
+
+    async listRepeats(): Promise<RepeatSchedule[]> {
+      const rows = await sql<{ value: RepeatSchedule }[]>`
+        select value from repeat_schedules order by created_at, id`;
+      return rows.map((row) => row.value);
+    },
+
+    async saveRepeat(repeat): Promise<void> {
+      await sql`
+        insert into repeat_schedules (id, value) values (${repeat.id}, ${toJson(sql, repeat)})
+        on conflict (id) do update set value = excluded.value`;
+    },
+
+    async deleteRepeat(id): Promise<boolean> {
+      const deleted = await sql`delete from repeat_schedules where id = ${id} returning id`;
+      return deleted.length > 0;
+    },
+
+    async listLibraryItems(): Promise<LibraryItem[]> {
+      const rows = await sql<{ value: LibraryItem }[]>`
+        select value from library_items order by created_at, id`;
+      return rows.map((row) => row.value);
+    },
+
+    async saveLibraryItem(item): Promise<void> {
+      await sql`
+        insert into library_items (id, value) values (${item.id}, ${toJson(sql, item)})
+        on conflict (id) do update set value = excluded.value`;
+    },
+
+    async deleteLibraryItem(id): Promise<boolean> {
+      const deleted = await sql`delete from library_items where id = ${id} returning id`;
+      return deleted.length > 0;
     },
 
     async hitRateLimit(key, windowSeconds): Promise<number> {
