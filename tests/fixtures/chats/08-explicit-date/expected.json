@@ -1,0 +1,18 @@
+{
+  "summary": "A calendar date for payment, written in full",
+  "client": "Nordlys Travel AS",
+  "currency": "EUR",
+  "items": [
+    {
+      "nameIncludes": "brochure",
+      "quantity": 1,
+      "unitAmount": "950.00"
+    }
+  ],
+  "due": {
+    "rule": "date",
+    "date": "2027-06-30"
+  },
+  "warnings": [],
+  "contacts": ["ap@nordlys-example.com"]
+}

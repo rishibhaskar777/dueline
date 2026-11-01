@@ -1,0 +1,11 @@
+{
+  "summary": "A friendly chat with no prices, so there is nothing to invoice",
+  "client": null,
+  "currency": null,
+  "items": [],
+  "due": {
+    "rule": "none"
+  },
+  "warnings": [],
+  "contacts": ["nadia@tidewater-example.com"]
+}

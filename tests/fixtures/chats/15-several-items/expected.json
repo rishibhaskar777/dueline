@@ -1,0 +1,23 @@
+{
+  "summary": "Four illustrations and a style guide in euros",
+  "client": "Verde Mercato",
+  "currency": "EUR",
+  "items": [
+    {
+      "nameIncludes": "illustration",
+      "quantity": 4,
+      "unitAmount": "85.00"
+    },
+    {
+      "nameIncludes": "style guide",
+      "quantity": 1,
+      "unitAmount": "120.00"
+    }
+  ],
+  "due": {
+    "rule": "net",
+    "days": 30
+  },
+  "warnings": [],
+  "contacts": ["matteo@verdemercato-example.com"]
+}

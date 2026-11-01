@@ -1,0 +1,22 @@
+{
+  "summary": "Hinglish: mixed Hindi and English with a quantity and prices",
+  "client": "Zest Juice Bar",
+  "currency": "USD",
+  "items": [
+    {
+      "nameIncludes": "logo",
+      "quantity": 1,
+      "unitAmount": "150.00"
+    },
+    {
+      "nameIncludes": "revision",
+      "quantity": 2,
+      "unitAmount": "30.00"
+    }
+  ],
+  "due": {
+    "rule": "none"
+  },
+  "warnings": ["no_payment_terms"],
+  "contacts": ["karan@zestjuice-example.com"]
+}

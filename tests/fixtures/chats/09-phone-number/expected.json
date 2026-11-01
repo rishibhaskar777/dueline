@@ -1,0 +1,17 @@
+{
+  "summary": "A phone number and an email in the chat, both of which must be hidden",
+  "client": "Harbor Light Coffee",
+  "currency": "USD",
+  "items": [
+    {
+      "nameIncludes": "menu",
+      "quantity": 1,
+      "unitAmount": "275.00"
+    }
+  ],
+  "due": {
+    "rule": "none"
+  },
+  "warnings": ["no_payment_terms"],
+  "contacts": ["jordan@harborlight-example.com", "+1 415 555 0134", "(415) 555-0178"]
+}

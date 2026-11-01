@@ -1,0 +1,22 @@
+{
+  "summary": "A rush fee is its own line item next to the main job",
+  "client": "Lumen Outdoor",
+  "currency": "USD",
+  "items": [
+    {
+      "nameIncludes": "redesign",
+      "quantity": 1,
+      "unitAmount": "1800.00"
+    },
+    {
+      "nameIncludes": "rush",
+      "quantity": 1,
+      "unitAmount": "300.00"
+    }
+  ],
+  "due": {
+    "rule": "none"
+  },
+  "warnings": ["no_payment_terms"],
+  "contacts": ["accounts@lumenoutdoor-example.com"]
+}

@@ -1,0 +1,18 @@
+{
+  "summary": "Hours at a rate in pounds, payment within 14 days",
+  "client": "Fenwick & Dale Ltd",
+  "currency": "GBP",
+  "items": [
+    {
+      "nameIncludes": "hour",
+      "quantity": 12,
+      "unitAmount": "65.00"
+    }
+  ],
+  "due": {
+    "rule": "net",
+    "days": 14
+  },
+  "warnings": [],
+  "contacts": ["tom.whitaker@fenwickdale-example.com"]
+}

@@ -1,0 +1,17 @@
+{
+  "summary": "A clear job and price but no email address anywhere",
+  "client": "Thistle Interiors",
+  "currency": "GBP",
+  "items": [
+    {
+      "nameIncludes": "moodboard",
+      "quantity": 1,
+      "unitAmount": "700.00"
+    }
+  ],
+  "due": {
+    "rule": "none"
+  },
+  "warnings": ["no_client_email", "no_payment_terms"],
+  "contacts": []
+}

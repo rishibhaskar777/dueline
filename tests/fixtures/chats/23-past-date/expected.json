@@ -1,0 +1,17 @@
+{
+  "summary": "A payment date that has already passed",
+  "client": "Fjord Textiles",
+  "currency": "EUR",
+  "items": [
+    {
+      "nameIncludes": "catalogue",
+      "quantity": 1,
+      "unitAmount": "1150.00"
+    }
+  ],
+  "due": {
+    "rule": "past"
+  },
+  "warnings": ["past_due_date"],
+  "contacts": ["greta@fjordtextiles-example.com"]
+}
