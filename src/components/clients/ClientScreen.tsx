@@ -13,10 +13,12 @@ import { buttonVariants } from "@/components/ui/button";
 import { getClientDetail } from "@/lib/api-client";
 import { formatRupees } from "@/lib/money/format";
 import { ClientNotes } from "./ClientNotes";
+import { ClientRepeats } from "./ClientRepeats";
+import { ReminderLanguageCard } from "./ReminderLanguageCard";
 
 function NotFound() {
   return (
-    <div className="max-w-xl rounded-xl border border-line bg-white p-6">
+    <div className="max-w-xl rounded-xl border border-line bg-card p-6">
       <h1 className="text-xl font-semibold">We couldn&apos;t find that client</h1>
       <p className="mt-2 text-sm">
         They may have no invoices left, or the address may be wrong.{" "}
@@ -42,7 +44,7 @@ export function ClientScreen({ clientKey }: { clientKey: string }) {
     );
   }
 
-  const { client, invoices, notes } = state.data;
+  const { client, invoices, notes, language } = state.data;
   return (
     <div className="grid gap-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
@@ -83,6 +85,8 @@ export function ClientScreen({ clientKey }: { clientKey: string }) {
         />
       </dl>
       <InvoiceList invoices={invoices} today={today} />
+      <ClientRepeats clientKey={client.key} />
+      <ReminderLanguageCard clientKey={client.key} initial={language} />
       <ClientNotes clientKey={client.key} initial={notes} />
     </div>
   );

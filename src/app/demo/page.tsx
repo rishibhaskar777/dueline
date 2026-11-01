@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Demo password" };
 export default function DemoPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
-      <div className="w-full max-w-sm overflow-hidden rounded-xl border border-line bg-white">
+      <div className="w-full max-w-sm overflow-hidden rounded-xl border border-line bg-card">
         <div className="bg-navy px-6 py-4">
           <Wordmark />
         </div>

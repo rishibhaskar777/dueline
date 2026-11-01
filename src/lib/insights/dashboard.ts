@@ -1,4 +1,5 @@
 import "server-only";
+import { evaluateRateAlerts } from "@/lib/automation/rate-alerts";
 import { today } from "@/lib/clock";
 import { financialYearOf } from "@/lib/date-math";
 import { loadClientGroups } from "@/lib/clients/clients";
@@ -30,5 +31,6 @@ export async function buildDashboard(): Promise<DashboardResponse> {
     ),
     lateClients: lateClients(groups),
     rates: await getRatesWidget(settings),
+    rateAlerts: evaluateRateAlerts(settings.rateAlerts, settings.marketRates),
   };
 }

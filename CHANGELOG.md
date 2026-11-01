@@ -9,6 +9,36 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- A daily preparation each morning (06:00 India time, Vercel Cron). It writes reminder drafts for
+  overdue invoices, lists the ones at least 3 days late (a setting) in a Today list at the top of
+  Nudges with "Review and send" and "Dismiss for today". Items stay until acted on or dismissed;
+  reminder items are refreshed by each run, retainer items stay until sent or dismissed. It turns monthly repeats into drafts, and
+  records a digest. It never sends anything: every item is a place to start. It runs once a day,
+  protected by `CRON_SECRET`; "Run today's preparation now" on Demo tools runs the same job.
+- Monthly repeats for retainer clients: "Repeat monthly" on an invoice saves a schedule (day 1 to 28),
+  the client page lists the client's repeats with pause and delete, and a due repeat becomes a draft
+  that opens New invoice filled in.
+- An item library: "Save to library" on an invoice item, a searchable "Add from library" on New
+  invoice, and rename and delete on Profile.
+- Reminders in the client's language (English, German, French, Spanish, Dutch, Portuguese, Hindi),
+  set on the client page. Templates exist for each, the same checks apply to amounts written in that
+  language's number format, and a card can switch back to English.
+- A "This morning" card at the top of Receivables: paid since yesterday, newly overdue, due in the next
+  3 days and drafts prepared. Up to three rate alerts in Settings (for example USD above ₹96) are marked
+  on the Rates widget, counted in the sidebar and listed in the digest, with an optional notification in
+  this browser while the app is open.
+- Light and dark themes with one toggle button in the sidebar and the phone top bar. A first visit follows the device, the choice is then kept, and the new theme grows from the button as a circle unless motion is reduced.
+- A command palette (Ctrl+K or Cmd+K) to go to any page, open a client or an invoice, start a new
+  invoice, draft a reminder or toggle the theme, and "?" for the list of shortcuts.
+- A phone layout below 768 px (top bar with a menu, card lists instead of tables, the due line
+  scrolling with its labels pinned, 44 px tap targets) and an installable app: a web manifest, icons
+  and a theme colour. There is no service worker and no offline mode.
+- `GET /api/cron/daily`, `POST /api/demo/prepare`, `GET /api/queue`, `POST /api/queue/{id}/dismiss`,
+  `GET /api/digest`, `GET /api/rate-alerts`, `GET`/`POST` `/api/repeats`, `PATCH`/`DELETE`
+  `/api/repeats/{id}`, `GET`/`POST` `/api/items`, `DELETE /api/items/{id}` and
+  `PUT /api/clients/by-key/{key}/language`. Migration 006 adds the queue, repeats, library and the
+  client language; 007 lets queue items stay until acted on.
+
 - Money views on Receivables: a forecast of what will arrive in the next 30, 60 and 90 days (weighted by
   each client's payment history, with the best case beside it), what getting paid costs this
   financial year, the invoices falling due in the next 14 days, the clients furthest behind, and
@@ -28,6 +58,14 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Nudges opens at once. `GET /api/reminders` no longer waits for the model: each overdue invoice comes
+  back with the draft the model wrote earlier, or the template marked `pending`. The screen asks for
+  better drafts one card at a time and replaces the text only if it has not been edited. The draft
+  cache key now includes the language.
+- `Settings` gains `prepareReminders`, `remindAfterDays` and `rateAlerts`; `ReminderDraft` gains
+  `language` and `pending`; `ClientDetail` gains `language`; `DashboardResponse` gains `rateAlerts`.
+- Colours come from tokens in both themes. The AG Grid theme and the due line read them, and a test
+  checks text contrast in both themes.
 - Reminder drafts are cached under a new prompt version, because they no longer end in "Thank you".
 - The LUT line on an invoice is now the declaration; invoices with the earlier line still count as
   under LUT.

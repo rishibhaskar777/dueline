@@ -38,7 +38,7 @@ export function SendResult({ result: first, onCreateAnother }: SendResultProps) 
     return (
       <section
         aria-labelledby="result-title"
-        className="max-w-2xl rounded-xl border border-due-soon bg-white p-6"
+        className="max-w-2xl rounded-xl border border-due-soon bg-card p-6"
       >
         <h2 id="result-title" className="text-xl font-semibold">
           Draft created, not sent
@@ -68,7 +68,7 @@ export function SendResult({ result: first, onCreateAnother }: SendResultProps) 
   return (
     <section
       aria-labelledby="result-title"
-      className="max-w-2xl rounded-xl border border-paid bg-white p-6"
+      className="max-w-2xl rounded-xl border border-paid bg-card p-6"
     >
       <h2 id="result-title" className="text-xl font-semibold text-paid">
         Invoice {invoice.number} sent

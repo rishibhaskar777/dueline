@@ -7,7 +7,7 @@ export function Wordmark() {
           y1="12"
           x2="30"
           y2="12"
-          stroke="#ffffff"
+          className="stroke-white"
           strokeWidth="2.5"
           strokeLinecap="round"
         />
@@ -16,7 +16,7 @@ export function Wordmark() {
           y1="3"
           x2="21"
           y2="21"
-          stroke="#8ea8ff"
+          className="stroke-blue-light"
           strokeWidth="3.5"
           strokeLinecap="round"
         />

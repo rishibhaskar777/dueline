@@ -1,3 +1,4 @@
+import type { ReminderLanguage } from "./reminder";
 import type { InvoiceSummary } from "./invoice";
 import type { ClientRisk, RiskLevel } from "./risk";
 
@@ -18,4 +19,5 @@ export interface ClientDetail {
   invoices: InvoiceSummary[];
   risk: ClientRisk;
   notes: string;
+  language: ReminderLanguage;
 }

@@ -21,6 +21,10 @@ describe("formatRate", () => {
   it("shows four decimals", () => {
     expect(formatRate(85.36)).toBe("85.3600");
   });
+
+  it("shows the number of decimals asked for", () => {
+    expect(formatRate(85.355, 2)).toBe("85.36");
+  });
 });
 
 describe("formatDate", () => {

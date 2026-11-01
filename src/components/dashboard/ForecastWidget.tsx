@@ -16,7 +16,7 @@ function Buckets({ forecast }: { forecast: Forecast }) {
         {forecast.buckets.map((bucket) => (
           <li key={bucket.label}>
             <p className="text-sm text-muted-foreground">{bucket.label}</p>
-            <p className="mt-1 font-heading text-2xl font-semibold text-navy tabular-nums">
+            <p className="mt-1 font-heading text-2xl font-semibold text-foreground tabular-nums">
               {formatRupees(bucket.expectedInr)}
             </p>
             <div aria-hidden="true" className="relative mt-2 h-2 rounded-full bg-ground">

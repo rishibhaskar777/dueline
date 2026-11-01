@@ -27,6 +27,25 @@ export function filterByStatus(invoices: InvoiceSummary[], filter: StatusFilter)
   return invoices.filter((invoice) => matches(invoice, filter));
 }
 
+// The grid's own search box looks in the same fields; a list of cards needs the same rule.
+export function searchInvoices(invoices: InvoiceSummary[], search: string): InvoiceSummary[] {
+  const words = search.toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return invoices;
+  return invoices.filter((invoice) => {
+    const haystack = [
+      invoice.number,
+      invoice.client.name,
+      invoice.work,
+      invoice.issuedOn,
+      invoice.dueOn,
+      invoice.purposeCode ?? "",
+    ]
+      .join(" ")
+      .toLowerCase();
+    return words.every((word) => haystack.includes(word));
+  });
+}
+
 export function countByStatus(invoices: InvoiceSummary[]): StatusCounts {
   return Object.fromEntries(
     STATUS_FILTERS.map(({ value }) => [value, filterByStatus(invoices, value).length]),

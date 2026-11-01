@@ -6,11 +6,14 @@ import { gridTheme } from "@/components/grid/ag-grid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useIsPhone } from "@/components/shared/use-phone";
 import type { InvoiceSummary } from "@/types";
+import { InvoiceCards } from "./InvoiceCards";
 import { type GridContext, invoiceColumns } from "./invoice-columns";
 import {
   countByStatus,
   filterByStatus,
+  searchInvoices,
   sortForTable,
   STATUS_FILTERS,
   type StatusFilter,
@@ -27,12 +30,13 @@ const defaultColDef = { sortable: true, resizable: true, suppressMovable: true }
 export function InvoiceTable({ invoices, today, onOpen }: InvoiceTableProps) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<StatusFilter>("all");
+  const phone = useIsPhone();
   const counts = useMemo(() => countByStatus(invoices), [invoices]);
   const context = useMemo<GridContext>(() => ({ today }), [today]);
   const rows = useMemo(() => sortForTable(filterByStatus(invoices, filter)), [invoices, filter]);
 
   return (
-    <section aria-labelledby="invoices-title" className="rounded-xl border border-line bg-white">
+    <section aria-labelledby="invoices-title" className="rounded-xl border border-line bg-card">
       <div className="flex flex-wrap items-end justify-between gap-3 p-6">
         <h2 id="invoices-title" className="text-xl font-semibold">
           Invoices
@@ -45,7 +49,7 @@ export function InvoiceTable({ invoices, today, onOpen }: InvoiceTableProps) {
             autoComplete="off"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            className="w-56"
+            className="w-56 max-md:w-full"
           />
         </div>
       </div>
@@ -63,22 +67,26 @@ export function InvoiceTable({ invoices, today, onOpen }: InvoiceTableProps) {
           </Button>
         ))}
       </div>
-      <AgGridReact<InvoiceSummary>
-        theme={gridTheme}
-        rowData={rows}
-        columnDefs={invoiceColumns}
-        context={context}
-        defaultColDef={defaultColDef}
-        quickFilterText={search}
-        includeHiddenColumnsInQuickFilter
-        getRowId={({ data }) => data.id}
-        domLayout="autoHeight"
-        onRowClicked={({ data }) => data && onOpen(data)}
-        onCellKeyDown={({ event, data }) => {
-          if (event instanceof KeyboardEvent && event.key === "Enter" && data) onOpen(data);
-        }}
-        overlayNoRowsTemplate="No invoices match."
-      />
+      {phone ? (
+        <InvoiceCards invoices={searchInvoices(rows, search)} today={today} onOpen={onOpen} />
+      ) : (
+        <AgGridReact<InvoiceSummary>
+          theme={gridTheme}
+          rowData={rows}
+          columnDefs={invoiceColumns}
+          context={context}
+          defaultColDef={defaultColDef}
+          quickFilterText={search}
+          includeHiddenColumnsInQuickFilter
+          getRowId={({ data }) => data.id}
+          domLayout="autoHeight"
+          onRowClicked={({ data }) => data && onOpen(data)}
+          onCellKeyDown={({ event, data }) => {
+            if (event instanceof KeyboardEvent && event.key === "Enter" && data) onOpen(data);
+          }}
+          overlayNoRowsTemplate="No invoices match."
+        />
+      )}
     </section>
   );
 }

@@ -6,7 +6,7 @@ export function InvoiceDetailsCard({
   details,
 }: Pick<InvoiceDetailResponse, "invoice" | "details">) {
   return (
-    <section aria-labelledby="details-title" className="rounded-xl border border-line bg-white p-6">
+    <section aria-labelledby="details-title" className="rounded-xl border border-line bg-card p-6">
       <h2 id="details-title" className="text-xl font-semibold">
         Details
       </h2>

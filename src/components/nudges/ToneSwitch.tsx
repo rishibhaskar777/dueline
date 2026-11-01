@@ -25,7 +25,7 @@ export function ToneSwitch({ tone, suggestedTone, disabled, onChange }: ToneSwit
             "flex min-h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60",
             option === tone
               ? "border-primary bg-primary text-primary-foreground"
-              : "border-line bg-white hover:bg-muted",
+              : "border-line bg-card hover:bg-muted",
           )}
         >
           {TONE_LABELS[option]}

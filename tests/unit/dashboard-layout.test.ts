@@ -62,18 +62,20 @@ describe("parseLayout", () => {
 
 describe("moveWidget, setWidgetVisible and resetLayout", () => {
   it("moves a widget up or down one place", () => {
-    expect(ids(moveWidget(DEFAULT_LAYOUT, "forecast", -1)).slice(0, 2)).toEqual([
+    expect(ids(moveWidget(DEFAULT_LAYOUT, "forecast", -1)).slice(0, 3)).toEqual([
+      "morning",
       "forecast",
       "totals",
     ]);
-    expect(ids(moveWidget(DEFAULT_LAYOUT, "totals", 1)).slice(0, 2)).toEqual([
+    expect(ids(moveWidget(DEFAULT_LAYOUT, "totals", 1)).slice(0, 3)).toEqual([
+      "morning",
       "forecast",
       "totals",
     ]);
   });
 
   it("does not move the first widget up or the last down", () => {
-    expect(moveWidget(DEFAULT_LAYOUT, "totals", -1)).toBe(DEFAULT_LAYOUT);
+    expect(moveWidget(DEFAULT_LAYOUT, "morning", -1)).toBe(DEFAULT_LAYOUT);
     expect(moveWidget(DEFAULT_LAYOUT, "activity", 1)).toBe(DEFAULT_LAYOUT);
   });
 
@@ -92,5 +94,19 @@ describe("moveWidget, setWidgetVisible and resetLayout", () => {
 
   it("goes back to the default", () => {
     expect(resetLayout()).toEqual(DEFAULT_LAYOUT);
+  });
+});
+
+describe("the This morning card", () => {
+  it("is the first widget of the default layout, shown", () => {
+    expect(DEFAULT_LAYOUT[0]).toEqual({ id: "morning", visible: true });
+  });
+
+  it("is added, shown, to a layout saved before it existed", () => {
+    const saved = JSON.stringify([{ id: "totals", visible: true }]);
+    expect(parseLayout(saved).find(({ id }) => id === "morning")).toEqual({
+      id: "morning",
+      visible: true,
+    });
   });
 });

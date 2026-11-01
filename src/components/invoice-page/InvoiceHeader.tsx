@@ -46,7 +46,7 @@ export function InvoiceHeader({ invoice, clientKey, today }: InvoiceHeaderProps)
         </p>
       </div>
       <div className="flex flex-wrap items-baseline gap-x-8 gap-y-2">
-        <p className="font-heading text-4xl font-semibold text-navy tabular-nums">
+        <p className="font-heading text-4xl font-semibold text-foreground tabular-nums">
           {formatMoney(invoice.amount)}
         </p>
         {invoice.payoutInr !== null && !cancelled && (

@@ -1,5 +1,7 @@
 import { formatDate } from "@/lib/format-date";
-import type { RatesWidget as Rates } from "@/types";
+import { describeAlert } from "@/lib/automation/rate-alerts";
+import { formatRate } from "@/lib/money/format";
+import type { RatesWidget as Rates, TriggeredRateAlert } from "@/types";
 import { DashboardWidget } from "./DashboardWidget";
 import type { DashboardState } from "./use-dashboard";
 
@@ -9,16 +11,26 @@ function comparison(percent: number | null): string {
   return `${Math.abs(percent).toFixed(1)}% ${percent > 0 ? "above" : "below"} its 30-day average`;
 }
 
-function Lines({ rates }: { rates: Rates }) {
+function Lines({ rates, alerts }: { rates: Rates; alerts: TriggeredRateAlert[] }) {
   return (
     <>
       <ul className="grid gap-1">
         {rates.lines.map(({ currency, rate, percentVsAverage }) => (
           <li key={currency} className="text-sm tabular-nums">
-            <span className="font-medium">{currency}</span> ₹{rate.toFixed(2)}
+            <span className="font-medium">{currency}</span> ₹{formatRate(rate, 2)}
             {percentVsAverage !== null && (
               <span className="text-muted-foreground">, {comparison(percentVsAverage)}</span>
             )}
+            {alerts
+              .filter((alert) => alert.currency === currency)
+              .map((alert) => (
+                <span
+                  key={`${alert.direction}-${alert.threshold}`}
+                  className="ml-2 rounded-md border border-due-soon px-1.5 py-0.5 text-xs font-medium text-due-soon"
+                >
+                  Alert: {describeAlert(alert)}
+                </span>
+              ))}
           </li>
         ))}
       </ul>
@@ -42,7 +54,7 @@ export function RatesWidget({ state, onRetry }: { state: DashboardState; onRetry
       emptyText="No exchange rates are available right now."
       isEmpty={({ rates }) => rates.lines.length === 0}
     >
-      {({ rates }) => <Lines rates={rates} />}
+      {({ rates, rateAlerts }) => <Lines rates={rates} alerts={rateAlerts} />}
     </DashboardWidget>
   );
 }

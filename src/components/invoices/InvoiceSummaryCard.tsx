@@ -13,7 +13,7 @@ export function InvoiceSummaryCard({ totals }: InvoiceSummaryCardProps) {
   const { estimate, failure } = usePayoutEstimate(totals?.total ?? null);
 
   return (
-    <section aria-labelledby="summary-title" className="rounded-xl border border-line bg-white p-6">
+    <section aria-labelledby="summary-title" className="rounded-xl border border-line bg-card p-6">
       <h2 id="summary-title" className="text-xl font-semibold">
         Summary
       </h2>
@@ -30,7 +30,7 @@ export function InvoiceSummaryCard({ totals }: InvoiceSummaryCardProps) {
           )}
           <div className="py-3">
             <dt className="text-muted-foreground">Invoice total</dt>
-            <dd className="mt-1 font-heading text-3xl font-semibold text-navy tabular-nums">
+            <dd className="mt-1 font-heading text-3xl font-semibold text-foreground tabular-nums">
               {formatMoney(totals.total)}
             </dd>
           </div>

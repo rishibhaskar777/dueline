@@ -48,7 +48,9 @@ export function StatusLine() {
         <span
           aria-hidden="true"
           className={
-            connected ? "size-2 rounded-full bg-emerald-400" : "size-2 rounded-full bg-late-on-dark"
+            connected
+              ? "size-2 rounded-full bg-paid-on-dark"
+              : "size-2 rounded-full bg-late-on-dark"
           }
         />
         {connected ? "PayPal sandbox connected" : "PayPal sandbox not connected"}

@@ -6,8 +6,9 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import type { InvoiceDetailResponse } from "@/types";
 import { CancelPanel } from "./CancelPanel";
 import { RecordPaymentPanel } from "./RecordPaymentPanel";
+import { RepeatPanel } from "./RepeatPanel";
 
-type Panel = "record" | "cancel" | null;
+type Panel = "record" | "cancel" | "repeat" | null;
 
 interface InvoiceActionsProps extends Pick<InvoiceDetailResponse, "invoice" | "details"> {
   today: string;
@@ -25,7 +26,7 @@ export function InvoiceActions({ invoice, details, today, onChanged }: InvoiceAc
   }
 
   return (
-    <section aria-labelledby="actions-title" className="rounded-xl border border-line bg-white p-6">
+    <section aria-labelledby="actions-title" className="rounded-xl border border-line bg-card p-6">
       <h2 id="actions-title" className="text-xl font-semibold">
         Actions
       </h2>
@@ -41,6 +42,9 @@ export function InvoiceActions({ invoice, details, today, onChanged }: InvoiceAc
         >
           Duplicate
         </Link>
+        <Button type="button" variant="outline" onClick={() => setPanel("repeat")}>
+          Repeat monthly
+        </Button>
         {actions.recordPayment && (
           <Button
             type="button"
@@ -65,6 +69,13 @@ export function InvoiceActions({ invoice, details, today, onChanged }: InvoiceAc
             issuedOn={invoice.issuedOn}
             today={today}
             onDone={done}
+            onClose={() => setPanel(null)}
+          />
+        )}
+        {panel === "repeat" && (
+          <RepeatPanel
+            invoiceId={invoice.id}
+            invoiceNumber={invoice.number}
             onClose={() => setPanel(null)}
           />
         )}

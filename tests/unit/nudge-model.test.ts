@@ -66,6 +66,12 @@ describe("nudge model", () => {
       expect(replaceEditsQuestion("firm")).toBe("Replace your edits with a Firm draft?");
       expect(replaceEditsQuestion("gentle")).toBe("Replace your edits with a Gentle draft?");
     });
+
+    it("names the language when the new draft is not in English", () => {
+      expect(replaceEditsQuestion("firm", "de")).toBe(
+        "Replace your edits with a Firm draft in German?",
+      );
+    });
   });
 });
 
@@ -75,9 +81,11 @@ describe("toneReason", () => {
     invoiceId: lateInvoice.id,
     tone: suggestedTone,
     suggestedTone,
+    language: "en",
     subject: "A quick reminder",
     message: "Please pay when you can.",
     source: "template",
+    pending: false,
     history: [],
   });
 

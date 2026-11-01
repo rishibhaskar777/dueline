@@ -49,7 +49,7 @@ export function ProfileForm({ initial }: { initial: Profile }) {
         onSubmit={onSubmit}
         noValidate
         aria-labelledby="profile-title"
-        className="grid gap-5 rounded-xl border border-line bg-white p-6"
+        className="grid gap-5 rounded-xl border border-line bg-card p-6"
       >
         <div>
           <h2 id="profile-title" className="text-xl font-semibold">

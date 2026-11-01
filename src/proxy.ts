@@ -23,6 +23,8 @@ function isPublic(method: string, pathname: string): boolean {
   return (
     pathname === "/api/demo/session" ||
     (method === "GET" && pathname === "/api/health") ||
+    // Vercel cannot follow a redirect or send the demo cookie; the job checks its own secret.
+    (method === "GET" && pathname === "/api/cron/daily") ||
     (method === "POST" && pathname === "/api/webhooks/paypal")
   );
 }

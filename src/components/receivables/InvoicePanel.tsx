@@ -35,7 +35,7 @@ function Body({ invoice }: { invoice: InvoiceSummary }) {
         <div>
           <p>
             About{" "}
-            <span className="font-heading text-3xl font-semibold text-navy tabular-nums">
+            <span className="font-heading text-3xl font-semibold text-foreground tabular-nums">
               {formatRupees(invoice.payoutInr)}
             </span>{" "}
             reaches your bank

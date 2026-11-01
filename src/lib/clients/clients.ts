@@ -3,7 +3,7 @@ import { today } from "@/lib/clock";
 import { loadSummaries } from "@/lib/payouts/load-summaries";
 import { emailIdentifiesClient } from "@/lib/risk/client-risk";
 import { getStore } from "@/lib/store";
-import type { ClientDetail, ClientSummary } from "@/types";
+import type { ClientDetail, ClientSummary, ReminderLanguage } from "@/types";
 import { ClientNotFoundError } from "./errors";
 import { groupClients, type ClientGroup } from "./group-clients";
 import { riskOf, summariseClient } from "./summarise-client";
@@ -31,6 +31,7 @@ export async function getClientDetail(key: string): Promise<ClientDetail> {
     invoices: group.invoices,
     risk: riskOf(group),
     notes: await getStore().getClientNotes(key),
+    language: await getStore().getClientLanguage(key),
   };
 }
 
@@ -39,4 +40,13 @@ export async function saveClientNotes(key: string, notes: string): Promise<strin
   const trimmed = notes.trim();
   await getStore().saveClientNotes(key, trimmed);
   return trimmed;
+}
+
+export async function saveClientLanguage(
+  key: string,
+  language: ReminderLanguage,
+): Promise<ReminderLanguage> {
+  await findGroup(key);
+  await getStore().saveClientLanguage(key, language);
+  return language;
 }

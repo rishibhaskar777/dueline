@@ -1,4 +1,13 @@
-import type { ActivityEvent, ActualPayout, Profile, Settings } from "@/types";
+import type {
+  ActivityEvent,
+  ActualPayout,
+  LibraryItem,
+  Profile,
+  QueueItem,
+  ReminderLanguage,
+  RepeatSchedule,
+  Settings,
+} from "@/types";
 import type { ClaimResult, Json, ReminderLogEntry, Store, StoredRates } from "./store";
 
 interface IdempotencyRecord {
@@ -19,6 +28,10 @@ export function createMemoryStore(): Store {
   let settings: Settings | null = null;
   let profile: Profile | null = null;
   const clientNotes = new Map<string, string>();
+  const clientLanguages = new Map<string, ReminderLanguage>();
+  const queue = new Map<string, QueueItem>();
+  const repeats = new Map<string, RepeatSchedule>();
+  const library = new Map<string, LibraryItem>();
 
   return {
     async claim(requestId, bodyHash): Promise<ClaimResult> {
@@ -98,6 +111,57 @@ export function createMemoryStore(): Store {
 
     async saveClientNotes(clientKey, notes): Promise<void> {
       clientNotes.set(clientKey, notes);
+    },
+
+    async getClientLanguage(clientKey): Promise<ReminderLanguage> {
+      return clientLanguages.get(clientKey) ?? "en";
+    },
+
+    async saveClientLanguage(clientKey, language): Promise<void> {
+      clientLanguages.set(clientKey, language);
+    },
+
+    async addQueueItem(item): Promise<boolean> {
+      if (queue.has(item.id)) return false;
+      queue.set(item.id, item);
+      return true;
+    },
+
+    async replaceQueueItems(kind, items): Promise<void> {
+      for (const [id, existing] of queue) if (existing.kind === kind) queue.delete(id);
+      for (const item of items) queue.set(item.id, item);
+    },
+
+    async listQueue(): Promise<QueueItem[]> {
+      return [...queue.values()];
+    },
+
+    async removeQueueItem(id): Promise<boolean> {
+      return queue.delete(id);
+    },
+
+    async listRepeats(): Promise<RepeatSchedule[]> {
+      return [...repeats.values()];
+    },
+
+    async saveRepeat(repeat): Promise<void> {
+      repeats.set(repeat.id, repeat);
+    },
+
+    async deleteRepeat(id): Promise<boolean> {
+      return repeats.delete(id);
+    },
+
+    async listLibraryItems(): Promise<LibraryItem[]> {
+      return [...library.values()];
+    },
+
+    async saveLibraryItem(item): Promise<void> {
+      library.set(item.id, item);
+    },
+
+    async deleteLibraryItem(id): Promise<boolean> {
+      return library.delete(id);
     },
 
     async hitRateLimit(key, windowSeconds): Promise<number> {

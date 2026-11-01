@@ -66,7 +66,7 @@ export function RecordPaymentPanel(props: RecordPaymentPanelProps) {
             id="payment-method"
             value={method}
             onChange={(event) => setMethod(event.target.value as PaymentMethod)}
-            className="h-8 rounded-lg border border-input bg-white px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="h-8 rounded-lg border border-input bg-card px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             {METHODS.map(({ value, label }) => (
               <option key={value} value={value}>

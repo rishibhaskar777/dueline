@@ -28,7 +28,7 @@ export function DueLineTooltip({ target }: { target: TooltipTarget }) {
   return (
     <div
       role="tooltip"
-      className="pointer-events-none fixed z-40 rounded-lg border border-line bg-white p-3 text-xs shadow-lg"
+      className="pointer-events-none fixed z-40 rounded-lg border border-line bg-card p-3 text-xs shadow-lg"
       style={{ left, width: WIDTH, ...vertical }}
     >
       <p className="text-sm font-medium">{invoice.work}</p>

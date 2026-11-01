@@ -3,10 +3,7 @@ import { describeTimelineEvent, timelineWhen } from "./timeline-text";
 
 export function Timeline({ events }: { events: TimelineEvent[] }) {
   return (
-    <section
-      aria-labelledby="timeline-title"
-      className="rounded-xl border border-line bg-white p-6"
-    >
+    <section aria-labelledby="timeline-title" className="rounded-xl border border-line bg-card p-6">
       <h2 id="timeline-title" className="text-xl font-semibold">
         History
       </h2>

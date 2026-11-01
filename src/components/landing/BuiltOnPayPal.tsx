@@ -12,7 +12,7 @@ const AI_RULES = [
 
 function Panel({ id, title, items }: { id: string; title: string; items: string[] }) {
   return (
-    <section aria-labelledby={id} className="rounded-xl border border-line bg-white p-6">
+    <section aria-labelledby={id} className="rounded-xl border border-line bg-card p-6">
       <h3 id={id} className="text-xl font-semibold">
         {title}
       </h3>

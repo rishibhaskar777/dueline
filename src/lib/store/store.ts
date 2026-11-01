@@ -1,4 +1,16 @@
-import type { ActivityEvent, ActualPayout, CurrencyCode, Profile, Settings, Tone } from "@/types";
+import type {
+  ActivityEvent,
+  ActualPayout,
+  CurrencyCode,
+  LibraryItem,
+  Profile,
+  QueueItem,
+  QueueKind,
+  ReminderLanguage,
+  RepeatSchedule,
+  Settings,
+  Tone,
+} from "@/types";
 
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
@@ -48,6 +60,26 @@ export interface Store {
   // Private notes about a client, "" when there are none. Never logged.
   getClientNotes(clientKey: string): Promise<string>;
   saveClientNotes(clientKey: string, notes: string): Promise<void>;
+
+  // The language reminders to this client are written in; English until one is saved.
+  getClientLanguage(clientKey: string): Promise<ReminderLanguage>;
+  saveClientLanguage(clientKey: string, language: ReminderLanguage): Promise<void>;
+
+  // Queue items stay until they are removed. An item whose ID is already there is not added twice.
+  addQueueItem(item: QueueItem): Promise<boolean>;
+  // Swaps every item of one kind for the given ones, so a daily run can refresh what is overdue.
+  replaceQueueItems(kind: QueueKind, items: QueueItem[]): Promise<void>;
+  // All items, in the order they were added.
+  listQueue(): Promise<QueueItem[]>;
+  removeQueueItem(id: string): Promise<boolean>;
+
+  listRepeats(): Promise<RepeatSchedule[]>;
+  saveRepeat(repeat: RepeatSchedule): Promise<void>;
+  deleteRepeat(id: string): Promise<boolean>;
+
+  listLibraryItems(): Promise<LibraryItem[]>;
+  saveLibraryItem(item: LibraryItem): Promise<void>;
+  deleteLibraryItem(id: string): Promise<boolean>;
 
   hitRateLimit(key: string, windowSeconds: number): Promise<number>;
 

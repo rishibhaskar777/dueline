@@ -46,7 +46,7 @@ export function PayoutCalculator({ settingsVersion, rateSource }: PayoutCalculat
   return (
     <section
       aria-labelledby="calculator-title"
-      className="rounded-xl border border-line bg-white p-6"
+      className="rounded-xl border border-line bg-card p-6"
     >
       <h2 id="calculator-title" className="text-xl font-semibold">
         What reaches your bank
@@ -109,7 +109,7 @@ export function PayoutCalculator({ settingsVersion, rateSource }: PayoutCalculat
             <FactRow label="PayPal's rate" value={`₹${formatRate(estimate.conversionRate)}`} />
             <div className="py-4">
               <dt className="text-muted-foreground">You receive</dt>
-              <dd className="mt-1 font-heading text-4xl font-semibold text-navy tabular-nums">
+              <dd className="mt-1 font-heading text-4xl font-semibold text-foreground tabular-nums">
                 {formatRupees(estimate.netInr)}
               </dd>
             </div>

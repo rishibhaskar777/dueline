@@ -1,3 +1,9 @@
+import {
+  LibraryFullError,
+  LibraryItemNotFoundError,
+  QueueItemNotFoundError,
+  RepeatNotFoundError,
+} from "@/lib/automation/errors";
 import { ClientNotFoundError } from "@/lib/clients/errors";
 import { ConfigError } from "@/lib/env";
 import { DemoResetLimitError, DemoUnavailableError } from "@/lib/demo/errors";
@@ -22,7 +28,14 @@ export function failFromError(error: unknown): Response {
   if (error instanceof DemoResetLimitError) return fail(429, "rate_limited", error.message);
   if (error instanceof InvalidReminderError) return fail(400, "invalid_request", error.message);
   if (error instanceof ReminderLimitError) return fail(429, "rate_limited", error.message);
-  if (error instanceof InvoiceNotFoundError || error instanceof ClientNotFoundError) {
+  if (error instanceof LibraryFullError) return fail(400, "invalid_request", error.message);
+  if (
+    error instanceof InvoiceNotFoundError ||
+    error instanceof ClientNotFoundError ||
+    error instanceof QueueItemNotFoundError ||
+    error instanceof RepeatNotFoundError ||
+    error instanceof LibraryItemNotFoundError
+  ) {
     return fail(404, "not_found", error.message);
   }
   if (error instanceof InvalidActionError) return fail(400, "invalid_request", error.message);

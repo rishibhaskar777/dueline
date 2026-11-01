@@ -19,7 +19,7 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section id="how" aria-labelledby="how-title" className="scroll-mt-4 bg-white px-4 py-16">
+    <section id="how" aria-labelledby="how-title" className="scroll-mt-4 bg-card px-4 py-16">
       <div className="mx-auto w-full max-w-6xl">
         <h2 id="how-title" className="text-3xl font-semibold">
           How it works

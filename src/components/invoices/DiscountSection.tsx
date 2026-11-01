@@ -29,7 +29,7 @@ export function DiscountSection({ form, update, errors, known }: DiscountSection
       />
       <section
         aria-labelledby="discount-title"
-        className="rounded-xl border border-line bg-white p-6"
+        className="rounded-xl border border-line bg-card p-6"
       >
         <h2 id="discount-title" className="sr-only">
           Early-payment discount

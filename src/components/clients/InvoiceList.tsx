@@ -8,7 +8,7 @@ export function InvoiceList({ invoices, today }: { invoices: InvoiceSummary[]; t
   return (
     <section
       aria-labelledby="client-invoices-title"
-      className="rounded-xl border border-line bg-white p-6"
+      className="rounded-xl border border-line bg-card p-6"
     >
       <h2 id="client-invoices-title" className="text-xl font-semibold">
         Invoices

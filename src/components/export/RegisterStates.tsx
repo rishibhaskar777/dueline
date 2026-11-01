@@ -16,7 +16,7 @@ export function RegisterSkeleton() {
 
 export function EmptyRegister({ month }: { month: string }) {
   return (
-    <div className="max-w-xl rounded-xl border border-line bg-white p-8">
+    <div className="max-w-xl rounded-xl border border-line bg-card p-8">
       <h2 className="text-xl font-semibold">Nothing to register</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         No invoices were paid in {formatMonth(month)}.

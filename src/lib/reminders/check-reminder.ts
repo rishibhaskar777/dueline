@@ -1,5 +1,7 @@
 import { toMinorUnits } from "@/lib/money/decimal";
+import type { ReminderLanguage } from "@/types";
 import { withoutContacts, type ReminderFacts } from "./facts";
+import { languageInfo, type Separators } from "./languages";
 import { SIGN_OFF_ROOM } from "./sign-off";
 
 export const REMINDER_LIMITS = {
@@ -17,14 +19,19 @@ const LINK =
 const ADDRESS = /\S@\S/;
 
 const CURRENCY_CODES = "USD|EUR|GBP|CAD|AUD";
-const NUMBER = String.raw`\d[\d,]*(?:\.\d+)?`;
-// A code or symbol before the number, a code after it, or a number with two decimals.
-const MONEY = new RegExp(
-  String.raw`(?:(?<before>${CURRENCY_CODES})\s?|[$€£]\s?)(?<a>${NUMBER})` +
-    String.raw`|(?<b>${NUMBER})\s?(?<after>${CURRENCY_CODES})\b` +
-    String.raw`|\b(?<c>\d[\d,]*\.\d{2})\b`,
-  "gi",
-);
+
+// A code or symbol before the number, a code after it, or a number with two decimals. The group and
+// decimal marks are those of the language the reminder is written in.
+function moneyPattern({ group, decimal }: Separators): RegExp {
+  const mark = decimal === "." ? String.raw`\.` : decimal;
+  const number = String.raw`\d[\d${group}]*(?:${mark}\d+)?`;
+  return new RegExp(
+    String.raw`(?:(?<before>${CURRENCY_CODES})\s?|[$€£]\s?)(?<a>${number})` +
+      String.raw`|(?<b>${number})\s?(?<after>${CURRENCY_CODES})\b` +
+      String.raw`|\b(?<c>\d[\d${group}]*${mark}\d{2})\b`,
+    "gi",
+  );
+}
 
 type OwnWords = Pick<ReminderFacts, "clientName" | "work">;
 
@@ -43,24 +50,41 @@ export function hasLinkOrAddress(text: string, own: OwnWords): boolean {
   return LINK.test(rest) || ADDRESS.test(rest);
 }
 
+// "1.250,00" becomes "1250.00" for a language that groups with dots and has a decimal comma.
+function toPlainNumber(value: string, { group, decimal }: Separators): string {
+  const marks = new RegExp(String.raw`[${group}${decimal === "." ? String.raw`\.` : decimal}]+$`);
+  return value
+    .replace(marks, "")
+    .replace(new RegExp(`[${group}]`, "g"), "")
+    .replace(decimal, ".");
+}
+
 function isAmount(
   value: string,
   code: string | undefined,
   amount: ReminderFacts["amount"],
+  separators: Separators,
 ): boolean {
   if (code && code.toUpperCase() !== amount.currency) return false;
   try {
-    return toMinorUnits(value.replaceAll(",", "")) === toMinorUnits(amount.value);
+    return toMinorUnits(toPlainNumber(value, separators)) === toMinorUnits(amount.value);
   } catch {
     return false;
   }
 }
 
 // The model must not change what is owed, so every amount it writes has to be the invoice's.
-function amountsMatch(text: string, amount: ReminderFacts["amount"]): boolean {
-  return [...text.matchAll(MONEY)].every(({ groups }) => {
+function amountsMatch(
+  text: string,
+  amount: ReminderFacts["amount"],
+  language: ReminderLanguage,
+): boolean {
+  const separators = languageInfo(language);
+  return [...text.matchAll(moneyPattern(separators))].every(({ groups }) => {
     const value = groups?.a ?? groups?.b ?? groups?.c;
-    return value !== undefined && isAmount(value, groups?.before ?? groups?.after, amount);
+    return (
+      value !== undefined && isAmount(value, groups?.before ?? groups?.after, amount, separators)
+    );
   });
 }
 
@@ -69,8 +93,13 @@ function within(text: string, { min, max }: { min: number; max: number }): boole
 }
 
 // Returns the trimmed text when it is safe to show, otherwise null. The message is the body only;
-// the sign-off is added later, so room is kept for it.
-export function checkReminderText(facts: ReminderFacts, draft: ReminderText): ReminderText | null {
+// the sign-off is added later, so room is kept for it. Amounts are read the way `language` writes
+// numbers.
+export function checkReminderText(
+  facts: ReminderFacts,
+  draft: ReminderText,
+  language: ReminderLanguage = "en",
+): ReminderText | null {
   const subject = draft.subject.trim();
   const message = draft.message.trim();
   const body = {
@@ -83,6 +112,6 @@ export function checkReminderText(facts: ReminderFacts, draft: ReminderText): Re
   if (!message.includes(facts.invoiceNumber)) return null;
 
   const text = `${subject}\n${message}`;
-  if (hasLinkOrAddress(text, facts) || !amountsMatch(text, facts.amount)) return null;
+  if (hasLinkOrAddress(text, facts) || !amountsMatch(text, facts.amount, language)) return null;
   return { subject, message };
 }
