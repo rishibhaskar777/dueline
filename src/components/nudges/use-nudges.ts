@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { toLoadError, type LoadError } from "@/components/shared/load-error";
-import { getInvoices, getReminders } from "@/lib/api-client";
-import type { InvoiceSummary, ReminderDraft } from "@/types";
+import { getClients, getInvoices, getReminders } from "@/lib/api-client";
+import { clientKey } from "@/lib/risk/client-key";
+import type { ClientSummary, InvoiceSummary, PaySpeed, ReminderDraft } from "@/types";
 
 export interface Nudge {
   draft: ReminderDraft;
   invoice: InvoiceSummary;
+  // How long this client takes to pay, when anything of theirs was paid in the last 12 months.
+  paySpeed: PaySpeed | null;
 }
 
 type NudgesState =
@@ -20,10 +23,16 @@ interface NudgesData {
   retry: () => void;
 }
 
-function pair(drafts: ReminderDraft[], invoices: InvoiceSummary[]): Nudge[] {
+function pair(
+  drafts: ReminderDraft[],
+  invoices: InvoiceSummary[],
+  clients: ClientSummary[],
+): Nudge[] {
   return drafts.flatMap((draft) => {
     const invoice = invoices.find(({ id }) => id === draft.invoiceId);
-    return invoice ? [{ draft, invoice }] : [];
+    if (!invoice) return [];
+    const key = clientKey(invoice.client.name);
+    return [{ draft, invoice, paySpeed: clients.find((c) => c.key === key)?.paySpeed ?? null }];
   });
 }
 
@@ -33,10 +42,15 @@ export function useNudges(): NudgesData {
 
   useEffect(() => {
     let active = true;
-    Promise.all([getReminders(), getInvoices()]).then(
-      ([{ drafts, remindersLeftToday }, { invoices }]) => {
+    // The pay speed is a small extra: the cards still open without it.
+    Promise.all([getReminders(), getInvoices(), getClients().catch(() => [])]).then(
+      ([{ drafts, remindersLeftToday }, { invoices }, clients]) => {
         if (active) {
-          setState({ kind: "ready", nudges: pair(drafts, invoices), remindersLeftToday });
+          setState({
+            kind: "ready",
+            nudges: pair(drafts, invoices, clients),
+            remindersLeftToday,
+          });
         }
       },
       (error) => {

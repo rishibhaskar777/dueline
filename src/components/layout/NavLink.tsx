@@ -8,10 +8,12 @@ import { cn } from "@/lib/utils";
 interface NavLinkProps {
   href: string;
   icon: ReactNode;
+  // Replaces the link text as its accessible name, for a link that carries a count.
+  label?: string;
   children: ReactNode;
 }
 
-export function NavLink({ href, icon, children }: NavLinkProps) {
+export function NavLink({ href, icon, label, children }: NavLinkProps) {
   const pathname = usePathname();
   const active = pathname === href || pathname.startsWith(`${href}/`);
 
@@ -19,8 +21,9 @@ export function NavLink({ href, icon, children }: NavLinkProps) {
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
+      aria-label={label}
       className={cn(
-        "flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-sidebar-foreground outline-none transition-colors hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+        "flex min-h-11 items-center gap-3 md:min-h-9 rounded-lg px-3 text-sm font-medium text-sidebar-foreground outline-none transition-colors hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring",
         active && "bg-sidebar-accent text-white",
       )}
     >

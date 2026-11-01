@@ -12,8 +12,27 @@ const PAY_LINK = "https://www.sandbox.paypal.com/invoice/p/#ABC123";
 const message = "Hi Sam,\n\nInvoice INV-1 is overdue.\n\nThank you,\nRiya";
 
 describe("withPayLink", () => {
-  it("adds the pay link as the last paragraph", () => {
-    expect(withPayLink(`${message}\n`, PAY_LINK)).toBe(`${message}\n\nPay here: ${PAY_LINK}`);
+  it("puts the pay link as the last paragraph of the body, before the sign-off", () => {
+    expect(withPayLink(`${message}\n`, PAY_LINK)).toBe(
+      `Hi Sam,\n\nInvoice INV-1 is overdue.\n\nPay here: ${PAY_LINK}\n\nThank you,\nRiya`,
+    );
+  });
+
+  it("finds a sign-off of any wording, with a business name ending in a full stop", () => {
+    const text =
+      "Hallo Sam,\n\nRechnung INV-1 ist überfällig.\n\nVielen Dank,\nRiya\nRiya Designs Co.";
+    expect(withPayLink(text, PAY_LINK)).toBe(
+      `Hallo Sam,\n\nRechnung INV-1 ist überfällig.\n\nPay here: ${PAY_LINK}\n\nVielen Dank,\nRiya\nRiya Designs Co.`,
+    );
+  });
+
+  it("adds the link at the end when the message has no sign-off block", () => {
+    expect(withPayLink("Hi Sam,\n\nPlease pay INV-1 this week.", PAY_LINK)).toBe(
+      `Hi Sam,\n\nPlease pay INV-1 this week.\n\nPay here: ${PAY_LINK}`,
+    );
+    expect(withPayLink("One short line.", PAY_LINK)).toBe(
+      `One short line.\n\nPay here: ${PAY_LINK}`,
+    );
   });
 
   it("adds nothing when the invoice has no pay link", () => {
@@ -52,7 +71,9 @@ describe("emailLinks", () => {
   it("builds the body with the pay link and both links for a short message", () => {
     const links = emailLinks("a@b.example", "Subject", message, PAY_LINK);
 
-    expect(links.body.endsWith(`\n\nPay here: ${PAY_LINK}`)).toBe(true);
+    expect(links.body.endsWith("Thank you,\nRiya")).toBe(true);
+    expect(links.body.indexOf("Pay here:")).toBeLessThan(links.body.indexOf("Thank you,"));
+    expect(links.body).toBe(withPayLink(message, PAY_LINK));
     expect(links.mailto).toContain("Pay%20here%3A%20https%3A%2F%2Fwww.sandbox.paypal.com");
     expect(links.gmail.startsWith("https://mail.google.com/mail/?view=cm&fs=1&to=")).toBe(true);
   });

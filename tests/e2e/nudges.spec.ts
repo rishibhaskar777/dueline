@@ -72,7 +72,10 @@ test.describe("Nudges", () => {
     const mailto = await card.getByRole("link", { name: "Open in email app" }).getAttribute("href");
     expect(mailto).toMatch(/^mailto:[^?]+%40personal\.example\.com\?subject=/);
     expect(mailto).toContain("%0D%0A");
-    expect(decodeURIComponent(mailto ?? "")).toContain("Pay here: ");
+    const body = decodeURIComponent(mailto ?? "");
+    expect(body).toContain("Pay here: ");
+    // The sign-off closes the message: something follows the pay link after a blank line.
+    expect(body.split("Pay here: ")[1]).toMatch(/^\S+\r\n\r\n\S/);
 
     const gmail = await card.getByRole("link", { name: "Open in Gmail" }).getAttribute("href");
     expect(gmail).toMatch(/^https:\/\/mail\.google\.com\/mail\/\?view=cm&fs=1&to=[^&]+%40personal/);
@@ -94,7 +97,7 @@ test.describe("Nudges", () => {
 
     await card.getByRole("button", { name: "Copy message" }).click();
     const copied = await page.evaluate(() => navigator.clipboard.readText());
-    expect(copied).toMatch(/Pay here: /);
+    expect(copied).toMatch(/Pay here: \S+\r?\n\r?\n\S/);
 
     await card.getByRole("button", { name: "I sent it" }).click();
     await expect(card.getByText(/Recorded at/)).toContainText(
