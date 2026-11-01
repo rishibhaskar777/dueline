@@ -1,7 +1,7 @@
 import "server-only";
 import { financialYearRange } from "@/lib/date-math";
 import { convertToInr, estimatePayout } from "@/lib/money/payout";
-import { loadInvoices } from "@/lib/paypal/summaries";
+import { loadVisibleInvoices } from "@/lib/demo/visible-invoices";
 import { resolvePayouts } from "@/lib/payouts/resolve-payouts";
 import { normaliseName } from "@/lib/risk/client-key";
 import { getSettingsAndRates } from "@/lib/settings";
@@ -40,7 +40,10 @@ const sum = (values: number[]): number => values.reduce((total, value) => total 
 // Receipts are counted in the financial year they were paid in, by India date.
 export async function buildAnnualSummary(fy: string): Promise<AnnualSummary> {
   const { from, to } = financialYearRange(fy);
-  const [loaded, { settings, market }] = await Promise.all([loadInvoices(), getSettingsAndRates()]);
+  const [loaded, { settings, market }] = await Promise.all([
+    loadVisibleInvoices(),
+    getSettingsAndRates(),
+  ]);
   const paid = loaded.filter(({ summary }) => {
     const { paidOn } = summary;
     return summary.dueState === "paid" && paidOn !== null && paidOn >= from && paidOn <= to;

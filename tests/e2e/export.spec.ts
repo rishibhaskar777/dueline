@@ -3,10 +3,10 @@ import { expect, test } from "@playwright/test";
 const REGISTER_HEADER =
   "Invoice number,Client,Client country,Paid on (IST),Currency,Invoice amount,PayPal fee," +
   "Net received (foreign),Rupees received,Rupee source,Rate used,Rate date,Purpose code," +
-  "Purpose description,SAC,Under LUT,PayPal transaction ID";
+  "Purpose description,SAC,Under LUT,PayPal transaction ID,Proof";
 
 test.describe("Export register", () => {
-  test("last month lists PayPal's payments and the CSV starts with the expected columns", async ({
+  test("last month lists PayPal's payments and bank transfers, and the CSV says what proves each", async ({
     page,
   }) => {
     await page.goto("/export");
@@ -16,6 +16,8 @@ test.describe("Export register", () => {
     await expect(page.getByText("INV-0041").first()).toBeVisible();
     await expect(page.getByText("Halden Coffee Co.").first()).toBeVisible();
     await expect(page.getByText("INV-0043").first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Bank transfers" })).toBeVisible();
+    await expect(page.getByLabel("FIRC or e-BRC number").first()).toBeVisible();
 
     const [download] = await Promise.all([
       page.waitForEvent("download"),
@@ -31,6 +33,9 @@ test.describe("Export register", () => {
     const lines = text.replace(/^﻿/, "").split(/\r?\n/);
 
     expect(lines).toContain(REGISTER_HEADER);
-    expect(lines.filter((line) => line.startsWith("INV-"))).toHaveLength(3);
+    const rows = lines.filter((line) => line.startsWith("INV-"));
+    expect(rows.filter((line) => line.endsWith(",PayPal FIRA"))).toHaveLength(3);
+    expect(rows.filter((line) => line.endsWith(',"Bank, reference missing"'))).toHaveLength(4);
+    expect(rows).toHaveLength(7);
   });
 });

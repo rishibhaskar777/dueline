@@ -18,7 +18,7 @@ describe("toCsv", () => {
     const csv = toCsv(register(paypalRow));
     expect(csv.startsWith("﻿Invoice number,")).toBe(true);
     expect(lines(csv)[0]).toBe(
-      "Invoice number,Client,Client country,Paid on (IST),Currency,Invoice amount,PayPal fee,Net received (foreign),Rupees received,Rupee source,Rate used,Rate date,Purpose code,Purpose description,SAC,Under LUT,PayPal transaction ID",
+      "Invoice number,Client,Client country,Paid on (IST),Currency,Invoice amount,PayPal fee,Net received (foreign),Rupees received,Rupee source,Rate used,Rate date,Purpose code,Purpose description,SAC,Under LUT,PayPal transaction ID,Proof",
     );
     expect(csv.endsWith("\r\n")).toBe(true);
     expect(csv.replaceAll("\r\n", "")).not.toMatch(/[\r\n]/);
@@ -26,13 +26,13 @@ describe("toCsv", () => {
 
   it("writes a row PayPal reported with its fee, net and transaction ID", () => {
     expect(lines(toCsv(register(paypalRow)))[1]).toBe(
-      "INV-0042,Halden Coffee Co.,United States,2026-10-15,USD,450.00,20.10,429.90,35617,PayPal,,,P1099,Other services not included elsewhere,998391,Yes,5GX12345AB6789012",
+      "INV-0042,Halden Coffee Co.,United States,2026-10-15,USD,450.00,20.10,429.90,35617,PayPal,,,P1099,Other services not included elsewhere,998391,Yes,5GX12345AB6789012,PayPal FIRA",
     );
   });
 
   it("writes an estimated row with the rate and its date, and leaves PayPal's cells empty", () => {
     expect(lines(toCsv(register(estimateRow)))[1]).toBe(
-      "INV-0041,Halden Coffee Co.,United States,2026-10-07,USD,280.00,,,22824,Estimate,85.36,2026-10-07,P1099,Other services not included elsewhere,998391,No,",
+      "INV-0041,Halden Coffee Co.,United States,2026-10-07,USD,280.00,,,22824,Estimate,85.36,2026-10-07,P1099,Other services not included elsewhere,998391,No,,PayPal FIRA",
     );
   });
 
@@ -64,35 +64,66 @@ describe("toCsv", () => {
   it("leaves a missing purpose code and client country empty", () => {
     const row = { ...paypalRow, purposeCode: null, clientCountry: null, underLut: false };
     expect(lines(toCsv(register(row)))[1]).toBe(
-      "INV-0042,Halden Coffee Co.,,2026-10-15,USD,450.00,20.10,429.90,35617,PayPal,,,,,998391,No,5GX12345AB6789012",
+      "INV-0042,Halden Coffee Co.,,2026-10-15,USD,450.00,20.10,429.90,35617,PayPal,,,,,998391,No,5GX12345AB6789012,PayPal FIRA",
     );
   });
 
   it("writes only the header for an empty month", () => {
     const csv = toCsv({
+      ...exportRegister,
       month: "2026-09",
       rows: [],
+      outsideRows: [],
       totalInr: 0,
       totalsByCurrency: [],
       paypalInr: 0,
       estimatedInr: 0,
       missingPurposeCodes: 0,
-      recordedOutsidePayPal: [],
     });
     expect(lines(csv)).toHaveLength(2);
     expect(lines(csv)[1]).toBe("");
   });
 
-  it("lists invoices recorded outside PayPal after the rows, without changing the columns", () => {
-    const csv = toCsv({ ...register(paypalRow), recordedOutsidePayPal: ["INV-0007", "INV-0009"] });
+  describe("bank transfers", () => {
+    const bankRow = {
+      ...paypalRow,
+      fee: undefined,
+      net: undefined,
+      transactionId: undefined,
+      invoiceNumber: "INV-0007",
+      paidOn: "2026-10-02",
+      inrSource: "estimate" as const,
+      rateUsed: null,
+      rateDate: null,
+      bankReference: "FIRC/2026/0042" as string | null,
+    };
+    const withBank = (...outsideRows: (typeof bankRow)[]): ExportRegister => ({
+      ...register(paypalRow),
+      outsideRows,
+    });
 
-    expect(lines(csv).slice(2)).toEqual([
-      "",
-      "Recorded outside PayPal (not on PayPal's FIRA): 2",
-      '"INV-0007, INV-0009"',
-      "",
-    ]);
-    expect(lines(csv)[0]).toBe(lines(toCsv(register(paypalRow)))[0]);
+    it("writes a bank transfer in the same table, with no PayPal fee or transaction, and its proof", () => {
+      expect(lines(toCsv(withBank(bankRow)))[1]).toBe(
+        "INV-0007,Halden Coffee Co.,United States,2026-10-02,USD,450.00,,,35617,Estimate,,,P1099,Other services not included elsewhere,998391,Yes,,Bank FIRC/e-BRC FIRC/2026/0042",
+      );
+    });
+
+    it("says when the bank reference is missing", () => {
+      const csv = toCsv(withBank({ ...bankRow, bankReference: null }));
+      expect(lines(csv)[1]).toMatch(/,"Bank, reference missing"$/);
+    });
+
+    it("sorts both kinds of row by the day they were paid", () => {
+      const csv = lines(toCsv(withBank(bankRow)));
+      expect(csv[1].startsWith("INV-0007,")).toBe(true);
+      expect(csv[2].startsWith("INV-0042,")).toBe(true);
+    });
+
+    it("keeps a spreadsheet from running a reference that starts like a formula", () => {
+      const csv = toCsv(withBank({ ...bankRow, bankReference: "-1" }));
+      expect(csv).toContain("Bank FIRC/e-BRC -1");
+      expect(toCsv(withBank({ ...bankRow, clientName: "=1+1" }))).toContain(",'=1+1,");
+    });
   });
 });
 

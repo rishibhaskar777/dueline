@@ -5,13 +5,13 @@ import type { ExportRegister } from "@/types";
 import { describeRupeeSplit } from "./register-text";
 
 export function RegisterSummary({ register }: { register: ExportRegister }) {
-  const { rows, missingPurposeCodes } = register;
+  const { rows, outsideRows, missingPurposeCodes } = register;
 
   return (
     <dl aria-label="Summary" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <StatTile
         label="Invoices paid"
-        value={rows.length}
+        value={rows.length + outsideRows.length}
         note={`In ${formatMonth(register.month)}, India time`}
       />
       <StatTile

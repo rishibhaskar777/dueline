@@ -56,6 +56,7 @@ function serve(...summaries: InvoiceSummary[]): void {
       underLut: false,
       sac: null,
       paymentId: null,
+      marker: "dueline-request:test",
     })),
   );
 }
@@ -122,10 +123,12 @@ describe("the rupees of one payment", () => {
       payoutSource: "outside_paypal",
     });
     expect(body.totals).toMatchObject({
-      paidThisMonthPayPalInr: 0,
-      paidThisMonthOutsideInr: convertToInr(tandemLike.amount, PAID_DAY_USD_RATE),
+      paidLast30PayPalInr: 0,
+      paidLast30OutsideInr: convertToInr(tandemLike.amount, PAID_DAY_USD_RATE),
     });
     expect(register.rows).toEqual([]);
-    expect(register.recordedOutsidePayPal).toEqual([tandemLike.number]);
+    expect(register.outsideRows.map((row) => row.invoiceNumber)).toEqual([tandemLike.number]);
+    expect(register.bankInr).toBe(convertToInr(tandemLike.amount, PAID_DAY_USD_RATE));
+    expect(register.paypalFiraInr).toBe(0);
   });
 });

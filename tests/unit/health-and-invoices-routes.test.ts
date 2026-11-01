@@ -20,8 +20,13 @@ vi.mock("@/lib/paypal/sdk", () => ({
   transactionSearchController: () => ({ searchTransactions: sdk.searchTransactions }),
 }));
 
-const unpaid = unpaidFixture as PayPalInvoice;
-const paid = paidFixture as PayPalInvoice;
+// Invoices Dueline made carry a marker; the demo shows nothing else.
+const marked = (invoice: PayPalInvoice): PayPalInvoice => ({
+  ...invoice,
+  detail: { ...invoice.detail, memo: "dueline-request:test" },
+});
+const unpaid = marked(unpaidFixture as PayPalInvoice);
+const paid = marked(paidFixture as PayPalInvoice);
 
 beforeEach(() => {
   stubEnv({ DEMO_TODAY: "2026-10-17" });
@@ -129,8 +134,9 @@ describe("GET /api/invoices", () => {
       outstandingInr: 70915,
       overdueInr: 0,
       overdueCount: 0,
-      paidThisMonthPayPalInr: 35617,
-      paidThisMonthOutsideInr: 0,
+      paidLast30Inr: 35617,
+      paidLast30PayPalInr: 35617,
+      paidLast30OutsideInr: 0,
     });
   });
 

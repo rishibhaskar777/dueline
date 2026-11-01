@@ -34,7 +34,14 @@ function loaded(
   paymentId: string | null = null,
   sac: string | null = null,
 ): LoadedInvoice {
-  return { summary, amountDue: summary.amount, underLut, sac, paymentId };
+  return {
+    summary,
+    amountDue: summary.amount,
+    underLut,
+    sac,
+    paymentId,
+    marker: "dueline-request:test",
+  };
 }
 
 function serve(...invoices: LoadedInvoice[]): void {
@@ -83,7 +90,7 @@ describe("buildExportRegister", () => {
     expect((await buildExportRegister("2026-10")).rows).toEqual([]);
   });
 
-  it("lists invoices recorded as paid outside PayPal by number, apart from the rows and totals", async () => {
+  it("lists invoices recorded as paid outside PayPal as bank transfers, apart from the PayPal rows", async () => {
     serve(
       loaded(haldenLabelsInvoice),
       loaded({
@@ -111,9 +118,14 @@ describe("buildExportRegister", () => {
     const register = await buildExportRegister("2026-10");
 
     expect(register.rows.map((row) => row.invoiceNumber)).toEqual(["INV-0042"]);
-    expect(register.recordedOutsidePayPal).toEqual(["INV-0099", "INV-0102"]);
-    expect(register.totalInr).toBe(35617);
-    expect(register.totalsByCurrency).toEqual([{ currency: "USD", value: "450.00" }]);
+    expect(register.outsideRows.map((row) => row.invoiceNumber)).toEqual(["INV-0099", "INV-0102"]);
+    expect(register.outsideRows[0]).not.toHaveProperty("fee");
+    expect(register.outsideRows[0]).not.toHaveProperty("transactionId");
+    expect(register.outsideRows.map((row) => row.bankReference)).toEqual([null, null]);
+    expect(register.paypalFiraInr).toBe(35617);
+    expect(register.bankInr).toBeGreaterThan(0);
+    expect(register.totalInr).toBe(register.paypalFiraInr + register.bankInr);
+    expect(register.totalsByCurrency.map(({ currency }) => currency)).toEqual(["USD", "EUR"]);
     expect(register.missingPurposeCodes).toBe(0);
   });
 
@@ -256,22 +268,57 @@ describe("buildExportRegister", () => {
     serve(loaded(brightwellInvoice));
     expect(await buildExportRegister("2026-09")).toEqual({
       month: "2026-09",
+      latestMonthWithPayments: null,
       rows: [],
+      outsideRows: [],
       totalInr: 0,
+      paypalFiraInr: 0,
+      bankInr: 0,
       totalsByCurrency: [],
       paypalInr: 0,
       estimatedInr: 0,
       missingPurposeCodes: 0,
-      recordedOutsidePayPal: [],
     });
   });
 
-  it("takes a country from the last part of the client's location", async () => {
-    const client = { ...haldenLabelsInvoice.client, location: "Austin, Texas, United States" };
+  it("names the client's country from its code", async () => {
+    const client = { ...haldenLabelsInvoice.client, country: "PT" };
     serve(loaded({ ...haldenLabelsInvoice, client }));
-    expect((await buildExportRegister("2026-10")).rows[0].clientCountry).toBe("United States");
+    expect((await buildExportRegister("2026-10")).rows[0].clientCountry).toBe("Portugal");
 
-    serve(loaded({ ...haldenLabelsInvoice, client: { ...client, location: undefined } }));
+    serve(loaded({ ...haldenLabelsInvoice, client: { ...client, country: undefined } }));
     expect((await buildExportRegister("2026-10")).rows[0].clientCountry).toBeNull();
+  });
+
+  it("points at the newest month, up to the current one, that has a paid invoice", async () => {
+    serve(
+      loaded({ ...haldenMenuInvoice, id: "a", paidOn: "2026-08-12" }),
+      loaded({
+        ...haldenMenuInvoice,
+        id: "b",
+        paidOn: "2026-09-02",
+        paypalStatus: "MARKED_AS_PAID",
+      }),
+      loaded({ ...haldenMenuInvoice, id: "future", paidOn: "2026-11-02" }),
+      loaded(brightwellInvoice),
+    );
+
+    expect((await buildExportRegister("2026-10")).latestMonthWithPayments).toBe("2026-09");
+  });
+
+  it("gives a bank transfer the reference the freelancer saved", async () => {
+    serve(
+      loaded({
+        ...haldenMenuInvoice,
+        id: "bank",
+        paypalStatus: "MARKED_AS_PAID",
+        paidOn: "2026-10-12",
+      }),
+    );
+    await holder.store?.saveBankReference("bank", "FIRC/26/0042");
+
+    expect((await buildExportRegister("2026-10")).outsideRows[0].bankReference).toBe(
+      "FIRC/26/0042",
+    );
   });
 });

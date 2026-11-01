@@ -1,6 +1,6 @@
 import { cell, csvFile, csvLine } from "@/lib/export/csv-text";
 import { findPurposeCode } from "@/lib/export/purpose-codes";
-import type { ExportRegister, ExportRegisterRow } from "@/types";
+import type { ExportOutsideRow, ExportRegister, ExportRegisterRow } from "@/types";
 
 const HEADER = [
   "Invoice number",
@@ -20,18 +20,24 @@ const HEADER = [
   "SAC",
   "Under LUT",
   "PayPal transaction ID",
+  "Proof",
 ];
 
-function rowOf(row: ExportRegisterRow): string {
-  return csvLine([
+type Cells = (string | number | null)[];
+
+function leadingCells(row: ExportRegisterRow | ExportOutsideRow): Cells {
+  return [
     row.invoiceNumber,
     row.clientName,
     row.clientCountry,
     row.paidOn,
     row.foreign.currency,
     row.foreign.value,
-    row.fee?.value ?? null,
-    row.net?.value ?? null,
+  ];
+}
+
+function rupeeCells(row: ExportRegisterRow | ExportOutsideRow): Cells {
+  return [
     row.inrReceived,
     row.inrSource === "paypal" ? "PayPal" : "Estimate",
     row.rateUsed,
@@ -40,22 +46,41 @@ function rowOf(row: ExportRegisterRow): string {
     row.purposeCode ? (findPurposeCode(row.purposeCode)?.label ?? null) : null,
     row.sac,
     row.underLut ? "Yes" : "No",
+  ];
+}
+
+function payPalLine(row: ExportRegisterRow): string {
+  return csvLine([
+    ...leadingCells(row),
+    row.fee?.value ?? null,
+    row.net?.value ?? null,
+    ...rupeeCells(row),
     row.transactionId,
+    "PayPal FIRA",
   ]);
 }
 
-function outsideNote(numbers: string[]): string[] {
-  if (numbers.length === 0) return [];
-  const note = `Recorded outside PayPal (not on PayPal's FIRA): ${numbers.length}`;
-  return ["", cell(note), cell(numbers.join(", "))];
+function bankLine(row: ExportOutsideRow): string {
+  const proof = row.bankReference
+    ? `Bank FIRC/e-BRC ${row.bankReference}`
+    : "Bank, reference missing";
+  return csvLine([...leadingCells(row), null, null, ...rupeeCells(row), null, proof]);
 }
 
 // The freelancer's GSTIN goes in a comment line above the column headers, when the profile has one.
+// PayPal payments and bank transfers share the table, told apart by the Proof column.
 export function toCsv(register: ExportRegister, gstin: string | null = null): string {
+  const lines = [
+    ...register.rows.map((row) => ({ row, line: payPalLine(row) })),
+    ...register.outsideRows.map((row) => ({ row, line: bankLine(row) })),
+  ].sort(
+    (a, b) =>
+      a.row.paidOn.localeCompare(b.row.paidOn) ||
+      a.row.invoiceNumber.localeCompare(b.row.invoiceNumber, "en", { numeric: true }),
+  );
   return csvFile([
     ...(gstin ? [cell(`# GSTIN: ${gstin}`)] : []),
     csvLine(HEADER),
-    ...register.rows.map(rowOf),
-    ...outsideNote(register.recordedOutsidePayPal),
+    ...lines.map(({ line }) => line),
   ]);
 }

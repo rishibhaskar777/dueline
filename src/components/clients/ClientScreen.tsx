@@ -11,6 +11,7 @@ import { useLoad } from "@/components/shared/use-load";
 import { useToday } from "@/components/shared/use-today";
 import { buttonVariants } from "@/components/ui/button";
 import { getClientDetail } from "@/lib/api-client";
+import { countryName } from "@/lib/countries";
 import { formatRupees } from "@/lib/money/format";
 import { ClientNotes } from "./ClientNotes";
 import { ClientRepeats } from "./ClientRepeats";
@@ -59,6 +60,16 @@ export function ClientScreen({ clientKey }: { clientKey: string }) {
             {client.riskLevel && <RiskBadge level={client.riskLevel} />}
           </div>
           <p className="mt-2 max-w-2xl text-muted-foreground">{client.riskReason}</p>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            {[
+              client.email,
+              countryName(client.country),
+              client.paySpeed &&
+                `pays in ${client.paySpeed.averageDays} days on average, ${client.paySpeed.onTimePercent}% on time`,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
         </div>
         <Link
           href={`/invoices/new?client=${encodeURIComponent(client.name)}`}

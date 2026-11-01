@@ -18,6 +18,7 @@ const paid: LoadedInvoice = {
   underLut: true,
   sac: null,
   paymentId: null,
+  marker: "dueline-request:test",
 };
 
 function get(query: string): Promise<Response> {

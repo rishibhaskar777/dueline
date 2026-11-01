@@ -35,6 +35,7 @@ function serve(...summaries: InvoiceSummary[]): void {
       underLut: false,
       sac: null,
       paymentId: null,
+      marker: "dueline-request:test",
     })),
   );
 }
@@ -94,6 +95,7 @@ describe("GET /api/dashboard", () => {
       "feesLost",
       "forecast",
       "lateClients",
+      "paySpeed",
       "rateAlerts",
       "rates",
       "upcomingDue",

@@ -17,7 +17,14 @@ vi.mock("@/lib/paypal/summaries", () => ({ loadInvoices: paypal.loadInvoices }))
 
 // USD is 85 rupees on every date, EUR 102.
 function loaded(summary: InvoiceSummary): LoadedInvoice {
-  return { summary, amountDue: summary.amount, underLut: false, sac: null, paymentId: null };
+  return {
+    summary,
+    amountDue: summary.amount,
+    underLut: false,
+    sac: null,
+    paymentId: null,
+    marker: "dueline-request:test",
+  };
 }
 
 // An invoice recorded as paid outside PayPal: no fee, no markup.
