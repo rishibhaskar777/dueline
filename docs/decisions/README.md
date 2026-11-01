@@ -29,3 +29,5 @@ Copy [0000-template.md](0000-template.md) to start a new one.
 | [0016](0016-business-profile-and-gst.md)      | The business profile and GST exports    |
 | [0017](0017-money-views.md)                   | The money views                         |
 | [0018](0018-automation-and-comfort.md)        | Automation and comfort                  |
+| [0019](0019-many-freelancers.md)              | Serving many freelancers (a design)     |
+| [0020](0020-proof-and-hardening.md)           | Proof and hardening                     |
