@@ -1,7 +1,9 @@
 import "server-only";
-import { getEnv } from "@/lib/env";
+import { getEnv, isOffline } from "@/lib/env";
 import { fetchPayPal } from "./http";
 
+// Offline mode has no PayPal to ask; the fake takes any token.
+const OFFLINE_TOKEN = "offline-token";
 const REFRESH_MARGIN_MS = 5 * 60 * 1000;
 
 interface TokenResponse {
@@ -29,6 +31,7 @@ async function requestToken(): Promise<string> {
 }
 
 export async function getAccessToken(): Promise<string> {
+  if (isOffline()) return OFFLINE_TOKEN;
   if (cached && Date.now() < cached.expiresAt - REFRESH_MARGIN_MS) return cached.value;
   inFlight ??= requestToken().finally(() => {
     inFlight = undefined;

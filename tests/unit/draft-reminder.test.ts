@@ -149,6 +149,19 @@ describe("draftReminderText", () => {
     ).rejects.toBe(limit);
   });
 
+  it("writes the template without asking the model when running offline", async () => {
+    stubEnv({ ...AI_ENV, DUELINE_OFFLINE: "true" });
+    modelAnswers(goodAnswer);
+    const beforeModelCall = vi.fn(async () => {});
+
+    const draft = await draftReminderText(facts, "firm", { beforeModelCall });
+
+    expect(draft.source).toBe("template");
+    expect(draft.subject).toContain("INV-0044");
+    expect(generateText).not.toHaveBeenCalled();
+    expect(beforeModelCall).not.toHaveBeenCalled();
+  });
+
   it("sends the model no email address, even when the client is named by one", async () => {
     modelAnswers(goodAnswer);
     await draftReminderText({ ...facts, clientName: "accounts@okaforreyes.example.com" }, "gentle");

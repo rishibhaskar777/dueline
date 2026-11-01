@@ -2,7 +2,12 @@ import { readFileSync } from "node:fs";
 import { generateText } from "ai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ModelDraft } from "@/lib/ai/check-draft";
-import { ExtractionFailedError, extractInvoiceDraft } from "@/lib/ai/extract-invoice";
+import {
+  ExtractionFailedError,
+  extractionRequest,
+  extractInvoiceDraft,
+} from "@/lib/ai/extract-invoice";
+import { maskContacts } from "@/lib/privacy/mask";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
 import { haldenGuess, haldenGuessWithTerms, noObjectError } from "../support/ai";
@@ -273,5 +278,61 @@ describe("extractInvoiceDraft", () => {
       }),
     ).rejects.toBe(refusal);
     expect(generateText).not.toHaveBeenCalled();
+  });
+
+  it("asks the model every time, and stores nothing, when a fresh answer is wanted", async () => {
+    modelAnswers(haldenGuess);
+    await extractInvoiceDraft(haldenChat);
+    await extractInvoiceDraft(haldenChat, { fresh: true });
+    await extractInvoiceDraft(haldenChat, { fresh: true });
+    expect(generateText).toHaveBeenCalledTimes(3);
+
+    store = createMemoryStore();
+    await extractInvoiceDraft(haldenChat, { fresh: true });
+    await extractInvoiceDraft(haldenChat);
+    expect(generateText).toHaveBeenCalledTimes(5);
+  });
+});
+
+describe("extractionRequest", () => {
+  it("is what the model is sent, with the chat as masked data", async () => {
+    modelAnswers(haldenGuess);
+    await extractInvoiceDraft(haldenChat);
+    const masked = maskContacts(haldenChat).masked;
+    expect(extractionRequest(masked, "2026-10-28")).toEqual({
+      system: sentToModel().system,
+      prompt: sentToModel().prompt,
+    });
+    expect(extractionRequest(masked, "2026-10-28").prompt).not.toContain("haldencoffee.example");
+  });
+});
+
+describe("extractInvoiceDraft offline", () => {
+  beforeEach(() =>
+    stubEnv({ DUELINE_OFFLINE: "true", DEMO_TODAY: "2026-10-28", GEMINI_API_KEY: "test-key" }),
+  );
+
+  it("reads the chat in code, checks it like a model's answer and never calls the model", async () => {
+    const beforeModelCall = vi.fn(async () => {});
+    const result = await extractInvoiceDraft(haldenChat, { beforeModelCall });
+
+    expect(generateText).not.toHaveBeenCalled();
+    expect(beforeModelCall).not.toHaveBeenCalled();
+    expect(result.masked).toEqual({ emails: 1, phones: 0 });
+    expect(result.warnings).toEqual([NO_TERMS_WARNING]);
+    expect(result.draft.client).toEqual({
+      name: "Halden Coffee Co.",
+      email: "mike@haldencoffee.example",
+    });
+    expect(result.draft.items.map((item) => [item.quantity, item.unitAmount])).toEqual([
+      [3, "120.00"],
+      [2, "45.00"],
+    ]);
+  });
+
+  it("fails like the model does when the chat has no prices", async () => {
+    await expect(extractInvoiceDraft("Hello! Can we talk about a logo?")).rejects.toBeInstanceOf(
+      ExtractionFailedError,
+    );
   });
 });

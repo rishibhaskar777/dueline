@@ -42,6 +42,7 @@ describe("GET /api/health", () => {
       ai: "missing_key",
       storage: "memory",
       mode: "sandbox",
+      offline: false,
       today: "2026-10-17",
       demoClock: true,
     });

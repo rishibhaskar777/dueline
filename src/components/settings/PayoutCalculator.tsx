@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { FactRow } from "@/components/shared/FactRow";
+import { OFFLINE_RATES_LABEL } from "@/components/shared/rate-source";
+import { useOffline } from "@/components/shared/use-offline";
 import { usePayoutEstimate } from "@/components/shared/use-payout-estimate";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +26,8 @@ import {
 
 const CURRENCY_ITEMS = currencySchema.options.map((code) => ({ value: code, label: code }));
 
-function rateNote(estimate: PayoutEstimate): string {
+function rateNote(estimate: PayoutEstimate, offline: boolean): string {
+  if (offline) return `${OFFLINE_RATES_LABEL} of ${formatDate(estimate.marketRateDate)}`;
   const source = estimate.marketRateSource === "ecb" ? "ECB rate" : "Your own rate";
   return `${source} of ${formatDate(estimate.marketRateDate)}`;
 }
@@ -37,6 +40,7 @@ interface PayoutCalculatorProps {
 export function PayoutCalculator({ settingsVersion, rateSource }: PayoutCalculatorProps) {
   const [amount, setAmount] = useState("1000.00");
   const [currency, setCurrency] = useState<CurrencyCode>("USD");
+  const offline = useOffline();
   const parsed = moneySchema.safeParse({ currency, value: amount });
   const { estimate, failure } = usePayoutEstimate(
     parsed.success ? parsed.data : null,
@@ -103,7 +107,7 @@ export function PayoutCalculator({ settingsVersion, rateSource }: PayoutCalculat
             <FactRow label="PayPal fee" value={`− ${formatMoney(estimate.fee)}`} />
             <FactRow label="After fee" value={formatMoney(estimate.net)} />
             <FactRow
-              label={`Market rate (${rateNote(estimate)})`}
+              label={`Market rate (${rateNote(estimate, offline)})`}
               value={`₹${formatRate(estimate.marketRate)}`}
             />
             <FactRow label="PayPal's rate" value={`₹${formatRate(estimate.conversionRate)}`} />
@@ -123,8 +127,8 @@ export function PayoutCalculator({ settingsVersion, rateSource }: PayoutCalculat
 
       <p className="mt-4 text-xs text-muted-foreground">
         Estimate from PayPal India&apos;s published fees and{" "}
-        {rateSource === "ecb" ? "the ECB rate" : "your own rates"}. Your real figures appear on each
-        paid invoice.
+        {offline ? "the saved rates" : rateSource === "ecb" ? "the ECB rate" : "your own rates"}.
+        Your real figures appear on each paid invoice.
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
         PayPal&apos;s sandbox can charge differently from live pricing.

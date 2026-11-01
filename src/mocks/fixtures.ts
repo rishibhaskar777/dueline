@@ -345,6 +345,7 @@ export const health: HealthResponse = {
   ai: "ready",
   storage: "memory",
   mode: "sandbox",
+  offline: false,
   today: FIXTURE_TODAY,
   demoClock: false,
 };

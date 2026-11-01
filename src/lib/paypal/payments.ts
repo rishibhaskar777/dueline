@@ -1,9 +1,11 @@
 import "server-only";
 import { ApiError } from "@paypal/paypal-server-sdk";
 import { addDays } from "@/lib/clock";
+import { isOffline } from "@/lib/env";
 import { fromMinorUnits, toMinorUnits } from "@/lib/money/decimal";
 import type { ActualPayout, Money } from "@/types";
 import { isRecordedOutsidePayPal, latestPayment, PAYOUT_STATUSES, toMoney } from "./map";
+import { offlineCapture } from "./offline/transport";
 import { paymentsController, transactionSearchController } from "./sdk";
 import type { PayPalInvoice } from "./types";
 
@@ -84,6 +86,7 @@ export async function getActualPayout(invoice: PayPalInvoice): Promise<ActualPay
   }
   const payment = latestPayment(invoice);
   if (!payment?.payment_id || !payment.payment_date) return null;
+  if (isOffline()) return offlineCapture(payment.payment_id);
 
   try {
     const fromPayment = await fromCapture(payment.payment_id);

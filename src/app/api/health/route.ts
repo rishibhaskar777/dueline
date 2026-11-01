@@ -1,6 +1,6 @@
 import { connection } from "next/server";
 import { isDemoClock, today, todayInKolkata } from "@/lib/clock";
-import { getEnv } from "@/lib/env";
+import { getEnv, isOffline } from "@/lib/env";
 import { getAccessToken } from "@/lib/paypal/token";
 import { getStore, storageKind } from "@/lib/store";
 import type { HealthResponse } from "@/types";
@@ -17,9 +17,18 @@ async function checkPayPal(): Promise<HealthResponse["paypal"]> {
 
 function checkAi(): HealthResponse["ai"] {
   try {
-    return getEnv().GEMINI_API_KEY ? "ready" : "missing_key";
+    // Offline mode drafts from templates, which need no key.
+    return isOffline() || getEnv().GEMINI_API_KEY ? "ready" : "missing_key";
   } catch {
     return "missing_key";
+  }
+}
+
+function checkOffline(): boolean {
+  try {
+    return isOffline();
+  } catch {
+    return false;
   }
 }
 
@@ -44,5 +53,12 @@ function readClock(): Pick<HealthResponse, "today" | "demoClock"> {
 export async function GET(): Promise<Response> {
   await connection();
   const [paypal, storage] = await Promise.all([checkPayPal(), checkStorage()]);
-  return ok<HealthResponse>({ paypal, ai: checkAi(), storage, mode: "sandbox", ...readClock() });
+  return ok<HealthResponse>({
+    paypal,
+    ai: checkAi(),
+    storage,
+    mode: "sandbox",
+    offline: checkOffline(),
+    ...readClock(),
+  });
 }

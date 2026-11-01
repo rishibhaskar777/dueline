@@ -1,6 +1,8 @@
 import "server-only";
+import { isOffline } from "@/lib/env";
 import { PayPalApiError } from "./errors";
 import { fetchPayPal } from "./http";
+import { offlinePayPalFetch } from "./offline/transport";
 import { clearAccessToken, getAccessToken } from "./token";
 
 interface PayPalRequest {
@@ -28,6 +30,7 @@ async function send(path: string, request: PayPalRequest): Promise<Response> {
 }
 
 export async function paypalFetch<T>(path: string, request: PayPalRequest = {}): Promise<T> {
+  if (isOffline()) return offlinePayPalFetch<T>(path, request);
   let response: Response;
   try {
     response = await send(path, request);

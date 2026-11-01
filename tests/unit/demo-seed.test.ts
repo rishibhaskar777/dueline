@@ -6,7 +6,7 @@ import { PayPalApiError } from "@/lib/paypal/errors";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
 import { EMPTY_PROFILE } from "@/types";
-import { createFakePayPal, type FakePayPal } from "../support/fake-paypal";
+import { createFakePayPal, type FakePayPal } from "@/lib/paypal/offline/fake-paypal";
 import { stubEnv } from "../support/env";
 
 const paypal = vi.hoisted(() => ({

@@ -1,5 +1,6 @@
 import "server-only";
 import { addDays, today } from "@/lib/clock";
+import { isOffline } from "@/lib/env";
 import { getStore } from "@/lib/store";
 import type { Json } from "@/lib/store/store";
 import { z } from "zod";
@@ -36,6 +37,12 @@ let inFlight: Promise<MarketRates | null> | undefined;
 
 function historicalKey(date: string): string {
   return `ecb-rates:${date}`;
+}
+
+// Offline mode never asks the ECB, so the rates saved in settings (by default the ones in the code)
+// stand in, labelled as manual because nobody fetched them today.
+function usesSavedRates(settings: Settings): boolean {
+  return settings.rateSource === "manual" || isOffline();
 }
 
 function manualRates(settings: Settings): MarketRates {
@@ -82,7 +89,7 @@ async function storedEcbRates(): Promise<{ market: MarketRates; fetchedOn: strin
 }
 
 export async function getMarketRates(settings: Settings): Promise<MarketRates> {
-  if (settings.rateSource === "manual") return manualRates(settings);
+  if (usesSavedRates(settings)) return manualRates(settings);
 
   const stored = await storedEcbRates();
   if (stored?.fetchedOn === today()) return stored.market;
@@ -121,7 +128,7 @@ async function fetchRatesOn(date: string): Promise<EcbRates | null> {
 // its date can be earlier than the one asked for, and when it cannot be reached the rates in use
 // today stand in.
 export async function getRatesOn(date: string, settings: Settings): Promise<MarketRates> {
-  if (settings.rateSource === "manual" || date >= today()) return getMarketRates(settings);
+  if (usesSavedRates(settings) || date >= today()) return getMarketRates(settings);
 
   const found = (await storedRatesOn(date)) ?? (await fetchRatesOn(date));
   return found ? { ...found, source: "ecb" } : getMarketRates(settings);
@@ -160,7 +167,7 @@ async function fetchTrend(date: string): Promise<RatesWidget | null> {
 // Today's rate of each currency against the average of the last 30 days, fetched once a day. When
 // the history cannot be had, or the rates are typed in by hand, it is today's rates alone.
 export async function getRatesWidget(settings: Settings): Promise<RatesWidget> {
-  if (settings.rateSource === "ecb") {
+  if (!usesSavedRates(settings)) {
     const date = today();
     const trend = (await storedTrend(date)) ?? (await fetchTrend(date));
     if (trend) return trend;
