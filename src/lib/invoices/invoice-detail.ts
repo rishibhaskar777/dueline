@@ -7,6 +7,7 @@ import { isUnderLut, toMoney } from "@/lib/paypal/map";
 import { summarise } from "@/lib/paypal/summaries";
 import type { PayPalInvoice } from "@/lib/paypal/types";
 import { loadSummaries } from "@/lib/payouts/load-summaries";
+import { listClients } from "@/lib/clients/clients";
 import { clientKey } from "@/lib/risk/client-key";
 import { getStore } from "@/lib/store";
 import type { InvoiceDetailResponse, InvoiceItem, InvoiceSummary } from "@/types";
@@ -51,12 +52,14 @@ async function summaryOf(invoice: PayPalInvoice): Promise<InvoiceSummary> {
 export async function getInvoiceDetail(id: string): Promise<InvoiceDetailResponse> {
   const invoice = await readInvoice(id);
   const store = getStore();
-  const [summary, history, events, hiddenIds] = await Promise.all([
+  const [summary, history, events, hiddenIds, clients] = await Promise.all([
     summaryOf(invoice),
     store.reminderHistory(id),
     store.latestActivity(ACTIVITY_LOOKBACK),
     store.listHiddenInvoices(),
+    listClients(),
   ]);
+  const key = clientKey(summary.client.name);
   const reminders = history
     .map(({ tone, sentAt, channel }) => ({ tone, sentAt, channel }))
     .sort((a, b) => a.sentAt.localeCompare(b.sentAt));
@@ -67,7 +70,8 @@ export async function getInvoiceDetail(id: string): Promise<InvoiceDetailRespons
     timeline: buildTimeline({ invoice, summary, reminders, activity, today: today() }),
     reminders,
     details: {
-      clientKey: clientKey(summary.client.name),
+      clientKey: key,
+      clientPaySpeed: clients.find((client) => client.key === key)?.paySpeed ?? null,
       items: itemsOf(invoice),
       note: invoice.detail.note ?? "",
       underLut: isUnderLut(invoice),

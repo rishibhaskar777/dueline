@@ -65,8 +65,8 @@ export function InvoiceActions({ invoice, details, today, onChanged }: InvoiceAc
             onChanged={onChanged}
           />
         )}
-        {actions.cancel && (
-          <Button type="button" variant="outline" onClick={() => setPanel("cancel")}>
+        {actions.cancel && panel !== "cancel" && (
+          <Button type="button" variant="destructive" onClick={() => setPanel("cancel")}>
             Cancel invoice
           </Button>
         )}

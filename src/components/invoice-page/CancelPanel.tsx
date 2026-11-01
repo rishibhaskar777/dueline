@@ -33,10 +33,7 @@ export function CancelPanel({ invoiceId, invoiceNumber, onDone, onClose }: Cance
       <h3 id="cancel-title" className="font-semibold">
         Cancel invoice {invoiceNumber}?
       </h3>
-      <p className="text-sm">
-        Your client will no longer be able to pay it on PayPal. You can&apos;t undo this from
-        Dueline.
-      </p>
+      <p className="text-sm">PayPal will mark it cancelled. This cannot be undone.</p>
       <label className="flex items-start gap-2 text-sm">
         <Checkbox checked={notifyClient} onCheckedChange={setNotifyClient} className="mt-0.5" />
         Email the client about the cancellation
@@ -48,10 +45,10 @@ export function CancelPanel({ invoiceId, invoiceNumber, onDone, onClose }: Cance
       )}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" variant="destructive" disabled={pending}>
-          {pending ? "Cancelling…" : "Cancel this invoice"}
+          {pending ? "Cancelling…" : "Cancel invoice"}
         </Button>
         <Button type="button" variant="outline" disabled={pending} onClick={onClose}>
-          Keep invoice
+          Keep it
         </Button>
       </div>
     </form>
