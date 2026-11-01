@@ -59,8 +59,8 @@ describe("the chat fixtures", () => {
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name);
 
-  it("hold 24 chats that each have an expected answer", () => {
-    expect(ids).toHaveLength(24);
+  it("hold 25 chats that each have an expected answer", () => {
+    expect(ids).toHaveLength(25);
     for (const id of ids) {
       expect(() => expectedOf(id), id).not.toThrow();
       expect(chatOf(id).length, id).toBeLessThanOrEqual(6000);
@@ -112,6 +112,11 @@ describe("scoreExtraction", () => {
     });
     expect(score.misses).toEqual([]);
     expect(score.unexpectedWarnings).toEqual([]);
+  });
+
+  it("checks the country only for a chat that states one", () => {
+    expect(scoreOf("25-country-stated").passed).toMatchObject({ country: true });
+    expect(scoreOf("01-logo-pack").passed).not.toHaveProperty("country");
   });
 
   it("fails the items and prices of a draft that applied a discount nobody agreed to", () => {
@@ -207,9 +212,9 @@ describe("tally and renderEvaluation", () => {
     expect(report).toContain("| Items exactly right | 1 of 2 | 50% |");
     expect(report).toContain("| Injection flagged | 0 of 0 | n/a |");
     expect(report).toContain(
-      "| 01-logo-pack | pass | pass | pass | pass | pass | pass | n/a | pass |",
+      "| 01-logo-pack | pass | pass | n/a | pass | pass | pass | pass | n/a | pass |",
     );
-    expect(report).toContain("| 13-hinglish-logo | pass | pass | FAIL | pass |");
+    expect(report).toContain("| 13-hinglish-logo | pass | pass | n/a | FAIL | pass |");
     expect(report).toContain("| 99-not-run | not run: the allowance is used up |");
     expect(report).toContain("**13-hinglish-logo** (Hinglish)");
     expect(report).toContain("- items: expected 1 x 150.00, 2 x 30.00");

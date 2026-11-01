@@ -20,6 +20,8 @@ export const expectedExtractionSchema = z.object({
   // What the chat is there to test, shown in the report.
   summary: z.string(),
   client: z.string().nullable(),
+  // The client's country code, for a chat that states where the client is. Left out otherwise.
+  country: z.string().optional(),
   // Null when the chat names no supported currency, which must raise a warning.
   currency: currencySchema.nullable(),
   items: z.array(
@@ -53,6 +55,7 @@ export interface ExtractionOutcome {
 const CHECKS = [
   "client",
   "currency",
+  "country",
   "items",
   "prices",
   "due",
@@ -161,6 +164,15 @@ export function scoreExtraction(
     );
   }
 
+  if (hasDraft && expected.country !== undefined) {
+    const gotCountry = draft?.client.country ?? "none";
+    note(
+      "country",
+      gotCountry === expected.country,
+      `expected ${expected.country}, got ${gotCountry}`,
+    );
+  }
+
   note(
     "items",
     itemsMatch(expected.items, items),
@@ -244,6 +256,7 @@ interface EvaluationRun {
 const LABELS: Record<Check, string> = {
   client: "Client",
   currency: "Currency",
+  country: "Country kept only when stated",
   items: "Items exactly right",
   prices: "Prices right",
   due: "Due date rule",

@@ -110,7 +110,13 @@ export function toPayPalInvoice(
     },
     ...(invoicer ? { invoicer } : {}),
     primary_recipients: [
-      { billing_info: { email_address: draft.client.email, business_name: draft.client.name } },
+      {
+        billing_info: {
+          email_address: draft.client.email,
+          business_name: draft.client.name,
+          ...(draft.client.country ? { address: { country_code: draft.client.country } } : {}),
+        },
+      },
     ],
     items: draft.items.map((item) => ({
       name: item.name,

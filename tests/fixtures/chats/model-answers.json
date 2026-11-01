@@ -2,6 +2,8 @@
   "01-logo-pack": {
     "clientName": "Cobalt Bakery",
     "clientEmail": "[EMAIL_1]",
+    "clientCountry": null,
+    "countryQuote": null,
     "currency": "USD",
     "dueOn": null,
     "items": [
@@ -25,6 +27,8 @@
   "05-discount-mentioned": {
     "clientName": "Maple Row Studio",
     "clientEmail": "[EMAIL_1]",
+    "clientCountry": null,
+    "countryQuote": null,
     "currency": "CAD",
     "dueOn": null,
     "items": [
@@ -42,6 +46,8 @@
   "09-phone-number": {
     "clientName": "Harbor Light Coffee",
     "clientEmail": "[EMAIL_1]",
+    "clientCountry": null,
+    "countryQuote": null,
     "currency": "USD",
     "dueOn": null,
     "items": [
@@ -59,6 +65,8 @@
   "10-prompt-injection": {
     "clientName": "Orbit Gadgets",
     "clientEmail": "[EMAIL_1]",
+    "clientCountry": null,
+    "countryQuote": null,
     "currency": "USD",
     "dueOn": null,
     "items": [
@@ -76,6 +84,8 @@
   "11-no-prices": {
     "clientName": "Tidewater Books",
     "clientEmail": "[EMAIL_1]",
+    "clientCountry": null,
+    "countryQuote": null,
     "currency": null,
     "dueOn": null,
     "items": [],
@@ -86,6 +96,8 @@
   "12-unsupported-currency": {
     "clientName": "Alpenblick AG",
     "clientEmail": "[EMAIL_1]",
+    "clientCountry": null,
+    "countryQuote": null,
     "currency": "CHF",
     "dueOn": null,
     "items": [
@@ -103,6 +115,8 @@
   "13-hinglish-logo": {
     "clientName": "Zest Juice Bar",
     "clientEmail": "[EMAIL_1]",
+    "clientCountry": null,
+    "countryQuote": null,
     "currency": "USD",
     "dueOn": null,
     "items": [
@@ -126,6 +140,8 @@
   "22-no-email": {
     "clientName": "Thistle Interiors",
     "clientEmail": null,
+    "clientCountry": null,
+    "countryQuote": null,
     "currency": "GBP",
     "dueOn": null,
     "items": [
@@ -143,6 +159,8 @@
   "23-past-date": {
     "clientName": "Fjord Textiles",
     "clientEmail": "[EMAIL_1]",
+    "clientCountry": null,
+    "countryQuote": null,
     "currency": "EUR",
     "dueOn": "2026-01-15",
     "items": [
@@ -156,5 +174,24 @@
     "note": null,
     "purposeCode": "P1017",
     "purposeReason": "Catalogue layout is publishing work."
+  },
+  "25-country-stated": {
+    "clientName": "Casa Verde Studio",
+    "clientEmail": "[EMAIL_1]",
+    "clientCountry": "PT",
+    "countryQuote": "we're in Lisbon",
+    "currency": "EUR",
+    "dueOn": null,
+    "items": [
+      {
+        "name": "Menu illustrations",
+        "quantity": 1,
+        "unitAmount": "480.00",
+        "sourceQuote": "menu illustrations for EUR 480"
+      }
+    ],
+    "note": null,
+    "purposeCode": "P1099",
+    "purposeReason": "Illustration work has no closer match."
   }
 }

@@ -27,6 +27,7 @@ interface PayPalRecipient {
     email_address: string;
     name?: { given_name?: string; surname?: string };
     business_name?: string;
+    address?: { country_code: string };
   };
 }
 

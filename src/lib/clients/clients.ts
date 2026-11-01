@@ -14,7 +14,7 @@ export async function loadClientGroups(): Promise<ClientGroup[]> {
 
 export async function listClients(): Promise<ClientSummary[]> {
   return (await loadClientGroups())
-    .map(summariseClient)
+    .map((group) => summariseClient(group, today()))
     .sort((a, b) => b.outstandingInr - a.outstandingInr || a.name.localeCompare(b.name));
 }
 
@@ -27,7 +27,7 @@ async function findGroup(key: string): Promise<ClientGroup> {
 export async function getClientDetail(key: string): Promise<ClientDetail> {
   const group = await findGroup(key);
   return {
-    client: summariseClient(group),
+    client: summariseClient(group, today()),
     invoices: group.invoices,
     risk: riskOf(group),
     notes: await getStore().getClientNotes(key),

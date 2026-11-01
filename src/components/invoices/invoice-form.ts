@@ -25,6 +25,8 @@ export interface FormItem {
 export interface InvoiceForm {
   clientName: string;
   clientEmail: string;
+  // ISO country code, "" when not set.
+  clientCountry: string;
   currency: CurrencyCode;
   dueOn: string;
   items: FormItem[];
@@ -71,6 +73,7 @@ export function blankForm(defaultSac = ""): InvoiceForm {
   return {
     clientName: "",
     clientEmail: "",
+    clientCountry: "",
     currency: "USD",
     dueOn: "",
     items: [newItem(defaultSac)],
@@ -89,6 +92,7 @@ export function formFromDraft(draft: InvoiceDraft): InvoiceForm {
     ...blankForm(),
     clientName: draft.client.name,
     clientEmail: draft.client.email,
+    clientCountry: draft.client.country ?? "",
     currency: draft.currency,
     dueOn: draft.dueOn ?? "",
     items: draft.items.map((item) => ({
@@ -205,7 +209,11 @@ export function toRequest(form: InvoiceForm, requestId: string, today?: string):
   const note = form.note.trim();
   const parsed = createInvoiceRequestSchema.safeParse({
     draft: {
-      client: { name: form.clientName.trim(), email: form.clientEmail.trim() },
+      client: {
+        name: form.clientName.trim(),
+        email: form.clientEmail.trim(),
+        ...(form.clientCountry ? { country: form.clientCountry } : {}),
+      },
       currency: form.currency,
       dueOn: form.dueOn,
       items: form.items.map((item) => ({
@@ -253,6 +261,7 @@ export function formFromInvoice(
     ...blankForm(defaultSac),
     clientName: invoice.client.name,
     clientEmail: invoice.client.email,
+    clientCountry: invoice.client.country ?? "",
     currency: invoice.amount.currency,
     items: details.items.map((item) => ({
       key: crypto.randomUUID(),
