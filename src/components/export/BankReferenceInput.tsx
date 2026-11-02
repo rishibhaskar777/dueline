@@ -67,10 +67,13 @@ export function BankReferenceInput({
         onChange={(event) => dispatch({ type: "type", text: event.target.value })}
         onKeyDown={onKeyDown}
         onBlur={() => void save()}
-        className={cn("h-9 max-md:h-11", !state.saved && !state.typed && "border-due-soon")}
+        className={cn(
+          "h-10 rounded-xl text-[15px] font-medium md:w-[200px] max-md:h-11",
+          !state.saved && !state.typed && "border-due-soon",
+        )}
       />
       {state.error && (
-        <p id={errorId} role="alert" className="text-xs text-late">
+        <p id={errorId} role="alert" className="text-sm font-semibold text-late">
           {state.error}
         </p>
       )}

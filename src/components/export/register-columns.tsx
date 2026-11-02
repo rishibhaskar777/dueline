@@ -4,6 +4,7 @@ import { findPurposeCode } from "@/lib/export/purpose-codes";
 import { formatDate } from "@/lib/format-date";
 import { formatMoney, formatRate, formatRupees } from "@/lib/money/format";
 import type { ExportRegisterRow, Money } from "@/types";
+import { InvoiceNumberCell } from "./InvoiceNumberCell";
 
 type Params = ICellRendererParams<ExportRegisterRow>;
 
@@ -37,14 +38,26 @@ function purposeTooltip(row: ExportRegisterRow): string {
   return findPurposeCode(row.purposeCode)?.label ?? "";
 }
 
-export const registerColumns: ColDef<ExportRegisterRow>[] = [
+function ClientWithTransactionCell({ data }: Params) {
+  if (!data) return null;
+  return (
+    <span className="flex flex-col justify-center leading-tight">
+      <span className="truncate">{data.clientName}</span>
+      <span className="font-mono text-xs break-all whitespace-normal text-muted-foreground">
+        {data.transactionId ?? "–"}
+      </span>
+    </span>
+  );
+}
+
+const fullColumns: ColDef<ExportRegisterRow>[] = [
   {
     headerName: "Paid on",
     field: "paidOn",
     valueFormatter: ({ value }) => formatDate(value),
     width: 115,
   },
-  { headerName: "Invoice", field: "invoiceNumber", width: 105 },
+  { headerName: "Invoice", field: "invoiceNumber", cellRenderer: InvoiceNumberCell, width: 110 },
   { headerName: "Client", field: "clientName", width: 150 },
   {
     headerName: "Amount",
@@ -60,18 +73,20 @@ export const registerColumns: ColDef<ExportRegisterRow>[] = [
     cellRenderer: RupeesCell,
     tooltipValueGetter: ({ data }) => (data ? rupeesTooltip(data) : ""),
     type: "rightAligned",
-    width: 150,
+    width: 175,
   },
   {
-    headerName: "Purpose code",
+    headerName: "Code",
+    headerTooltip: "Purpose code",
     field: "purposeCode",
     cellRenderer: PurposeCell,
     tooltipValueGetter: ({ data }) => (data ? purposeTooltip(data) : ""),
-    width: 125,
+    width: 90,
   },
   {
     headerName: "LUT",
     field: "underLut",
+    cellDataType: false,
     valueFormatter: ({ value }) => (value ? "Yes" : "No"),
     width: 75,
   },
@@ -80,10 +95,11 @@ export const registerColumns: ColDef<ExportRegisterRow>[] = [
     field: "transactionId",
     valueFormatter: ({ value }) => value ?? "–",
     cellClass: "font-mono text-[13px]",
-    width: 175,
+    width: 260,
   },
   {
-    headerName: "PayPal fee",
+    headerName: "Fee",
+    headerTooltip: "PayPal fee",
     valueGetter: ({ data }) => (data?.fee ? Number(data.fee.value) : null),
     valueFormatter: ({ data }) => moneyOrDash(data?.fee),
     type: "rightAligned",
@@ -99,3 +115,20 @@ export const registerColumns: ColDef<ExportRegisterRow>[] = [
     width: 120,
   },
 ];
+
+// Under 1280 px the LUT and Fee columns go and the transaction ID sits under the client name, which
+// leaves enough width for every other value to show in full. The fee is still the gap between
+// Amount and Net.
+const COMPACT_HIDDEN = new Set(["LUT", "Fee", "Transaction ID"]);
+
+export const compactRegisterColumns: ColDef<ExportRegisterRow>[] = fullColumns
+  .filter((column) => !COMPACT_HIDDEN.has(column.headerName ?? ""))
+  .map((column) =>
+    column.field === "clientName"
+      ? { ...column, cellRenderer: ClientWithTransactionCell, width: 200 }
+      : column.field === "paidOn"
+        ? { ...column, width: 125 }
+        : column,
+  );
+
+export const registerColumns = fullColumns;

@@ -1,7 +1,3 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { addMonths } from "@/lib/date-math";
 import { formatMonth } from "@/lib/format-date";
 import { monthSchema } from "@/types";
@@ -12,37 +8,40 @@ interface MonthPickerProps {
   onChange: (month: string) => void;
 }
 
+const ARROW =
+  "flex size-9 items-center justify-center rounded-full bg-chip text-base font-bold transition-colors hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50 max-md:size-11";
+
 export function MonthPicker({ month, currentMonth, onChange }: MonthPickerProps) {
   return (
-    <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
-      <div className="flex items-center gap-2">
-        <Button
+    <div className="flex flex-wrap items-center gap-3">
+      <div className="surface inline-flex items-center gap-1.5 p-1 [--surface-radius:1000px]">
+        <button
           type="button"
-          variant="outline"
-          size="icon-lg"
           aria-label="Previous month"
           onClick={() => onChange(addMonths(month, -1))}
+          className={ARROW}
         >
-          <ChevronLeft aria-hidden="true" />
-        </Button>
-        <h2 aria-live="polite" className="min-w-40 text-center text-xl font-semibold">
+          <span aria-hidden="true">‹</span>
+        </button>
+        <h2
+          aria-live="polite"
+          className="min-w-40 px-2 text-center font-heading text-[22px] font-extrabold tracking-[-0.3px]"
+        >
           {formatMonth(month)}
         </h2>
-        <Button
+        <button
           type="button"
-          variant="outline"
-          size="icon-lg"
           aria-label="Next month"
           disabled={month >= currentMonth}
           onClick={() => onChange(addMonths(month, 1))}
+          className={ARROW}
         >
-          <ChevronRight aria-hidden="true" />
-        </Button>
+          <span aria-hidden="true">›</span>
+        </button>
       </div>
-      <div className="grid gap-1.5">
-        <Label htmlFor="register-month">Go to month</Label>
-        <Input
-          id="register-month"
+      <label className="surface flex h-11 items-center gap-2 px-4 text-[15px] font-semibold [--surface-radius:1000px] focus-within:ring-2 focus-within:ring-ring">
+        <span>Go to month</span>
+        <input
           type="month"
           value={month}
           max={currentMonth}
@@ -51,9 +50,9 @@ export function MonthPicker({ month, currentMonth, onChange }: MonthPickerProps)
               onChange(target.value);
             }
           }}
-          className="w-44"
+          className="bg-transparent text-[15px] font-medium outline-none"
         />
-      </div>
+      </label>
     </div>
   );
 }

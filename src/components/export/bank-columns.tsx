@@ -4,6 +4,7 @@ import { formatDate } from "@/lib/format-date";
 import { formatMoney, formatRupees } from "@/lib/money/format";
 import type { ExportOutsideRow } from "@/types";
 import { BankReferenceInput } from "./BankReferenceInput";
+import { InvoiceNumberCell } from "./InvoiceNumberCell";
 
 type Params = ICellRendererParams<ExportOutsideRow>;
 
@@ -31,7 +32,7 @@ export const bankColumns: ColDef<ExportOutsideRow>[] = [
     valueFormatter: ({ value }) => formatDate(value),
     width: 115,
   },
-  { headerName: "Invoice", field: "invoiceNumber", width: 105 },
+  { headerName: "Invoice", field: "invoiceNumber", cellRenderer: InvoiceNumberCell, width: 110 },
   { headerName: "Client", field: "clientName", width: 170 },
   {
     headerName: "Amount",
@@ -50,7 +51,8 @@ export const bankColumns: ColDef<ExportOutsideRow>[] = [
     width: 125,
   },
   {
-    headerName: "Purpose code",
+    headerName: "Code",
+    headerTooltip: "Purpose code",
     field: "purposeCode",
     valueFormatter: ({ value }) => value ?? "Missing",
     tooltipValueGetter: ({ data }) => (data ? purposeTooltip(data) : ""),
