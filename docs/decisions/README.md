@@ -33,3 +33,4 @@ Copy [0000-template.md](0000-template.md) to start a new one.
 | [0020](0020-proof-and-hardening.md)                  | Proof and hardening                                     |
 | [0021](0021-demo-generations-and-human-reminders.md) | Demo generations, and reminders that read like a person |
 | [0022](0022-screens-that-answer.md)                  | Screens that answer their question                      |
+| [0023](0023-visual-redesign.md)                      | A visual redesign: glass surfaces and new fonts         |

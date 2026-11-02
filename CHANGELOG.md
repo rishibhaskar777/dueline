@@ -7,6 +7,11 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed (Redesign, phase 1)
+
+- A new look for every screen ([decision 0023](docs/decisions/0023-visual-redesign.md)): Outfit and Figtree fonts, a new colour palette in both themes, an animated page background, frosted-glass cards, pill buttons and rounded fields. Nothing moved and no text changed. The reminder tone buttons and the status and risk badges follow the same style, and the due line's hover card is drawn outside its card so it keeps its place.
+- Added a sliding-pill segmented control (`Segmented`) for the next phases; no screen uses it yet.
+
 ### Added
 
 - Screens that answer their question ([decision 0022](docs/decisions/0022-screens-that-answer.md)). The invoice number in the Receivables table opens the invoice page and PayPal is an icon link, so all eight columns fit a 1366 px laptop; the risk badge sits under the client's name. The invoice page lists issued and due dates, days late, the client's email and country, the work, the purpose code with its label, the LUT line with its ARN and the client's average days to get paid, and asks in the page before cancelling. The due line moves an end label that would touch the Today line, marks a line that starts before the chart and shows every invoice number.

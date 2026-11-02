@@ -633,6 +633,14 @@ a top bar (`SidebarShell`), `useIsPhone` swaps the grids for card lists and the 
 labels. The command palette (`CommandPalette`) builds its commands from the pages, the clients and
 the invoices (`buildCommands`) and searches them with `filterByQuery`.
 
+The design system is in `src/app/globals.css`: the colour and glass tokens for both themes, the
+`surface`, `surface-strong`, `glass-track` and `glass-indicator` utilities (with a solid fallback
+where `backdrop-filter` is missing) and the page background's classes. `Backdrop` draws that
+background once from the root layout, and its colours switch with the `.dark` class. Fonts are Outfit
+and Figtree through `next/font/google`. `useSlidingIndicator` and `pickIndicator` place the pill under
+the hovered, focused, clicked or active item, and `Segmented` uses them
+([decision 0023](decisions/0023-visual-redesign.md)).
+
 ## Demo story and reset
 
 `src/lib/demo/story.ts` is pure data and a builder, and owns the story's client names, countries,
