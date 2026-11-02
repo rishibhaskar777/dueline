@@ -1,11 +1,15 @@
+"use client";
+
+import { useCallback } from "react";
 import Link from "next/link";
 import { clientHref } from "@/components/clients/client-href";
-import { countryName } from "@/lib/countries";
 import { findPurposeCode } from "@/lib/export/purpose-codes";
 import { formatDate } from "@/lib/format-date";
 import { formatDays } from "@/lib/format-days";
+import { getClients } from "@/lib/api-client";
+import { useLoad } from "@/components/shared/use-load";
 import type { InvoiceDetailResponse } from "@/types";
-import { dueSentence, lutSentence } from "./invoice-facts";
+import { clientLine, dueSentence, lutSentence } from "./invoice-facts";
 
 interface InvoiceFactsProps extends Pick<InvoiceDetailResponse, "invoice" | "details"> {
   today: string;
@@ -20,10 +24,26 @@ function Fact({ label, children }: { label: string; children: React.ReactNode })
   );
 }
 
+// The client's country is on the invoice's billing address; an invoice without one borrows the
+// country from the client's other invoices.
+function useClientCountry({
+  invoice,
+  details,
+}: Pick<InvoiceDetailResponse, "invoice" | "details">) {
+  const own = invoice.client.country ?? null;
+  const load = useCallback(async () => {
+    if (own) return own;
+    const clients = await getClients();
+    return clients.find(({ key }) => key === details.clientKey)?.country ?? null;
+  }, [own, details.clientKey]);
+  const { state } = useLoad(load);
+  return state.kind === "ready" ? state.data : own;
+}
+
 export function InvoiceFacts({ invoice, details, today }: InvoiceFactsProps) {
   const purpose = invoice.purposeCode ? findPurposeCode(invoice.purposeCode) : undefined;
   const speed = details.clientPaySpeed;
-  const [local, domain] = invoice.client.email.split("@");
+  const country = useClientCountry({ invoice, details });
   return (
     <dl
       aria-label="Invoice facts"
@@ -32,11 +52,9 @@ export function InvoiceFacts({ invoice, details, today }: InvoiceFactsProps) {
       <Fact label="Issued">{formatDate(invoice.issuedOn)}</Fact>
       <Fact label="Due">{dueSentence(invoice, today)}</Fact>
       <Fact label="Client">
-        <span className="block break-words">
-          {local}
-          <wbr />@{domain}
+        <span className="[overflow-wrap:anywhere]">
+          {clientLine(invoice.client.email, country)}
         </span>
-        {countryName(invoice.client.country ?? null)}
       </Fact>
       <Fact label="Work">{invoice.work}</Fact>
       <Fact label="Purpose code">

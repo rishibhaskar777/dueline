@@ -70,12 +70,16 @@ function wasUnpaidOn(day: string, input: TimelineInput): boolean {
 }
 
 // Two dates every invoice has: the day it fell due, and the day after, when an unpaid invoice
-// became overdue. Neither is shown before it has come.
+// became overdue. Neither is shown before it has come, and the due date is left out when the
+// payment came on or before it, since it would read as if it fell due after the payment.
 function milestones(input: TimelineInput): TimelineEvent[] {
   const { invoice, summary, today } = input;
   if (invoice.status === "DRAFT") return [];
   const events: TimelineEvent[] = [];
-  if (summary.dueOn <= today) events.push({ id: "due", kind: "due", at: summary.dueOn });
+  const paidInTime =
+    summary.dueState === "paid" && summary.paidOn !== null && summary.paidOn <= summary.dueOn;
+  if (summary.dueOn <= today && !paidInTime)
+    events.push({ id: "due", kind: "due", at: summary.dueOn });
 
   const overdueOn = addDays(summary.dueOn, 1);
   if (overdueOn <= today && wasUnpaidOn(overdueOn, input)) {
