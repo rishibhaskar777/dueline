@@ -9,6 +9,13 @@ export function formatDate(date: string): string {
   return dayMonthYear.format(new Date(`${date}T00:00:00Z`));
 }
 
+const weekday = new Intl.DateTimeFormat("en-IN", { weekday: "long", timeZone: "UTC" });
+
+// "Monday, 2 Nov 2026".
+export function formatWeekdayDate(date: string): string {
+  return `${weekday.format(new Date(`${date}T00:00:00Z`))}, ${formatDate(date)}`;
+}
+
 const dayMonth = new Intl.DateTimeFormat("en-IN", {
   day: "numeric",
   month: "short",

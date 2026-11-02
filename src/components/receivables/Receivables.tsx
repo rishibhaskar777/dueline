@@ -2,18 +2,26 @@
 
 import { useState } from "react";
 import { CustomisePanel } from "@/components/dashboard/CustomisePanel";
-import { isWide } from "@/components/dashboard/dashboard-layout";
+import { widgetSize } from "@/components/dashboard/dashboard-layout";
 import { useDashboard } from "@/components/dashboard/use-dashboard";
 import { useLayout } from "@/components/dashboard/use-layout";
 import { LoadFailure } from "@/components/shared/LoadFailure";
-import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
+import { HomeHeader } from "./HomeHeader";
 import { InvoicePanel } from "./InvoicePanel";
 import { ReceivablesSkeleton } from "./ReceivablesSkeleton";
 import { EmptyReceivables, RefreshNote } from "./ReceivablesStates";
 import { ReceivablesWidget } from "./ReceivablesWidget";
 import { useReceivables } from "./use-receivables";
+
+// Written out in full so Tailwind finds them.
+const COLUMNS = {
+  2: "lg:col-span-2",
+  3: "lg:col-span-3",
+  4: "lg:col-span-4",
+  6: "lg:col-span-6",
+} as const;
+const ROWS = { 1: "", 2: "lg:row-span-2" } as const;
 
 export function Receivables() {
   const { data, error, freshEvents, retry } = useReceivables();
@@ -23,48 +31,55 @@ export function Receivables() {
   const [customising, setCustomising] = useState(false);
 
   if (!data) {
-    return error ? (
-      <LoadFailure title="Couldn't load your receivables" error={error} onRetry={retry} />
-    ) : (
-      <ReceivablesSkeleton />
+    return (
+      <div className="grid gap-5">
+        <HomeHeader health={null} onCustomise={null} />
+        {error ? (
+          <LoadFailure title="Couldn't load your receivables" error={error} onRetry={retry} />
+        ) : (
+          <ReceivablesSkeleton />
+        )}
+      </div>
     );
   }
-  if (data.invoices.length === 0) return <EmptyReceivables />;
 
   const { invoices, health } = data;
+  if (invoices.length === 0) {
+    return (
+      <div className="grid gap-5">
+        <HomeHeader health={health} onCustomise={null} />
+        <EmptyReceivables />
+      </div>
+    );
+  }
+
   const open = invoices.find((invoice) => invoice.id === openId) ?? null;
   const shown = layout.filter(({ visible }) => visible);
 
   return (
-    <div className="grid gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-          {health.demoClock && (
-            <p className="text-sm text-muted-foreground">Demo date: {formatDate(health.today)}</p>
-          )}
-          {error && <RefreshNote error={error} />}
-        </div>
-        <Button type="button" variant="outline" onClick={() => setCustomising(true)}>
-          Customise
-        </Button>
-      </div>
+    <div className="grid gap-5">
+      <HomeHeader health={health} onCustomise={() => setCustomising(true)} />
+      {error && <RefreshNote error={error} />}
       {shown.length === 0 && (
         <p className="text-sm text-muted-foreground">
           Every widget is hidden. Use Customise to show some again.
         </p>
       )}
-      <div className="grid items-start gap-6 lg:grid-cols-2">
-        {shown.map(({ id }) => (
-          <div key={id} className={cn("min-w-0", isWide(id) && "lg:col-span-2")}>
-            <ReceivablesWidget
-              id={id}
-              data={data}
-              freshEvents={freshEvents}
-              dashboard={dashboard}
-              onOpen={(invoice) => setOpenId(invoice.id)}
-            />
-          </div>
-        ))}
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-x-4 gap-y-5 [--surface-radius:24px] lg:grid-flow-dense lg:grid-cols-6">
+        {shown.map(({ id }) => {
+          const { columns, rows } = widgetSize(id);
+          return (
+            <div key={id} className={cn("grid min-w-0 empty:hidden", COLUMNS[columns], ROWS[rows])}>
+              <ReceivablesWidget
+                id={id}
+                data={data}
+                freshEvents={freshEvents}
+                dashboard={dashboard}
+                onOpen={(invoice) => setOpenId(invoice.id)}
+              />
+            </div>
+          );
+        })}
       </div>
       <InvoicePanel invoice={open} today={health.today} onClose={() => setOpenId(null)} />
       <CustomisePanel

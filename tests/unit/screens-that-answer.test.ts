@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { digestLines } from "@/components/dashboard/digest-lines";
-import { isNothingDue } from "@/components/dashboard/ForecastWidget";
+import { isNothingDue } from "@/components/dashboard/forecast-summary";
 import { dueSentence, lutSentence } from "@/components/invoice-page/invoice-facts";
 import {
   publishOverdueCount,
