@@ -1,10 +1,12 @@
 "use client";
 
+import { Menu } from "@base-ui/react/menu";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { signOut } from "@/lib/api-client";
+import { ITEM_CLASS } from "./account-menu-styles";
 
-export function LockDemoButton() {
+export function LockDemoItem() {
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
@@ -19,13 +21,13 @@ export function LockDemoButton() {
   }
 
   return (
-    <button
-      type="button"
-      onClick={lock}
+    <Menu.Item
+      closeOnClick={false}
       disabled={pending}
-      className="flex min-h-11 w-fit items-center rounded-md text-sm text-sidebar-foreground underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-sidebar-ring disabled:opacity-50"
+      onClick={lock}
+      className={`${ITEM_CLASS} text-late data-[disabled]:opacity-50`}
     >
       Lock demo
-    </button>
+    </Menu.Item>
   );
 }

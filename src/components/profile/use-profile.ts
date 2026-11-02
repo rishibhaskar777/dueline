@@ -12,10 +12,24 @@ interface ProfileState {
   retry: () => void;
 }
 
+const savedListeners = new Set<(profile: Profile) => void>();
+
+// The profile form announces what it saved, so the account menu shows the new name at once.
+export function publishSavedProfile(profile: Profile): void {
+  savedListeners.forEach((listener) => listener(profile));
+}
+
 export function useProfile(): ProfileState {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [error, setError] = useState<LoadError | null>(null);
   const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    savedListeners.add(setProfile);
+    return () => {
+      savedListeners.delete(setProfile);
+    };
+  }, []);
 
   useEffect(() => {
     let current = true;

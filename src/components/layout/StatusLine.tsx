@@ -32,10 +32,10 @@ export function StatusLine() {
   }, []);
 
   if (state.kind === "loading") {
-    return <p className="text-sm text-sidebar-foreground/80">Checking connection…</p>;
+    return <p className="text-sm text-muted-foreground">Checking connection…</p>;
   }
   if (state.kind === "error") {
-    return <p className="text-sm text-late-on-dark">Cannot reach the Dueline server</p>;
+    return <p className="text-sm text-late">Cannot reach the Dueline server</p>;
   }
 
   const { health } = state;
@@ -43,20 +43,16 @@ export function StatusLine() {
   const problems = problemsIn(health);
 
   return (
-    <div className="space-y-1 text-sm" role="status">
+    <div className="space-y-1 px-3 py-2 text-sm" role="status">
       {health.offline && (
-        <p className="w-fit rounded-md bg-sidebar-accent px-2 py-0.5 text-xs font-medium text-sidebar-foreground">
+        <p className="w-fit rounded-full bg-hover px-2.5 py-0.5 text-xs font-semibold text-foreground">
           Offline demo
         </p>
       )}
-      <p className="flex items-center gap-2 text-sidebar-foreground">
+      <p className="flex items-center gap-2 text-muted-foreground">
         <span
           aria-hidden="true"
-          className={
-            connected
-              ? "size-2 rounded-full bg-paid-on-dark"
-              : "size-2 rounded-full bg-late-on-dark"
-          }
+          className={connected ? "size-2 rounded-full bg-paid" : "size-2 rounded-full bg-late"}
         />
         {health.offline
           ? "Simulated PayPal sandbox"
@@ -67,12 +63,12 @@ export function StatusLine() {
       {problems
         .filter((problem) => connected || !problem.startsWith("PayPal"))
         .map((problem) => (
-          <p key={problem} className="text-late-on-dark">
+          <p key={problem} className="text-late">
             {problem}
           </p>
         ))}
       {health.demoClock && (
-        <p className="text-xs text-sidebar-foreground/80">Demo date: {health.today}</p>
+        <p className="text-xs text-muted-foreground">Demo date: {health.today}</p>
       )}
     </div>
   );
