@@ -12,7 +12,7 @@ export default function DemoToolsPage() {
         title="Demo tools"
         intro="Put the sandbox back to the sample story, or run the morning preparation now."
       />
-      <div className="grid gap-6">
+      <div className="grid items-start gap-[18px] md:grid-cols-2">
         <DemoCard />
         <PrepareCard />
       </div>
