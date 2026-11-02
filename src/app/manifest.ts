@@ -10,8 +10,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/receivables",
     scope: "/",
     display: "standalone",
-    background_color: "#0D1B2E",
-    theme_color: "#0D1B2E",
+    background_color: "#0A2A7A",
+    theme_color: "#0A2A7A",
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },

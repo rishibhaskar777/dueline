@@ -11,7 +11,7 @@ describe("the web app manifest", () => {
       name: "Dueline",
       start_url: "/receivables",
       display: "standalone",
-      theme_color: "#0D1B2E",
+      theme_color: "#0A2A7A",
     });
   });
 

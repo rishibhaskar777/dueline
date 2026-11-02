@@ -10,7 +10,7 @@ export default function DemoPage() {
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm overflow-hidden surface">
         <div className="bg-navy px-6 py-4">
-          <Wordmark />
+          <Wordmark tone="inverse" />
         </div>
         <div className="p-6">
           <Suspense>
