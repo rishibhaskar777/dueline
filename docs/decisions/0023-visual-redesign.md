@@ -79,3 +79,31 @@ The sidebar is replaced by a top bar on every app page (`AppBar`, `MainTabs`, `A
   in the dark theme it is `#ff6b61` with near-black text, because white on that red is 2.8:1.
 - **Anchors.** The bar is sticky and in the flow, so the content starts below it, and
   `scroll-padding-top` keeps anchor jumps (`/nudges#invoice-…`) from landing under it.
+
+## Home
+
+- **Greeting.** The heading reads "Good morning", "Good afternoon" or "Good evening" by the hour in
+  Asia/Kolkata, with the first word of the profile name. The hour is read in the browser after the
+  page mounts, so the server and first render say "Good day" in the same box. The date line comes
+  from the health answer (which follows the demo clock) and replaces the old "Demo date" line.
+- **Condensed checklist.** Getting started is one strip with a progress bar and the next undone step;
+  "See all steps" opens the full list. Its region is still named "Getting started" or "All set".
+- **Rate line inside the fees card.** The rates widget is hidden by default; the rate of the currency
+  with the most rupees outstanding (USD when none), its comparison with the 30-day average and any
+  triggered alert are one line of What getting paid costs. The longer explanation is behind "How this
+  is worked out".
+- **Forecast.** The three buckets are separate windows, so the card shows the next 30 days with a bar
+  of expected over best case, and the best case of days 31 to 90 as one sentence. The basis sentence
+  stays as small print.
+- **One colour per due-line row**, as drawn in the design, instead of a blue then red line, and a
+  label column instead of labels placed beside the end dot. `label-placement.ts` is gone.
+- **Phones.** Each due-line row stacks the client name, the line and the label.
+- **Clients behind.** The late clients region is named "Clients behind". Under each name it says
+  "Late on 3 of 3 · 12 days on average", from `lateCount`, `invoicesConsidered` and
+  `averageDaysLate`, which `LateClient` now carries; the average is left out when it is 0.
+- **No Days late column.** The overdue days are in the Status pill, so the column and its sort are
+  gone; sort by Due instead.
+- **Filter.** The invoice filter is the shared segmented control with four options; the "Unpaid"
+  option is gone.
+- **Default layout.** The designed layout is stored under `dueline.layout.v2`, so everyone sees it once;
+  a layout saved under v1 is ignored.

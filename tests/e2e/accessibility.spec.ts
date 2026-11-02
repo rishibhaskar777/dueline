@@ -22,6 +22,20 @@ const SCREENS: Screen[] = [
     ready: async (page) => {
       await expect(page.getByRole("heading", { name: "The due line" })).toBeVisible();
       await expect(page.getByLabel("Totals")).toContainText("₹");
+      await expect(page.getByRole("columnheader", { name: "Invoice" })).toBeVisible();
+    },
+    later: {
+      name: "Receivables, Customise and the invoice panel",
+      go: async (page) => {
+        await page.getByRole("button", { name: "Customise" }).click();
+        const customise = page.getByRole("dialog", { name: "Customise Receivables" });
+        await expect(customise).toBeVisible();
+        await expectNoSeriousViolations(page, "Receivables, Customise");
+        await page.keyboard.press("Escape");
+        await expect(customise).toBeHidden();
+        await page.locator(".ag-row").first().click();
+        await expect(page.getByRole("dialog")).toBeVisible();
+      },
     },
   },
   {

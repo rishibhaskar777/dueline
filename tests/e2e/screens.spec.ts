@@ -3,10 +3,10 @@ import { expectNoSeriousViolations } from "./support";
 
 async function overdueCountFromFilter(page: Page): Promise<number> {
   const button = page.getByRole("group", { name: "Filter by status" }).getByRole("button", {
-    name: /^Overdue \(/,
+    name: /^Overdue \d+$/,
   });
   const text = (await button.textContent()) ?? "";
-  return Number(/\((\d+)\)/.exec(text)?.[1]);
+  return Number(/(\d+)$/.exec(text)?.[1]);
 }
 
 test.describe("Receivables table", () => {
@@ -24,7 +24,6 @@ test.describe("Receivables table", () => {
         "To your bank",
         "Due",
         "Status",
-        "Days late",
         "PayPal",
       ]) {
         const header = grid.locator(".ag-header-cell-text", { hasText: new RegExp(`^${name}$`) });
@@ -58,7 +57,43 @@ test.describe("Receivables table", () => {
     await expect(page.getByRole("heading", { name: "History" })).toBeVisible();
   });
 
-  test("the PayPal column is an icon link that names its invoice", async ({ page }) => {
+  test("the filter is one group of buttons that changes the rows", async ({ page }) => {
+    await page.goto("/receivables");
+    const filter = page.getByRole("group", { name: "Filter by status" });
+    const all = filter.getByRole("button", { name: /^All \d+$/ });
+    await expect(all).toHaveAttribute("aria-pressed", "true");
+    const grid = page.locator(".ag-root-wrapper").last();
+    const before = await grid.locator(".ag-row").count();
+
+    const paid = filter.getByRole("button", { name: /^Paid \d+$/ });
+    await paid.click();
+    await expect(paid).toHaveAttribute("aria-pressed", "true");
+    await expect(all).toHaveAttribute("aria-pressed", "false");
+    const expected = Number(/(\d+)$/.exec((await paid.textContent()) ?? "")?.[1]);
+    await expect(grid.locator(".ag-row")).toHaveCount(expected);
+    expect(expected).toBeLessThan(before);
+  });
+
+  test("Customise can show the hidden Rupee rates widget", async ({ page }) => {
+    await page.goto("/receivables");
+    await expect(page.getByRole("heading", { name: "Rupee rates" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Customise" }).click();
+    await page.getByRole("switch", { name: "Show Rates" }).click();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("heading", { name: "Rupee rates" })).toBeVisible();
+  });
+
+  test("has no sideways scroll at 390 px", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.goto("/receivables");
+    await expect(page.getByRole("heading", { name: "The due line" })).toBeVisible();
+    const scrolls = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    );
+    expect(scrolls).toBe(false);
+  });
+
+  test("the PayPal column is a text link that names its invoice", async ({ page }) => {
     await page.goto("/receivables");
     const link = page.getByRole("link", {
       name: /^View invoice .* on PayPal \(opens in a new tab\)$/,
@@ -226,6 +261,7 @@ test.describe("First-run checklist", () => {
     await page.goto("/receivables");
     const checklist = page.getByRole("region", { name: /^(Getting started|All set)$/ });
     await expect(checklist).toBeVisible();
+    await checklist.getByRole("button", { name: "See all steps" }).click();
     await expect(
       checklist.getByRole("link", { name: /Fill in your business profile/ }),
     ).toBeVisible();
