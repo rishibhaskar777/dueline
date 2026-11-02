@@ -1,32 +1,35 @@
 import type { FocusEvent, KeyboardEvent, MouseEvent } from "react";
 import { formatMoney } from "@/lib/money/format";
-import type { DueLineRow, SegmentTone } from "./due-line-layout";
+import { cn } from "@/lib/utils";
+import type { DueLineRow, LineTone } from "./due-line-layout";
 
-const ROW_HEIGHT = 44;
+// The client column, the line and the label; on a phone they stack, so the line keeps the full width.
 export const ROW_COLUMNS =
-  "grid grid-cols-[11rem_minmax(28rem,1fr)_6.5rem] items-center max-md:grid-cols-[7.5rem_minmax(28rem,1fr)_6.5rem]";
-const LINE_Y = ROW_HEIGHT / 2;
-// Room the status text leaves after the end dot (radius and stroke) or the due tick, plus 6 px.
-const AFTER_END_DOT_PX = 12;
-const AFTER_DUE_TICK_PX = 7;
+  "grid grid-cols-[minmax(0,1fr)] md:grid-cols-[170px_minmax(0,1fr)_134px] md:gap-x-3.5";
 
-const STROKES: Record<SegmentTone, string> = {
-  paid: "stroke-paid",
-  blue: "stroke-blue",
-  due_soon: "stroke-due-soon",
-  late: "stroke-late",
+const BAR: Record<LineTone, string> = {
+  paid: "bg-mark-green",
+  blue: "bg-blue-line",
+  due_soon: "bg-mark-amber",
+  late: "bg-mark-red",
 };
-const FILLS: Record<SegmentTone, string> = {
-  paid: "fill-paid",
-  blue: "fill-blue",
-  due_soon: "fill-due-soon",
-  late: "fill-late",
+const RING: Record<LineTone, string> = {
+  paid: "border-mark-green",
+  blue: "border-blue-line",
+  due_soon: "border-mark-amber",
+  late: "border-mark-red",
 };
-const STATUS_TEXT: Record<SegmentTone, string> = {
-  paid: "fill-paid",
-  blue: "fill-muted-foreground",
-  due_soon: "fill-due-soon",
-  late: "fill-late",
+const STROKE: Record<LineTone, string> = {
+  paid: "stroke-mark-green",
+  blue: "stroke-blue-line",
+  due_soon: "stroke-mark-amber",
+  late: "stroke-mark-red",
+};
+const TEXT: Record<LineTone, string> = {
+  paid: "text-paid",
+  blue: "text-blue",
+  due_soon: "text-due-soon",
+  late: "text-late",
 };
 
 const percent = (fraction: number): string => `${fraction * 100}%`;
@@ -48,8 +51,7 @@ export function DueLineRowView({
   onShowTip,
   onHideTip,
 }: DueLineRowViewProps) {
-  const { invoice } = row;
-  const onLeft = row.label.side === "left";
+  const { invoice, tone } = row;
 
   // The spaces between the parts make the row's text read as one phrase. Its accessible name begins
   // with the same words, which keeps the visible label part of the name.
@@ -70,88 +72,70 @@ export function DueLineRowView({
       onMouseLeave={onHideTip}
       onFocus={(event: FocusEvent<HTMLElement>) => onShowTip(row, event.currentTarget, null)}
       onBlur={onHideTip}
-      className={`${ROW_COLUMNS} cursor-pointer rounded-md outline-none hover:bg-ground focus-visible:ring-2 focus-visible:ring-ring`}
-      style={{ height: ROW_HEIGHT }}
+      className={cn(
+        ROW_COLUMNS,
+        "cursor-pointer items-center gap-y-1 border-t border-bar-line py-3 outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring",
+      )}
     >
-      <div className="min-w-0 pr-3 max-md:sticky max-md:left-0 max-md:z-10 max-md:bg-card">
-        <p className="truncate text-sm font-medium">{invoice.client.name}</p>{" "}
-        <p className="truncate text-sm text-muted-foreground tabular-nums">
+      <span className="min-w-0 text-[15px] font-bold">
+        <span className="block truncate">{invoice.client.name}</span>{" "}
+        <span className="block truncate text-[13px] font-medium text-subtle tabular-nums">
           {invoice.number} · {formatMoney(invoice.amount)}
-        </p>
-      </div>{" "}
-      <svg
-        aria-hidden="true"
-        width="100%"
-        height={ROW_HEIGHT}
-        className="due-line-grow overflow-visible"
-      >
+        </span>
+      </span>{" "}
+      <div data-line="" aria-hidden="true" className="relative h-[26px]">
         {ticks.map((position) => (
-          <line
+          <div
             key={position}
-            x1={percent(position)}
-            x2={percent(position)}
-            y1={0}
-            y2={ROW_HEIGHT}
-            className="stroke-line"
+            className="absolute inset-y-0 w-px bg-grid-line"
+            style={{ left: percent(position) }}
           />
         ))}
-        <line
-          x1={percent(today)}
-          x2={percent(today)}
-          y1={0}
-          y2={ROW_HEIGHT}
-          strokeDasharray="3 3"
-          className="stroke-foreground"
+        <div className="absolute inset-x-0 top-3 h-0.5 rounded-sm bg-rail" />
+        <div
+          className="absolute -top-3 -bottom-3 border-l-2 border-dashed border-today-line"
+          style={{ left: percent(today) }}
         />
-        {row.segments.map((segment) => (
-          <line
-            key={`${segment.from}-${segment.tone}`}
-            x1={percent(segment.from)}
-            x2={percent(segment.to)}
-            y1={LINE_Y}
-            y2={LINE_Y}
-            strokeWidth={4}
-            strokeLinecap="round"
-            className={STROKES[segment.tone]}
-          />
-        ))}
-        <line
-          x1={percent(row.due)}
-          x2={percent(row.due)}
-          y1={LINE_Y - 9}
-          y2={LINE_Y + 9}
-          strokeWidth={2}
-          className="stroke-foreground"
+        <div
+          className={cn("dl-bar absolute top-[11px] h-1 rounded-sm", BAR[tone])}
+          style={{ left: percent(row.from), width: percent(row.end - row.from) }}
         />
-        <circle
-          cx={percent(row.end)}
-          cy={LINE_Y}
-          r={5}
-          strokeWidth={2}
-          className={`${row.endMark === "filled" ? FILLS[row.endTone] : "fill-card"} ${STROKES[row.endTone]}`}
-        />
-        {row.startsBeforeChart && (
-          <path
-            d={`M 8 ${LINE_Y - 5} L 2 ${LINE_Y} L 8 ${LINE_Y + 5}`}
+        {row.startsBeforeChart ? (
+          <svg
+            width="8"
+            height="12"
+            viewBox="0 0 8 12"
             fill="none"
             strokeWidth={2}
             strokeLinecap="round"
             strokeLinejoin="round"
-            className={STROKES[row.segments[0].tone]}
+            className={cn("absolute top-[7px] left-0", STROKE[tone])}
+          >
+            <path d="M 6 1 L 1 6 L 6 11" />
+          </svg>
+        ) : (
+          <span
+            className={cn(
+              "absolute top-[7px] -ml-1.5 box-border size-3 rounded-full border-[2.5px] bg-dot-ground",
+              RING[tone],
+            )}
+            style={{ left: percent(row.from) }}
           />
         )}
-        <text
-          x={percent(onLeft ? row.end : row.statusAt)}
-          dx={
-            onLeft ? -AFTER_END_DOT_PX : row.end >= row.due ? AFTER_END_DOT_PX : AFTER_DUE_TICK_PX
-          }
-          y={LINE_Y + 4 + row.label.dy}
-          textAnchor={onLeft ? "end" : "start"}
-          className={`${STATUS_TEXT[row.statusTone]} text-xs`}
-        >
-          {row.statusText}
-        </text>
-      </svg>
+        <span
+          className="absolute top-[3px] -ml-px h-5 w-0.5 rounded-sm bg-foreground opacity-70"
+          style={{ left: percent(row.due) }}
+        />
+        <span
+          className={cn(
+            "absolute top-1.5 -ml-[7px] box-border size-3.5 rounded-full border-[2.5px] shadow-[0_0_0_4px_var(--dot-halo)]",
+            RING[tone],
+            row.endMark === "filled" ? BAR[tone] : "bg-dot-ground",
+          )}
+          style={{ left: percent(row.end) }}
+        />
+      </div>{" "}
+      <span className={cn("text-sm font-bold", TEXT[tone])}>{row.statusText}</span>
     </div>
   );
 }

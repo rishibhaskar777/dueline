@@ -2,7 +2,6 @@ import { addDays, daysBetween } from "@/lib/date-math";
 import { formatDate } from "@/lib/format-date";
 import { formatMoney } from "@/lib/money/format";
 import type { InvoiceSummary } from "@/types";
-import { estimateLabelWidth, placeEndLabel, type LabelPlacement } from "./label-placement";
 
 // The default view covers this many days back and ahead of today; older invoices are one click away.
 export const HISTORY_DAYS = 60;
@@ -11,32 +10,25 @@ const AXIS_PADDING_DAYS = 3;
 const TICK_EVERY_DAYS = 7;
 export const MIN_LINE_PX = 8;
 // A week label this close to the "Today" label would overlap it.
-export const TODAY_LABEL_CLEARANCE_PX = 24;
-// The chart column is never narrower than this (see ROW_COLUMNS), so it is the safe width to assume
-// before the real one is measured.
+export const TODAY_LABEL_CLEARANCE_PX = 48;
+// Week labels are thinned out until this much room separates neighbours.
+export const MIN_LABEL_SPACING_PX = 56;
+// The line column is never narrower than this on a laptop, so it is the safe width to assume before
+// the real one is measured.
 export const DEFAULT_AXIS_PX = 448;
 
-export type SegmentTone = "paid" | "blue" | "due_soon" | "late";
-
-interface Segment {
-  from: number;
-  to: number;
-  tone: SegmentTone;
-}
+// The colour of a row's bar, end dot and status words.
+export type LineTone = "paid" | "blue" | "due_soon" | "late";
 
 export interface DueLineRow {
   invoice: InvoiceSummary;
-  segments: Segment[];
+  tone: LineTone;
+  from: number;
   due: number;
   end: number;
-  // Where the status text starts: after whichever is further right, the line's end or its due tick.
-  statusAt: number;
   // The line began before the chart's first date, so it is drawn from the left edge with an arrow.
   startsBeforeChart: boolean;
-  label: LabelPlacement;
   endMark: "filled" | "open";
-  endTone: SegmentTone;
-  statusTone: SegmentTone;
   statusText: string;
   accessibleName: string;
 }
@@ -44,7 +36,7 @@ export interface DueLineRow {
 interface Tick {
   position: number;
   date: string;
-  // False when the label would run into the "Today" label.
+  // False when the label would run into the "Today" label or its neighbour.
   labelled: boolean;
 }
 
@@ -90,28 +82,17 @@ function accessibleName(invoice: InvoiceSummary, status: string): string {
   return `${invoice.client.name} ${invoice.number} · ${formatMoney(invoice.amount)} ${status}, ${when}`;
 }
 
-function paidSegments(from: number, due: number, paidOn: number): Segment[] {
-  if (paidOn <= due) return [{ from, to: paidOn, tone: "paid" }];
-  return [
-    { from, to: due, tone: "paid" },
-    { from: due, to: paidOn, tone: "late" },
-  ];
-}
-
-function unpaidSegments(
-  invoice: InvoiceSummary,
-  from: number,
-  due: number,
-  now: number,
-): Segment[] {
-  if (invoice.dueState === "overdue" && now > due) {
-    return [
-      { from, to: due, tone: "blue" },
-      { from: due, to: now, tone: "late" },
-    ];
+function toneOf(invoice: InvoiceSummary): LineTone {
+  switch (invoice.dueState) {
+    case "paid":
+      return lateDays(invoice) > 0 ? "late" : "paid";
+    case "overdue":
+      return "late";
+    case "due_soon":
+      return "due_soon";
+    case "on_time":
+      return "blue";
   }
-  const tone = invoice.dueState === "due_soon" ? "due_soon" : "blue";
-  return [{ from, to: now, tone }];
 }
 
 function buildRow(
@@ -121,37 +102,21 @@ function buildRow(
 ): DueLineRow {
   const { at, axisPx, origin } = scale;
   const from = at(invoice.issuedOn);
-  const due = at(invoice.dueOn);
   const paid = invoice.dueState === "paid";
   // An unpaid line never shrinks to a dot: it is at least MIN_LINE_PX long on screen.
-  const finish = paid
+  const end = paid
     ? at(invoice.paidOn ?? invoice.dueOn)
     : Math.max(at(today), from + MIN_LINE_PX / axisPx);
-  const segments = paid
-    ? paidSegments(from, due, finish)
-    : unpaidSegments(invoice, from, due, finish);
   const status = statusText(invoice, today);
-  const endTone = segments[segments.length - 1].tone;
-  const paidLate = paid && lateDays(invoice) > 0;
-  const statusAt = Math.max(finish, due);
 
   return {
     invoice,
-    segments,
-    due,
-    end: finish,
-    statusAt,
+    tone: toneOf(invoice),
+    from,
+    due: at(invoice.dueOn),
+    end,
     startsBeforeChart: invoice.issuedOn < origin,
-    label: placeEndLabel({
-      rightStartPx: statusAt * axisPx,
-      endPx: finish * axisPx,
-      widthPx: estimateLabelWidth(status),
-      axisPx,
-      marksPx: [at(today) * axisPx, due * axisPx],
-    }),
     endMark: paid ? "filled" : "open",
-    endTone,
-    statusTone: paid && !paidLate ? "paid" : endTone,
     statusText: status,
     accessibleName: accessibleName(invoice, status),
   };
@@ -172,6 +137,11 @@ function latest(dates: string[]): string {
 
 function tickLabelled(position: number, today: number, axisPx: number): boolean {
   return Math.abs(position - today) * axisPx >= TODAY_LABEL_CLEARANCE_PX;
+}
+
+// Every how-manyth week gets a label, so neighbours keep MIN_LABEL_SPACING_PX apart on a narrow line.
+function labelStride(span: number, axisPx: number): number {
+  return Math.max(1, Math.ceil(MIN_LABEL_SPACING_PX / ((axisPx * TICK_EVERY_DAYS) / span)));
 }
 
 export function layoutDueLine(
@@ -202,13 +172,14 @@ export function layoutDueLine(
   const at = (date: string): number => Math.min(1, Math.max(0, daysBetween(origin, date) / span));
   const todayAt = at(today);
 
+  const stride = labelStride(span, axisPx);
   const ticks: Tick[] = [];
   for (let day = 0; day <= span; day += TICK_EVERY_DAYS) {
     const position = day / span;
     ticks.push({
       position,
       date: addDays(origin, day),
-      labelled: tickLabelled(position, todayAt, axisPx),
+      labelled: ticks.length % stride === 0 && tickLabelled(position, todayAt, axisPx),
     });
   }
 
