@@ -6,27 +6,24 @@ import { useLoad } from "@/components/shared/use-load";
 import { getDigest } from "@/lib/api-client";
 import { formatDate } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
-import { digestLines } from "./digest-lines";
+import { digestLines, type DigestLine } from "./digest-lines";
 
-const TONES = { paid: "text-paid", late: "text-late", "due-soon": "text-due-soon" } as const;
+const DOTS = { late: "bg-mark-red", "due-soon": "bg-mark-amber" } as const;
+
+const STRIP =
+  "surface flex flex-wrap items-center gap-x-7 gap-y-3 px-6 py-[18px] [--h2-size:18px] [--h2-tracking:0] [--h2-weight:700]";
 
 export function MorningWidget() {
   const { state, reload } = useLoad(getDigest);
 
   return (
-    <section
-      aria-labelledby="morning-title"
-      aria-busy={state.kind === "loading"}
-      className="surface p-6"
-    >
-      <h2 id="morning-title" className="text-xl font-semibold">
-        This morning
-      </h2>
-      {state.kind === "loading" && <SkeletonBlock className="mt-4 h-16" />}
+    <section aria-labelledby="morning-title" aria-busy={state.kind === "loading"} className={STRIP}>
+      <h2 id="morning-title">This morning</h2>
+      {state.kind === "loading" && <SkeletonBlock className="h-6 w-64" />}
       {state.kind === "error" && (
-        <p role="alert" className="mt-3 text-sm">
+        <p role="alert" className="text-base">
           {state.error.message}{" "}
-          <button type="button" onClick={reload} className="text-blue underline underline-offset-2">
+          <button type="button" onClick={reload} className="text-link underline underline-offset-2">
             Try again
           </button>
         </p>
@@ -36,31 +33,39 @@ export function MorningWidget() {
   );
 }
 
+function Item({ line }: { line: DigestLine }) {
+  if (line.href) {
+    return (
+      <Link href={line.href} className="text-base font-semibold text-link underline">
+        {line.text} →
+      </Link>
+    );
+  }
+  const dot = (line.tone && line.tone !== "paid" && DOTS[line.tone]) || "bg-blue-line";
+  return (
+    <p className="flex items-center gap-2 text-base">
+      <span aria-hidden="true" className={cn("size-2.5 shrink-0 rounded-full", dot)} />
+      <span>
+        <span className="font-semibold">{line.label}:</span> {line.text}
+      </span>
+    </p>
+  );
+}
+
 function Lines({ digest }: { digest: Parameters<typeof digestLines>[0] }) {
   const lines = digestLines(digest);
   if (lines.length === 0) {
     return (
-      <p className="mt-3 text-sm text-muted-foreground">
+      <p className="text-base text-muted-foreground">
         Nothing new as of {formatDate(digest.day)}. Nothing is due soon and nothing is overdue.
       </p>
     );
   }
   return (
-    <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-[12rem_1fr]">
+    <>
       {lines.map((line) => (
-        <div key={line.key} className="contents">
-          <dt className="font-medium">{line.label}</dt>
-          <dd className={cn(line.tone && TONES[line.tone])}>
-            {line.href ? (
-              <Link href={line.href} className="underline underline-offset-2">
-                {line.text}
-              </Link>
-            ) : (
-              line.text
-            )}
-          </dd>
-        </div>
+        <Item key={line.key} line={line} />
       ))}
-    </dl>
+    </>
   );
 }

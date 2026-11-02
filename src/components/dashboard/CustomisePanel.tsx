@@ -47,7 +47,12 @@ export function CustomisePanel({
         <ul className="divide-y divide-line">
           {layout.map(({ id, visible }, index) => (
             <li key={id} className="flex items-center gap-2 py-2">
-              <span className="flex-1 text-sm font-medium">{widgetTitle(id)}</span>
+              <span className="flex-1 text-sm font-semibold">{widgetTitle(id)}</span>
+              <ToggleSwitch
+                label={`Show ${widgetTitle(id)}`}
+                checked={visible}
+                onChange={(next) => onChange(setWidgetVisible(layout, id, next))}
+              />
               <Button
                 type="button"
                 variant="outline"
@@ -68,16 +73,11 @@ export function CustomisePanel({
               >
                 <ArrowDown aria-hidden="true" />
               </Button>
-              <ToggleSwitch
-                label={`Show ${widgetTitle(id)}`}
-                checked={visible}
-                onChange={(next) => onChange(setWidgetVisible(layout, id, next))}
-              />
             </li>
           ))}
         </ul>
         <Button type="button" variant="outline" className="w-fit" onClick={onReset}>
-          Reset to default
+          Reset layout
         </Button>
       </DialogContent>
     </Dialog>

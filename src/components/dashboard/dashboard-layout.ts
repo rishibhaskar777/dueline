@@ -1,17 +1,18 @@
+// columns and rows are the widget's size on the six-column grid from the lg breakpoint up; shown is
+// whether the default layout includes it.
 export const WIDGETS = [
-  { id: "morning", title: "This morning", wide: true },
-  { id: "checklist", title: "Getting started", wide: true },
-  { id: "totals", title: "Totals", wide: true },
-  { id: "forecast", title: "Forecast", wide: false },
-  { id: "dueLine", title: "Due line", wide: true },
-  { id: "upcomingDue", title: "Upcoming due", wide: false },
-  { id: "lateClients", title: "Late clients", wide: false },
-  { id: "feesLost", title: "Fees lost", wide: false },
-  { id: "rates", title: "Rates", wide: false },
-  { id: "invoices", title: "Invoices", wide: true },
-  { id: "activity", title: "Activity", wide: false },
+  { id: "morning", title: "This morning", columns: 6, rows: 1, shown: true },
+  { id: "checklist", title: "Getting started", columns: 6, rows: 1, shown: true },
+  { id: "totals", title: "Totals", columns: 6, rows: 1, shown: true },
+  { id: "dueLine", title: "Due line", columns: 4, rows: 2, shown: true },
+  { id: "forecast", title: "Forecast", columns: 2, rows: 1, shown: true },
+  { id: "lateClients", title: "Late clients", columns: 2, rows: 1, shown: true },
+  { id: "invoices", title: "Invoices", columns: 6, rows: 1, shown: true },
+  { id: "feesLost", title: "Fees lost", columns: 3, rows: 1, shown: true },
+  { id: "activity", title: "Activity", columns: 3, rows: 1, shown: true },
+  { id: "upcomingDue", title: "Upcoming due", columns: 3, rows: 1, shown: false },
+  { id: "rates", title: "Rates", columns: 3, rows: 1, shown: false },
 ] as const;
-
 export type WidgetId = (typeof WIDGETS)[number]["id"];
 
 export interface LayoutEntry {
@@ -21,9 +22,9 @@ export interface LayoutEntry {
 
 export type Layout = LayoutEntry[];
 
-export const LAYOUT_STORAGE_KEY = "dueline.layout.v1";
+export const LAYOUT_STORAGE_KEY = "dueline.layout.v2";
 
-export const DEFAULT_LAYOUT: Layout = WIDGETS.map(({ id }) => ({ id, visible: true }));
+export const DEFAULT_LAYOUT: Layout = WIDGETS.map(({ id, shown }) => ({ id, visible: shown }));
 
 const isWidgetId = (value: unknown): value is WidgetId => WIDGETS.some(({ id }) => id === value);
 
@@ -36,9 +37,12 @@ function isEntry(value: unknown): value is LayoutEntry {
 // Whatever was saved is untrusted: unknown or repeated widgets are dropped, and widgets added since
 // it was saved are appended, shown.
 function validateLayout(value: unknown): Layout {
-  const saved = Array.isArray(value) ? value.filter(isEntry) : [];
+  if (!Array.isArray(value)) return DEFAULT_LAYOUT;
+  const saved = value.filter(isEntry);
   const kept = saved.filter((entry, index) => saved.findIndex((e) => e.id === entry.id) === index);
-  const missing = DEFAULT_LAYOUT.filter(({ id }) => !kept.some((entry) => entry.id === id));
+  const missing = DEFAULT_LAYOUT.filter(({ id }) => !kept.some((entry) => entry.id === id)).map(
+    ({ id }) => ({ id, visible: true }),
+  );
   return [...kept.map(({ id, visible }) => ({ id, visible })), ...missing];
 }
 
@@ -72,6 +76,7 @@ export function widgetTitle(id: WidgetId): string {
   return WIDGETS.find((widget) => widget.id === id)?.title ?? id;
 }
 
-export function isWide(id: WidgetId): boolean {
-  return WIDGETS.find((widget) => widget.id === id)?.wide ?? false;
+export function widgetSize(id: WidgetId): { columns: 2 | 3 | 4 | 6; rows: 1 | 2 } {
+  const { columns, rows } = WIDGETS.find((widget) => widget.id === id) ?? WIDGETS[0];
+  return { columns, rows };
 }

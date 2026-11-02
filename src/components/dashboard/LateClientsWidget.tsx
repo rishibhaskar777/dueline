@@ -1,33 +1,40 @@
 import { clientHref } from "@/components/clients/client-href";
 import Link from "next/link";
-import { RiskBadge } from "@/components/shared/RiskBadge";
 import { formatRupees } from "@/lib/money/format";
 import type { LateClient } from "@/types";
 import { DashboardWidget } from "./DashboardWidget";
+import { lateHistoryLine, latePill } from "./late-client-pill";
 import type { DashboardState } from "./use-dashboard";
 
 function List({ clients }: { clients: LateClient[] }) {
   return (
-    <ul className="divide-y divide-line">
-      {clients.map((client) => (
-        <li key={client.key} className="py-3">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+    <ul className="grid gap-3.5">
+      {clients.map((client) => {
+        const pill = latePill(client);
+        return (
+          <li key={client.key}>
             <Link
               href={clientHref(client.key)}
-              className="font-medium text-blue underline-offset-2 hover:underline"
+              className="-mx-2 flex items-center justify-between gap-2.5 rounded-lg px-2 py-0.5 text-foreground no-underline outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring"
             >
-              {client.name}
+              <span>
+                <span className="block font-bold">{client.name}</span>
+                <span className="block text-sm font-medium text-foreground tabular-nums">
+                  {lateHistoryLine(client)}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  About {formatRupees(client.overdueInr)} overdue. {client.reason}
+                </span>
+              </span>
+              {pill && (
+                <span className="rounded-full bg-tint-red px-3 py-1.5 text-[13px] font-bold whitespace-nowrap text-late tabular-nums">
+                  {pill}
+                </span>
+              )}
             </Link>
-            {client.riskLevel && <RiskBadge level={client.riskLevel} />}
-            <span className="text-sm font-medium text-late tabular-nums">
-              {client.daysLate} {client.daysLate === 1 ? "day" : "days"} late
-            </span>
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            About {formatRupees(client.overdueInr)} overdue. {client.reason}
-          </p>
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -42,7 +49,7 @@ export function LateClientsWidget({
   return (
     <DashboardWidget
       id="late-clients"
-      title="Clients behind on payment"
+      title="Clients behind"
       state={state}
       onRetry={onRetry}
       emptyText="No client is late right now."

@@ -38,7 +38,7 @@ export function ReceivablesWidget({
     case "morning":
       return <MorningWidget />;
     case "totals":
-      return <TotalsStrip totals={totals} />;
+      return <TotalsStrip totals={totals} invoices={invoices} />;
     case "forecast":
       return <ForecastWidget state={state} onRetry={retry} />;
     case "dueLine":
@@ -48,7 +48,7 @@ export function ReceivablesWidget({
     case "lateClients":
       return <LateClientsWidget state={state} onRetry={retry} />;
     case "feesLost":
-      return <FeesLostWidget state={state} onRetry={retry} />;
+      return <FeesLostWidget state={state} onRetry={retry} invoices={invoices} />;
     case "rates":
       return <RatesWidget state={state} onRetry={retry} />;
     case "invoices":

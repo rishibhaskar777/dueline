@@ -55,7 +55,7 @@ export function digestLines(digest: DailyDigest): DigestLine[] {
     lines.push({
       key: "drafts",
       label: "Prepared for you",
-      text: `${count} ${count === 1 ? "draft is" : "drafts are"} ready to review under Nudges.`,
+      text: `${count} reminder ${count === 1 ? "draft" : "drafts"} ready to review`,
       href: "/nudges",
     });
   }
