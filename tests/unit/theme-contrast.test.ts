@@ -26,9 +26,11 @@ const TEXT_ON_SURFACE = [
   ["due-soon", "card"],
   ["late", "background"],
   ["late", "card"],
-  ["sidebar-foreground", "sidebar"],
-  ["paid-on-dark", "sidebar"],
-  ["late-on-dark", "sidebar"],
+  ["foreground", "bar-solid"],
+  ["muted-foreground", "bar-solid"],
+  ["muted-foreground", "popover"],
+  ["late", "popover"],
+  ["pill-red-text", "pill-red"],
   ["foreground", "secondary"],
   ["muted-foreground", "secondary"],
   ["blue", "secondary"],
@@ -65,8 +67,7 @@ describe.each([
 
 describe("the two themes", () => {
   it("define the same text and surface tokens", () => {
-    const onDark = ["paid-on-dark", "late-on-dark"];
-    const wanted = new Set(TEXT_ON_SURFACE.flat().filter((name) => !onDark.includes(name)));
+    const wanted = new Set(TEXT_ON_SURFACE.flat());
     for (const name of wanted) {
       expect(() => resolveToken(name, dark, light), name).not.toThrow();
     }

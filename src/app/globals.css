@@ -20,8 +20,6 @@
   --color-paid: var(--paid);
   --color-due-soon: var(--due-soon);
   --color-late: var(--late);
-  --color-paid-on-dark: var(--paid-on-dark);
-  --color-late-on-dark: var(--late-on-dark);
   --color-ground: var(--ground);
   --color-line: var(--line);
   --color-track: var(--track);
@@ -36,15 +34,11 @@
   --color-focus-halo: var(--focus-halo);
   --color-toggle-on: var(--toggle-on);
   --color-scrim: var(--scrim);
+  --color-kbd: var(--kbd);
+  --color-pill-red: var(--pill-red);
+  --color-pill-red-text: var(--pill-red-text);
+  --color-alert-dot: var(--alert-dot);
   --color-toggle-mark: var(--toggle-on-mark);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -82,8 +76,6 @@
   --paid: #0b6b3c;
   --due-soon: #8a4f00;
   --late: #b3241c;
-  --paid-on-dark: #3ccb9c;
-  --late-on-dark: #ffb4ab;
   --ground: #f4f7fc;
   --line: #dfe5ef;
   --muted-text: #4c5260;
@@ -112,14 +104,6 @@
   --chart-4: var(--late);
   --chart-5: var(--muted-text);
   --radius: 0.625rem;
-  --sidebar: #0a2a7a;
-  --sidebar-foreground: #e6ebf3;
-  --sidebar-primary: var(--blue);
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgb(255 255 255 / 10%);
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: rgb(255 255 255 / 12%);
-  --sidebar-ring: var(--blue-light);
 
   --page-glow-1: #8fbaff;
   --page-glow-2: #a7e3ff;
@@ -153,6 +137,14 @@
   --indicator-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 8px 20px rgba(10, 20, 50, 0.22);
   --hover: rgba(11, 30, 70, 0.06);
 
+  --bar: rgba(255, 255, 255, 0.66);
+  --bar-line: rgba(10, 30, 70, 0.08);
+  --bar-solid: #fbfcfe;
+  --kbd: rgba(255, 255, 255, 0.9);
+  --pill-red: #d1322a;
+  --pill-red-text: #ffffff;
+  --alert-dot: #f5a524;
+
   --tint-blue: rgba(29, 99, 240, 0.12);
   --tint-green: rgba(14, 138, 79, 0.12);
   --tint-amber: rgba(224, 138, 0, 0.14);
@@ -184,8 +176,6 @@
   --muted: #1c2130;
   --accent: #1c2130;
   --ring: #8fb8ff;
-  --sidebar: #070e19;
-  --sidebar-primary-foreground: #0d1b2e;
 
   --page-glow-1: #1e40af;
   --page-glow-2: #0e7490;
@@ -216,6 +206,13 @@
   --indicator-edge: rgba(255, 255, 255, 0.32);
   --indicator-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 8px 22px rgba(0, 0, 0, 0.35);
   --hover: rgba(255, 255, 255, 0.07);
+
+  --bar: rgba(14, 17, 24, 0.58);
+  --bar-line: rgba(255, 255, 255, 0.08);
+  --bar-solid: #0c0f15;
+  --kbd: rgba(255, 255, 255, 0.12);
+  --pill-red: #ff6b61;
+  --pill-red-text: #0b0b0f;
 
   --tint-blue: rgba(91, 155, 255, 0.16);
   --tint-green: rgba(52, 194, 122, 0.16);
@@ -249,6 +246,13 @@
   }
   html {
     @apply font-sans;
+    /* The open account menu locks page scroll; the reserved gutter keeps the page from shifting. */
+    scrollbar-gutter: stable;
+    /* Anchors land below the sticky top bar: one row from 768 px up, two on a phone. */
+    scroll-padding-top: 8.5rem;
+    @media (min-width: 768px) {
+      scroll-padding-top: 5.5rem;
+    }
   }
   h1,
   h2,
@@ -302,6 +306,44 @@
 
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     background: var(--popover);
+  }
+}
+
+/* The top bar. --bar-solid is --bar blended with the page, for browsers without backdrop-filter
+   and for the contrast test. */
+@utility app-bar {
+  background: var(--bar);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid var(--bar-line);
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background: var(--bar-solid);
+  }
+}
+
+/* The 44 px round and pill buttons on the right of the top bar. */
+@utility bar-button {
+  display: flex;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1000px;
+  background: var(--hover);
+  transition:
+    transform 0.3s var(--ease-spring),
+    background-color 0.2s ease;
+
+  &:hover {
+    transform: scale(1.06);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
   }
 }
 
@@ -364,6 +406,21 @@
 .surface * {
   scrollbar-width: thin;
   scrollbar-color: var(--line) transparent;
+}
+
+.dl-menu {
+  animation: dl-menu 0.22s cubic-bezier(0.3, 1.3, 0.4, 1);
+}
+
+@keyframes dl-menu {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .dl-backdrop {
