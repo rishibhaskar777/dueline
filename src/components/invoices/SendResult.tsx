@@ -2,7 +2,8 @@
 
 import { Check, TriangleAlert } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { showStepHeading } from "@/components/invoices/step-focus";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { sendInvoiceDraft } from "@/lib/api-client";
 import { formatDate } from "@/lib/format-date";
@@ -24,6 +25,8 @@ export function SendResult({ result: first, onCreateAnother }: SendResultProps) 
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const { invoice, sent } = result;
+
+  useEffect(showStepHeading, [sent]);
 
   async function retry() {
     setPending(true);
