@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
+import { ConnectPayPalCard } from "@/components/profile/ConnectPayPalCard";
 import { ProfileFields } from "@/components/profile/ProfileFields";
 import {
   toForm,
@@ -47,21 +48,16 @@ export function ProfileForm({ initial }: { initial: Profile }) {
   }
 
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-2">
+    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-[18px] lg:grid-cols-[minmax(0,1fr)_360px]">
       <form
         onSubmit={onSubmit}
         noValidate
         aria-labelledby="profile-title"
-        className="grid gap-5 surface p-6"
+        className="surface grid gap-x-4 gap-y-[18px] p-7 max-md:p-5 sm:grid-cols-2 [--surface-radius:28px]"
       >
-        <div>
-          <h2 id="profile-title" className="text-xl font-semibold">
-            Your business
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Used on every invoice and reminder Dueline sends for you.
-          </p>
-        </div>
+        <h2 id="profile-title" className="sr-only">
+          Your business
+        </h2>
 
         <ProfileFields
           form={form}
@@ -73,17 +69,22 @@ export function ProfileForm({ initial }: { initial: Profile }) {
           onBlur={(field) => setVisited(new Set(visited).add(field))}
         />
 
-        {saveError && (
-          <p role="alert" className="text-sm text-late">
-            {saveError}
-          </p>
-        )}
-        <Button type="submit" disabled={pending} className="w-fit">
-          {pending ? "Saving…" : "Save profile"}
-        </Button>
+        <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 sm:col-span-2">
+          {saveError && (
+            <p role="alert" className="text-sm font-semibold text-late">
+              {saveError}
+            </p>
+          )}
+          <Button type="submit" size="lg" disabled={pending} className="px-[26px] font-bold">
+            {pending ? "Saving…" : "Save profile"}
+          </Button>
+        </div>
       </form>
 
-      <ProfilePreview form={form} />
+      <aside aria-label="Invoice header and PayPal" className="grid gap-4">
+        <ProfilePreview form={form} />
+        <ConnectPayPalCard />
+      </aside>
     </div>
   );
 }

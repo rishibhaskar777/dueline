@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { FieldError } from "@/components/invoices/FieldError";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 interface ProfileFieldProps {
   id: string;
@@ -15,7 +16,8 @@ interface ProfileFieldProps {
   inputMode?: "numeric";
   maxLength?: number;
   placeholder?: string;
-  className?: string;
+  // Spans both columns of the form grid.
+  wide?: boolean;
 }
 
 export function ProfileField({
@@ -30,15 +32,17 @@ export function ProfileField({
   inputMode,
   maxLength,
   placeholder,
-  className,
+  wide,
 }: ProfileFieldProps) {
   const describedBy = [help ? `${id}-help` : null, error ? `${id}-error` : null]
     .filter(Boolean)
     .join(" ");
 
   return (
-    <div className="grid gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
+    <div className={cn("grid content-start gap-1.5", wide && "sm:col-span-2")}>
+      <Label htmlFor={id} className="font-bold">
+        {label}
+      </Label>
       <Input
         id={id}
         type={type}
@@ -51,10 +55,10 @@ export function ProfileField({
         onBlur={onBlur}
         aria-invalid={Boolean(error)}
         aria-describedby={describedBy || undefined}
-        className={className}
+        className="h-[50px] rounded-[14px] px-3.5 text-base font-medium"
       />
       {help && (
-        <p id={`${id}-help`} className="text-xs text-muted-foreground">
+        <p id={`${id}-help`} className="text-[13px] text-subtle">
           {help}
         </p>
       )}

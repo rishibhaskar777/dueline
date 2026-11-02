@@ -31,7 +31,9 @@ function LibraryRow({ item, onChanged }: { item: LibraryItem; onChanged: () => v
   return (
     <li className="flex flex-wrap items-end gap-2 py-3">
       <div className="grid min-w-48 flex-1 gap-1.5">
-        <Label htmlFor={`library-${item.id}`}>Name</Label>
+        <Label htmlFor={`library-${item.id}`} className="font-bold">
+          Name
+        </Label>
         <Input
           id={`library-${item.id}`}
           value={name}
@@ -39,7 +41,7 @@ function LibraryRow({ item, onChanged }: { item: LibraryItem; onChanged: () => v
           onChange={(event) => setName(event.target.value)}
         />
       </div>
-      <p className="pb-2 text-sm tabular-nums">
+      <p className="pb-2.5 text-[15px] tabular-nums">
         {formatMoney({ currency: item.currency, value: item.unitAmount })}
         {item.sac && <span className="text-muted-foreground"> · SAC {item.sac}</span>}
       </p>
@@ -71,17 +73,18 @@ export function LibraryManager() {
   const { items, reload } = useLibrary();
 
   return (
-    <section aria-labelledby="library-title" className="surface p-6">
-      <h2 id="library-title" className="text-xl font-semibold">
-        Item library
-      </h2>
-      <p className="mt-1 text-sm text-muted-foreground">
+    <section
+      aria-labelledby="library-title"
+      className="surface p-[26px] [--h2-size:24px] [--h2-tracking:-0.4px] max-md:p-5"
+    >
+      <h2 id="library-title">Item library</h2>
+      <p className="mt-1.5 text-[15px] text-muted-foreground">
         Items you saved from New invoice, ready to add to the next one.
       </p>
       {items.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">Nothing saved yet.</p>
+        <p className="mt-3 text-[15px] text-muted-foreground">Nothing saved yet.</p>
       ) : (
-        <ul className="mt-2 divide-y divide-line">
+        <ul className="mt-2 divide-y divide-bar-line">
           {items.map((item) => (
             <LibraryRow key={`${item.id}:${item.name}`} item={item} onChanged={reload} />
           ))}
