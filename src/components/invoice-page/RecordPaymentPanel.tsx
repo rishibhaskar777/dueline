@@ -50,7 +50,7 @@ export function RecordPaymentPanel(props: RecordPaymentPanelProps) {
     <form
       onSubmit={onSubmit}
       aria-labelledby="record-title"
-      className="grid gap-3 rounded-lg border border-line bg-ground p-4"
+      className="grid gap-3 rounded-[20px] bg-inner p-5"
     >
       <h3 id="record-title" className="font-semibold">
         Record a payment outside PayPal
@@ -66,7 +66,7 @@ export function RecordPaymentPanel(props: RecordPaymentPanelProps) {
             id="payment-method"
             value={method}
             onChange={(event) => setMethod(event.target.value as PaymentMethod)}
-            className="h-8 rounded-lg border border-input bg-card px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="h-11 rounded-[14px] border-[1.5px] border-input bg-field px-3 text-[15px] outline-none focus-visible:border-field-focus focus-visible:ring-4 focus-visible:ring-focus-halo"
           >
             {METHODS.map(({ value, label }) => (
               <option key={value} value={value}>

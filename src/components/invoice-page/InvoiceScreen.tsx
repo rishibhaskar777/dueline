@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useCallback } from "react";
+import { AmountCard } from "@/components/invoice-page/AmountCard";
 import { InvoiceActions } from "@/components/invoice-page/InvoiceActions";
-import { InvoiceDetailsCard } from "@/components/invoice-page/InvoiceDetailsCard";
 import { InvoiceFacts } from "@/components/invoice-page/InvoiceFacts";
 import { InvoiceHeader } from "@/components/invoice-page/InvoiceHeader";
+import { ItemsCard } from "@/components/invoice-page/ItemsCard";
 import { Timeline } from "@/components/invoice-page/Timeline";
 import { LoadFailure } from "@/components/shared/LoadFailure";
 import { SkeletonBlock } from "@/components/shared/SkeletonBlock";
@@ -19,7 +20,7 @@ function NotFound() {
       <h1 className="text-xl font-semibold">We couldn&apos;t find that invoice</h1>
       <p className="mt-2 text-sm">
         <Link href="/receivables" className="text-blue underline underline-offset-2">
-          Back to Receivables
+          Back to Home
         </Link>
       </p>
     </div>
@@ -42,12 +43,13 @@ export function InvoiceScreen({ invoiceId }: { invoiceId: string }) {
 
   const { invoice, details, timeline } = state.data;
   return (
-    <div className="grid gap-6">
-      <InvoiceHeader invoice={invoice} clientKey={details.clientKey} today={today} />
-      <InvoiceFacts invoice={invoice} details={details} today={today} />
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="grid gap-6">
-          <InvoiceDetailsCard details={details} />
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5">
+      <InvoiceHeader invoice={invoice} details={details} today={today} />
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
+          <AmountCard invoice={invoice} />
+          <InvoiceFacts invoice={invoice} details={details} today={today} />
+          <ItemsCard details={details} />
           <InvoiceActions invoice={invoice} details={details} today={today} onChanged={reload} />
         </div>
         <Timeline events={timeline} />
