@@ -48,7 +48,7 @@ export function featuredRate(
   if (!line) return null;
   const comparison = rateComparison(line.percentVsAverage);
   return {
-    text: `${line.currency} ₹${formatRate(line.rate, 2)}${comparison && ` · ${comparison}`}`,
+    text: `${line.currency} ₹${formatRate(line.rate)}${comparison && ` · ${comparison}`}`,
     alerts: alerts.filter(({ currency }) => currency === line.currency),
   };
 }

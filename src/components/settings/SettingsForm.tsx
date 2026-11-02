@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { ApiClientError, getDashboard, getSettings, saveSettings } from "@/lib/api-client";
 import { formatDate } from "@/lib/format-date";
+import { formatRate } from "@/lib/money/format";
 import { automationOf } from "./automation-form";
 import { averageGap } from "./payout-lines";
 import { currencySchema, type CurrencyCode, type Settings } from "@/types";
@@ -188,7 +189,9 @@ function RatesTable({ form, update, manual, invalidField, caption, gaps }: Rates
                   inputMode="decimal"
                   autoComplete="off"
                   readOnly={!manual}
-                  value={form.marketRates[code]}
+                  value={
+                    manual ? form.marketRates[code] : formatRate(Number(form.marketRates[code]))
+                  }
                   onChange={(event) =>
                     update({ marketRates: { ...form.marketRates, [code]: event.target.value } })
                   }

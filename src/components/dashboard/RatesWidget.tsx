@@ -15,7 +15,7 @@ function Lines({ rates, alerts }: { rates: Rates; alerts: TriggeredRateAlert[] }
       <ul className="grid gap-1">
         {rates.lines.map(({ currency, rate, percentVsAverage }) => (
           <li key={currency} className="text-sm tabular-nums">
-            <span className="font-medium">{currency}</span> ₹{formatRate(rate, 2)}
+            <span className="font-medium">{currency}</span> ₹{formatRate(rate)}
             {percentVsAverage !== null && (
               <span className="text-muted-foreground">, {rateComparison(percentVsAverage)}</span>
             )}

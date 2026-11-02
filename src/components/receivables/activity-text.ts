@@ -60,3 +60,10 @@ export function eventWhen(at: string, today: string, now: number = Date.now()): 
   }
   return relativeTime(at, today, now);
 }
+
+export const ACTIVITY_PREVIEW = 6;
+
+// The newest events (the list is newest first) until the person asks for the rest.
+export function visibleEvents(events: ActivityEvent[], expanded: boolean): ActivityEvent[] {
+  return expanded ? events : events.slice(0, ACTIVITY_PREVIEW);
+}
