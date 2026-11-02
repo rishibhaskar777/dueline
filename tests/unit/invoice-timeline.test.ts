@@ -29,6 +29,31 @@ const viewed = (id: string, at: string): ActivityEvent => ({
 });
 
 describe("buildTimeline", () => {
+  it("leaves the due date out when the invoice was paid on or before it", () => {
+    for (const paidOn of ["2026-10-28", "2026-10-30"]) {
+      const kinds = buildTimeline({
+        today: "2026-11-02",
+        invoice: raw("PAID"),
+        summary: paidInvoice("2026-10-30", paidOn),
+        reminders: [],
+        activity: [],
+      }).map(({ kind }) => kind);
+      expect(kinds).not.toContain("due");
+      expect(kinds[0]).toBe("paid");
+    }
+  });
+
+  it("keeps the due date, before the payment, when the invoice was paid late", () => {
+    const kinds = buildTimeline({
+      today: "2026-11-02",
+      invoice: raw("PAID"),
+      summary: paidInvoice("2026-10-25", "2026-10-30"),
+      reminders: [],
+      activity: [],
+    }).map(({ kind }) => kind);
+    expect(kinds.indexOf("paid")).toBeLessThan(kinds.indexOf("due"));
+  });
+
   it("lists created, sent, reminders and views newest first", () => {
     const events = buildTimeline({
       today: "2026-08-01",

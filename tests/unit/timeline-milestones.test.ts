@@ -67,11 +67,11 @@ describe("the due and overdue milestones", () => {
     ]);
   });
 
-  it("adds the due date but no overdue day to an invoice paid before it fell due", () => {
+  it("adds neither the due date nor an overdue day to an invoice paid before it fell due", () => {
     const kinds = build(raw("PAID"), paidInvoice("2026-08-15", "2026-08-10"), "2026-08-20").map(
       ({ kind }) => kind,
     );
-    expect(kinds).toEqual(["due", "paid", "sent", "created"]);
+    expect(kinds).toEqual(["paid", "sent", "created"]);
   });
 
   it("adds no overdue day to an invoice paid on the due date", () => {

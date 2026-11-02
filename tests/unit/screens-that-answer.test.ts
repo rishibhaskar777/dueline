@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { digestLines } from "@/components/dashboard/digest-lines";
 import { isNothingDue } from "@/components/dashboard/forecast-summary";
-import { dueSentence, lutSentence } from "@/components/invoice-page/invoice-facts";
+import { clientLine, dueSentence, lutSentence } from "@/components/invoice-page/invoice-facts";
 import {
   publishOverdueCount,
   readOverdueCount,
@@ -181,5 +181,16 @@ describe("the overdue count", () => {
     publishOverdueCount(0);
     expect(readOverdueCount()).toBe(0);
     expect(listener).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("clientLine", () => {
+  it("puts the country before the email when it is known", () => {
+    expect(clientLine("maya@example.com", "US")).toBe("United States · maya@example.com");
+  });
+
+  it("is just the email when the country is not known", () => {
+    expect(clientLine("maya@example.com", null)).toBe("maya@example.com");
+    expect(clientLine("maya@example.com", undefined)).toBe("maya@example.com");
   });
 });

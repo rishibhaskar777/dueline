@@ -217,3 +217,33 @@ describe("api client", () => {
     expect(exportRegisterCsvUrl("2026-10")).toBe("/api/export-register?month=2026-10&format=csv");
   });
 });
+
+describe("a request after a cold start", () => {
+  it("reads again once when the first try gets no answer, and answers from the second", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockResolvedValue(Response.json({ invoices: [] }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getInvoices()).resolves.toEqual({ invoices: [] });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("says the app could not be reached, never the browser's raw message", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+
+    await expect(getInvoices()).rejects.toMatchObject({
+      code: "network_error",
+      message: "Could not reach Dueline. Check your connection and try again.",
+    });
+  });
+
+  it("does not send a write twice", async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError("Failed to fetch"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(resetDemo()).rejects.toMatchObject({ code: "network_error" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});

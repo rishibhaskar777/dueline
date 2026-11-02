@@ -18,12 +18,10 @@ describe("formatMoney", () => {
 });
 
 describe("formatRate", () => {
-  it("shows four decimals", () => {
-    expect(formatRate(85.36)).toBe("85.3600");
-  });
-
-  it("shows the number of decimals asked for", () => {
-    expect(formatRate(85.355, 2)).toBe("85.36");
+  it("shows a rupee rate to the paisa", () => {
+    expect(formatRate(85.36)).toBe("85.36");
+    expect(formatRate(94.9095)).toBe("94.91");
+    expect(formatRate(92.0622)).toBe("92.06");
   });
 });
 

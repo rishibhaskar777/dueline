@@ -7,10 +7,14 @@ import { stubEnv } from "../support/env";
 
 const secret = "s".repeat(32);
 
-function signIn(password: unknown, address: string): Request {
+function signIn(password: unknown, address: string, browser?: string): Request {
   return new Request("http://localhost:3000/api/demo/session", {
     method: "POST",
-    headers: { "content-type": "application/json", "x-forwarded-for": `${address}, 10.0.0.1` },
+    headers: {
+      "content-type": "application/json",
+      "x-forwarded-for": `${address}, 10.0.0.1`,
+      ...(browser ? { cookie: `dueline_browser=${browser}` } : {}),
+    },
     body: JSON.stringify({ password }),
   });
 }
@@ -48,7 +52,7 @@ describe("POST /api/demo/session", () => {
     const response = await POST(signIn("nope", "198.51.100.3"));
     expect(response.status).toBe(401);
     expect((await response.json()).error.code).toBe("unauthorized");
-    expect(response.headers.get("set-cookie")).toBeNull();
+    expect(response.headers.get("set-cookie")).not.toContain(`${DEMO_COOKIE_NAME}=`);
   });
 
   it("answers 400 for a missing or oversized password", async () => {
@@ -56,14 +60,48 @@ describe("POST /api/demo/session", () => {
     expect((await POST(signIn("x".repeat(201), "198.51.100.4"))).status).toBe(400);
   });
 
-  it("answers 429 from the 11th attempt in 15 minutes, per address", async () => {
+  it("answers 429 from the 11th attempt of one browser in 15 minutes", async () => {
+    const browser = "11111111-1111-4111-8111-111111111111";
     for (let attempt = 1; attempt <= 10; attempt++) {
-      expect((await POST(signIn("wrong", "198.51.100.5"))).status).toBe(401);
+      expect((await POST(signIn("wrong", "198.51.100.5", browser))).status).toBe(401);
     }
-    const blocked = await POST(signIn("open sesame", "198.51.100.5"));
+    const blocked = await POST(signIn("open sesame", "198.51.100.5", browser));
     expect(blocked.status).toBe(429);
     expect((await blocked.json()).error.code).toBe("rate_limited");
-    expect((await POST(signIn("open sesame", "198.51.100.6"))).status).toBe(204);
+  });
+
+  it("does not lock out another browser on the same address", async () => {
+    const first = "22222222-2222-4222-8222-222222222222";
+    const second = "33333333-3333-4333-8333-333333333333";
+    for (let attempt = 1; attempt <= 11; attempt++) {
+      await POST(signIn("wrong", "198.51.100.6", first));
+    }
+    expect((await POST(signIn("open sesame", "198.51.100.6", first))).status).toBe(429);
+    expect((await POST(signIn("open sesame", "198.51.100.6", second))).status).toBe(204);
+  });
+
+  it("holds an address that keeps dropping its browser cookie", async () => {
+    for (let attempt = 1; attempt <= 60; attempt++) {
+      expect((await POST(signIn("wrong", "198.51.100.8"))).status).toBe(401);
+    }
+    expect((await POST(signIn("open sesame", "198.51.100.8"))).status).toBe(429);
+    expect((await POST(signIn("open sesame", "198.51.100.9"))).status).toBe(204);
+  });
+
+  it("gives a new browser an id, and keeps the one it has", async () => {
+    const fresh = await POST(signIn("nope", "198.51.100.10"));
+    expect(fresh.headers.get("set-cookie")).toMatch(/dueline_browser=[0-9a-f-]{36}/);
+    const known = await POST(
+      signIn("nope", "198.51.100.10", "44444444-4444-4444-8444-444444444444"),
+    );
+    expect(known.headers.get("set-cookie")).toBeNull();
+  });
+
+  it("keeps the browser id out of script reach and apart from the session", async () => {
+    const cookie = (await POST(signIn("nope", "198.51.100.11"))).headers.get("set-cookie") ?? "";
+    expect(cookie).toContain("HttpOnly");
+    expect(cookie).toContain("SameSite=Lax");
+    expect(cookie).not.toContain(secret);
   });
 
   it("answers 500 config_error when access is not set up", async () => {
