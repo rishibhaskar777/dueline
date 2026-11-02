@@ -90,8 +90,39 @@ function sendToSignIn(): void {
   window.location.assign(signInUrl());
 }
 
+const NETWORK_MESSAGE = "Could not reach Dueline. Check your connection and try again.";
+const COLD_START_PAUSE_MS = 700;
+
+const isRead = (init?: RequestInit): boolean => (init?.method ?? "GET") === "GET";
+
+// A function that has been asleep can fail its first request before it answers in JSON, with no
+// answer at all or a platform error page. Reading again is safe, so a read is tried once more.
+async function attempt(
+  path: string,
+  init?: RequestInit,
+): Promise<{ response: Response | null; retry: boolean }> {
+  try {
+    const response = await fetch(path, init);
+    const platformError =
+      response.status >= 500 && !response.headers.get("content-type")?.includes("json");
+    return { response, retry: platformError };
+  } catch {
+    return { response: null, retry: true };
+  }
+}
+
+async function fetchWithColdStartRetry(path: string, init?: RequestInit): Promise<Response> {
+  let outcome = await attempt(path, init);
+  if (outcome.retry && isRead(init)) {
+    await new Promise((resolve) => setTimeout(resolve, COLD_START_PAUSE_MS));
+    outcome = await attempt(path, init);
+  }
+  if (!outcome.response) throw new ApiClientError(0, "network_error", NETWORK_MESSAGE);
+  return outcome.response;
+}
+
 async function request(path: string, init?: RequestInit): Promise<Response> {
-  const response = await fetch(path, init);
+  const response = await fetchWithColdStartRetry(path, init);
   if (response.ok) return response;
 
   const error = await toError(response);

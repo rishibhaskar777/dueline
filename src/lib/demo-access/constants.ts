@@ -1,4 +1,5 @@
 export const DEMO_COOKIE_NAME = "dueline_demo";
+export const BROWSER_COOKIE_NAME = "dueline_browser";
 export const DEMO_SESSION_SECONDS = 7 * 24 * 60 * 60;
 
 interface DemoCookieOptions {

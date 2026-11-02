@@ -19,5 +19,5 @@ export function describeAlert({ currency, direction, threshold }: RateAlert): st
 }
 
 export function describeTriggered(alert: TriggeredRateAlert): string {
-  return `${describeAlert(alert)}: now ₹${formatRate(alert.rate, 2)}`;
+  return `${describeAlert(alert)}: now ₹${formatRate(alert.rate)}`;
 }

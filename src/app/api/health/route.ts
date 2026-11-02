@@ -3,6 +3,7 @@ import { isDemoClock, today, todayInKolkata } from "@/lib/clock";
 import { getEnv, isOffline } from "@/lib/env";
 import { getAccessToken } from "@/lib/paypal/token";
 import { getStore, storageKind } from "@/lib/store";
+import { retryOnce } from "@/lib/store/retry-once";
 import type { HealthResponse } from "@/types";
 import { ok } from "@/app/api/_lib/respond";
 
@@ -35,7 +36,7 @@ function checkOffline(): boolean {
 async function checkStorage(): Promise<HealthResponse["storage"]> {
   try {
     const kind = storageKind();
-    await getStore().ping();
+    await retryOnce(() => getStore().ping());
     return kind;
   } catch {
     return "error";

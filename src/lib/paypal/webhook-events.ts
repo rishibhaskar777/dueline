@@ -7,6 +7,7 @@ import { markerOf } from "./memo";
 import { getStore } from "@/lib/store";
 
 import { getInvoice } from "./invoices";
+import { invoicesWithPaidRow } from "./reconcile-paid";
 import { toInvoiceSummary } from "./map";
 import { getActualPayout } from "./payments";
 import { clearInvoiceCaches } from "./summaries";
@@ -63,6 +64,7 @@ async function refreshInvoice(event: WebhookEvent, invoiceId: string): Promise<v
 
   const summary = toInvoiceSummary(invoice, today(), payout);
   if (!summary) return;
+  if (kind === "paid" && (await invoicesWithPaidRow(store)).has(summary.id)) return;
   // A story invoice shares its row ids with the seed, so a webhook for it adds no second row.
   const story = storyMarkerOf(markerOf(invoice.detail.memo));
   await store.addActivity({
