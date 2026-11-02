@@ -16,6 +16,26 @@ const SCREENS: Screen[] = [
     path: "/",
     ready: (page) => expect(page.getByRole("heading", { level: 1 })).toBeVisible(),
   },
+  ...[
+    ["How it works", "/how-it-works"],
+    ["Features", "/features"],
+    ["For your CA", "/for-your-ca"],
+    ["Built on PayPal", "/built-on-paypal"],
+  ].map(([name, path]) => ({
+    name,
+    path,
+    ready: (page: Page) => expect(page.getByRole("heading", { level: 1 })).toBeVisible(),
+  })),
+  {
+    name: "Demo password",
+    path: "/demo",
+    ready: (page) => expect(page.getByLabel("Demo password")).toBeVisible(),
+  },
+  {
+    name: "Not found",
+    path: "/no-such-page",
+    ready: (page) => expect(page.getByRole("heading", { level: 1 })).toBeVisible(),
+  },
   {
     name: "Receivables",
     path: "/receivables",
@@ -98,6 +118,19 @@ const SCREENS: Screen[] = [
       await page.getByRole("button", { name: "Previous month" }).click();
       await expect(page.getByText("INV-0041").first()).toBeVisible();
     },
+  },
+  {
+    name: "Fees and rates",
+    path: "/settings",
+    ready: async (page) => {
+      await expect(page.getByLabel("PayPal fee (%)")).toBeVisible();
+      await expect(page.getByText("You receive")).toBeVisible();
+    },
+  },
+  {
+    name: "Demo tools",
+    path: "/demo-tools",
+    ready: (page) => expect(page.getByRole("button", { name: "Reset the demo" })).toBeVisible(),
   },
   {
     name: "Profile",
