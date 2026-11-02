@@ -11,7 +11,7 @@ export interface PaletteCommand {
 }
 
 const PAGES = [
-  { href: "/receivables", label: "Receivables", keywords: "dashboard home due line" },
+  { href: "/receivables", label: "Home", keywords: "receivables dashboard due line" },
   { href: "/clients", label: "Clients", keywords: "customers" },
   { href: "/invoices/new", label: "New invoice", keywords: "create paste chat" },
   { href: "/nudges", label: "Nudges", keywords: "reminders late chase" },
