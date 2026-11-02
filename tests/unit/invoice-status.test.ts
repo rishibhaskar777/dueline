@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { payoutSourceNote, rateNote, statusLabel } from "@/components/receivables/invoice-status";
+import {
+  payoutSourceNote,
+  payoutSourceWord,
+  rateNote,
+  statusLabel,
+  tableStatusLabel,
+} from "@/components/receivables/invoice-status";
 import { tandemInvoice } from "@/mocks/fixtures";
 import type { InvoiceSummary } from "@/types";
 
@@ -50,5 +56,37 @@ describe("rateNote", () => {
 
   it("says nothing when PayPal reported the rupees", () => {
     expect(rateNote(invoice({ rateDate: null }))).toBeNull();
+  });
+});
+
+describe("tableStatusLabel", () => {
+  it("adds how many days late an overdue invoice is", () => {
+    expect(
+      tableStatusLabel(
+        invoice({ dueState: "overdue", dueOn: "2026-10-22", daysLate: 8 }),
+        "2026-10-30",
+      ),
+    ).toBe("Overdue · 8 days");
+    expect(
+      tableStatusLabel(
+        invoice({ dueState: "overdue", dueOn: "2026-10-29", daysLate: 1 }),
+        "2026-10-30",
+      ),
+    ).toBe("Overdue · 1 day");
+  });
+
+  it("leaves every other status as it is", () => {
+    expect(
+      tableStatusLabel(invoice({ dueState: "due_soon", dueOn: "2026-11-01" }), "2026-10-30"),
+    ).toBe("Due soon");
+    expect(tableStatusLabel(invoice({ dueState: "paid" }), "2026-10-30")).toBe("Paid");
+  });
+});
+
+describe("payoutSourceWord", () => {
+  it("is the short word the table shows beside the rupees", () => {
+    expect(payoutSourceWord("estimate")).toBe("est.");
+    expect(payoutSourceWord("paypal")).toBe("PayPal");
+    expect(payoutSourceWord("outside_paypal")).toBe("bank");
   });
 });

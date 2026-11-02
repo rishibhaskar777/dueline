@@ -13,7 +13,6 @@ describe("invoice table model", () => {
       all: 6,
       overdue: 2,
       due_soon: 1,
-      unpaid: 4,
       paid: 2,
     });
   });
@@ -23,7 +22,6 @@ describe("invoice table model", () => {
       "INV-0043",
       "INV-0044",
     ]);
-    expect(filterByStatus(invoices, "unpaid")).toHaveLength(4);
     expect(filterByStatus(invoices, "paid").every((i) => i.dueState === "paid")).toBe(true);
     expect(filterByStatus(invoices, "all")).toHaveLength(6);
   });

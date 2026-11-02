@@ -35,7 +35,7 @@ function Body({ invoice }: { invoice: InvoiceSummary }) {
         <div>
           <p>
             About{" "}
-            <span className="font-heading text-3xl font-semibold text-foreground tabular-nums">
+            <span className="font-heading text-3xl font-extrabold text-foreground tabular-nums">
               {formatRupees(invoice.payoutInr)}
             </span>{" "}
             reaches your bank
@@ -86,7 +86,7 @@ export function InvoicePanel({ invoice, today, onClose }: InvoicePanelProps) {
               <DialogDescription className="flex flex-wrap items-center gap-2">
                 <span>Invoice {invoice.number}</span>
                 <StatusBadge invoice={invoice} today={today} />
-                <span className="font-medium text-foreground tabular-nums">
+                <span className="font-heading font-extrabold text-foreground tabular-nums">
                   {formatMoney(invoice.amount)}
                 </span>
               </DialogDescription>

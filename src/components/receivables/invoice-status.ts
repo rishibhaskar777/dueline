@@ -34,3 +34,21 @@ export function statusLabel(invoice: InvoiceSummary, today: string): string {
   if (invoice.dueState !== "paid" && invoice.dueOn === today) return "Due today";
   return LABELS[invoice.dueState];
 }
+
+// The table and its cards say how late an overdue invoice is, so they need no column for it.
+export function tableStatusLabel(invoice: InvoiceSummary, today: string): string {
+  const label = statusLabel(invoice, today);
+  if (invoice.dueState !== "overdue" || label !== LABELS.overdue) return label;
+  return `${label} · ${invoice.daysLate} ${invoice.daysLate === 1 ? "day" : "days"}`;
+}
+
+const SOURCE_WORDS: Record<PayoutSource, string> = {
+  paypal: "PayPal",
+  estimate: "est.",
+  outside_paypal: "bank",
+};
+
+// The small word beside a rupee figure in the table.
+export function payoutSourceWord(source: PayoutSource): string {
+  return SOURCE_WORDS[source];
+}
