@@ -39,6 +39,9 @@ export interface LateClient {
   overdueInr: number;
   riskLevel: RiskLevel | null;
   reason: string;
+  lateCount: number;
+  invoicesConsidered: number;
+  averageDaysLate: number;
 }
 
 export interface RateLine {

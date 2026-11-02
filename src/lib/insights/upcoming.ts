@@ -43,6 +43,9 @@ export function lateClients(groups: ClientGroup[]): LateClient[] {
             group.score.invoicesConsidered,
             group.invoices.some(({ mergedFrom }) => mergedFrom),
           ),
+          lateCount: group.score.lateCount,
+          invoicesConsidered: group.score.invoicesConsidered,
+          averageDaysLate: group.score.averageDaysLate,
         },
       ];
     })
