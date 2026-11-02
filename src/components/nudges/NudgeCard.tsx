@@ -1,17 +1,19 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DraftStatus } from "./DraftStatus";
 import { EmailMessageActions } from "./EmailMessageActions";
+import { EmailPreviewPanel } from "./EmailPreviewPanel";
 import { LanguageNote } from "./LanguageNote";
 import { NudgeHeader } from "./NudgeHeader";
-import { sentMessage } from "./nudge-model";
-import { DraftStatus } from "./DraftStatus";
+import { paypalSentNote, payTimeLine, sendStates, sentMessage } from "./nudge-model";
 import { ReplaceEditsPrompt } from "./ReplaceEditsPrompt";
-import { ToneSwitch } from "./ToneSwitch";
+import { SendPanel } from "./SendPanel";
+import { ToneControl } from "./ToneControl";
 import type { Nudge } from "./use-nudges";
 import { useNudgeDraft, type ImproveDraft } from "./use-nudge-draft";
 
@@ -35,22 +37,29 @@ export function NudgeCard({
 }: NudgeCardProps) {
   const id = useId();
   const nudge = useNudgeDraft(initial, improve, onSent);
+  const [previewing, setPreviewing] = useState(false);
   const { draft, drafting, sending, closed, sentVia, sentAt, pendingRedraft } = nudge;
   const busy = drafting || sending;
   const locked = busy || closed;
+  const states = sendStates(sentVia);
+  const paypalNote = paypalSentNote(nudge.history);
 
   return (
-    <li id={`invoice-${encodeURIComponent(invoice.id)}`} className="scroll-mt-6 surface p-6">
-      <NudgeHeader invoice={invoice} paySpeed={paySpeed} history={nudge.history} />
-
-      <div className="mt-5 grid gap-4">
-        <ToneSwitch
-          tone={draft.tone}
-          suggestedTone={draft.suggestedTone}
-          disabled={locked}
-          onChange={nudge.switchTone}
-        />
-        <p className="text-sm text-muted-foreground">{draft.reason}</p>
+    <li
+      id={`invoice-${encodeURIComponent(invoice.id)}`}
+      className="grid scroll-mt-6 gap-7 surface p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_300px]"
+    >
+      <div className="grid min-w-0 content-start gap-4">
+        <NudgeHeader invoice={invoice} history={nudge.history} />
+        <div className="self-start">
+          <ToneControl
+            tone={draft.tone}
+            suggestedTone={draft.suggestedTone}
+            disabled={locked}
+            onChange={nudge.switchTone}
+          />
+        </div>
+        <p className="text-[15px] text-muted-foreground">{draft.reason}</p>
         <LanguageNote
           clientLanguage={nudge.clientLanguage}
           language={draft.language}
@@ -72,67 +81,92 @@ export function NudgeCard({
         )}
 
         <div className="grid gap-1.5" aria-busy={drafting || nudge.improving}>
-          <Label htmlFor={`${id}-subject`}>Subject</Label>
+          <Label htmlFor={`${id}-subject`} className="font-bold">
+            Subject
+          </Label>
           <Input
             id={`${id}-subject`}
             value={nudge.subject}
             disabled={locked}
             onChange={(event) => nudge.setSubject(event.target.value)}
           />
-          <Label htmlFor={`${id}-message`} className="mt-2">
+          <Label htmlFor={`${id}-message`} className="mt-2.5 font-bold">
             Message
           </Label>
           <Textarea
             id={`${id}-message`}
-            rows={9}
+            rows={11}
             value={nudge.message}
             disabled={locked}
             onChange={(event) => nudge.setMessage(event.target.value)}
+            className="rounded-2xl p-4 leading-[1.6]"
           />
           <DraftStatus nudge={nudge} />
         </div>
+      </div>
 
-        <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
-          <div className="grid max-w-xs gap-1.5">
+      <div className="grid min-w-0 content-start gap-3.5">
+        <SendPanel title="Send PayPal reminder">
+          <p className="text-sm leading-normal text-muted-foreground">
+            PayPal emails its standard reminder with a Pay now button. PayPal writes the wording.
+          </p>
+          {states.paypal === "sent" && paypalNote ? (
+            <p className="rounded-xl bg-tint-green px-3.5 py-2.5 text-sm font-bold text-paid">
+              {paypalNote}
+            </p>
+          ) : (
             <Button
               type="button"
+              className="h-11 justify-self-start px-5 font-bold"
               disabled={busy || sentVia.paypal || limitReached}
               onClick={() => nudge.send("paypal")}
             >
               {sending ? "Sending…" : "Send PayPal reminder"}
             </Button>
-            <p className="text-sm text-muted-foreground">
-              PayPal emails its standard reminder with a Pay now button. PayPal writes the wording.
-            </p>
-            {sentVia.paypal && (
-              <p className="text-sm text-muted-foreground">
-                A PayPal reminder was already sent today.
-              </p>
-            )}
-          </div>
-          <EmailMessageActions
+          )}
+        </SendPanel>
+        <EmailMessageActions
+          to={invoice.client.email}
+          subject={nudge.subject}
+          message={nudge.message}
+          payLink={invoice.payLink}
+          disabled={busy || states.email === "sent"}
+          sentToday={states.email === "sent"}
+          confirming={sending}
+          onConfirm={() => nudge.send("email")}
+          previewId={`${id}-email-preview`}
+          previewing={previewing}
+          onTogglePreview={() => setPreviewing((value) => !value)}
+        />
+        {paySpeed && (
+          <p className="text-sm text-muted-foreground">
+            {payTimeLine(invoice.client.name, paySpeed)}
+          </p>
+        )}
+        {sentAt && (
+          <p role="status" className="text-sm font-semibold text-paid">
+            {sentMessage(sentAt, nudge.history.at(-1)?.channel ?? "paypal")}
+          </p>
+        )}
+        {closed && <p className="text-sm text-muted-foreground">{ALL_SENT_TODAY}</p>}
+        {nudge.sendError && (
+          <p role="alert" className="text-sm text-late">
+            {nudge.sendError}
+          </p>
+        )}
+      </div>
+
+      {previewing && (
+        <div className="lg:col-span-2">
+          <EmailPreviewPanel
+            id={`${id}-email-preview`}
             to={invoice.client.email}
             subject={nudge.subject}
             message={nudge.message}
             payLink={invoice.payLink}
-            disabled={busy || sentVia.email}
-            sentToday={sentVia.email}
-            confirming={sending}
-            onConfirm={() => nudge.send("email")}
           />
-          {sentAt && (
-            <p role="status" className="text-sm font-medium text-paid">
-              {sentMessage(sentAt, nudge.history.at(-1)?.channel ?? "paypal")}
-            </p>
-          )}
-          {closed && <p className="text-sm text-muted-foreground">{ALL_SENT_TODAY}</p>}
-          {nudge.sendError && (
-            <p role="alert" className="text-sm text-late">
-              {nudge.sendError}
-            </p>
-          )}
         </div>
-      </div>
+      )}
     </li>
   );
 }

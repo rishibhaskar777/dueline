@@ -1,7 +1,8 @@
 import { todayInKolkata } from "@/lib/date-math";
 import { formatDayMonth } from "@/lib/format-date";
+import { formatDays } from "@/lib/format-days";
 import { languageInfo } from "@/lib/reminders/languages";
-import type { ReminderChannel, ReminderDraft, ReminderLanguage, Tone } from "@/types";
+import type { PaySpeed, ReminderChannel, ReminderDraft, ReminderLanguage, Tone } from "@/types";
 
 export const TONE_LABELS: Record<Tone, string> = {
   gentle: "Gentle",
@@ -36,6 +37,38 @@ export function sentTodayVia(
   return history.some(
     (entry) => entry.channel === channel && todayInKolkata(new Date(entry.sentAt)) === today,
   );
+}
+
+// "Firm · suggested" for the tone the app suggests, the plain name for the others.
+export function toneOptionLabel(tone: Tone, suggestedTone: Tone): string {
+  return tone === suggestedTone ? `${TONE_LABELS[tone]} · suggested` : TONE_LABELS[tone];
+}
+
+// "✓ Firm reminder sent through PayPal, 2 Nov" for the latest PayPal reminder sent today.
+export function paypalSentNote(history: SentReminder[], now: Date = new Date()): string | null {
+  const today = todayInKolkata(now);
+  const latest = history.findLast(
+    (entry) => entry.channel === "paypal" && todayInKolkata(new Date(entry.sentAt)) === today,
+  );
+  return latest
+    ? `✓ ${TONE_LABELS[latest.tone]} reminder sent through PayPal, ${formatDayMonth(today)}`
+    : null;
+}
+
+export type SendState = "send" | "sent";
+
+// Which way out each panel offers: the buttons, or the note that today's has gone.
+export function sendStates(
+  sentVia: Record<ReminderChannel, boolean>,
+): Record<ReminderChannel, SendState> {
+  return {
+    paypal: sentVia.paypal ? "sent" : "send",
+    email: sentVia.email ? "sent" : "send",
+  };
+}
+
+export function payTimeLine(clientName: string, paySpeed: PaySpeed): string {
+  return `${clientName} takes ${formatDays(paySpeed.averageDays)} to pay on average, ${paySpeed.onTimePercent}% on time.`;
 }
 
 type DraftText = Pick<ReminderDraft, "subject" | "message">;

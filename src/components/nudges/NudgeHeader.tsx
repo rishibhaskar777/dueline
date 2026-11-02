@@ -1,57 +1,50 @@
 "use client";
 
 import { RiskBadge } from "@/components/shared/RiskBadge";
-import { RiskReason } from "@/components/shared/RiskReason";
 import { useClientRisk } from "@/components/shared/use-client-risk";
 import { formatDate } from "@/lib/format-date";
-import { formatDays } from "@/lib/format-days";
 import { formatMoney } from "@/lib/money/format";
-import type { InvoiceSummary, PaySpeed, ReminderDraft } from "@/types";
+import type { InvoiceSummary, ReminderDraft } from "@/types";
 import { daysLateLabel, historyLabel } from "./nudge-model";
 
 interface NudgeHeaderProps {
   invoice: InvoiceSummary;
-  paySpeed: PaySpeed | null;
   history: ReminderDraft["history"];
 }
 
-export function NudgeHeader({ invoice, paySpeed, history }: NudgeHeaderProps) {
+export function NudgeHeader({ invoice, history }: NudgeHeaderProps) {
   const risk = useClientRisk(invoice.client.email, invoice.client.name);
+  const judged = risk && risk.invoicesConsidered > 0 ? risk : null;
 
   return (
-    <header>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <h2 className="text-xl font-semibold">{invoice.client.name}</h2>
-        {risk && risk.invoicesConsidered > 0 && <RiskBadge level={risk.level} />}
-      </div>
-      {risk && risk.invoicesConsidered > 0 && (
-        <p className="mt-1 text-sm">
-          <RiskReason risk={risk} />
+    <header className="flex flex-wrap items-start justify-between gap-3">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+          <h2 className="font-heading text-[28px] font-extrabold tracking-[-0.5px] break-words">
+            {invoice.client.name}
+          </h2>
+          {judged && <RiskBadge level={judged.level} />}
+        </div>
+        <p className="mt-1 text-[15px] text-muted-foreground">
+          Invoice {invoice.number} · due {formatDate(invoice.dueOn)}
+          {judged && ` · late on ${judged.lateCount} of ${judged.invoicesConsidered} invoices`}
         </p>
-      )}
-      <p className="mt-2 flex flex-wrap items-baseline gap-x-3 text-sm text-muted-foreground">
-        <span>Invoice {invoice.number}</span>
-        <span className="font-medium text-foreground tabular-nums">
+        {history.length > 0 && (
+          <ul className="mt-1.5 text-sm text-muted-foreground">
+            {history.map((entry) => (
+              <li key={entry.sentAt}>{historyLabel(entry)}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <p className="text-right">
+        <span className="block font-heading text-[30px] font-extrabold tabular-nums">
           {formatMoney(invoice.amount)}
         </span>
-        <span className="tabular-nums">Due {formatDate(invoice.dueOn)}</span>
-        <span className="font-medium text-late tabular-nums">
+        <span className="text-[15px] font-semibold text-late tabular-nums">
           {daysLateLabel(invoice.daysLate)}
         </span>
       </p>
-      {paySpeed && (
-        <p className="mt-1 text-sm text-muted-foreground">
-          Average days to get paid: {formatDays(paySpeed.averageDays)}, {paySpeed.onTimePercent}% on
-          time
-        </p>
-      )}
-      {history.length > 0 && (
-        <ul className="mt-2 text-sm text-muted-foreground">
-          {history.map((entry) => (
-            <li key={entry.sentAt}>{historyLabel(entry)}</li>
-          ))}
-        </ul>
-      )}
     </header>
   );
 }
