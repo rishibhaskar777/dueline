@@ -449,7 +449,7 @@ A merge is a row in `client_aliases` (migration 009). `loadInvoices` applies the
 radar also maps a typed name through them (`resolveClientName`). `checkMerge` refuses chains.
 `app_flags` holds "export_downloaded" (set when the register's CSV is served) and "checklist_dismissed".
 `GET /api/checklist` ticks the first-run items from the profile, settings, the invoices and those flags.
-The sidebar's overdue count is a small store (`overdue-count.ts`) that the Receivables poll publishes to.
+The Nudges tab's overdue count is a small store (`overdue-count.ts`) that the Receivables poll publishes to; `use-nudges-count.ts` also reads it every five minutes.
 The due line places end labels with `placeEndLabel` (`label-placement.ts`).
 
 ## Money views
@@ -576,7 +576,7 @@ or copying records nothing; "I sent it" posts `channel: "email"`, which only log
 The card shows `ReminderDraft.reason`, which names the facts behind the suggestion ("Suggested firm: 8 days late, and late on 3 of 3 invoices."); the Today queue item carries the same text. Switching tone calls `POST /api/reminders/draft`; when the subject or message was edited, the card
 first asks "Replace your edits with a Firm draft?" with "Replace" and "Keep editing", and nothing is
 drafted until the user chooses. Each draft gets its own request ID, so a retry never sends twice. After a send the card is closed for the day. Without
-overdue invoices the screen reads "No late invoices. Nothing to chase today." The sidebar shows no
+overdue invoices the screen reads "No late invoices. Nothing to chase today." The Nudges tab shows no
 count on Nudges: it sits in the layout and shares no state with the screens, so a count would need
 its own request for the invoice list.
 
@@ -616,7 +616,7 @@ creates or reminds is reachable from it, and a test checks the PayPal send funct
 not stored. `listQueue` checks every reminder item against the shown invoices and deletes the ones
 whose invoice is not shown, is paid or is no longer overdue, and `seedNewGeneration` clears the
 reminder items when a reset or the weekly re-seed starts a new generation. `GET /api/rate-alerts` evaluates
-the alerts in Settings against the rates in use and drives the sidebar badge and the optional browser
+the alerts in Settings against the rates in use and drives the account button's dot and the badge beside Fees and rates in its menu, and the optional browser
 notifications, which a client component polls once a minute while the app is open.
 
 `vercel.json` holds the one cron entry. `src/proxy.ts` lets `GET /api/cron/daily` through without the
@@ -628,8 +628,7 @@ itself. The Demo tools button calls `POST /api/demo/prepare`, which runs the sam
 The colours are custom properties in `src/app/globals.css`, with a `.dark` block that redefines them.
 A script in the page head sets the class from the saved choice, or from the device on a first visit, and `ThemeToggle` (and the command palette) switch it with `toggleTheme`, which reveals the new theme as a growing circle where the browser supports view transitions. Components use the tokens
 (`bg-card`, `text-foreground`, `text-late`), the AG Grid theme and the SVG charts read them, and
-`tests/unit/theme-contrast.test.ts` checks the text pairs in both themes. Below 768 px the sidebar is
-a top bar (`SidebarShell`), `useIsPhone` swaps the grids for card lists and the due line pins its
+`tests/unit/theme-contrast.test.ts` checks the text pairs in both themes. Below 768 px the top bar has a second row for the tabs (`AppBar`, `MainTabs`), `useIsPhone` swaps the grids for card lists and the due line pins its
 labels. The command palette (`CommandPalette`) builds its commands from the pages, the clients and
 the invoices (`buildCommands`) and searches them with `filterByQuery`.
 
@@ -638,7 +637,7 @@ The design system is in `src/app/globals.css`: the colour and glass tokens for b
 where `backdrop-filter` is missing) and the page background's classes. `Backdrop` draws that
 background once from the root layout, and its colours switch with the `.dark` class. Fonts are Outfit
 and Figtree through `next/font/google`. `useSlidingIndicator` and `pickIndicator` place the pill under
-the hovered, focused, clicked or active item, and `Segmented` uses them
+the hovered, focused, clicked or active item; `Segmented` and the main tabs (`MainTabs`, in the sticky `AppBar` with `AccountMenu`) use them
 ([decision 0023](decisions/0023-visual-redesign.md)).
 
 ## Demo story and reset
@@ -666,7 +665,7 @@ the invoice caches and returns the counts. A non-story invoice created in the la
 counted in `kept`, so a judge in the middle of an invoice does not lose it to another judge's reset.
 The daily run calls `reseedStaleDemo`: once the current generation is 7 days old it starts a new one,
 cancelling only the open story invoices of older generations, behind the same ten-minute slot. The
-"Demo" card (`DemoCard`) lives on its own page, `/demo-tools`, which the sidebar links to only when
+"Demo" card (`DemoCard`) lives on its own page, `/demo-tools`, which the account menu links to only when
 `GET /api/demo/recipient` succeeds (`useDemoMode`); it asks for confirmation inline and shows the
 result line.
 
@@ -703,7 +702,7 @@ both required; if one is missing, API routes answer 500 `config_error` and scree
 
 `/demo` renders `DemoSignIn`, which calls `signIn` in `api-client.ts` and then opens the `next`
 path, checked by `safeNextPath`. `api-client.ts` sends the browser to `/demo` when any other call
-answers 401. The sidebar's "Lock demo" button calls `signOut`.
+answers 401. The account menu's "Lock demo" item calls `signOut`.
 
 ## Webhooks
 
@@ -762,7 +761,7 @@ paid through PayPal with PayPal's own fee and rupee figures, three in the previo
 recent, so the export register has rows. The seed's own PayPal calls skip the wait for the seed by
 running inside an `AsyncLocalStorage` scope.
 
-`GET /api/health` reports `offline: true` and the sidebar shows an "Offline demo" badge.
+`GET /api/health` reports `offline: true` and the account menu shows an "Offline demo" badge.
 
 ## Content Security Policy
 

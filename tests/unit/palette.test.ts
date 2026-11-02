@@ -57,6 +57,11 @@ describe("the palette's commands", () => {
     expect(labels(filterByQuery(commands, "new invoice"))[0]).toBe("Go to New invoice");
   });
 
+  it("calls the receivables page Home and still finds it by its old name", () => {
+    expect(labels(filterByQuery(commands, "go home"))[0]).toBe("Go to Home");
+    expect(labels(filterByQuery(commands, "receivables"))[0]).toBe("Go to Home");
+  });
+
   it("toggles the theme", () => {
     const [toggle] = filterByQuery(commands, "toggle theme");
     expect(toggle.action).toEqual({ kind: "toggle-theme" });

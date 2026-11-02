@@ -124,7 +124,7 @@ export function ReviewStep({ initial, profile, onCreateAnother }: ReviewStepProp
         <DiscountSection form={form} update={update} errors={errors} />
       </div>
 
-      <div className="grid gap-4 lg:sticky lg:top-6">
+      <div className="grid gap-4 lg:sticky lg:top-24">
         <InvoiceSummaryCard totals={calculateTotals(form)} />
 
         {held && <HeldPanel notice={held} onCreateAnother={onCreateAnother} />}

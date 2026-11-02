@@ -32,6 +32,7 @@ test.describe("landing page and demo access", () => {
     await expect(totals).toContainText("Paid in the last 30 days");
     await expect(totals).toContainText("₹");
     await expect(page.getByRole("heading", { name: "The due line" })).toBeVisible();
+    await page.getByRole("button", { name: /^Account menu/ }).click();
     await expect(page.getByText("Offline demo", { exact: true })).toBeVisible();
   });
 

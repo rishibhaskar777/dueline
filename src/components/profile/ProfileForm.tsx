@@ -11,6 +11,7 @@ import {
   type ProfileFormValues,
 } from "@/components/profile/profile-form";
 import { ProfilePreview } from "@/components/profile/ProfilePreview";
+import { publishSavedProfile } from "@/components/profile/use-profile";
 import { Button } from "@/components/ui/button";
 import { saveProfile } from "@/lib/api-client";
 import type { Profile } from "@/types";
@@ -34,7 +35,9 @@ export function ProfileForm({ initial }: { initial: Profile }) {
     setPending(true);
     setSaveError(null);
     try {
-      setForm(toForm(await saveProfile(checked.profile)));
+      const saved = await saveProfile(checked.profile);
+      setForm(toForm(saved));
+      publishSavedProfile(saved);
       toast.success("Profile saved");
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "Could not save your profile.");

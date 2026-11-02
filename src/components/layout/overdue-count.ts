@@ -5,7 +5,7 @@ import { useSyncExternalStore } from "react";
 let count = 0;
 const listeners = new Set<() => void>();
 
-// The Receivables poll publishes what it reads, so the sidebar's count moves with it.
+// The Receivables poll publishes what it reads, so the Nudges tab's count moves with it.
 export function publishOverdueCount(next: number): void {
   if (next === count) return;
   count = next;
