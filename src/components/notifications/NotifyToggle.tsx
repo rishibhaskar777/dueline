@@ -43,14 +43,14 @@ export function NotifyToggle() {
   return (
     <div className="grid gap-1">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-medium">Notify me in this browser</span>
+        <span className="font-semibold">Notify me in this browser</span>
         <ToggleSwitch
           label="Notify me in this browser"
           checked={choice.on}
           onChange={(on) => void change(on)}
         />
       </div>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-[13px] text-subtle">
         Shows a notification while Dueline is open when a rate alert fires or a payment arrives.
         Nothing is sent by email or to other devices.
       </p>

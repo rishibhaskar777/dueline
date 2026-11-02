@@ -31,7 +31,7 @@ export function ToggleSwitch({ label, checked, onChange, disabled = false }: Tog
         <span
           className={cn(
             "absolute top-0.5 left-0.5 size-4.5 rounded-full shadow transition-transform motion-reduce:transition-none max-md:size-5.5",
-            checked ? "translate-x-5 bg-white" : "bg-muted-foreground",
+            checked ? "translate-x-5 bg-toggle-mark" : "bg-muted-foreground",
           )}
         />
       </span>
