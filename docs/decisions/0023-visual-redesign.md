@@ -148,3 +148,21 @@ The sidebar is replaced by a top bar on every app page (`AppBar`, `MainTabs`, `A
 - **Shared tone control.** The tone switch is the shared `Segmented` control, which gained a `disabled`
   option. The suggested tone reads "Firm · suggested", shortened to a dot on a phone with the words kept for
   screen readers.
+
+## App pages, the website and the theme switch
+
+- **App pages.** Export register, Profile, Fees and rates, Demo tools, the 404 page and the not-configured page
+  take the same cards, pills and fields. The register's four totals reuse `TotalCard`; its tables use the
+  shared `tableGridTheme`. The profile and settings pages are a form beside a 360 px column and stack below
+  1024 px. The fees page gained a "Vs 30-day average" column, read from the existing dashboard rates.
+- **Site layout and nav.** The public pages share one layout with `SiteNav` and a one-line footer. The nav reuses
+  the app bar's sliding indicator, and "Open the demo" always goes to `/receivables`, which the password page
+  intercepts, so the visitor lands on Home after signing in.
+- **Landing choices.** The three headings of the black section are buttons (`aria-pressed`) that change on hover,
+  focus or click and never by themselves. The three choices are data in `landing-choices.ts`. The inactive
+  headings are 40% white rather than 35%, because 35% fails the 3:1 contrast check for large text.
+- **Sign-in split.** The navy half is decorative apart from the logo link; on screens narrower than 1280 px it
+  becomes a short band without the floating cards.
+- **Instant theme switch.** The circle reveal needed view transitions and a second animation on top of the
+  colour fades. Most product sites switch instantly, which is calmer and cannot look broken on a slow device, so
+  the switch now suppresses all transitions for one frame and changes the class.
