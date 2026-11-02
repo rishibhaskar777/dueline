@@ -107,3 +107,44 @@ The sidebar is replaced by a top bar on every app page (`AppBar`, `MainTabs`, `A
   option is gone.
 - **Default layout.** The designed layout is stored under `dueline.layout.v2`, so everyone sees it once;
   a layout saved under v1 is ignored.
+
+## Clients and invoice pages
+
+- **Cards instead of the table.** `/clients` is a grid of cards (three columns from 1024 px, two from
+  768 px, one below). A card shows everything the table did except Last paid, which only appears in the
+  card's bottom line when there is no risk reason to say. The AG Grid table, its columns and its phone
+  card list are gone, so one layout serves every width and the whole card is one link. The search pill now
+  also matches email. Clients are ordered by what they owe, then by name.
+- **Client page.** The reason is a full-width strip tinted by the risk level, with the offer the radar
+  suggests; there is no strip for a client with no level. The tone is not on this page's data, so only the
+  offer is written. Totals reuse the Home `TotalCard`.
+- **Back link and header actions.** The invoice page's back link is "Home", as the tab is called. The payer
+  link, copy and reminder buttons move from the Actions card to the header and show on the same conditions as
+  before (`headerActions`); Actions keeps Duplicate, Repeat monthly, Record a payment, Hide from the demo and
+  Cancel. The cancel question is a red panel in the card, with the same wording and buttons.
+- **Lateness in the list.** On the client page only, an invoice paid late says so in its pill ("Paid · 3 days
+  late", "Paid outside PayPal · 16 days late"), from `clientStatusLabel`. Home and the invoice page keep their
+  wording.
+- **History.** A vertical timeline with a dot per kind of event (`timelineDot`).
+
+## New invoice and Nudges
+
+- **Step header.** The step pill shows where you are and is not a control: the app has no way back from the
+  review step that keeps your edits, so it is not a button. The heading changes with the step, and the sent
+  result is its own page with its own h1.
+- **Notices as pills.** What the privacy filter hid is green; every note and warning from reading the chat is
+  amber. The text and data are the same as the old panel's.
+- **Discount inside Details.** The early-payment discount is two rows of the Details card, not a card of its
+  own. The late-payer radar is a strip in the risk tone and still fills that discount.
+- **Item rows.** Items are rows of fields with one header row when the card is 768 px wide; narrower, each row
+  wraps to two lines and shows its labels. The card decides (a container query), not the screen, because beside
+  the summary it is only about 530 px wide on a 1024 px laptop. The Client and Details fields stack the same way.
+- **Two action panels.** A nudge offers PayPal's reminder and the freelancer's own message as two panels
+  beside the draft. When PayPal's reminder has gone today the button is replaced by a note saying so; the
+  email panel keeps its confirm step ("I sent it") and its sent-today note.
+- **Email preview.** "Preview" opens the email across the whole nudge card, below the draft and the action
+  column, so the message is not squeezed into the 300 px column. The card owns the open state; the button keeps
+  its toggle label and `aria-controls`.
+- **Shared tone control.** The tone switch is the shared `Segmented` control, which gained a `disabled`
+  option. The suggested tone reads "Firm · suggested", shortened to a dot on a phone with the words kept for
+  screen readers.
