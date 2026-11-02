@@ -7,7 +7,9 @@ test.describe("Keyboard use", () => {
     page,
   }) => {
     await page.goto("/receivables");
-    await expect(page.getByRole("heading", { name: "Money owed to you" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: /^Good (morning|afternoon|evening|day)/ }),
+    ).toBeVisible();
 
     let inNavigation = false;
     for (let presses = 0; presses < MAX_TABS && !inNavigation; presses++) {

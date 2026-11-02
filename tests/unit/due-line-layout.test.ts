@@ -4,6 +4,7 @@ import {
   DEFAULT_AXIS_PX,
   HISTORY_DAYS,
   layoutDueLine,
+  MIN_LABEL_SPACING_PX,
   MIN_LINE_PX,
   TODAY_LABEL_CLEARANCE_PX,
 } from "@/components/receivables/due-line-layout";
@@ -40,8 +41,7 @@ describe("layoutDueLine", () => {
 
   it("draws a paid-on-time invoice in the paid colour with a filled end", () => {
     const [row] = layoutDueLine([haldenLabelsInvoice], "2026-10-30", false).rows;
-    expect(row.segments).toHaveLength(1);
-    expect(row.segments[0].tone).toBe("paid");
+    expect(row.tone).toBe("paid");
     expect(row.endMark).toBe("filled");
     expect(row.statusText).toBe("Paid");
     expect(row.accessibleName).toBe(
@@ -49,7 +49,7 @@ describe("layoutDueLine", () => {
     );
   });
 
-  it("turns the part after the due date late when an invoice was paid late", () => {
+  it("draws an invoice paid late in the late colour", () => {
     const [row] = layoutDueLine(
       [
         invoice({
@@ -62,10 +62,8 @@ describe("layoutDueLine", () => {
       "2026-10-30",
       false,
     ).rows;
-    expect(row.segments.map((segment) => segment.tone)).toEqual(["paid", "late"]);
-    expect(row.segments[0].to).toBe(row.segments[1].from);
-    expect(row.endTone).toBe("late");
-    expect(row.statusTone).toBe("late");
+    expect(row.tone).toBe("late");
+    expect(row.endMark).toBe("filled");
     expect(row.statusText).toBe("Paid 5 days late");
     expect(row.accessibleName).toBe(
       `Tandem Health ${row.invoice.number} · $900.00 Paid 5 days late, 15 Oct 2026`,
@@ -86,17 +84,17 @@ describe("layoutDueLine", () => {
       false,
     ).rows;
     expect(row.statusText).toBe("Paid");
-    expect(row.statusTone).toBe("paid");
+    expect(row.tone).toBe("paid");
   });
 
-  it("runs an overdue invoice to today, blue then late, with an open end", () => {
+  it("runs an overdue invoice to today in the late colour, with an open end", () => {
     const [row] = layoutDueLine(
       [invoice({ dueState: "overdue", issuedOn: "2026-10-01", dueOn: "2026-10-10", daysLate: 5 })],
       "2026-10-15",
       false,
     ).rows;
-    expect(row.segments.map((segment) => segment.tone)).toEqual(["blue", "late"]);
-    expect(row.segments[1].to).toBe(row.end);
+    expect(row.tone).toBe("late");
+    expect(row.from).toBeLessThan(row.due);
     expect(row.endMark).toBe("open");
     expect(row.statusText).toBe("5 days late");
   });
@@ -107,7 +105,7 @@ describe("layoutDueLine", () => {
       "2026-10-15",
       false,
     ).rows;
-    expect(row.segments.map((segment) => segment.tone)).toEqual(["due_soon"]);
+    expect(row.tone).toBe("due_soon");
     expect(row.statusText).toBe("Due in 2 days");
   });
 
@@ -223,7 +221,7 @@ describe("layoutDueLine", () => {
       "2026-10-30",
       false,
     ).rows;
-    expect(row.segments[0].from).toBe(0);
+    expect(row.from).toBe(0);
     expect(row.startsBeforeChart).toBe(true);
   });
 
@@ -234,32 +232,6 @@ describe("layoutDueLine", () => {
       false,
     ).rows;
     expect(row.startsBeforeChart).toBe(false);
-  });
-
-  it("moves the label of a paid invoice off the Today line", () => {
-    const rows = layoutDueLine(
-      [
-        invoice({
-          id: "now",
-          dueState: "overdue",
-          issuedOn: "2026-10-01",
-          dueOn: "2026-10-15",
-          paidOn: null,
-        }),
-        invoice({
-          id: "paid",
-          dueState: "paid",
-          issuedOn: "2026-10-27",
-          dueOn: "2026-10-28",
-          paidOn: "2026-10-28",
-        }),
-      ],
-      "2026-10-30",
-      false,
-      400,
-    ).rows;
-    const paid = rows.find((row) => row.invoice.id === "paid");
-    expect(paid?.label.side).toBe("left");
   });
 
   it("ends the axis three days after the latest date but no later than 21 days ahead", () => {
@@ -297,23 +269,6 @@ describe("layoutDueLine", () => {
     );
     expect(crowded.ticks.filter((tick) => !tick.labelled)).toHaveLength(1);
     expect(crowded.ticks.find((tick) => !tick.labelled)?.date).toBe("2026-10-29");
-  });
-
-  it("starts the status text after whichever is further right, the line's end or its due tick", () => {
-    const [overdue] = layoutDueLine(
-      [invoice({ dueState: "overdue", issuedOn: "2026-10-01", dueOn: "2026-10-10", daysLate: 5 })],
-      "2026-10-15",
-      false,
-    ).rows;
-    expect(overdue.statusAt).toBe(overdue.end);
-
-    const [early] = layoutDueLine(
-      [invoice({ dueState: "on_time", issuedOn: "2026-10-01", dueOn: "2026-10-28" })],
-      "2026-10-15",
-      false,
-    ).rows;
-    expect(early.statusAt).toBe(early.due);
-    expect(early.due).toBeGreaterThan(early.end);
   });
 
   it("shows the invoice number on every row, even for a client with one invoice", () => {
@@ -360,8 +315,7 @@ describe("layoutDueLine", () => {
       false,
       600,
     ).rows;
-    expect(row.end - row.segments[0].from).toBeCloseTo(MIN_LINE_PX / 600);
-    expect(row.segments[0].to).toBe(row.end);
+    expect(row.end - row.from).toBeCloseTo(MIN_LINE_PX / 600);
   });
 
   it("scales the minimum with the measured width and leaves longer lines alone", () => {
@@ -377,7 +331,18 @@ describe("layoutDueLine", () => {
       false,
       DEFAULT_AXIS_PX,
     ).rows;
-    expect(long.end).toBeCloseTo(long.segments[0].to);
     expect(long.end * DEFAULT_AXIS_PX).toBeGreaterThan(MIN_LINE_PX);
+  });
+
+  it("labels every few weeks on a narrow line so neighbours keep apart", () => {
+    const sixtyDays = invoice({ dueState: "on_time", issuedOn: "2026-09-01", dueOn: "2026-10-30" });
+    const narrow = layoutDueLine([sixtyDays], "2026-10-30", false, 170);
+    const labelled = narrow.ticks.filter((tick) => tick.labelled);
+    expect(labelled.length).toBeGreaterThan(0);
+    expect(labelled.length).toBeLessThan(narrow.ticks.length / 2);
+    for (let index = 1; index < labelled.length; index++) {
+      const gap = (labelled[index].position - labelled[index - 1].position) * 170;
+      expect(gap).toBeGreaterThanOrEqual(MIN_LABEL_SPACING_PX - 1);
+    }
   });
 });

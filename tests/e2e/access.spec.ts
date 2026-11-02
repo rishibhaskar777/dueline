@@ -25,7 +25,9 @@ test.describe("landing page and demo access", () => {
     await page.getByLabel("Demo password").fill(DEMO_PASSWORD);
     await page.getByRole("button", { name: "Open the demo" }).click();
 
-    await expect(page.getByRole("heading", { level: 1, name: "Money owed to you" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: /^Good (morning|afternoon|evening|day)/ }),
+    ).toBeVisible();
     const totals = page.getByLabel("Totals");
     await expect(totals).toContainText("Outstanding");
     await expect(totals).toContainText("Overdue");

@@ -272,6 +272,9 @@ export interface LateClient {
   overdueInr: number; // estimated rupees on the client's overdue invoices
   riskLevel: RiskLevel | null;
   reason: string; // the radar's reason, with "Based on N invoices." when N is below 4
+  lateCount: number; // as on ClientRisk
+  invoicesConsidered: number; // as on ClientRisk
+  averageDaysLate: number; // as on ClientRisk
 }
 export interface RateLine {
   currency: CurrencyCode;

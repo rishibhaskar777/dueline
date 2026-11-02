@@ -1,63 +1,49 @@
 import { formatRupees } from "@/lib/money/format";
 import { formatDays } from "@/lib/format-days";
-import type { Forecast, ForecastBucket, PaySpeed } from "@/types";
+import type { Forecast, PaySpeed } from "@/types";
 import { DashboardWidget } from "./DashboardWidget";
+import { bestCaseLine, expectedShare } from "./forecast-summary";
 import type { DashboardState } from "./use-dashboard";
 
-function invoiceCount(count: number): string {
-  return `${count} ${count === 1 ? "invoice" : "invoices"}`;
+function Tile({ figure, caption }: { figure: string; caption: string }) {
+  return (
+    <div className="flex-1 rounded-2xl bg-inner px-3.5 py-3">
+      <p className="font-heading text-2xl font-extrabold tabular-nums">{figure}</p>
+      <p className="text-[13px] text-muted-foreground">{caption}</p>
+    </div>
+  );
 }
 
-// A window with no invoices and no rupees says so, instead of showing a zero and an empty bar.
-export function isNothingDue({ expectedInr, bestCaseInr, invoices }: ForecastBucket): boolean {
-  return expectedInr === 0 && bestCaseInr === 0 && invoices === 0;
-}
-
-function Buckets({ forecast, paySpeed }: { forecast: Forecast; paySpeed: PaySpeed | null }) {
-  const largest = Math.max(1, ...forecast.buckets.map(({ bestCaseInr }) => bestCaseInr));
+function Summary({ forecast, paySpeed }: { forecast: Forecast; paySpeed: PaySpeed | null }) {
+  const [soon] = forecast.buckets;
 
   return (
-    <>
-      <ul className="grid gap-4 sm:grid-cols-3">
-        {forecast.buckets.map((bucket) => (
-          <li key={bucket.label}>
-            <p className="text-sm text-muted-foreground">{bucket.label}</p>
-            {isNothingDue(bucket) ? (
-              <p className="mt-1 font-heading text-2xl font-semibold text-muted-foreground">
-                Nothing due
-              </p>
-            ) : (
-              <>
-                <p className="mt-1 font-heading text-2xl font-semibold text-foreground tabular-nums">
-                  {formatRupees(bucket.expectedInr)}
-                </p>
-                <div aria-hidden="true" className="relative mt-2 h-2 rounded-full bg-ground">
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-full bg-blue/25"
-                    style={{ width: `${(bucket.bestCaseInr / largest) * 100}%` }}
-                  />
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-full bg-blue"
-                    style={{ width: `${(bucket.expectedInr / largest) * 100}%` }}
-                  />
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground tabular-nums">
-                  Best case {formatRupees(bucket.bestCaseInr)} · {invoiceCount(bucket.invoices)}
-                </p>
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
-      <p className="mt-4 text-sm text-muted-foreground">{forecast.basis}</p>
+    <div className="grid gap-3">
+      <p className="text-[15px] text-muted-foreground">
+        Next 30 days, weighted by each client&apos;s history
+      </p>
+      <p className="font-heading text-[38px] leading-tight font-extrabold tracking-[-0.8px] tabular-nums">
+        {formatRupees(soon.expectedInr)}
+      </p>
+      <div aria-hidden="true" className="h-2.5 rounded-full bg-tint-blue">
+        <div
+          className="dl-bar h-2.5 rounded-full bg-blue-line"
+          style={{ width: `${expectedShare(soon) * 100}%` }}
+        />
+      </div>
+      <p className="text-sm text-subtle tabular-nums">{bestCaseLine(forecast)}</p>
       {paySpeed && (
-        <p className="mt-1 text-sm text-muted-foreground">
-          Average days to get paid: {formatDays(paySpeed.averageDays)}, {paySpeed.onTimePercent}% on
-          time, over {paySpeed.invoices} {paySpeed.invoices === 1 ? "invoice" : "invoices"} paid in
-          the last 12 months.
-        </p>
+        <div className="flex gap-2.5 pt-1.5">
+          <Tile figure={formatDays(paySpeed.averageDays)} caption="to get paid, on average" />
+          <Tile figure={`${paySpeed.onTimePercent}%`} caption="paid on time" />
+        </div>
       )}
-    </>
+      <p className="text-xs text-subtle">
+        {forecast.basis}
+        {paySpeed &&
+          ` Averages are over ${paySpeed.invoices} ${paySpeed.invoices === 1 ? "invoice" : "invoices"} paid in the last 12 months.`}
+      </p>
+    </div>
   );
 }
 
@@ -73,7 +59,7 @@ export function ForecastWidget({ state, onRetry }: { state: DashboardState; onRe
         forecast.buckets.every(({ bestCaseInr, invoices }) => bestCaseInr === 0 && invoices === 0)
       }
     >
-      {({ forecast, paySpeed }) => <Buckets forecast={forecast} paySpeed={paySpeed} />}
+      {({ forecast, paySpeed }) => <Summary forecast={forecast} paySpeed={paySpeed} />}
     </DashboardWidget>
   );
 }

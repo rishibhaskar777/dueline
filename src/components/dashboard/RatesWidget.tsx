@@ -5,13 +5,8 @@ import { useOffline } from "@/components/shared/use-offline";
 import { formatRate } from "@/lib/money/format";
 import type { RatesWidget as Rates, TriggeredRateAlert } from "@/types";
 import { DashboardWidget } from "./DashboardWidget";
+import { rateComparison } from "./rate-line";
 import type { DashboardState } from "./use-dashboard";
-
-function comparison(percent: number | null): string {
-  if (percent === null) return "";
-  if (percent === 0) return "same as its 30-day average";
-  return `${Math.abs(percent).toFixed(1)}% ${percent > 0 ? "above" : "below"} its 30-day average`;
-}
 
 function Lines({ rates, alerts }: { rates: Rates; alerts: TriggeredRateAlert[] }) {
   const offline = useOffline();
@@ -22,7 +17,7 @@ function Lines({ rates, alerts }: { rates: Rates; alerts: TriggeredRateAlert[] }
           <li key={currency} className="text-sm tabular-nums">
             <span className="font-medium">{currency}</span> ₹{formatRate(rate, 2)}
             {percentVsAverage !== null && (
-              <span className="text-muted-foreground">, {comparison(percentVsAverage)}</span>
+              <span className="text-muted-foreground">, {rateComparison(percentVsAverage)}</span>
             )}
             {alerts
               .filter((alert) => alert.currency === currency)

@@ -392,11 +392,12 @@ under the Client card. The summary card reads the same payout estimate as Fees a
 
 ## Receivables screen
 
-`/receivables` renders a server component with the header and a "New invoice" link, and one client
-component, `Receivables`. It shows, top to bottom: the totals strip, the due line, and the invoice
-table beside the activity feed (stacked below 1536 px, so the table has the full width at laptop sizes). A loading skeleton of the same size,
-an empty panel with "Create your first invoice" and an error panel with "Try again" stand in for
-them. When data is already on screen and a refresh fails, the old data stays with a "Couldn't
+`/receivables` renders one client component, `Receivables`: the header (`HomeHeader`: the greeting, the date
+and connection line, Customise and "+ New invoice") and then the widgets on a six-column grid (from 1024 px;
+one column below). The default order is This morning, Getting started, the totals, the due line beside the
+forecast and Clients behind, the invoice table, What getting paid costs and Activity; upcoming due and the
+rates are available in Customise and hidden by default. A loading skeleton of the same shapes, an empty panel
+with "Create your first invoice" and an error panel with "Try again" stand in for them. When data is already on screen and a refresh fails, the old data stays with a "Couldn't
 refresh" note.
 
 **Polling.** `use-receivables.ts` loads invoices, activity and health together. Health (today's
@@ -408,20 +409,19 @@ data, keeps it when a refresh fails (the error and PayPal's `debugId` are kept a
 finds events that arrived since the previous refresh. Those are highlighted in the feed and
 announced in an `aria-live` region.
 
-**The due line.** `DueLineChart` draws one row per invoice, newest issued first, as hand-built SVG
-(see [decision 0012](decisions/0012-hand-built-due-line.md)). The default view shows the last 60
-days and up to 21 days ahead; a paid invoice that ended before that is behind "Show older", and an
-unpaid invoice is always shown. `due-line-layout.ts` holds the maths and no React: the axis runs
-from the earliest date shown (not before the window) to the latest of the due, paid and today dates
-plus 3 days (not beyond 21 days ahead), with a tick every 7 days, and every position is a fraction
-of the axis. A week label within 24 px of the "Today" label is left out, the status text starts
-after whichever is further right, the line's end or its due tick, and a paid-late line says "Paid N
-days late" in the late colour. A row whose client name appears twice shows the invoice number
-under it. Chart text is at least 12 px. A paid invoice is a line from issued to paid in the paid colour, with
-the part after the due date in the late colour when it was paid late. An unpaid invoice runs to
-today: blue up to the due date and late after it, or the due-soon colour when it is due within 3
-days. A tick marks the due date; a filled dot ends a paid line and an open dot marks today. Every
-row says its state in words, is focusable, and opens the invoice panel on Enter or click.
+**The due line.** `DueLineChart` draws one row per invoice, newest issued first, from positioned HTML
+(see [decision 0012](decisions/0012-hand-built-due-line.md)): a client column, the line and a label column.
+The default view shows the last 60 days and up to 21 days ahead; a paid invoice that ended before that is
+behind "Show older", and an unpaid invoice is always shown. `due-line-layout.ts` holds the maths and no
+React: the axis runs from the earliest date shown (not before the window) to the latest of the due, paid
+and today dates plus 3 days (not beyond 21 days ahead), with a tick every 7 days, and every position is a
+fraction of the axis. A week label within 48 px of the "Today" label is left out, and on a narrow line
+only every few weeks is labelled so neighbours keep 56 px apart. A row has one colour: paid (green), late
+(red, also for an invoice paid late, which says "Paid N days late"), due soon (amber) or before due
+(blue). The bar grows from the left the first time a row is shown (`.dl-bar`, not with reduced motion).
+A tick marks the due date; a filled dot ends a paid line and an open dot marks today. The state is in
+words in the label column, which drops under the line on a phone, so nothing can collide and the page
+does not scroll sideways. Every row is focusable and opens the invoice panel on Enter or click.
 
 **Shared pieces.** `components/shared/` holds what both data screens use: `LoadFailure` and
 `toLoadError` (the error panel and the error shape), `SkeletonBlock`, `StatTile` and `SourceTag`.
@@ -450,15 +450,15 @@ radar also maps a typed name through them (`resolveClientName`). `checkMerge` re
 `app_flags` holds "export_downloaded" (set when the register's CSV is served) and "checklist_dismissed".
 `GET /api/checklist` ticks the first-run items from the profile, settings, the invoices and those flags.
 The Nudges tab's overdue count is a small store (`overdue-count.ts`) that the Receivables poll publishes to; `use-nudges-count.ts` also reads it every five minutes.
-The due line places end labels with `placeEndLabel` (`label-placement.ts`).
 
 ## Money views
 
 **Receivables widgets.** The Receivables screen is a list of widgets: totals, forecast, due line, upcoming
 due, late clients, fees lost, rates, the invoice table and activity. `components/dashboard/` holds
 `dashboard-layout.ts` (the widget list and the pure helpers that validate, move, show, hide and reset a
-layout), `use-layout.ts` (the layout in `localStorage` under `dueline.layout.v1`, read and written in
-`try/catch`, the default layout whenever storage is unavailable) and `CustomisePanel`. The five new
+layout), `use-layout.ts` (the layout in `localStorage` under `dueline.layout.v2`, read and written in
+`try/catch`, the default layout whenever storage is unavailable) and `CustomisePanel`. Each widget's size on the six-column grid (`columns`, `rows`) and whether it is shown by default are in
+`WIDGETS`; the grid packs with `grid-auto-flow: dense`, so hidden or reordered widgets leave no holes. The five new
 widgets read `GET /api/dashboard` through `use-dashboard.ts` and share `DashboardWidget`, which gives each
 one its loading, error and empty states. Nothing about the layout is on the server.
 
@@ -628,8 +628,7 @@ itself. The Demo tools button calls `POST /api/demo/prepare`, which runs the sam
 The colours are custom properties in `src/app/globals.css`, with a `.dark` block that redefines them.
 A script in the page head sets the class from the saved choice, or from the device on a first visit, and `ThemeToggle` (and the command palette) switch it with `toggleTheme`, which reveals the new theme as a growing circle where the browser supports view transitions. Components use the tokens
 (`bg-card`, `text-foreground`, `text-late`), the AG Grid theme and the SVG charts read them, and
-`tests/unit/theme-contrast.test.ts` checks the text pairs in both themes. Below 768 px the top bar has a second row for the tabs (`AppBar`, `MainTabs`), `useIsPhone` swaps the grids for card lists and the due line pins its
-labels. The command palette (`CommandPalette`) builds its commands from the pages, the clients and
+`tests/unit/theme-contrast.test.ts` checks the text pairs in both themes. Below 768 px the top bar has a second row for the tabs (`AppBar`, `MainTabs`), `useIsPhone` swaps the grids for card lists and the due line puts its labels under the line. The command palette (`CommandPalette`) builds its commands from the pages, the clients and
 the invoices (`buildCommands`) and searches them with `filterByQuery`.
 
 The design system is in `src/app/globals.css`: the colour and glass tokens for both themes, the

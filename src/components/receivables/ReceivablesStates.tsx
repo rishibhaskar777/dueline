@@ -13,7 +13,7 @@ export function RefreshNote({ error }: { error: LoadError }) {
 
 export function EmptyReceivables() {
   return (
-    <div className="max-w-xl surface p-8">
+    <div className="max-w-xl surface p-8 [--surface-radius:24px]">
       <h2 className="text-xl font-semibold">No invoices yet</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         Paste a client chat and Dueline drafts the invoice. You approve it before PayPal sends it.

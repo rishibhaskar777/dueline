@@ -1,40 +1,77 @@
-import { StatTile } from "@/components/shared/StatTile";
+import Link from "next/link";
+import type { ReactNode } from "react";
 import { formatRupees } from "@/lib/money/format";
-import type { Totals } from "@/types";
+import { cn } from "@/lib/utils";
+import type { InvoiceSummary, Totals } from "@/types";
+import { invoiceCount, openInvoiceCount, paidNote } from "./totals-notes";
 
-function PaidNote({ totals }: { totals: Totals }) {
+interface TotalCardProps {
+  label: string;
+  value: string;
+  note: ReactNode;
+  tone?: "late" | "navy";
+}
+
+function TotalCard({ label, value, note, tone }: TotalCardProps) {
+  const navy = tone === "navy";
   return (
-    <>
-      {formatRupees(totals.paidLast30PayPalInr)} through PayPal
-      {totals.paidLast30OutsideInr > 0 && (
-        <span className="mt-1 block text-xs">
-          and {formatRupees(totals.paidLast30OutsideInr)} recorded outside PayPal
-        </span>
+    <div
+      className={cn(
+        "flex flex-col gap-1.5 rounded-[24px] p-[26px] transition-transform duration-[350ms] ease-spring hover:-translate-y-[3px] motion-reduce:transition-none motion-reduce:hover:transform-none",
+        navy ? "bg-navy-card text-white" : "surface",
       )}
-    </>
+    >
+      <dt
+        className={cn(
+          "text-base font-semibold",
+          navy ? "text-navy-card-muted" : "text-muted-foreground",
+        )}
+      >
+        {label}
+      </dt>
+      <dd
+        className={cn(
+          "font-heading text-[46px] leading-[1.15] font-extrabold tracking-[-1px] tabular-nums",
+          tone === "late" && "text-late",
+        )}
+      >
+        {value}
+      </dd>
+      <dd className={cn("text-[15px]", navy ? "text-navy-card-muted" : "text-subtle")}>{note}</dd>
+    </div>
   );
 }
 
-export function TotalsStrip({ totals }: { totals: Totals }) {
-  const overdueNote = totals.overdueCount === 1 ? "1 invoice" : `${totals.overdueCount} invoices`;
-
+export function TotalsStrip({ totals, invoices }: { totals: Totals; invoices: InvoiceSummary[] }) {
   return (
-    <dl aria-label="Totals" className="grid gap-4 sm:grid-cols-3">
-      <StatTile
+    <dl aria-label="Totals" className="grid gap-4 lg:grid-cols-3">
+      <TotalCard
         label="Outstanding"
         value={formatRupees(totals.outstandingInr)}
-        note="Estimated after fees"
+        note={`${invoiceCount(openInvoiceCount(invoices))} · estimated after fees`}
       />
-      <StatTile
+      <TotalCard
         label="Overdue"
         value={formatRupees(totals.overdueInr)}
-        note={overdueNote}
         tone="late"
+        note={
+          totals.overdueCount > 0 ? (
+            <>
+              {invoiceCount(totals.overdueCount)} ·{" "}
+              <Link href="/nudges" className="text-link underline">
+                see reminders
+              </Link>
+            </>
+          ) : (
+            "Nothing overdue"
+          )
+        }
       />
-      <StatTile
+      <TotalCard
         label="Paid in the last 30 days"
         value={formatRupees(totals.paidLast30Inr)}
-        note={<PaidNote totals={totals} />}
+        tone="navy"
+        note={paidNote(totals)}
       />
     </dl>
   );

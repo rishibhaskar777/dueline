@@ -68,6 +68,7 @@ describe("lateClients", () => {
     const [client] = lateClients(groupClients(invoices, false, TODAY));
     expect(client.riskLevel).toBe("late_payer");
     expect(client.reason).toContain("Based on 1 invoice.");
+    expect(client).toMatchObject({ lateCount: 1, invoicesConsidered: 1 });
   });
 
   it("is empty when nobody is overdue", () => {

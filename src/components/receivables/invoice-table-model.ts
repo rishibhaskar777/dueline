@@ -1,26 +1,18 @@
 import type { InvoiceSummary } from "@/types";
 
-export type StatusFilter = "all" | "overdue" | "due_soon" | "unpaid" | "paid";
+export type StatusFilter = "all" | "overdue" | "due_soon" | "paid";
 
 export const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "All" },
   { value: "overdue", label: "Overdue" },
   { value: "due_soon", label: "Due soon" },
-  { value: "unpaid", label: "Unpaid" },
   { value: "paid", label: "Paid" },
 ];
 
 type StatusCounts = Record<StatusFilter, number>;
 
 function matches(invoice: InvoiceSummary, filter: StatusFilter): boolean {
-  switch (filter) {
-    case "all":
-      return true;
-    case "unpaid":
-      return invoice.dueState !== "paid";
-    default:
-      return invoice.dueState === filter;
-  }
+  return filter === "all" || invoice.dueState === filter;
 }
 
 export function filterByStatus(invoices: InvoiceSummary[], filter: StatusFilter): InvoiceSummary[] {

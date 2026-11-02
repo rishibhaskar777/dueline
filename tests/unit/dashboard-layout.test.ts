@@ -5,6 +5,7 @@ import {
   parseLayout,
   resetLayout,
   setWidgetVisible,
+  widgetSize,
   WIDGETS,
 } from "@/components/dashboard/dashboard-layout";
 
@@ -62,23 +63,23 @@ describe("parseLayout", () => {
 
 describe("moveWidget, setWidgetVisible and resetLayout", () => {
   it("moves a widget up or down one place", () => {
-    expect(ids(moveWidget(DEFAULT_LAYOUT, "forecast", -1)).slice(0, 4)).toEqual([
+    expect(ids(moveWidget(DEFAULT_LAYOUT, "dueLine", -1)).slice(0, 4)).toEqual([
       "morning",
       "checklist",
-      "forecast",
+      "dueLine",
       "totals",
     ]);
     expect(ids(moveWidget(DEFAULT_LAYOUT, "totals", 1)).slice(0, 4)).toEqual([
       "morning",
       "checklist",
-      "forecast",
+      "dueLine",
       "totals",
     ]);
   });
 
   it("does not move the first widget up or the last down", () => {
     expect(moveWidget(DEFAULT_LAYOUT, "morning", -1)).toBe(DEFAULT_LAYOUT);
-    expect(moveWidget(DEFAULT_LAYOUT, "activity", 1)).toBe(DEFAULT_LAYOUT);
+    expect(moveWidget(DEFAULT_LAYOUT, "rates", 1)).toBe(DEFAULT_LAYOUT);
   });
 
   it("does not change the layout it was given", () => {
@@ -89,9 +90,9 @@ describe("moveWidget, setWidgetVisible and resetLayout", () => {
   });
 
   it("shows and hides a widget", () => {
-    const hidden = setWidgetVisible(DEFAULT_LAYOUT, "rates", false);
-    expect(hidden.find(({ id }) => id === "rates")?.visible).toBe(false);
-    expect(setWidgetVisible(hidden, "rates", true)).toEqual(DEFAULT_LAYOUT);
+    const hidden = setWidgetVisible(DEFAULT_LAYOUT, "forecast", false);
+    expect(hidden.find(({ id }) => id === "forecast")?.visible).toBe(false);
+    expect(setWidgetVisible(hidden, "forecast", true)).toEqual(DEFAULT_LAYOUT);
   });
 
   it("goes back to the default", () => {
@@ -110,5 +111,49 @@ describe("the This morning card", () => {
       id: "morning",
       visible: true,
     });
+  });
+});
+
+describe("the default layout", () => {
+  it("shows every widget but upcoming due and rates", () => {
+    expect(DEFAULT_LAYOUT.filter(({ visible }) => !visible).map(({ id }) => id)).toEqual([
+      "upcomingDue",
+      "rates",
+    ]);
+  });
+
+  it("orders the widgets as designed", () => {
+    expect(ids(DEFAULT_LAYOUT).slice(0, 9)).toEqual([
+      "morning",
+      "checklist",
+      "totals",
+      "dueLine",
+      "forecast",
+      "lateClients",
+      "invoices",
+      "feesLost",
+      "activity",
+    ]);
+  });
+});
+
+describe("widgetSize", () => {
+  it("gives the due line four columns over two rows, beside two-column cards", () => {
+    expect(widgetSize("dueLine")).toEqual({ columns: 4, rows: 2 });
+    expect(widgetSize("forecast")).toEqual({ columns: 2, rows: 1 });
+    expect(widgetSize("lateClients")).toEqual({ columns: 2, rows: 1 });
+  });
+
+  it("gives the strips and the table the full width and the other cards half", () => {
+    for (const id of ["morning", "checklist", "totals", "invoices"] as const) {
+      expect(widgetSize(id).columns).toBe(6);
+    }
+    for (const id of ["feesLost", "activity", "upcomingDue", "rates"] as const) {
+      expect(widgetSize(id).columns).toBe(3);
+    }
+  });
+
+  it("fits every widget in six columns", () => {
+    for (const { columns } of WIDGETS) expect(columns).toBeLessThanOrEqual(6);
   });
 });

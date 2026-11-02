@@ -1,12 +1,10 @@
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
-import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { RiskBadge } from "@/components/shared/RiskBadge";
-import { SourceTag } from "@/components/shared/SourceTag";
 import { formatDate } from "@/lib/format-date";
 import { formatMoney, formatRupees } from "@/lib/money/format";
 import type { InvoiceSummary } from "@/types";
-import { statusLabel } from "./invoice-status";
+import { payoutSourceWord, tableStatusLabel } from "./invoice-status";
 import { StatusBadge } from "./StatusBadge";
 
 type Params = ICellRendererParams<InvoiceSummary>;
@@ -16,7 +14,9 @@ export interface GridContext {
 }
 
 function StatusCell({ data, context }: Params) {
-  return data ? <StatusBadge invoice={data} today={(context as GridContext).today} /> : null;
+  return data ? (
+    <StatusBadge invoice={data} today={(context as GridContext).today} detailed />
+  ) : null;
 }
 
 // The risk badge sits under the name, so a long name keeps its whole width and every column fits.
@@ -24,8 +24,8 @@ function ClientCell({ data }: Params) {
   if (!data) return null;
   const flagged = data.riskLevel === "watch" || data.riskLevel === "late_payer";
   return (
-    <span className="flex h-full flex-col items-start justify-center gap-0.5 leading-tight">
-      <span className="max-w-full truncate" title={data.client.name}>
+    <span className="flex h-full items-center gap-2 leading-tight font-semibold">
+      <span className="min-w-0 truncate" title={data.client.name}>
         {data.client.name}
       </span>
       {flagged && data.riskLevel && <RiskBadge level={data.riskLevel} />}
@@ -40,7 +40,7 @@ function NumberCell({ data }: Params) {
       href={`/invoices/${encodeURIComponent(data.id)}`}
       onClick={(event) => event.stopPropagation()}
       aria-label={`Open invoice ${data.number}`}
-      className="text-blue underline underline-offset-2"
+      className="font-bold text-link underline"
     >
       {data.number}
     </Link>
@@ -52,13 +52,15 @@ function PayoutCell({ data }: Params) {
   return (
     <span className="tabular-nums">
       {formatRupees(data.payoutInr)}
-      {data.payoutSource && <SourceTag source={data.payoutSource} />}
+      {data.payoutSource && (
+        <span className="ml-1 text-xs text-subtle">{payoutSourceWord(data.payoutSource)}</span>
+      )}
     </span>
   );
 }
 
 function PayPalCell({ data }: Params) {
-  if (!data || data.dueState === "paid") return null;
+  if (!data) return null;
   return (
     <a
       href={data.payLink}
@@ -66,10 +68,9 @@ function PayPalCell({ data }: Params) {
       rel="noopener noreferrer"
       onClick={(event) => event.stopPropagation()}
       aria-label={`View invoice ${data.number} on PayPal (opens in a new tab)`}
-      className="group inline-flex items-center gap-1 text-blue"
+      className="font-semibold text-link underline"
     >
-      <ExternalLink aria-hidden="true" className="size-4" />
-      <span className="sr-only group-hover:not-sr-only group-focus-visible:not-sr-only">View</span>
+      View ↗
     </a>
   );
 }
@@ -90,7 +91,7 @@ export const invoiceColumns: ColDef<InvoiceSummary>[] = [
     valueGetter: ({ data }) => (data ? Number(data.amount.value) : 0),
     valueFormatter: ({ data }) => (data ? formatMoney(data.amount) : ""),
     type: "rightAligned",
-    cellClass: "tabular-nums",
+    cellClass: ["ag-right-aligned-cell", "tabular-nums"],
     width: 120,
     minWidth: 100,
   },
@@ -113,24 +114,16 @@ export const invoiceColumns: ColDef<InvoiceSummary>[] = [
   {
     headerName: "Status",
     valueGetter: ({ data, context }) =>
-      data ? statusLabel(data, (context as GridContext).today) : "",
+      data ? tableStatusLabel(data, (context as GridContext).today) : "",
     cellRenderer: StatusCell,
     width: 180,
     minWidth: 140,
   },
   {
-    headerName: "Days late",
-    field: "daysLate",
-    valueFormatter: ({ value }) => (value > 0 ? String(value) : "–"),
-    type: "rightAligned",
-    cellClass: "tabular-nums",
-    width: 100,
-    minWidth: 85,
-  },
-  {
     headerName: "PayPal",
     colId: "open",
     sortable: false,
+    type: "rightAligned",
     cellRenderer: PayPalCell,
     width: 100,
     minWidth: 85,
