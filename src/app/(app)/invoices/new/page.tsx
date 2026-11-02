@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { NewInvoice } from "@/components/invoices/NewInvoice";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { clientSchema, repeatIdSchema } from "@/types";
 
 export const metadata: Metadata = { title: "New invoice" };
@@ -32,14 +31,8 @@ async function Form({ searchParams }: Pick<PageProps<"/invoices/new">, "searchPa
 
 export default function NewInvoicePage({ searchParams }: PageProps<"/invoices/new">) {
   return (
-    <>
-      <PageHeader
-        title="New invoice"
-        intro="Paste the conversation where the work was agreed, review the draft, then send it."
-      />
-      <Suspense>
-        <Form searchParams={searchParams} />
-      </Suspense>
-    </>
+    <Suspense>
+      <Form searchParams={searchParams} />
+    </Suspense>
   );
 }

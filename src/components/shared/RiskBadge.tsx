@@ -13,6 +13,8 @@ const STYLES: Record<RiskLevel, string> = {
   late_payer: "bg-tint-red font-bold text-late",
 };
 
-export function RiskBadge({ level }: { level: RiskLevel }) {
+// A client with no level yet has no history, so the badge says it is new.
+export function RiskBadge({ level }: { level: RiskLevel | null }) {
+  if (!level) return <Badge className="bg-chip font-bold text-muted-foreground">New</Badge>;
   return <Badge className={STYLES[level]}>{LABELS[level]}</Badge>;
 }

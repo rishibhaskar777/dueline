@@ -4,6 +4,7 @@ import { useState } from "react";
 import { blankForm, formFromDraft, type InvoiceForm } from "@/components/invoices/invoice-form";
 import { PasteStep, type Drafted } from "@/components/invoices/PasteStep";
 import { ReviewStep } from "@/components/invoices/ReviewStep";
+import { StepHeader } from "@/components/invoices/StepHeader";
 import { useProfile } from "@/components/profile/use-profile";
 import { usePrefill, type Prefill } from "@/components/invoices/use-prefill";
 import type { ClientRisk } from "@/types";
@@ -35,9 +36,12 @@ export function NewInvoice({ prefill }: { prefill: Prefill }) {
 
   if (prefilled.kind === "loading") {
     return (
-      <p role="status" className="text-sm text-muted-foreground">
-        Getting the invoice ready…
-      </p>
+      <div className="grid gap-5">
+        <StepHeader state="review" />
+        <p role="status" className="text-sm text-muted-foreground">
+          Getting the invoice ready…
+        </p>
+      </div>
     );
   }
   const shown = review ?? (prefilled.kind === "ready" ? prefilled.review : null);

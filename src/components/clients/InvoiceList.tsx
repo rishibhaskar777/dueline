@@ -6,20 +6,21 @@ import type { InvoiceSummary } from "@/types";
 
 export function InvoiceList({ invoices, today }: { invoices: InvoiceSummary[]; today: string }) {
   return (
-    <section aria-labelledby="client-invoices-title" className="surface p-6">
-      <h2 id="client-invoices-title" className="text-xl font-semibold">
-        Invoices
-      </h2>
-      <ul className="mt-3 divide-y divide-line">
+    <section
+      aria-labelledby="client-invoices-title"
+      className="surface p-6 [--h2-size:24px] [--surface-radius:24px]"
+    >
+      <h2 id="client-invoices-title">Invoices</h2>
+      <ul className="mt-2 divide-y divide-line">
         {invoices.map((invoice) => (
           <li
             key={invoice.id}
-            className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-3"
+            className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-4"
           >
-            <div>
+            <div className="min-w-0">
               <Link
                 href={`/invoices/${encodeURIComponent(invoice.id)}`}
-                className="font-medium text-blue underline-offset-2 hover:underline"
+                className="font-heading text-[17px] font-bold text-link underline underline-offset-[3px]"
               >
                 {invoice.number}
               </Link>
@@ -28,9 +29,9 @@ export function InvoiceList({ invoices, today }: { invoices: InvoiceSummary[]; t
                 {formatDate(invoice.dueOn)}
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="tabular-nums">{formatMoney(invoice.amount)}</span>
-              <StatusBadge invoice={invoice} today={today} />
+            <div className="flex items-center gap-3.5">
+              <span className="font-semibold tabular-nums">{formatMoney(invoice.amount)}</span>
+              <StatusBadge invoice={invoice} today={today} lateness />
             </div>
           </li>
         ))}

@@ -15,11 +15,11 @@ interface DiscountFieldsProps {
 export function DiscountFields({ form, update, errors }: DiscountFieldsProps) {
   return (
     <div>
-      <label className="flex items-start gap-2 text-sm font-medium">
+      <label className="flex items-center gap-2.5 font-semibold">
         <Checkbox
           checked={form.discountOn}
           onCheckedChange={(checked) => update({ discountOn: checked })}
-          className="mt-0.5"
+          className="size-5"
         />
         Offer an early-payment discount
       </label>
@@ -28,7 +28,9 @@ export function DiscountFields({ form, update, errors }: DiscountFieldsProps) {
         <>
           <div className="mt-4 flex flex-wrap gap-4">
             <div className="grid gap-1.5">
-              <Label htmlFor="discount-percent">Discount (%)</Label>
+              <Label htmlFor="discount-percent" className="font-bold">
+                Discount (%)
+              </Label>
               <Input
                 id="discount-percent"
                 inputMode="decimal"
@@ -42,7 +44,9 @@ export function DiscountFields({ form, update, errors }: DiscountFieldsProps) {
               <FieldError id="discount-percent-error" message={errors["discount.percent"]} />
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="discount-days">Valid for (days)</Label>
+              <Label htmlFor="discount-days" className="font-bold">
+                Valid for (days)
+              </Label>
               <Input
                 id="discount-days"
                 inputMode="numeric"

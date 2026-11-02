@@ -58,7 +58,7 @@ export function AccountMenu() {
       <Menu.Trigger
         aria-label={accountLabel(name, rateAlerts)}
         data-initials={initials ?? undefined}
-        className="bar-button relative w-11 bg-navy text-[15px] font-bold text-white outline-none hover:bg-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring after:content-[attr(data-initials)]"
+        className="bar-button relative w-11 bg-navy text-[15px] font-bold text-white hover:bg-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring after:content-[attr(data-initials)]"
       >
         {!initials && <UserRound aria-hidden className="size-5" />}
         {rateAlerts > 0 && (

@@ -27,8 +27,8 @@ export function NudgeList() {
   if (state.kind === "loading") {
     return (
       <div role="status" aria-label="Loading your nudges" className="grid gap-4">
-        <SkeletonBlock className="h-80" />
-        <SkeletonBlock className="h-80" />
+        <SkeletonBlock className="h-80 rounded-[28px]" />
+        <SkeletonBlock className="h-80 rounded-[28px]" />
       </div>
     );
   }
@@ -42,17 +42,20 @@ export function NudgeList() {
 
   return (
     <div className="grid gap-4">
-      <p className="max-w-3xl text-sm text-muted-foreground">
+      <p className="max-w-3xl text-[15px] text-muted-foreground">
         PayPal can email its standard reminder from your account, with a Pay now button, and PayPal
         writes the wording. Or send your own message from your email. PayPal allows two reminders a
         day. Nothing is sent until you press a button.
       </p>
       {limitReached && (
-        <p role="status" className="max-w-3xl rounded-xl border border-line bg-ground p-4 text-sm">
+        <p
+          role="status"
+          className="max-w-3xl rounded-[20px] bg-tint-amber p-4 text-sm font-semibold text-due-soon"
+        >
           {LIMIT_REACHED_NOTICE}
         </p>
       )}
-      <ul className="grid max-w-3xl gap-4">
+      <ul className="grid gap-4">
         {state.nudges.map((nudge) => (
           <NudgeCard
             key={nudge.draft.invoiceId}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useDemoMode } from "@/components/demo/use-demo-mode";
 import type { InvoiceDetailResponse } from "@/types";
 import { HideFromDemoButton } from "./HideFromDemoButton";
@@ -11,6 +12,8 @@ import { RecordPaymentPanel } from "./RecordPaymentPanel";
 import { RepeatPanel } from "./RepeatPanel";
 
 type Panel = "record" | "cancel" | "repeat" | null;
+
+const PILL = "h-11 px-5 font-bold";
 
 interface InvoiceActionsProps extends Pick<InvoiceDetailResponse, "invoice" | "details"> {
   today: string;
@@ -29,29 +32,26 @@ export function InvoiceActions({ invoice, details, today, onChanged }: InvoiceAc
   }
 
   return (
-    <section aria-labelledby="actions-title" className="surface p-6">
-      <h2 id="actions-title" className="text-xl font-semibold">
-        Actions
-      </h2>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {actions.remind && (
-          <Link href={`/nudges#invoice-${id}`} className={buttonVariants({ variant: "outline" })}>
-            Send a reminder
-          </Link>
-        )}
+    <section
+      aria-labelledby="actions-title"
+      className="surface p-7 [--h2-size:24px] [--surface-radius:24px]"
+    >
+      <h2 id="actions-title">Actions</h2>
+      <div className="mt-3.5 flex flex-wrap gap-2.5">
         <Link
           href={`/invoices/new?duplicate=${id}`}
-          className={buttonVariants({ variant: "outline" })}
+          className={cn(buttonVariants({ variant: "outline" }), PILL)}
         >
           Duplicate
         </Link>
-        <Button type="button" variant="outline" onClick={() => setPanel("repeat")}>
+        <Button type="button" variant="outline" className={PILL} onClick={() => setPanel("repeat")}>
           Repeat monthly
         </Button>
         {actions.recordPayment && (
           <Button
             type="button"
             variant="outline"
+            className={PILL}
             disabled={!today}
             onClick={() => setPanel("record")}
           >
@@ -66,12 +66,17 @@ export function InvoiceActions({ invoice, details, today, onChanged }: InvoiceAc
           />
         )}
         {actions.cancel && panel !== "cancel" && (
-          <Button type="button" variant="destructive" onClick={() => setPanel("cancel")}>
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-11 border-[1.5px] border-mark-red px-5 font-bold text-late hover:bg-tint-red hover:text-late"
+            onClick={() => setPanel("cancel")}
+          >
             Cancel invoice
           </Button>
         )}
       </div>
-      <div className="mt-4">
+      <div className="empty:hidden [&>*]:mt-4">
         {panel === "record" && (
           <RecordPaymentPanel
             invoiceId={invoice.id}

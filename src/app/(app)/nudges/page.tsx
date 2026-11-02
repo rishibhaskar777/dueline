@@ -9,7 +9,7 @@ export default function NudgesPage() {
     <>
       <PageHeader
         title="Nudges"
-        intro="A reminder is drafted for each late invoice. You read it and send it."
+        intro="A reminder is drafted for each late invoice. You read it, then choose how it goes out."
       />
       <Nudges />
     </>

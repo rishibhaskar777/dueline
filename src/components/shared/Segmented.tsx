@@ -1,13 +1,13 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, type ReactNode } from "react";
 import { useSlidingIndicator } from "@/components/layout/use-sliding-indicator";
 import { cn } from "@/lib/utils";
 import { nextSegmentIndex } from "./segmented-keys";
 
 interface SegmentedOption<T extends string> {
   value: T;
-  label: string;
+  label: ReactNode;
 }
 
 interface SegmentedProps<T extends string> {
@@ -17,6 +17,7 @@ interface SegmentedProps<T extends string> {
   // Names what the control chooses, e.g. "Filter invoices".
   label: string;
   size?: "md" | "sm";
+  disabled?: boolean;
 }
 
 const SIZES = {
@@ -30,6 +31,7 @@ export function Segmented<T extends string>({
   onChange,
   label,
   size = "md",
+  disabled = false,
 }: SegmentedProps<T>) {
   const activeIndex = options.findIndex((option) => option.value === value);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -67,6 +69,7 @@ export function Segmented<T extends string>({
             }}
             type="button"
             aria-pressed={index === activeIndex}
+            disabled={disabled}
             {...item}
             onClick={() => {
               item.onClick();
@@ -79,7 +82,7 @@ export function Segmented<T extends string>({
               itemRefs.current[next]?.focus();
             }}
             className={cn(
-              "relative z-10 rounded-full whitespace-nowrap transition-colors duration-300 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring max-md:min-h-11",
+              "relative z-10 rounded-full whitespace-nowrap disabled:opacity-60 transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring max-md:min-h-11",
               SIZES[size].item,
               index === activeIndex ? "font-bold" : "font-semibold",
               index === slider.highlighted ? "text-white" : "text-foreground",

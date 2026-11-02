@@ -378,7 +378,9 @@ business account's invoicing settings.
 
 ## New invoice screen
 
-`/invoices/new` renders `NewInvoice`, which shows the paste step and then the review step. The paste
+`/invoices/new` renders `NewInvoice`, which shows the paste step and then the review step; each draws
+`StepHeader` (the step pill, which shows progress and is not a control, and the page's one h1, from
+`stepHeader`), and the sent result carries its own h1. The paste
 step calls `POST /api/invoices/extract`, or opens a blank form. The review step holds the form as
 text fields (`invoice-form.ts` turns them into a request with the same zod schema the server uses),
 loads the purpose codes, today's date and the demo buyer's address, shows the totals and a payout
@@ -387,8 +389,9 @@ life. If the server holds a request (`duplicate_request`, `paypal_timeout`) and 
 the form, a `duplicate_request` answer is replaced by "These details changed after the invoice was
 submitted…" with a "Create another" button that starts over with a new request ID. The result panel offers "Retry sending" with its own request ID for a draft that was not sent.
 
-**Screens that answer.** `useDiscountOffer` links the radar to the one discount control. The radar renders
-under the Client card. The summary card reads the same payout estimate as Fees and rates.
+**Screens that answer.** `useDiscountOffer` links the radar to the one discount control, which now sits in the
+Details card (`DiscountFields`). The radar renders under the Client card as a strip in the risk tone. What the
+privacy filter hid and every warning are tinted pills above the form (`noticePills`). The summary card reads the same payout estimate as Fees and rates.
 
 ## Receivables screen
 
@@ -462,13 +465,17 @@ layout), `use-layout.ts` (the layout in `localStorage` under `dueline.layout.v2`
 widgets read `GET /api/dashboard` through `use-dashboard.ts` and share `DashboardWidget`, which gives each
 one its loading, error and empty states. Nothing about the layout is on the server.
 
-**Clients.** `/clients` is an AG Grid of `ClientSummary` rows with a search box; a row opens
-`/clients/by-key/[key]`, which shows the risk badge and reason, three tiles, the client's invoices, a notes form
-and "New invoice for this client" (`/invoices/new?client=<name>`, checked on the page).
+**Clients.** `/clients` is a grid of cards, one link per `ClientSummary` (`ClientCards`), most owed first
+(`sortClients`) with a search pill over name, email and reason (`searchClients`); a card opens
+`/clients/by-key/[key]`. That page shows an avatar tinted by the risk level (`risk-tone.ts`), the risk badge, a
+reason strip with the offer the radar suggests, three `TotalCard`s (shared with Home), the client's invoices (status pills from `clientStatusLabel`, which adds how late a paid invoice was paid),
+reminder language, repeats, a notes form, merged clients and the merge card, and "New invoice for this client"
+(`/invoices/new?client=<name>`, checked on the page).
 
-**Invoice page.** `/invoices/[id]` shows the header (client link, number, status, amount, rupees with
-their source and rate date, the payer link with a copy button), the history, the details and the
-actions. Actions show only when the status allows them, and Record payment and Cancel open an inline
+**Invoice page.** `/invoices/[id]` shows the header (back link to Home, number, status, client link and the
+payer link, copy and reminder buttons chosen by `headerActions`), then the amount card with the blue payout
+panel (`payoutPanel`: rupees, their source and rate date), the facts, the items, the actions, and the history
+beside them (dot colours from `timelineDot`). Actions show only when the status allows them, and Record payment and Cancel open an inline
 panel with their own request ID. Duplicate opens `/invoices/new?duplicate=<id>`, which loads the invoice
 and fills the form. Receivables rows and the invoice panel link to the page.
 

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export function CopyLinkButton({ link }: { link: string }) {
+export function CopyLinkButton({ link, className }: { link: string; className?: string }) {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
 
   async function copy(): Promise<void> {
@@ -17,10 +17,10 @@ export function CopyLinkButton({ link }: { link: string }) {
 
   return (
     <>
-      <Button type="button" variant="outline" onClick={copy}>
+      <Button type="button" variant="outline" className={className} onClick={copy}>
         Copy payer link
       </Button>
-      <span role="status" className="text-sm text-muted-foreground">
+      <span role="status" className="text-sm text-muted-foreground empty:hidden">
         {state === "copied" && "Link copied."}
         {state === "failed" && "Could not copy. Select the link on PayPal instead."}
       </span>

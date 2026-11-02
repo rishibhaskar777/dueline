@@ -33,13 +33,11 @@ export function ClientRepeats({ clientKey }: { clientKey: string }) {
   }
 
   return (
-    <section aria-labelledby="repeats-title" className="surface p-6">
-      <h2 id="repeats-title" className="text-xl font-semibold">
-        Repeats
-      </h2>
+    <section aria-labelledby="repeats-title" className="surface p-6 [--surface-radius:24px]">
+      <h2 id="repeats-title">Repeats</h2>
       {state.data.length === 0 ? (
-        <p className="mt-2 text-sm text-muted-foreground">
-          No monthly repeats. Open one of this client&apos;s invoices and choose Repeat monthly.
+        <p className="mt-3 text-[15px] text-muted-foreground">
+          No monthly repeats yet. Open one of this client&apos;s invoices and choose Repeat monthly.
         </p>
       ) : (
         <ul className="mt-2 divide-y divide-line">
@@ -50,6 +48,7 @@ export function ClientRepeats({ clientKey }: { clientKey: string }) {
                 <Button
                   type="button"
                   variant="outline"
+                  className="font-bold"
                   onClick={() => void act(() => setRepeatPaused(repeat.id, !repeat.paused))}
                 >
                   {repeat.paused ? "Resume" : "Pause"}
@@ -57,6 +56,7 @@ export function ClientRepeats({ clientKey }: { clientKey: string }) {
                 <Button
                   type="button"
                   variant="outline"
+                  className="font-bold"
                   onClick={() => void act(() => deleteRepeat(repeat.id))}
                 >
                   Delete

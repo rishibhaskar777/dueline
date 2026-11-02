@@ -39,7 +39,7 @@ export function RepeatPanel({ invoiceId, invoiceNumber, onClose }: RepeatPanelPr
     <form
       onSubmit={onSubmit}
       aria-labelledby="repeat-title"
-      className="grid gap-3 rounded-lg border border-line bg-ground p-4"
+      className="grid gap-3 rounded-[20px] bg-inner p-5"
     >
       <h3 id="repeat-title" className="font-semibold">
         Repeat {invoiceNumber} every month

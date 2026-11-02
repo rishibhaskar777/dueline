@@ -41,16 +41,16 @@ export function ReminderLanguageCard({ clientKey, initial }: ReminderLanguageCar
   }
 
   return (
-    <section aria-labelledby="language-title" className="surface p-6">
-      <h2 id="language-title" className="text-xl font-semibold">
-        Reminder language
-      </h2>
-      <p className="mt-1 text-sm text-muted-foreground">
+    <section aria-labelledby="language-title" className="surface p-6 [--surface-radius:24px]">
+      <h2 id="language-title">Reminder language</h2>
+      <p className="mt-3 text-[15px] text-muted-foreground">
         Reminder drafts for this client are written in this language. You can still switch a draft
         back to English on Nudges.
       </p>
       <div className="mt-3 grid gap-1.5">
-        <Label id="language-label">Language</Label>
+        <Label id="language-label" className="font-bold">
+          Language
+        </Label>
         <Select
           value={language}
           items={ITEMS}

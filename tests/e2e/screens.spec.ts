@@ -244,7 +244,7 @@ test.describe("Nudges preview", () => {
     const card = page
       .getByRole("listitem")
       .filter({ has: page.getByRole("heading", { name: "Brightwell Labs" }) });
-    await expect(card.getByLabel("Message")).not.toHaveValue("");
+    await expect(card.getByLabel("Message", { exact: true })).not.toHaveValue("");
 
     await card.getByRole("button", { name: "Preview" }).click();
     const preview = card.getByRole("region", { name: "Email preview" });
@@ -252,7 +252,12 @@ test.describe("Nudges preview", () => {
     await expect(preview).toContainText("Subject");
     await expect(preview).toContainText("Pay here: ");
     await expect(preview).toContainText("PayPal's own reminder uses PayPal's standard wording");
-    await expect(card.getByText(/^Average days to get paid:/)).toBeVisible();
+    await expect(card.getByText(/ takes \d+ days to pay on average/)).toBeVisible();
+
+    // It spans the card, not the 300 px action column.
+    const previewBox = await preview.boundingBox();
+    const cardBox = await card.boundingBox();
+    expect(previewBox?.width ?? 0).toBeGreaterThan((cardBox?.width ?? 0) * 0.8);
   });
 });
 
@@ -299,7 +304,85 @@ test.describe("Clients", () => {
   });
 });
 
+test.describe("Clients list and client page", () => {
+  test("a client card opens the client page", async ({ page }) => {
+    await page.goto("/clients");
+    const card = page.getByRole("link", { name: /Halden Coffee Co\./ }).first();
+    await expect(card).toContainText("Billed");
+    await expect(card).toContainText("Owed");
+    await expect(card).toContainText("Pays in");
+    await card.click();
+    await expect(page).toHaveURL(/\/clients\/by-key\//);
+    await expect(page.getByRole("heading", { level: 1, name: "Halden Coffee Co." })).toBeVisible();
+    await expect(page.getByLabel("Client totals")).toContainText("Billed");
+    await page.getByRole("link", { name: "All clients" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Clients" })).toBeVisible();
+  });
+
+  test("searching by email finds the client, and a miss says so", async ({ page }) => {
+    const response = await page.request.get("/api/clients");
+    const { clients } = (await response.json()) as { clients: { name: string; email: string }[] };
+    const target = clients[0];
+
+    await page.goto("/clients");
+    const search = page.getByRole("searchbox", { name: "Search clients" });
+    await search.fill(target.email);
+    await expect(page.getByRole("link", { name: new RegExp(target.name) }).first()).toBeVisible();
+
+    await search.fill("no such client anywhere");
+    await expect(page.getByText("No clients match.")).toBeVisible();
+  });
+});
+
+test.describe("Invoice page header", () => {
+  test("an overdue invoice has the payer link, copy and reminder actions", async ({ page }) => {
+    const response = await page.request.get("/api/invoices");
+    const { invoices } = (await response.json()) as {
+      invoices: { id: string; dueState: string }[];
+    };
+    const overdue = invoices.find(({ dueState }) => dueState === "overdue");
+    expect(overdue).toBeDefined();
+    await page.goto(`/invoices/${encodeURIComponent(overdue?.id ?? "")}`);
+    await expect(page.getByRole("heading", { level: 1, name: /^Invoice / })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Home$/ }).last()).toHaveAttribute(
+      "href",
+      "/receivables",
+    );
+    await expect(page.getByRole("link", { name: /^Open payer link/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Copy payer link" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Send a reminder" })).toBeVisible();
+  });
+
+  test("a paid invoice has no reminder action", async ({ page }) => {
+    const response = await page.request.get("/api/invoices");
+    const { invoices } = (await response.json()) as {
+      invoices: { id: string; dueState: string }[];
+    };
+    const paid = invoices.find(({ dueState }) => dueState === "paid");
+    expect(paid).toBeDefined();
+    await page.goto(`/invoices/${encodeURIComponent(paid?.id ?? "")}`);
+    await expect(page.getByRole("heading", { level: 1, name: /^Invoice / })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Send a reminder" })).toHaveCount(0);
+  });
+});
+
 test.describe("New invoice", () => {
+  test("the sample chat reaches the review step with its own heading and summary", async ({
+    page,
+  }) => {
+    await page.goto("/invoices/new");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Paste what your client wrote." }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Use a sample chat" }).click();
+    await page.getByRole("button", { name: "Draft invoice" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Check the draft" })).toBeVisible();
+    await expect(page.getByText("About this reaches your bank")).toBeVisible();
+    await expect(
+      page.getByRole("listitem").filter({ hasText: "2 · Review and send" }),
+    ).toHaveAttribute("aria-current", "step");
+  });
+
   test("the radar sits under the Client card and its offer fills the one discount control", async ({
     page,
   }) => {
@@ -330,7 +413,7 @@ test.describe("New invoice", () => {
     const box = page.getByRole("textbox", { name: "Client chat" });
     expect(await box.getAttribute("placeholder")).toContain("\n");
     await expect(
-      page.getByText("Emails and phone numbers are hidden before the AI reads the chat."),
+      page.getByText("Emails and phone numbers are hidden before the AI reads it"),
     ).toBeVisible();
   });
 });
@@ -357,6 +440,21 @@ test.describe("Phone layout", () => {
       expect(overflow).toBeLessThanOrEqual(0);
     });
   }
+});
+
+test.describe("Phone layout, new invoice review step", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("has no sideways page scroll", async ({ page }) => {
+    await page.goto("/invoices/new");
+    await page.getByRole("button", { name: "Use a sample chat" }).click();
+    await page.getByRole("button", { name: "Draft invoice" }).click();
+    await expect(page.getByRole("button", { name: "Create and send invoice" })).toBeVisible();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+  });
 });
 
 test.describe("Phone layout, invoice and client pages", () => {
@@ -393,7 +491,7 @@ test.describe("Phone layout, invoice and client pages", () => {
     const card = page
       .getByRole("listitem")
       .filter({ has: page.getByRole("heading", { name: "Brightwell Labs" }) });
-    await expect(card.getByLabel("Message")).not.toHaveValue("");
+    await expect(card.getByLabel("Message", { exact: true })).not.toHaveValue("");
     await card.getByRole("button", { name: "Preview" }).click();
     await expect(card.getByRole("region", { name: "Email preview" })).toBeVisible();
     await expectNoSideways(page);

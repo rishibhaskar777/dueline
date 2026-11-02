@@ -14,8 +14,8 @@ interface InvoiceFactsProps extends Pick<InvoiceDetailResponse, "invoice" | "det
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5">{children}</dd>
+      <dt className="text-sm font-semibold text-muted-foreground">{label}</dt>
+      <dd className="mt-0.5 text-[17px] font-semibold break-words">{children}</dd>
     </div>
   );
 }
@@ -23,17 +23,20 @@ function Fact({ label, children }: { label: string; children: React.ReactNode })
 export function InvoiceFacts({ invoice, details, today }: InvoiceFactsProps) {
   const purpose = invoice.purposeCode ? findPurposeCode(invoice.purposeCode) : undefined;
   const speed = details.clientPaySpeed;
+  const [local, domain] = invoice.client.email.split("@");
   return (
     <dl
       aria-label="Invoice facts"
-      className="grid gap-x-8 gap-y-4 surface p-6 sm:grid-cols-2 lg:grid-cols-3"
+      className="grid gap-x-[18px] gap-y-[22px] surface p-7 [--surface-radius:24px] sm:grid-cols-2 xl:grid-cols-3"
     >
       <Fact label="Issued">{formatDate(invoice.issuedOn)}</Fact>
       <Fact label="Due">{dueSentence(invoice, today)}</Fact>
       <Fact label="Client">
-        {[invoice.client.email, countryName(invoice.client.country ?? null)]
-          .filter(Boolean)
-          .join(" · ")}
+        <span className="block break-words">
+          {local}
+          <wbr />@{domain}
+        </span>
+        {countryName(invoice.client.country ?? null)}
       </Fact>
       <Fact label="Work">{invoice.work}</Fact>
       <Fact label="Purpose code">
@@ -41,7 +44,7 @@ export function InvoiceFacts({ invoice, details, today }: InvoiceFactsProps) {
           <>
             {invoice.purposeCode}
             {purpose && ` · ${purpose.label}`}
-            <span className="block text-sm text-muted-foreground">
+            <span className="block text-sm font-normal text-muted-foreground">
               Suggestion, confirm with your CA
             </span>
           </>
@@ -60,7 +63,7 @@ export function InvoiceFacts({ invoice, details, today }: InvoiceFactsProps) {
         )}
         <Link
           href={clientHref(details.clientKey)}
-          className="text-blue underline underline-offset-2"
+          className="text-link underline underline-offset-2"
         >
           {invoice.client.name}
         </Link>

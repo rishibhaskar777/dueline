@@ -26,7 +26,13 @@ export function AddFromLibrary({ items, currency, onPick }: AddFromLibraryProps)
 
   return (
     <>
-      <Button type="button" variant="outline" onClick={() => setOpen(true)}>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="font-bold"
+        onClick={() => setOpen(true)}
+      >
         <Library aria-hidden data-icon="inline-start" />
         Add from library
       </Button>

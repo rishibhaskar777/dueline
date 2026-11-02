@@ -1,7 +1,9 @@
 "use client";
 
+import { Lock } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { CHAT_PLACEHOLDER, SAMPLE_CHAT } from "@/components/invoices/sample-chat";
+import { StepHeader } from "@/components/invoices/StepHeader";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,12 +25,14 @@ function plural(count: number, one: string, many: string): string {
 }
 
 function maskedNotice({ emails, phones }: ExtractResponse["masked"]): string {
-  return `We hid ${plural(emails, "email", "emails")} and ${plural(phones, "phone number", "phone numbers")} before the AI read the chat.`;
+  return `We hid ${plural(emails, "email", "emails")} and ${plural(phones, "phone number", "phone numbers")} before the AI read the chat`;
 }
 
 interface PasteStepProps {
   onDrafted: (drafted: Drafted) => void;
 }
+
+const PILL = "h-11 px-5 font-bold";
 
 export function PasteStep({ onDrafted }: PasteStepProps) {
   const [chat, setChat] = useState("");
@@ -53,57 +57,88 @@ export function PasteStep({ onDrafted }: PasteStepProps) {
   }
 
   return (
-    <form onSubmit={onSubmit} aria-labelledby="paste-title" className="max-w-3xl surface p-6">
-      <h2 id="paste-title" className="text-xl font-semibold">
-        Paste the client chat
-      </h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Dueline drafts the invoice for you to check. Nothing is sent until you click Create and send
-        invoice.
-      </p>
-
-      <div className="mt-5 grid gap-1.5">
-        <Label htmlFor="chat">Client chat</Label>
-        <Textarea
-          id="chat"
-          rows={10}
-          maxLength={MAX_CHAT_LENGTH}
-          value={chat}
-          onChange={(event) => setChat(event.target.value)}
-          placeholder={CHAT_PLACEHOLDER}
-          aria-describedby="chat-hint chat-count"
-          className="min-h-48"
-        />
-        <p id="chat-hint" className="text-xs text-muted-foreground">
-          Emails and phone numbers are hidden before the AI reads the chat.
-        </p>
-        <p id="chat-count" className="text-xs text-muted-foreground tabular-nums">
-          {chat.length.toLocaleString("en-IN")} of {MAX_CHAT_LENGTH.toLocaleString("en-IN")}{" "}
-          characters
-        </p>
-      </div>
-
-      {error && (
-        <p role="alert" className="mt-4 text-sm text-late">
-          {error}
-        </p>
-      )}
-
-      <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <Button type="submit" disabled={pending || chat.trim() === ""}>
-          {pending ? "Drafting…" : "Draft invoice"}
-        </Button>
-        <Button type="button" variant="link" onClick={() => setChat(SAMPLE_CHAT)}>
-          Use a sample chat
-        </Button>
-        <Button
-          type="button"
-          variant="link"
-          onClick={() => onDrafted({ draft: null, warnings: [], notice: null, risk: null })}
+    <div className="grid gap-5">
+      <StepHeader state="paste" />
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <form
+          onSubmit={onSubmit}
+          aria-labelledby="new-invoice-title"
+          className="grid gap-3.5 surface p-[26px]"
         >
-          Start without a chat
-        </Button>
+          <Label htmlFor="chat" className="text-base font-bold">
+            Client chat
+          </Label>
+          <Textarea
+            id="chat"
+            rows={12}
+            maxLength={MAX_CHAT_LENGTH}
+            value={chat}
+            onChange={(event) => setChat(event.target.value)}
+            placeholder={CHAT_PLACEHOLDER}
+            aria-describedby="chat-hint chat-count"
+            className="min-h-48 rounded-[18px] p-[18px] text-[17px] leading-[1.55]"
+          />
+          <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
+            <Lock aria-hidden className="size-4 shrink-0" />
+            <span>
+              <span id="chat-hint">Emails and phone numbers are hidden before the AI reads it</span>
+              {" · "}
+              <span id="chat-count" className="tabular-nums">
+                {chat.length.toLocaleString("en-IN")} of {MAX_CHAT_LENGTH.toLocaleString("en-IN")}
+              </span>
+            </span>
+          </p>
+
+          {error && (
+            <p role="alert" className="text-sm text-late">
+              {error}
+            </p>
+          )}
+
+          <div className="flex flex-wrap gap-2.5">
+            <Button
+              type="button"
+              variant="outline"
+              className={PILL}
+              onClick={() => setChat(SAMPLE_CHAT)}
+            >
+              Use a sample chat
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className={PILL}
+              onClick={() => onDrafted({ draft: null, warnings: [], notice: null, risk: null })}
+            >
+              Start without a chat
+            </Button>
+            <Button
+              type="submit"
+              className="h-11 px-6 font-bold"
+              disabled={pending || chat.trim() === ""}
+            >
+              {pending ? "Drafting…" : "Draft invoice"}
+            </Button>
+          </div>
+        </form>
+
+        <aside className="grid gap-3.5">
+          <section className="grid gap-3 rounded-[24px] bg-navy-card p-[26px] text-white">
+            <h2 className="font-heading text-[22px] font-extrabold">What the AI does</h2>
+            <p className="text-[15px] leading-[1.55] text-navy-card-muted">
+              Finds the client, items, quantities, prices, currency and payment terms. Every number
+              is checked in code against the chat.
+            </p>
+          </section>
+          <section className="grid gap-2.5 surface p-[26px] [--surface-radius:24px]">
+            <h2>What it never does</h2>
+            <p className="text-[15px] leading-[1.55] text-muted-foreground">
+              Send anything, read contact details, or invent a price that is not in the chat. Gaps
+              become warnings you fix before sending.
+            </p>
+          </section>
+        </aside>
       </div>
-    </form>
+    </div>
   );
 }

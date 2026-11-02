@@ -16,7 +16,7 @@ export function EmailPreviewPanel({ id, to, subject, message, payLink }: EmailPr
     <section
       id={id}
       aria-label="Email preview"
-      className="grid gap-3 rounded-lg border border-line bg-ground p-4 text-sm"
+      className="grid gap-3 surface-strong p-4 text-sm [--surface-radius:16px]"
     >
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
         <dt className="text-muted-foreground">To</dt>

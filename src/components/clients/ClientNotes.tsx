@@ -39,15 +39,20 @@ export function ClientNotes({ clientKey, initial }: ClientNotesProps) {
   }
 
   return (
-    <form onSubmit={onSubmit} aria-labelledby="notes-title" className="surface p-6">
-      <h2 id="notes-title" className="text-xl font-semibold">
-        Notes
-      </h2>
+    <form
+      onSubmit={onSubmit}
+      aria-labelledby="notes-title"
+      className="surface p-6 [--surface-radius:24px]"
+    >
+      <h2 id="notes-title">Private notes</h2>
       <div className="mt-3 grid gap-1.5">
-        <Label htmlFor="client-notes">Private notes about this client</Label>
+        <Label htmlFor="client-notes" className="sr-only">
+          Private notes about this client
+        </Label>
         <Textarea
           id="client-notes"
-          rows={5}
+          rows={3}
+          placeholder="Only you see these notes"
           maxLength={MAX_NOTES}
           value={notes}
           onChange={(event) => {
@@ -55,19 +60,22 @@ export function ClientNotes({ clientKey, initial }: ClientNotesProps) {
             setMessage(null);
           }}
         />
-        <p className="text-xs text-muted-foreground tabular-nums">
-          {notes.length.toLocaleString("en-IN")} of {MAX_NOTES.toLocaleString("en-IN")} characters.
-          Only you see these notes.
-        </p>
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <Button type="submit" disabled={pending || notes.trim() === saved}>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <p className="text-[13px] text-subtle tabular-nums">
+          {notes.length.toLocaleString("en-IN")} of {MAX_NOTES.toLocaleString("en-IN")} characters
+        </p>
+        <Button
+          type="submit"
+          className="h-11 px-[22px] font-bold"
+          disabled={pending || notes.trim() === saved}
+        >
           {pending ? "Saving…" : "Save notes"}
         </Button>
         {message && (
           <p
             role={message.ok ? "status" : "alert"}
-            className={message.ok ? "text-sm" : "text-sm text-late"}
+            className={message.ok ? "w-full text-sm" : "w-full text-sm text-late"}
           >
             {message.text}
           </p>

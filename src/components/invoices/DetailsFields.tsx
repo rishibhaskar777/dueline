@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import { DiscountFields } from "@/components/invoices/DiscountFields";
 import { FieldError } from "@/components/invoices/FieldError";
 import { lutIssue, type FieldErrors, type InvoiceForm } from "@/components/invoices/invoice-form";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -36,82 +37,92 @@ export function DetailsFields({ form, update, errors, codes, profile, today }: D
   const issue = profile ? lutIssue(profile, form.includeLutNote, today) : null;
 
   return (
-    <div className="grid gap-5">
-      <div className="flex flex-wrap gap-4">
-        <div className="grid gap-1.5">
-          <Label id="currency-label">Currency</Label>
-          <Select
-            value={form.currency}
-            items={CURRENCY_ITEMS}
-            onValueChange={(value) => value && update({ currency: value })}
-          >
-            <SelectTrigger aria-labelledby="currency-label" className="w-24">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {CURRENCY_ITEMS.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
+      <div className="@container">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-3.5 @xl:grid-cols-[160px_200px_minmax(0,1fr)]">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-1.5">
+            <Label id="currency-label" className="font-bold">
+              Currency
+            </Label>
+            <Select
+              value={form.currency}
+              items={CURRENCY_ITEMS}
+              onValueChange={(value) => value && update({ currency: value })}
+            >
+              <SelectTrigger aria-labelledby="currency-label" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CURRENCY_ITEMS.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="grid gap-1.5">
-          <Label htmlFor="due-on">Due date</Label>
-          <Input
-            id="due-on"
-            type="date"
-            min={today}
-            value={form.dueOn}
-            onChange={(event) => update({ dueOn: event.target.value })}
-            aria-invalid={Boolean(errors.dueOn)}
-            aria-describedby={errors.dueOn ? "due-on-error" : undefined}
-            className="w-44 tabular-nums"
-          />
-          <FieldError id="due-on-error" message={errors.dueOn} />
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-1.5">
+            <Label htmlFor="due-on" className="font-bold">
+              Due date
+            </Label>
+            <Input
+              id="due-on"
+              type="date"
+              min={today}
+              value={form.dueOn}
+              onChange={(event) => update({ dueOn: event.target.value })}
+              aria-invalid={Boolean(errors.dueOn)}
+              aria-describedby={errors.dueOn ? "due-on-error" : undefined}
+              className="tabular-nums"
+            />
+            <FieldError id="due-on-error" message={errors.dueOn} />
+          </div>
+
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-1.5">
+            <Label id="purpose-label" className="font-bold">
+              RBI purpose code
+            </Label>
+            <Select
+              value={form.purposeCode ?? NO_CODE}
+              items={codeItems}
+              onValueChange={(value) =>
+                value &&
+                update({ purposeCode: value === NO_CODE ? null : value, purposeReason: "" })
+              }
+            >
+              <SelectTrigger
+                aria-labelledby="purpose-label"
+                aria-describedby="purpose-help"
+                className="w-full"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="min-w-96">
+                {codeItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
+      <p id="purpose-help" className="text-sm text-muted-foreground">
+        Suggestion, confirm with your CA.
+        {form.purposeReason && ` ${form.purposeReason}`}
+      </p>
 
       <div className="grid gap-1.5">
-        <Label id="purpose-label">Purpose code</Label>
-        <Select
-          value={form.purposeCode ?? NO_CODE}
-          items={codeItems}
-          onValueChange={(value) =>
-            value && update({ purposeCode: value === NO_CODE ? null : value, purposeReason: "" })
-          }
-        >
-          <SelectTrigger
-            aria-labelledby="purpose-label"
-            aria-describedby="purpose-help"
-            className="w-full max-w-lg"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="min-w-96">
-            {codeItems.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <p id="purpose-help" className="text-xs text-muted-foreground">
-          Suggestion, confirm with your CA.
-          {form.purposeReason && ` ${form.purposeReason}`}
-        </p>
-      </div>
-
-      <div className="grid gap-1.5">
-        <label className="flex items-start gap-2 text-sm">
+        <label className="flex items-center gap-2.5 font-semibold">
           <Checkbox
             checked={form.includeLutNote}
             onCheckedChange={(checked) => update({ includeLutNote: checked })}
-            className="mt-0.5"
+            className="size-5"
           />
           Export under LUT (no IGST)
+          {form.includeLutNote && profile?.lutArn && <> · ARN {profile.lutArn}</>}
         </label>
         {issue && (
           <p className="text-sm text-due-soon">
@@ -126,8 +137,12 @@ export function DetailsFields({ form, update, errors, codes, profile, today }: D
         )}
       </div>
 
+      <DiscountFields form={form} update={update} errors={errors} />
+
       <div className="grid gap-1.5">
-        <Label htmlFor="note">Note to the client</Label>
+        <Label htmlFor="note" className="font-bold">
+          Note to the client
+        </Label>
         <Textarea
           id="note"
           rows={3}
