@@ -4,7 +4,9 @@ import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { OFFLINE_RATES_LABEL } from "@/components/shared/rate-source";
 import { useOffline } from "@/components/shared/use-offline";
+import { AutomationSettings } from "@/components/settings/AutomationSettings";
 import { PayoutCalculator } from "@/components/settings/PayoutCalculator";
+import { useLoad } from "@/components/shared/use-load";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,9 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ApiClientError, getSettings, saveSettings } from "@/lib/api-client";
+import { ApiClientError, getDashboard, getSettings, saveSettings } from "@/lib/api-client";
 import { formatDate } from "@/lib/format-date";
 import { automationOf } from "./automation-form";
+import { averageGap } from "./payout-lines";
 import { currencySchema, type CurrencyCode, type Settings } from "@/types";
 
 const CURRENCIES = currencySchema.options;
@@ -94,7 +97,9 @@ interface NumberFieldProps {
 function NumberField({ id, label, value, onChange, invalid }: NumberFieldProps) {
   return (
     <div className="grid gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id} className="font-bold">
+        {label}
+      </Label>
       <Input
         id={id}
         inputMode="decimal"
@@ -102,7 +107,7 @@ function NumberField({ id, label, value, onChange, invalid }: NumberFieldProps) 
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-invalid={invalid}
-        className="w-32 tabular-nums"
+        className="h-12 text-base font-medium tabular-nums"
       />
     </div>
   );
@@ -114,68 +119,94 @@ interface RatesTableProps {
   manual: boolean;
   invalidField: string;
   caption: string;
+  gaps: Partial<Record<CurrencyCode, number | null>>;
 }
 
-function RatesTable({ form, update, manual, invalidField, caption }: RatesTableProps) {
+const CELL = "px-2.5 py-2 max-md:p-0";
+// Below md the header row is hidden, so each cell carries its own label.
+const LABELLED =
+  "max-md:before:mb-1 max-md:before:block max-md:before:text-xs max-md:before:font-semibold max-md:before:text-muted-foreground max-md:before:content-[attr(data-label)]";
+const HEAD = "px-2.5 py-2.5 text-left text-sm font-semibold text-muted-foreground";
+
+function RatesTable({ form, update, manual, invalidField, caption, gaps }: RatesTableProps) {
   return (
-    <table className="mt-6 w-full text-sm">
-      <caption className="pb-2 text-left text-muted-foreground">{caption}</caption>
-      <thead>
-        <tr className="text-left text-muted-foreground">
-          <th scope="col" className="py-2 font-medium">
-            Currency
-          </th>
-          <th scope="col" className="py-2 font-medium">
-            Fixed fee
-          </th>
-          <th scope="col" className="py-2 font-medium">
-            Market rate (₹ per unit)
-          </th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-line">
-        {CURRENCIES.map((code) => (
-          <tr key={code}>
-            <th scope="row" className="py-2 text-left font-medium">
-              {code}
+    <div className="md:overflow-x-auto">
+      <table className="w-full caption-bottom border-collapse text-[15px]">
+        <caption className="pt-3 text-left text-[13px] text-subtle">
+          {caption}. PayPal&apos;s sandbox can charge differently from live pricing.
+        </caption>
+        <thead className="max-md:sr-only">
+          <tr>
+            <th scope="col" className={HEAD}>
+              Currency
             </th>
-            <td className="py-2 pr-3">
-              <Label htmlFor={`fixed-fee-${code}`} className="sr-only">
-                {code} fixed fee
-              </Label>
-              <Input
-                id={`fixed-fee-${code}`}
-                inputMode="decimal"
-                autoComplete="off"
-                value={form.fixedFees[code]}
-                onChange={(event) =>
-                  update({ fixedFees: { ...form.fixedFees, [code]: event.target.value } })
-                }
-                aria-invalid={invalidField === `fixedFees.${code}`}
-                className="w-24 tabular-nums"
-              />
-            </td>
-            <td className="py-2">
-              <Label htmlFor={`market-rate-${code}`} className="sr-only">
-                {code} market rate
-              </Label>
-              <Input
-                id={`market-rate-${code}`}
-                inputMode="decimal"
-                autoComplete="off"
-                readOnly={!manual}
-                value={form.marketRates[code]}
-                onChange={(event) =>
-                  update({ marketRates: { ...form.marketRates, [code]: event.target.value } })
-                }
-                aria-invalid={invalidField === `marketRates.${code}`}
-                className="w-28 tabular-nums read-only:bg-ground read-only:text-muted-foreground"
-              />
-            </td>
+            <th scope="col" className={HEAD}>
+              Fixed fee
+            </th>
+            <th scope="col" className={HEAD}>
+              Market rate (₹ per unit)
+            </th>
+            <th scope="col" className={HEAD}>
+              Vs 30-day average
+            </th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody className="max-md:block">
+          {CURRENCIES.map((code) => (
+            <tr
+              key={code}
+              className="border-t border-bar-line max-md:grid max-md:grid-cols-2 max-md:gap-x-3 max-md:gap-y-2 max-md:py-3"
+            >
+              <th
+                scope="row"
+                className="px-2.5 py-2.5 text-left font-bold max-md:col-span-2 max-md:px-0 max-md:py-0"
+              >
+                {code}
+              </th>
+              <td className={`${CELL} ${LABELLED}`} data-label="Fixed fee">
+                <Label htmlFor={`fixed-fee-${code}`} className="sr-only">
+                  {code} fixed fee
+                </Label>
+                <Input
+                  id={`fixed-fee-${code}`}
+                  inputMode="decimal"
+                  autoComplete="off"
+                  value={form.fixedFees[code]}
+                  onChange={(event) =>
+                    update({ fixedFees: { ...form.fixedFees, [code]: event.target.value } })
+                  }
+                  aria-invalid={invalidField === `fixedFees.${code}`}
+                  className="h-10 w-24 rounded-xl tabular-nums max-md:w-full"
+                />
+              </td>
+              <td className={`${CELL} ${LABELLED}`} data-label="Market rate (₹ per unit)">
+                <Label htmlFor={`market-rate-${code}`} className="sr-only">
+                  {code} market rate
+                </Label>
+                <Input
+                  id={`market-rate-${code}`}
+                  inputMode="decimal"
+                  autoComplete="off"
+                  readOnly={!manual}
+                  value={form.marketRates[code]}
+                  onChange={(event) =>
+                    update({ marketRates: { ...form.marketRates, [code]: event.target.value } })
+                  }
+                  aria-invalid={invalidField === `marketRates.${code}`}
+                  className="h-10 w-28 rounded-xl tabular-nums max-md:w-full read-only:bg-transparent read-only:text-foreground"
+                />
+              </td>
+              <td
+                className={`${CELL} ${LABELLED} text-muted-foreground max-md:col-span-2 md:whitespace-nowrap`}
+                data-label="Vs 30-day average"
+              >
+                {averageGap(gaps[code] ?? null)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -188,6 +219,7 @@ export function SettingsForm() {
   const [saveError, setSaveError] = useState<SaveError | null>(null);
   const [savedCount, setSavedCount] = useState(0);
   const offline = useOffline();
+  const { state: dashboard } = useLoad(getDashboard);
 
   useEffect(() => {
     let current = true;
@@ -252,17 +284,25 @@ export function SettingsForm() {
     }
   }
 
+  const gaps = Object.fromEntries(
+    dashboard.kind === "ready"
+      ? dashboard.data.rates.lines.map((line) => [line.currency, line.percentVsAverage])
+      : [],
+  );
+
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-2">
-      <form onSubmit={onSubmit} aria-labelledby="fees-title" className="surface p-6">
-        <h2 id="fees-title" className="text-xl font-semibold">
-          PayPal fees and rates
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-[18px] lg:grid-cols-[minmax(0,1fr)_360px]">
+      <form
+        onSubmit={onSubmit}
+        aria-labelledby="fees-title"
+        className="surface flex flex-col gap-[18px] p-7 max-md:p-5 [--h2-size:24px] [--h2-tracking:-0.4px] [--surface-radius:28px]"
+      >
+        <h2 id="fees-title">PayPal fees and rates</h2>
+        <p className="text-[15px] text-muted-foreground">
           Defaults are PayPal India&apos;s published fees for international commercial payments.
         </p>
 
-        <div className="mt-5 flex flex-wrap gap-4">
+        <div className="grid gap-3.5 sm:grid-cols-3">
           <NumberField
             id="fee-percent"
             label="PayPal fee (%)"
@@ -278,13 +318,15 @@ export function SettingsForm() {
             invalid={invalidField === "fxMarkupPercent"}
           />
           <div className="grid gap-1.5">
-            <Label id="rate-source-label">Rate source</Label>
+            <Label id="rate-source-label" className="font-bold">
+              Rate source
+            </Label>
             <Select
               value={form.rateSource}
               items={SOURCE_ITEMS}
               onValueChange={(value) => value && update({ rateSource: value })}
             >
-              <SelectTrigger aria-labelledby="rate-source-label" className="w-44">
+              <SelectTrigger aria-labelledby="rate-source-label" className="h-12 w-full text-base">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -303,6 +345,7 @@ export function SettingsForm() {
           update={update}
           manual={manual}
           invalidField={invalidField}
+          gaps={gaps}
           caption={
             offline
               ? `${OFFLINE_RATES_LABEL}, last changed ${formatDate(settings.ratesUpdatedOn)}`
@@ -312,17 +355,22 @@ export function SettingsForm() {
           }
         />
 
-        {saveError && (
-          <p role="alert" className="mt-4 text-sm text-late">
-            {saveError.field ? `${saveError.field}: ${saveError.message}` : saveError.message}
-          </p>
-        )}
-        <Button type="submit" disabled={pending} className="mt-6">
-          {pending ? "Saving…" : "Save settings"}
-        </Button>
+        <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+          {saveError && (
+            <p role="alert" className="text-sm font-semibold text-late">
+              {saveError.field ? `${saveError.field}: ${saveError.message}` : saveError.message}
+            </p>
+          )}
+          <Button type="submit" size="lg" disabled={pending} className="px-[26px] font-bold">
+            {pending ? "Saving…" : "Save settings"}
+          </Button>
+        </div>
       </form>
 
-      <PayoutCalculator settingsVersion={savedCount} rateSource={settings.rateSource} />
+      <aside aria-label="Estimate and morning settings" className="grid gap-4">
+        <PayoutCalculator settingsVersion={savedCount} rateSource={settings.rateSource} />
+        <AutomationSettings />
+      </aside>
     </div>
   );
 }
