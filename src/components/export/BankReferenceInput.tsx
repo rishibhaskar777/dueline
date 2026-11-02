@@ -67,7 +67,7 @@ export function BankReferenceInput({
         onChange={(event) => dispatch({ type: "type", text: event.target.value })}
         onKeyDown={onKeyDown}
         onBlur={() => void save()}
-        className={cn("h-9", !state.saved && !state.typed && "border-due-soon")}
+        className={cn("h-9 max-md:h-11", !state.saved && !state.typed && "border-due-soon")}
       />
       {state.error && (
         <p id={errorId} role="alert" className="text-xs text-late">

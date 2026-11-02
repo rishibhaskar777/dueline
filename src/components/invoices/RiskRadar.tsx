@@ -31,7 +31,7 @@ export function RiskRadar({ clientName, clientEmail, known, form, update }: Risk
 
   const { suggestion } = risk;
   return (
-    <section aria-labelledby="radar-title" className="rounded-xl border border-line bg-card p-6">
+    <section aria-labelledby="radar-title" className="surface p-6">
       <div className="flex flex-wrap items-center gap-2">
         <h2 id="radar-title" className="text-xl font-semibold">
           Late-payer radar

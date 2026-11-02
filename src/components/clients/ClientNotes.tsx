@@ -39,11 +39,7 @@ export function ClientNotes({ clientKey, initial }: ClientNotesProps) {
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      aria-labelledby="notes-title"
-      className="rounded-xl border border-line bg-card p-6"
-    >
+    <form onSubmit={onSubmit} aria-labelledby="notes-title" className="surface p-6">
       <h2 id="notes-title" className="text-xl font-semibold">
         Notes
       </h2>

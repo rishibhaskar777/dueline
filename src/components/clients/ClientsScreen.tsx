@@ -33,7 +33,7 @@ export function ClientsScreen() {
   }
   if (state.data.length === 0) {
     return (
-      <p className="max-w-xl rounded-xl border border-line bg-card p-6 text-sm">
+      <p className="max-w-xl surface p-6 text-sm">
         Your clients appear here once you have sent an invoice.
       </p>
     );
@@ -42,7 +42,7 @@ export function ClientsScreen() {
   const open = (client: ClientSummary) => router.push(clientHref(client.key));
 
   return (
-    <section aria-labelledby="clients-title" className="rounded-xl border border-line bg-card">
+    <section aria-labelledby="clients-title" className="surface">
       <div className="flex flex-wrap items-end justify-between gap-3 p-6">
         <h2 id="clients-title" className="text-xl font-semibold">
           Clients

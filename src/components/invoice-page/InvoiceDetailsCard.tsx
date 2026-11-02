@@ -3,7 +3,7 @@ import type { InvoiceDetailResponse } from "@/types";
 
 export function InvoiceDetailsCard({ details }: Pick<InvoiceDetailResponse, "details">) {
   return (
-    <section aria-labelledby="details-title" className="rounded-xl border border-line bg-card p-6">
+    <section aria-labelledby="details-title" className="surface p-6">
       <h2 id="details-title" className="text-xl font-semibold">
         Details
       </h2>

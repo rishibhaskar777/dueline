@@ -17,7 +17,7 @@ export function MorningWidget() {
     <section
       aria-labelledby="morning-title"
       aria-busy={state.kind === "loading"}
-      className="rounded-xl border border-line bg-card p-6"
+      className="surface p-6"
     >
       <h2 id="morning-title" className="text-xl font-semibold">
         This morning

@@ -29,7 +29,7 @@ export function InvoiceActions({ invoice, details, today, onChanged }: InvoiceAc
   }
 
   return (
-    <section aria-labelledby="actions-title" className="rounded-xl border border-line bg-card p-6">
+    <section aria-labelledby="actions-title" className="surface p-6">
       <h2 id="actions-title" className="text-xl font-semibold">
         Actions
       </h2>

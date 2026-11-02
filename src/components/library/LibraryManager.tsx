@@ -71,7 +71,7 @@ export function LibraryManager() {
   const { items, reload } = useLibrary();
 
   return (
-    <section aria-labelledby="library-title" className="rounded-xl border border-line bg-card p-6">
+    <section aria-labelledby="library-title" className="surface p-6">
       <h2 id="library-title" className="text-xl font-semibold">
         Item library
       </h2>

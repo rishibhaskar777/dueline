@@ -51,7 +51,7 @@ export function MergeClient({ client, hasMerged }: MergeClientProps) {
   }
 
   return (
-    <section aria-labelledby="merge-title" className="rounded-xl border border-line bg-card p-6">
+    <section aria-labelledby="merge-title" className="surface p-6">
       <h2 id="merge-title" className="text-xl font-semibold">
         Same client under another name?
       </h2>

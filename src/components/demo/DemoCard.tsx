@@ -38,10 +38,7 @@ export function DemoCard() {
   }
 
   return (
-    <section
-      aria-labelledby="demo-title"
-      className="max-w-xl rounded-xl border border-line bg-card p-6"
-    >
+    <section aria-labelledby="demo-title" className="max-w-xl surface p-6">
       <h2 id="demo-title" className="text-xl font-semibold">
         Demo
       </h2>

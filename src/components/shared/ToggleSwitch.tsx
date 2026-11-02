@@ -8,6 +8,8 @@ interface ToggleSwitchProps {
   disabled?: boolean;
 }
 
+// On phones the button is 44 px tall around a 28 px track, so the control meets the touch target
+// size while the track keeps its look.
 export function ToggleSwitch({ label, checked, onChange, disabled = false }: ToggleSwitchProps) {
   return (
     <button
@@ -17,18 +19,22 @@ export function ToggleSwitch({ label, checked, onChange, disabled = false }: Tog
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={cn(
-        "relative h-6 w-11 shrink-0 rounded-full border before:absolute before:-inset-2 before:content-[''] transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 max-md:h-7 max-md:w-12",
-        checked ? "border-primary bg-primary" : "border-line bg-ground",
-      )}
+      className="group relative flex shrink-0 items-center justify-center rounded-full outline-none before:absolute before:-inset-2 before:content-[''] disabled:opacity-50 max-md:min-h-11 max-md:min-w-12"
     >
       <span
         aria-hidden="true"
         className={cn(
-          "absolute top-0.5 left-0.5 size-4.5 rounded-full shadow transition-transform motion-reduce:transition-none max-md:size-5.5",
-          checked ? "translate-x-5 bg-primary-foreground" : "bg-muted-foreground",
+          "relative h-6 w-11 rounded-full border transition-colors group-focus-visible:ring-3 group-focus-visible:ring-ring/50 max-md:h-7 max-md:w-12",
+          checked ? "border-toggle-on bg-toggle-on" : "border-line bg-ground",
         )}
-      />
+      >
+        <span
+          className={cn(
+            "absolute top-0.5 left-0.5 size-4.5 rounded-full shadow transition-transform motion-reduce:transition-none max-md:size-5.5",
+            checked ? "translate-x-5 bg-white" : "bg-muted-foreground",
+          )}
+        />
+      </span>
     </button>
   );
 }

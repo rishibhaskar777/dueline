@@ -8,9 +8,9 @@ const LABELS: Record<RiskLevel, string> = {
 };
 
 const STYLES: Record<RiskLevel, string> = {
-  reliable: "bg-paid/10 text-paid",
-  watch: "bg-due-soon/10 text-due-soon",
-  late_payer: "bg-late/10 text-late",
+  reliable: "bg-tint-green font-bold text-paid",
+  watch: "bg-tint-amber font-bold text-due-soon",
+  late_payer: "bg-tint-red font-bold text-late",
 };
 
 export function RiskBadge({ level }: { level: RiskLevel }) {

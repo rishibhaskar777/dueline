@@ -26,15 +26,16 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       style={
         {
-          "--normal-bg": "var(--popover)",
+          "--normal-bg": "var(--glass-strong)",
           "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
+          "--normal-border": "var(--glass-edge)",
+          "--border-radius": "18px",
+          fontFamily: "var(--font-figtree), ui-sans-serif, system-ui, sans-serif",
         } as React.CSSProperties
       }
       toastOptions={{
         classNames: {
-          toast: "cn-toast",
+          toast: "cn-toast surface-strong",
         },
       }}
       {...props}

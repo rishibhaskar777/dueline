@@ -22,7 +22,7 @@ import { ReminderLanguageCard } from "./ReminderLanguageCard";
 
 function NotFound() {
   return (
-    <div className="max-w-xl rounded-xl border border-line bg-card p-6">
+    <div className="max-w-xl surface p-6">
       <h1 className="text-xl font-semibold">We couldn&apos;t find that client</h1>
       <p className="mt-2 text-sm">
         They may have no invoices left, or the address may be wrong.{" "}

@@ -31,7 +31,7 @@ export function MergedClients({ clientKey, clientName, merged, onChanged }: Merg
 
   if (merged.length === 0) return null;
   return (
-    <section aria-labelledby="merged-title" className="rounded-xl border border-line bg-card p-6">
+    <section aria-labelledby="merged-title" className="surface p-6">
       <h2 id="merged-title" className="text-xl font-semibold">
         Merged into {clientName}
       </h2>

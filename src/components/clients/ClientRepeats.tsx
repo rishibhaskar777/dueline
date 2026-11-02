@@ -33,7 +33,7 @@ export function ClientRepeats({ clientKey }: { clientKey: string }) {
   }
 
   return (
-    <section aria-labelledby="repeats-title" className="rounded-xl border border-line bg-card p-6">
+    <section aria-labelledby="repeats-title" className="surface p-6">
       <h2 id="repeats-title" className="text-xl font-semibold">
         Repeats
       </h2>

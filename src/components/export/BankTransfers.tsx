@@ -49,7 +49,7 @@ export function BankTransfers({ rows, paypalFiraInr, bankInr }: BankTransfersPro
   if (rows.length === 0) return null;
 
   return (
-    <section aria-labelledby="bank-title" className="rounded-xl border border-line bg-card">
+    <section aria-labelledby="bank-title" className="surface">
       <div className="p-6">
         <h2 id="bank-title" className="text-xl font-semibold">
           Bank transfers

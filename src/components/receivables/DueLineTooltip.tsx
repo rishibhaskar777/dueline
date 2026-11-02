@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { formatDate, formatDayMonth } from "@/lib/format-date";
 import { formatMoney, formatRupees } from "@/lib/money/format";
 import type { DueLineRow } from "./due-line-layout";
@@ -25,10 +26,10 @@ export function DueLineTooltip({ target }: { target: TooltipTarget }) {
     ? { top: target.rowBottom + GAP }
     : { bottom: window.innerHeight - target.rowTop + GAP };
 
-  return (
+  return createPortal(
     <div
       role="tooltip"
-      className="pointer-events-none fixed z-40 rounded-lg border border-line bg-card p-3 text-xs shadow-lg"
+      className="surface-strong pointer-events-none fixed z-40 p-3 text-xs [--surface-radius:16px]"
       style={{ left, width: WIDTH, ...vertical }}
     >
       <p className="text-sm font-medium">{invoice.work}</p>
@@ -61,6 +62,7 @@ export function DueLineTooltip({ target }: { target: TooltipTarget }) {
           </>
         )}
       </dl>
-    </div>
+    </div>,
+    document.body,
   );
 }
