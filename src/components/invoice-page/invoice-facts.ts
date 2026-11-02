@@ -1,3 +1,4 @@
+import { countryName } from "@/lib/countries";
 import { daysBetween } from "@/lib/date-math";
 import { formatDate } from "@/lib/format-date";
 import { formatDays } from "@/lib/format-days";
@@ -22,4 +23,10 @@ export function lutSentence(underLut: boolean, note: string): string {
   if (!underLut) return "Not under LUT";
   const arn = LUT_ARN.exec(note)?.[1];
   return arn ? `Under LUT · ARN ${arn}` : "Under LUT · no ARN on this invoice";
+}
+
+// "United States · name@example.com" when the country is known, otherwise just the email.
+export function clientLine(email: string, country: string | null | undefined): string {
+  const name = countryName(country ?? null);
+  return name ? `${name} · ${email}` : email;
 }

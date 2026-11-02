@@ -4,6 +4,7 @@ import { todayInKolkata } from "@/lib/date-math";
 import { reseedStaleDemo } from "@/lib/demo/reset";
 import { prepareReminderDrafts } from "@/lib/reminders/reminder-drafts";
 import { loadVisibleInvoices } from "@/lib/demo/visible-invoices";
+import { reconcilePaidInvoices } from "@/lib/paypal/reconcile-paid";
 import { clearInvoiceCaches } from "@/lib/paypal/summaries";
 import { runClaimed } from "@/lib/requests/run-claimed";
 import { getSettings } from "@/lib/settings";
@@ -64,6 +65,11 @@ async function prepare(): Promise<void> {
   const reminders = (await getSettings()).prepareReminders ? await prepareReminders(day) : [];
   await getStore().replaceQueueItems("reminder", reminders);
   await prepareDueRepeats(today());
+  try {
+    await reconcilePaidInvoices(day);
+  } catch {
+    console.error("Reconciling paid invoices failed");
+  }
 }
 
 // Once per India day, however many times it is asked for: a second call, a retry by the cron

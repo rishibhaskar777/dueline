@@ -681,7 +681,9 @@ the invoice caches and returns the counts. A non-story invoice created in the la
 `create_time`) (or one whose creation time PayPal did not report) is never cancelled or deleted and is
 counted in `kept`, so a judge in the middle of an invoice does not lose it to another judge's reset.
 The daily run calls `reseedStaleDemo`: once the current generation is 7 days old it starts a new one,
-cancelling only the open story invoices of older generations, behind the same ten-minute slot. The
+cancelling only the open story invoices of older generations, behind the same ten-minute slot. The story
+is built so that something is due soon on every day of its seven days (`RESEED_AFTER_DAYS` in `story.ts`:
+Northpine Studio on days 0 to 3, Tandem Health on days 4 to 6), and `demo-freshness.test.ts` checks it. The
 "Demo" card (`DemoCard`) lives on its own page, `/demo-tools`, which the account menu links to only when
 `GET /api/demo/recipient` succeeds (`useDemoMode`); it asks for confirmation inline and shows the
 result line.
@@ -721,6 +723,12 @@ both required; if one is missing, API routes answer 500 `config_error` and scree
 path, checked by `safeNextPath`. `api-client.ts` sends the browser to `/demo` when any other call
 answers 401. The account menu's "Lock demo" item calls `signOut`.
 
+`POST /api/demo/session` counts attempts in two ways over 15 minutes: 10 per browser, told apart by a
+random id the route puts in the `dueline_browser` cookie on the first attempt, and 60 per address, which
+holds someone who keeps dropping the cookie while leaving room for several people on one office
+network. Either count over its limit answers 429 `rate_limited`. The counters are read with one retry,
+so a database that was asleep does not fail the first sign-in (`retryOnce`).
+
 ## Webhooks
 
 `POST /api/webhooks/paypal` is public, because PayPal calls it, and protects itself instead:
@@ -738,6 +746,11 @@ answers 401. The account menu's "Lock demo" item calls `signOut`.
 4. For `PAID` it also looks up PayPal's actual payout and stores it. For `PAID` and `SENT` it records
    an activity event whose ID is the PayPal event ID.
 5. It marks the event ID as processed and answers 204. Other event types are only marked.
+
+A missed webhook loses only the "paid" row of the activity feed, because the invoice and its payout
+are always read from PayPal. At the end of its run the daily job calls `reconcilePaidInvoices`
+(`src/lib/paypal/reconcile-paid.ts`), which adds that row, with a fixed ID per invoice, for an invoice
+paid through PayPal in the last 14 days that has none.
 
 If a step after verification fails, the route logs PayPal's `debug_id` and answers 500, so PayPal
 retries. `GET /api/activity` returns the latest 20 stored events.

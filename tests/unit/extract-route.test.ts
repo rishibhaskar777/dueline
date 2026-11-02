@@ -144,7 +144,7 @@ describe("POST /api/invoices/extract", () => {
     const { error } = await response.json();
     expect(error.code).toBe("ai_unavailable");
     expect(error.message).toBe(
-      "AI is unavailable right now. You can still fill the invoice by hand.",
+      "The AI is busy right now. Try again in a minute, or fill the invoice in yourself.",
     );
     expect(generateText).not.toHaveBeenCalled();
   });
@@ -153,7 +153,11 @@ describe("POST /api/invoices/extract", () => {
     vi.mocked(generateText).mockRejectedValue(apiCallError(429));
     const response = await extract(chatNumber(1));
     expect(response.status).toBe(503);
-    expect((await response.json()).error.code).toBe("ai_unavailable");
+    const { error } = await response.json();
+    expect(error.code).toBe("ai_unavailable");
+    expect(error.message).toBe(
+      "The AI is busy right now. Try again in a minute, or fill the invoice in yourself.",
+    );
     expect(generateText).toHaveBeenCalledTimes(2);
   });
 

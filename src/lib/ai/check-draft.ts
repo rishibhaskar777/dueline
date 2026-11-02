@@ -49,6 +49,9 @@ const MAX_REASON_LENGTH = 300;
 
 const DECIMAL_AMOUNT = /^\d+(\.\d{1,2})?$/;
 const THOUSANDS_AMOUNT = /^\d{1,3}(,\d{3})+(\.\d+)?$/;
+// Indian grouping (1,20,000), then western grouping (120,000), then a plain number.
+const AMOUNT_TOKEN =
+  /\d{1,2}(?:,\d{2})+,\d{3}(?:\.\d+)?|\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?/g;
 const CURRENCY_PREFIX = /^(?:USD|EUR|GBP|CAD|AUD|INR|[$€£₹])\s*/i;
 const INSTRUCTION_PHRASES =
   /ignore\s+(?:all\s+|any\s+|the\s+)?(?:previous\s+|prior\s+|above\s+)?instructions|system\s+prompt|you\s+are\s+now|disregard\s+(?:the\s+|all\s+)?(?:above|previous|prior)/i;
@@ -75,10 +78,15 @@ function normaliseAmount(raw: string): string | null {
   return minor > 0 ? fromMinorUnits(minor) : null;
 }
 
-// Compares as decimals, so "$1,200", "1200" and "1200.00" in a quote all match 1200.00.
-function priceIsInQuote(unitAmount: string, quote: string): boolean {
-  const numbers = quote.replace(/(\d),(?=\d{3})/g, "$1").match(/\d+(?:\.\d+)?/g) ?? [];
-  return numbers.some((found) => normaliseAmount(found) === unitAmount);
+// Compares as decimals, so "$1,200", "1200", "1200.00", "120/-" and "1,20,000" in the chat all match
+// the same amount. A different number that merely contains the digits does not.
+function priceIsInChat(unitAmount: string, { chat, contacts }: CheckInput): boolean {
+  const withoutContacts = [...contacts.emails, ...contacts.phones].reduce(
+    (text, contact) => text.replaceAll(contact, " "),
+    chat,
+  );
+  const numbers = withoutContacts.match(AMOUNT_TOKEN) ?? [];
+  return numbers.some((found) => normaliseAmount(found.replaceAll(",", "")) === unitAmount);
 }
 
 function looksLikeInstructions(chat: string): boolean {
@@ -95,11 +103,8 @@ function isQuantity(value: number): boolean {
   return Number.isInteger(value) && value >= 1 && value <= 999;
 }
 
-function checkItems(
-  raw: ModelDraft["items"],
-  { chat, contacts }: CheckInput,
-  warnings: string[],
-): LineItem[] {
+function checkItems(raw: ModelDraft["items"], input: CheckInput, warnings: string[]): LineItem[] {
+  const { chat, contacts } = input;
   if (raw.length > MAX_ITEMS) warnings.push(`Only the first ${MAX_ITEMS} items were kept`);
 
   const items: LineItem[] = [];
@@ -121,8 +126,8 @@ function checkItems(
     if (!quoteIsInChat(quote, chat)) {
       warnings.push(`Check '${name}': not found word for word in the chat`);
     }
-    if (!priceIsInQuote(unitAmount, quote)) {
-      warnings.push(`Check the price of '${name}': it does not appear in the quoted words`);
+    if (!priceIsInChat(unitAmount, input)) {
+      warnings.push(`Check the price of '${name}': it does not appear in the chat`);
     }
     items.push({
       name,

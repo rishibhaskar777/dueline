@@ -16,6 +16,7 @@ export function formatMoney(money: Money): string {
   );
 }
 
-export function formatRate(rate: number, digits = 4): string {
-  return rate.toFixed(digits);
+// Rupee rates are shown to the paisa; the full figure stays in the data and in editable fields.
+export function formatRate(rate: number): string {
+  return rate.toFixed(2);
 }

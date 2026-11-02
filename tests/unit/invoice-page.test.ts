@@ -27,6 +27,7 @@ describe("the invoice page header", () => {
   it("offers the payer link and a reminder on an overdue invoice", () => {
     expect(headerActions(view(overdueInvoice("2026-10-25", 8), true))).toEqual({
       openPayerLink: true,
+      viewOnPayPal: false,
       copyPayerLink: true,
       sendReminder: true,
     });
@@ -35,21 +36,26 @@ describe("the invoice page header", () => {
   it("offers the payer link but no reminder when the server says none is due", () => {
     expect(headerActions(view(openInvoice("2026-12-01"), false))).toEqual({
       openPayerLink: true,
+      viewOnPayPal: false,
       copyPayerLink: true,
       sendReminder: false,
     });
   });
 
-  it("offers no reminder on a paid invoice", () => {
-    expect(headerActions(view(paidInvoice("2026-10-25", "2026-10-20"), false)).sendReminder).toBe(
-      false,
-    );
+  it("offers only a view on PayPal, and no reminder, on a paid invoice", () => {
+    expect(headerActions(view(paidInvoice("2026-10-25", "2026-10-20"), false))).toEqual({
+      openPayerLink: false,
+      viewOnPayPal: true,
+      copyPayerLink: false,
+      sendReminder: false,
+    });
   });
 
   it("offers nothing to pay on a cancelled invoice", () => {
     const cancelled = { ...openInvoice("2026-12-01"), paypalStatus: "CANCELLED" };
     expect(headerActions(view(cancelled, false))).toEqual({
       openPayerLink: false,
+      viewOnPayPal: false,
       copyPayerLink: false,
       sendReminder: false,
     });

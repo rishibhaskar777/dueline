@@ -97,10 +97,7 @@ describe("extractInvoiceDraft", () => {
     });
     const result = await extractInvoiceDraft(haldenChat);
     expect(result.draft.items).toHaveLength(1);
-    expect(result.warnings).toEqual([
-      "Check 'Logo option': not found word for word in the chat",
-      "Check the price of 'Logo option': it does not appear in the quoted words",
-    ]);
+    expect(result.warnings).toEqual(["Check 'Logo option': not found word for word in the chat"]);
   });
 
   it("drops an item with quantity 0 and says which", async () => {

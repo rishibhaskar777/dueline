@@ -56,6 +56,17 @@ export function InvoiceHeader({ invoice, details, today }: InvoiceHeaderProps) {
               <span className="sr-only"> (opens in a new tab)</span>
             </a>
           )}
+          {actions.viewOnPayPal && (
+            <a
+              href={invoice.payLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(buttonVariants({ variant: "outline" }), PILL)}
+            >
+              View on PayPal <span aria-hidden="true">↗</span>
+              <span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          )}
           {actions.copyPayerLink && <CopyLinkButton link={invoice.payLink} className={PILL} />}
           {actions.sendReminder && (
             <Link

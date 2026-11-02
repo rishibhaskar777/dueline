@@ -35,9 +35,11 @@ export function useSendReminder(
   const [sendError, setSendError] = useState<string | null>(null);
   const [sentAt, setSentAt] = useState<string | null>(null);
   const started = useRef(false);
+  const running = useRef(false);
 
   async function send({ draft, channel, requestId }: ReminderToSend): Promise<void> {
-    if (sending) return;
+    if (running.current) return;
+    running.current = true;
     setSending(true);
     started.current = true;
     setSendError(null);
@@ -55,6 +57,7 @@ export function useSendReminder(
       started.current = false;
       setSendError(messageOf(error));
     } finally {
+      running.current = false;
       setSending(false);
     }
   }

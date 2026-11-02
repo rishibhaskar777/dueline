@@ -73,3 +73,15 @@ report when a window ends.
 
 The cache is kept in the store, so on Vercel it is shared between function instances. It needs
 migration 003 (`npm run db:migrate`); until then the app works and simply calls the model each time.
+
+## Update, 3 Nov 2026: the price check reads the whole chat
+
+The check that a price comes from the chat used to look only in the words the item was quoted from.
+In a real chat the price is often in the other person's reply ("Riya: Logos for $120 each"), not in
+the line that names the item, so honest drafts got a warning on every item. The check now accepts a
+price when the exact amount is written anywhere in the chat, and warns only when it is nowhere in it
+("Check the price of 'X': it does not appear in the chat"). Amounts are compared as numbers, so
+"120", "120.00", "$120", "120/-" and "1,20,000" count, and 1200 does not stand in for 120. Only
+amounts the person wrote count: contact details are removed from the chat before it is read, and
+nothing the model produced is used. The check that each quote is in the chat word for word is
+unchanged.

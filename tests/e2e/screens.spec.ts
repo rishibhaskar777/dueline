@@ -212,7 +212,8 @@ test.describe("Export register", () => {
     await expect(page.getByText("On PayPal's FIRA", { exact: true })).toBeVisible();
     await expect(page.getByText("By bank transfer", { exact: true })).toBeVisible();
 
-    const input = page.getByLabel(/^FIRC or e-BRC number for invoice /).first();
+    // The story gives the earliest transfer its number, so the last one is still to fill.
+    const input = page.getByLabel(/^FIRC or e-BRC number for invoice /).last();
     await input.fill("FIRC/26-77");
     await input.press("Escape");
     await expect(input).toHaveValue("");
@@ -230,7 +231,7 @@ test.describe("Export register", () => {
     await expect(input).toHaveValue("FIRC/26-77");
     await page.reload();
     await page.getByRole("button", { name: "Previous month" }).click();
-    await expect(page.getByLabel(/^FIRC or e-BRC number for invoice /).first()).toHaveValue(
+    await expect(page.getByLabel(/^FIRC or e-BRC number for invoice /).last()).toHaveValue(
       "FIRC/26-77",
     );
   });

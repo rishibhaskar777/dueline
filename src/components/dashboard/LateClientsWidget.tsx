@@ -1,9 +1,8 @@
 import { clientHref } from "@/components/clients/client-href";
 import Link from "next/link";
-import { formatRupees } from "@/lib/money/format";
 import type { LateClient } from "@/types";
 import { DashboardWidget } from "./DashboardWidget";
-import { lateHistoryLine, latePill } from "./late-client-pill";
+import { lateHistoryLine, latePill, overdueLine } from "./late-client-pill";
 import type { DashboardState } from "./use-dashboard";
 
 function List({ clients }: { clients: LateClient[] }) {
@@ -22,9 +21,7 @@ function List({ clients }: { clients: LateClient[] }) {
                 <span className="block text-sm font-medium text-foreground tabular-nums">
                   {lateHistoryLine(client)}
                 </span>
-                <span className="text-sm text-muted-foreground">
-                  About {formatRupees(client.overdueInr)} overdue. {client.reason}
-                </span>
+                <span className="text-sm text-muted-foreground">{overdueLine(client)}</span>
               </span>
               {pill && (
                 <span className="rounded-full bg-tint-red px-3 py-1.5 text-[13px] font-bold whitespace-nowrap text-late tabular-nums">

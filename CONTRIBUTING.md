@@ -54,7 +54,7 @@ in memory. Read [docs/architecture.md](docs/architecture.md) and
    `npm run extract:check -- my-chat.txt`) and prints the checked draft and its warnings. It calls the
    real model unless the same chat was already answered today. Migration 003 adds the table for that
    cache, so run `npm run db:migrate` first if you use a database.
-7. Build the demo story with `npm run seed`. It creates eight invoices for five clients, with dates
+7. Build the demo story with `npm run seed`. It creates nine invoices for five clients, with dates
    counted back from today, and records the older ones as paid outside PayPal so the late-payer radar
    has history. It prints a table of what it created, repaired, skipped or could not create, and it
    skips invoices that already exist, so it is safe to run again. On a sandbox that already has

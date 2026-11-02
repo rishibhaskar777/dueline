@@ -7,6 +7,32 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- The late-payer card on the landing page now says "12 days on average", as the demo does everywhere.
+- For your CA: "Sample rows from the demo" is the table's caption, once. The public pages and the sign-in page balance their headings and the last line of their intro text.
+- Home: Clients behind says "About ₹71,038 overdue." and gives the basis ("Based on 2 invoices.") only when it is under 3 invoices. Activity shows the 6 newest events with "Show all 16" and "Show fewer".
+- Invoice page: a paid invoice has one "View on PayPal" link and no copy button, a cancelled one has neither. History no longer lists a due date after a payment that came on or before it. Client in the facts card shows the country before the email when it is known.
+- New invoice: the review step opens at the top with the focus on its heading, and Country is filled in for a client Dueline already knows. The built-in sample chat no longer raises price warnings: a price is accepted when it is written anywhere in the chat ([decision 0010](docs/decisions/0010-ai-invoice-drafting.md)).
+- Nudges: the Today band builds its line from the invoice as it is today, so its days late match the card below it.
+- Rupee rates are shown to the paisa (₹94.91, not ₹94.9095) everywhere they are text; fields you edit keep every digit.
+- Demo story: the October bank transfer for the Brightwell Labs icon set has the FIRC number FIRC/2026/001, so the register shows "1 FIRC added".
+
+### Changed
+
+- The demo story keeps something due soon on every day of its seven-day life (Tandem Health is now due in 7 days at the start), and a test checks it for 1 to 15 December.
+- When Gemini is busy or out of quota, New invoice says "The AI is busy right now. Try again in a minute, or fill the invoice in yourself." and offers "Start without a chat" as the main button.
+- A page that loads after the database or functions were asleep reads again once before it shows an error, and a network failure says "Could not reach Dueline" instead of the browser's own wording. The health check and the demo sign-in try the database a second time before they fail.
+- The sign-in limit is ten attempts in fifteen minutes per browser (a random id in its own cookie) and sixty per address, so people sharing one office network no longer lock each other out.
+- The daily job adds the "paid" row to Activity for a PayPal payment whose webhook never arrived. Whichever of the webhook and the job comes second adds no second row for the invoice.
+- Create and send, and Send PayPal reminder, ignore a second click made in the same moment.
+- `.env.example` says for every setting whether it is for live, offline or both, with an example.
+
+### Docs
+
+- README rewritten for the PayPal AI Hackathon 2026: what Dueline does, how it uses PayPal, AI and AG Grid, how to try it and how to run it, with screenshots in `docs/images/`.
+- The extraction evaluation is regenerated with today's results. It compares amounts as numbers and names without regard to case or spacing, and its report names each item, so a difference in wording no longer reads as "12 x 65.00 against 12 x 65.00".
+
 ### Changed (Redesign, phase 1)
 
 - A new look for every screen ([decision 0023](docs/decisions/0023-visual-redesign.md)): Outfit and Figtree fonts, a new colour palette in both themes, an animated page background, frosted-glass cards, pill buttons and rounded fields. Nothing moved and no text changed. The reminder tone buttons and the status and risk badges follow the same style, and the due line's hover card is drawn outside its card so it keeps its place.

@@ -128,7 +128,9 @@ describe("scoreExtraction", () => {
   it("fails the items but not the prices when only a quantity is wrong", () => {
     const score = scoreOf("13-hinglish-logo");
     expect(score.passed).toMatchObject({ items: false, prices: true });
-    expect(score.misses[0]).toContain("expected 1 x 150.00, 2 x 30.00, got 1 x 150.00, 1 x 30.00");
+    expect(score.misses[0]).toContain(
+      "expected 1 x 150.00 (logo), 2 x 30.00 (revision), got 1 x 150.00 (Logo), 1 x 30.00 (Revision)",
+    );
   });
 
   it("flags a chat that gives the AI orders even when the draft follows them", () => {
@@ -192,6 +194,36 @@ describe("scoreExtraction", () => {
   });
 });
 
+describe("items compared as numbers and plain words", () => {
+  const expected = {
+    ...expectedOf("01-logo-pack"),
+    items: [{ nameIncludes: "Hours", quantity: 12, unitAmount: "65.00" }],
+  };
+  const outcome = (name: string, unitAmount: string): ExtractionOutcome => {
+    const base = outcomeFor("01-logo-pack");
+    return {
+      ...base,
+      draft: base.draft && {
+        ...base.draft,
+        items: [{ ...base.draft.items[0], name, quantity: 12, unitAmount }],
+      },
+    };
+  };
+
+  it("counts 12 x 65 as 12 x 65.00, whatever the case and spacing of the name", () => {
+    const score = scoreExtraction(expected, outcome("  consulting  HOURS", "65"), TODAY);
+    expect(score.passed).toMatchObject({ items: true, prices: true });
+  });
+
+  it("names the item in the report when only the name differs", () => {
+    const score = scoreExtraction(expected, outcome("Pricing page help", "65.00"), TODAY);
+    expect(score.passed).toMatchObject({ items: false, prices: true });
+    expect(score.misses).toContain(
+      "items: expected 12 x 65.00 (Hours), got 12 x 65.00 (Pricing page help)",
+    );
+  });
+});
+
 describe("tally and renderEvaluation", () => {
   const chats: EvaluatedChat[] = [
     { id: "01-logo-pack", summary: "Plain job", score: scoreOf("01-logo-pack") },
@@ -217,7 +249,7 @@ describe("tally and renderEvaluation", () => {
     expect(report).toContain("| 13-hinglish-logo | pass | pass | n/a | FAIL | pass |");
     expect(report).toContain("| 99-not-run | not run: the allowance is used up |");
     expect(report).toContain("**13-hinglish-logo** (Hinglish)");
-    expect(report).toContain("- items: expected 1 x 150.00, 2 x 30.00");
+    expect(report).toContain("- items: expected 1 x 150.00 (");
   });
 
   it("says so when nothing differed", () => {

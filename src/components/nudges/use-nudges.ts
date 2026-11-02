@@ -18,7 +18,7 @@ type NudgesState =
   | { kind: "error"; error: LoadError }
   | { kind: "ready"; nudges: Nudge[]; remindersLeftToday: number };
 
-interface NudgesData {
+export interface NudgesData {
   state: NudgesState;
   retry: () => void;
 }

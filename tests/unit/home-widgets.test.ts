@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { nextStep, nextStepText } from "@/components/dashboard/checklist-steps";
 import { bestCaseLine, expectedShare } from "@/components/dashboard/forecast-summary";
-import { lateHistoryLine, latePill } from "@/components/dashboard/late-client-pill";
+import { lateHistoryLine, latePill, overdueLine } from "@/components/dashboard/late-client-pill";
 import { featuredRate, mostOutstandingCurrency } from "@/components/dashboard/rate-line";
 import { invoiceCount, openInvoiceCount, paidNote } from "@/components/receivables/totals-notes";
 import { tandemInvoice } from "@/mocks/fixtures";
@@ -121,6 +121,19 @@ describe("latePill", () => {
 
   it("has no pill when nothing is open and late", () => {
     expect(latePill({ ...client, daysLate: 0 })).toBeNull();
+  });
+
+  it("gives only the money when three or more invoices are behind the reading", () => {
+    expect(overdueLine({ ...client, overdueInr: 71038 })).toBe("About ₹71,038 overdue.");
+  });
+
+  it("adds the basis when it is thin", () => {
+    expect(overdueLine({ ...client, overdueInr: 71038, invoicesConsidered: 2 })).toBe(
+      "About ₹71,038 overdue. Based on 2 invoices.",
+    );
+    expect(overdueLine({ ...client, overdueInr: 5000, invoicesConsidered: 1 })).toBe(
+      "About ₹5,000 overdue. Based on 1 invoice.",
+    );
   });
 });
 

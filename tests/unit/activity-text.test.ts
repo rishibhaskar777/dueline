@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { describeEvent, findNewEvents, relativeTime } from "@/components/receivables/activity-text";
+import {
+  ACTIVITY_PREVIEW,
+  describeEvent,
+  findNewEvents,
+  relativeTime,
+  visibleEvents,
+} from "@/components/receivables/activity-text";
 import { activity } from "@/mocks/fixtures";
 import type { ActivityEvent } from "@/types";
 
@@ -55,5 +61,23 @@ describe("findNewEvents", () => {
   it("returns only events whose id was not seen before", () => {
     expect(findNewEvents(activity.slice(1), activity).map((e) => e.id)).toEqual(["evt-1004"]);
     expect(findNewEvents(activity, activity)).toEqual([]);
+  });
+});
+
+describe("visibleEvents", () => {
+  const many: ActivityEvent[] = Array.from({ length: 16 }, (_, i) => ({
+    ...activity[0],
+    id: `evt-${i}`,
+  }));
+
+  it("keeps the newest few until the rest is asked for", () => {
+    expect(visibleEvents(many, false).map((e) => e.id)).toEqual(
+      many.slice(0, ACTIVITY_PREVIEW).map((e) => e.id),
+    );
+    expect(visibleEvents(many, true)).toHaveLength(16);
+  });
+
+  it("shows a short list whole", () => {
+    expect(visibleEvents(many.slice(0, 3), false)).toHaveLength(3);
   });
 });

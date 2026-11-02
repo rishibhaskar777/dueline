@@ -73,3 +73,24 @@ describe("unmask", () => {
     );
   });
 });
+
+describe("maskContacts on a full-size paste", () => {
+  it.each([
+    ["emoji", "😀".repeat(3000)],
+    ["Hindi", "नमस्ते ".repeat(800)],
+    ["one long word", "a".repeat(6000)],
+    ["dots", "a.".repeat(3000)],
+    ["digits", "1 ".repeat(3000)],
+  ])("returns quickly for 6,000 characters of %s", (_name, text) => {
+    const started = performance.now();
+    const result = maskContacts(text);
+    expect(performance.now() - started).toBeLessThan(500);
+    expect(result.masked.length).toBeGreaterThan(0);
+  });
+
+  it("still finds a contact among emoji and Hindi", () => {
+    const result = maskContacts("नमस्ते 😀 write to riya@example.com 😀");
+    expect(result.emails).toEqual(["riya@example.com"]);
+    expect(result.masked).toContain("[EMAIL_1]");
+  });
+});

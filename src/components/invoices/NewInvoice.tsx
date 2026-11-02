@@ -6,6 +6,7 @@ import { PasteStep, type Drafted } from "@/components/invoices/PasteStep";
 import { ReviewStep } from "@/components/invoices/ReviewStep";
 import { StepHeader } from "@/components/invoices/StepHeader";
 import { useProfile } from "@/components/profile/use-profile";
+import { useStepFocus } from "@/components/invoices/step-focus";
 import { usePrefill, type Prefill } from "@/components/invoices/use-prefill";
 import type { ClientRisk } from "@/types";
 
@@ -23,6 +24,8 @@ export function NewInvoice({ prefill }: { prefill: Prefill }) {
   const [formNumber, setFormNumber] = useState(0);
   const profileReady = profile !== null || profileError !== null;
   const prefilled = usePrefill(prefill, profile?.defaultSac ?? "", profileReady);
+
+  useStepFocus(review || prefilled.kind !== "ready" || prefilled.review ? "review" : "paste");
 
   function onDrafted({ draft, warnings, notice, risk }: Drafted) {
     setReview({

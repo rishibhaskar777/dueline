@@ -15,6 +15,8 @@ export interface DemoInvoice {
   paidOn: string | null;
   // A reminder Dueline sent earlier, kept in its own log only; nothing is sent to PayPal.
   reminder: { tone: Tone; sentOn: string } | null;
+  // The bank's FIRC number for a payment that came by bank transfer, when the story has one.
+  bankReference: string | null;
 }
 
 // Days from today. A negative number is in the past.
@@ -37,6 +39,7 @@ interface Template extends Engagement {
   offsets: Offsets;
   // Days after the due date the reminder went out.
   reminderDaysLate?: { tone: Tone; daysLate: number };
+  bankReference?: string;
 }
 
 // The story's open and latest invoices. The sample data in src/mocks reuses them so both show the
@@ -150,6 +153,11 @@ function earlier(
   };
 }
 
+// A story is shown for up to RESEED_AFTER_DAYS - 1 days before the daily run seeds a new one. Northpine
+// Studio is due soon on days 0 to 3 of that time and Tandem Health on days 4 to 6, so Home always
+// shows something due soon.
+export const RESEED_AFTER_DAYS = 7;
+
 // Okafor & Reyes pay about two weeks late every time and are late again now, so the radar calls them
 // a late payer; their "Website copy" invoice was chased once, gently, three days after it fell due.
 // Brightwell Labs paid six days late and is three days late now, which is a watch. Halden Coffee Co.
@@ -176,18 +184,21 @@ const TEMPLATES: Template[] = [
     due: 0,
     paid: -4,
   }),
-  earlier("brightwell-icon-set", engagements.brightwellLanding, "Icon set", "350.00", {
-    issued: -50,
-    due: -36,
-    paid: -30,
-  }),
+  {
+    ...earlier("brightwell-icon-set", engagements.brightwellLanding, "Icon set", "350.00", {
+      issued: -50,
+      due: -36,
+      paid: -30,
+    }),
+    bankReference: "FIRC/2026/001",
+  },
   template("brightwell-landing-page", engagements.brightwellLanding, { issued: -17, due: -3 }),
   template("northpine-social-media-kit", engagements.northpineKit, { issued: -11, due: 3 }),
-  template("tandem-pitch-deck", engagements.tandemDeck, { issued: -8, due: 13 }),
+  template("tandem-pitch-deck", engagements.tandemDeck, { issued: -8, due: 7 }),
 ];
 
 export function buildDemoStory(today: string): DemoInvoice[] {
-  return TEMPLATES.map(({ offsets, reminderDaysLate, ...template }) => {
+  return TEMPLATES.map(({ offsets, reminderDaysLate, bankReference, ...template }) => {
     const dueOn = addDays(today, offsets.due);
     return {
       ...template,
@@ -197,6 +208,7 @@ export function buildDemoStory(today: string): DemoInvoice[] {
       reminder: reminderDaysLate
         ? { tone: reminderDaysLate.tone, sentOn: addDays(dueOn, reminderDaysLate.daysLate) }
         : null,
+      bankReference: bankReference ?? null,
     };
   });
 }

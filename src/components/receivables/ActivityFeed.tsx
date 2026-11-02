@@ -1,7 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import { formatTimestamp } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
 import type { ActivityEvent } from "@/types";
-import { describeEvent, eventWhen } from "./activity-text";
+import { ACTIVITY_PREVIEW, describeEvent, eventWhen, visibleEvents } from "./activity-text";
 
 interface ActivityFeedProps {
   events: ActivityEvent[];
@@ -10,6 +13,7 @@ interface ActivityFeedProps {
 }
 
 export function ActivityFeed({ events, today, freshEvents }: ActivityFeedProps) {
+  const [expanded, setExpanded] = useState(false);
   const fresh = new Set(freshEvents.map((event) => event.id));
 
   return (
@@ -24,7 +28,7 @@ export function ActivityFeed({ events, today, freshEvents }: ActivityFeedProps) 
         </p>
       ) : (
         <ul className="mt-3 grid gap-3">
-          {events.map((event) => (
+          {visibleEvents(events, expanded).map((event) => (
             <li
               key={event.id}
               className={cn(
@@ -43,6 +47,16 @@ export function ActivityFeed({ events, today, freshEvents }: ActivityFeedProps) 
             </li>
           ))}
         </ul>
+      )}
+      {events.length > ACTIVITY_PREVIEW && (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((open) => !open)}
+          className="mt-3 rounded-md text-sm font-semibold text-blue hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        >
+          {expanded ? "Show fewer" : `Show all ${events.length}`}
+        </button>
       )}
     </section>
   );

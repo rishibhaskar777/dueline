@@ -20,7 +20,7 @@ const SAMPLE_LINES: SampleLine[] = [
     to: 80,
     tone: "blue",
     ended: false,
-    label: "Due in 12 days",
+    label: "Due in 6 days",
   },
   {
     client: "Okafor & Reyes",
@@ -43,7 +43,7 @@ const SAMPLE_LINES: SampleLine[] = [
 ];
 
 const SAMPLE_SUMMARY =
-  "The due line draws each invoice from sent to paid. Tandem Health is due in 12 days, Okafor and Reyes is 8 days late, and Halden Coffee Co. paid on time.";
+  "The due line draws each invoice from sent to paid. Tandem Health is due in 6 days, Okafor and Reyes is 8 days late, and Halden Coffee Co. paid on time.";
 
 interface Feature {
   mark: string;
@@ -122,10 +122,10 @@ export default function LandingPage() {
           <span aria-hidden="true" className="size-2 rounded-full bg-mark-green" />
           For freelancers in India paid through PayPal
         </p>
-        <h1 className="mt-1 max-w-[1000px] font-heading text-5xl leading-none font-extrabold tracking-[-1.5px] md:text-[72px] md:tracking-[-2.2px] lg:text-[92px] lg:tracking-[-2.8px]">
+        <h1 className="intro-title mt-1 max-w-[1000px] font-heading text-5xl leading-none font-extrabold tracking-[-1.5px] md:text-[72px] md:tracking-[-2.2px] lg:text-[92px] lg:tracking-[-2.8px]">
           Get paid from abroad. Without chasing.
         </h1>
-        <p className="max-w-[700px] text-lg leading-relaxed text-muted-foreground md:text-[21px]">
+        <p className="intro-text max-w-[700px] text-lg leading-relaxed text-muted-foreground md:text-[21px]">
           Turn a client chat into a PayPal invoice, see what reaches your bank in rupees, spot late
           payers early and keep export paperwork ready for your CA.
         </p>

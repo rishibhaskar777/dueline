@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { addDays } from "@/lib/date-math";
+import { fromMinorUnits, toMinorUnits } from "@/lib/money/decimal";
 import { currencySchema, type InvoiceDraft } from "@/types";
 
 // The warnings a chat is expected to raise, and the words of the warning that raises each.
@@ -106,6 +107,11 @@ function expectedDue(rule: ExpectedExtraction["due"], today: string): string | n
   return addDays(today, rule.rule === "net" ? rule.days : DEFAULT_TERMS_DAYS);
 }
 
+// "65", "65.0" and "65.00" are the same price.
+function sameAmount(a: string, b: string): boolean {
+  return toMinorUnits(a) === toMinorUnits(b);
+}
+
 // Each expected item must match one distinct item of the draft, and the draft may have no others.
 function itemsMatch(expected: ExpectedExtraction["items"], actual: InvoiceDraft["items"]): boolean {
   if (expected.length !== actual.length) return false;
@@ -114,8 +120,8 @@ function itemsMatch(expected: ExpectedExtraction["items"], actual: InvoiceDraft[
     const found = unused.findIndex(
       (item) =>
         item.quantity === want.quantity &&
-        item.unitAmount === want.unitAmount &&
-        item.name.toLowerCase().includes(want.nameIncludes.toLowerCase()),
+        sameAmount(item.unitAmount, want.unitAmount) &&
+        plain(item.name).includes(plain(want.nameIncludes)),
     );
     if (found < 0) return false;
     unused.splice(found, 1);
@@ -123,10 +129,11 @@ function itemsMatch(expected: ExpectedExtraction["items"], actual: InvoiceDraft[
   return true;
 }
 
-function listOf(items: { quantity: number; unitAmount: string; name?: string }[]): string {
+// The name is shown too, since a name that does not fit is as often the miss as a number.
+function listOf(items: { quantity: number; unitAmount: string; name: string }[]): string {
   return items.length === 0
     ? "no items"
-    : items.map((item) => `${item.quantity} x ${item.unitAmount}`).join(", ");
+    : items.map((item) => `${item.quantity} x ${item.unitAmount} (${item.name})`).join(", ");
 }
 
 export function scoreExtraction(
@@ -176,12 +183,12 @@ export function scoreExtraction(
   note(
     "items",
     itemsMatch(expected.items, items),
-    `expected ${listOf(expected.items)}, got ${listOf(items)}`,
+    `expected ${listOf(expected.items.map((i) => ({ ...i, name: i.nameIncludes })))}, got ${listOf(items)}`,
   );
 
   const prices = (list: { unitAmount: string }[]): string =>
     list
-      .map((item) => item.unitAmount)
+      .map((item) => fromMinorUnits(toMinorUnits(item.unitAmount)))
       .sort()
       .join(",");
   note(

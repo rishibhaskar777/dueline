@@ -27,10 +27,12 @@ export default function DemoPage() {
             PayPal sandbox
           </p>
           <div className="flex flex-col gap-2">
-            <h1 className="font-heading text-[40px] leading-[1.04] font-extrabold tracking-[-1.2px] md:text-[46px] md:tracking-[-1.4px]">
+            <h1 className="intro-title font-heading text-[40px] leading-[1.04] font-extrabold tracking-[-1.2px] md:text-[46px] md:tracking-[-1.4px]">
               Open the demo
             </h1>
-            <p className="text-[17px] text-muted-foreground">One password, no account needed.</p>
+            <p className="intro-text text-[17px] text-muted-foreground">
+              One password, no account needed.
+            </p>
           </div>
           <Suspense>
             <DemoSignIn />

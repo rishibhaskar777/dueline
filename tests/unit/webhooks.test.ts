@@ -4,7 +4,8 @@ import { POST as webhook } from "@/app/api/webhooks/paypal/route";
 import { clearInvoiceCaches } from "@/lib/paypal/summaries";
 import { clearAccessToken } from "@/lib/paypal/token";
 import type { PayPalInvoice } from "@/lib/paypal/types";
-import { getStore } from "@/lib/store";
+import { createMemoryStore } from "@/lib/store/memory-store";
+import type { Store } from "@/lib/store/store";
 import { activity } from "@/mocks/fixtures";
 import { stubEnv } from "../support/env";
 import { jsonResponse, mockPayPal, callsTo } from "../support/http";
@@ -17,6 +18,10 @@ vi.mock("@/lib/paypal/sdk", () => ({
   paymentsController: () => ({ getCapturedPayment: sdk.getCapturedPayment }),
   transactionSearchController: () => ({ searchTransactions: sdk.searchTransactions }),
 }));
+
+let store: Store;
+const getStore = (): Store => store;
+vi.mock("@/lib/store", () => ({ getStore: () => store }));
 
 vi.mock("@/lib/paypal/summaries", () => ({ clearInvoiceCaches: vi.fn() }));
 
@@ -68,6 +73,7 @@ function capturedPayout(): void {
 }
 
 beforeEach(() => {
+  store = createMemoryStore();
   stubEnv({ PAYPAL_WEBHOOK_ID: "WH-ID", DEMO_TODAY: "2026-10-29", DEMO_MODE: "false" });
   clearAccessToken();
   vi.mocked(clearInvoiceCaches).mockClear();
@@ -190,6 +196,28 @@ describe("POST /api/webhooks/paypal processing", () => {
     expect(events).toHaveLength(1);
     expect(events[0]).toMatchObject({ kind: "paid", invoiceId: nestedId });
     expect(await getStore().isProcessed(nestedPaid.id)).toBe(true);
+  });
+
+  it("adds no second paid row when the daily job already added one for the invoice", async () => {
+    capturedPayout();
+    servePayPal("SUCCESS", (url) =>
+      url.pathname === INVOICE_PATH ? jsonResponse(paid) : jsonResponse({}, { status: 404 }),
+    );
+    await getStore().addActivity({
+      id: `reconciled:${paid.id}:paid`,
+      kind: "paid",
+      invoiceId: paid.id,
+      invoiceNumber: paid.detail.invoice_number,
+      clientName: "Client",
+      at: "2026-10-29T09:00:00.000Z",
+    });
+
+    expect((await webhook(delivery(rawEvent("WH-R1", "INVOICING.INVOICE.PAID")))).status).toBe(204);
+
+    const rows = (await getStore().latestActivity(50)).filter(
+      (event) => event.kind === "paid" && event.invoiceId === paid.id,
+    );
+    expect(rows.map((event) => event.id)).toEqual([`reconciled:${paid.id}:paid`]);
   });
 
   it("marks an invoicing event with no invoice id as processed without calling PayPal", async () => {

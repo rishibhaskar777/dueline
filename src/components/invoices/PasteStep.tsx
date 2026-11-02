@@ -38,11 +38,14 @@ export function PasteStep({ onDrafted }: PasteStepProps) {
   const [chat, setChat] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // When the AI cannot be asked, filling the invoice in by hand is the way on.
+  const [aiDown, setAiDown] = useState(false);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
     setError(null);
+    setAiDown(false);
     try {
       const { draft, warnings, masked, risk } = await extractInvoice(chat);
       onDrafted({ draft, warnings, notice: maskedNotice(masked), risk });
@@ -51,6 +54,7 @@ export function PasteStep({ onDrafted }: PasteStepProps) {
         onDrafted({ draft: null, warnings: [NO_ITEMS_FOUND], notice: null, risk: null });
         return;
       }
+      setAiDown(caught instanceof ApiClientError && caught.code === "ai_unavailable");
       setError(caught instanceof Error ? caught.message : "Could not read the chat.");
       setPending(false);
     }
@@ -106,7 +110,7 @@ export function PasteStep({ onDrafted }: PasteStepProps) {
             </Button>
             <Button
               type="button"
-              variant="outline"
+              variant={aiDown ? "default" : "outline"}
               className={PILL}
               onClick={() => onDrafted({ draft: null, warnings: [], notice: null, risk: null })}
             >

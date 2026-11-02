@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ClientFields } from "@/components/invoices/ClientFields";
 import { DetailsFields } from "@/components/invoices/DetailsFields";
 import { HeldPanel } from "@/components/invoices/HeldPanel";
@@ -12,6 +12,7 @@ import {
   type InvoiceForm,
 } from "@/components/invoices/invoice-form";
 import { ItemsList } from "@/components/invoices/ItemsList";
+import { useKnownClientCountry } from "@/components/invoices/known-client-country";
 import { NoticePills } from "@/components/invoices/NoticePills";
 import { RiskRadar } from "@/components/invoices/RiskRadar";
 import { SendResult } from "@/components/invoices/SendResult";
@@ -47,10 +48,11 @@ export function ReviewStep({ initial, profile, onCreateAnother }: ReviewStepProp
     [initial],
   );
 
-  const update = (changes: Partial<InvoiceForm>) => {
+  const update = useCallback((changes: Partial<InvoiceForm>) => {
     setForm((previous) => ({ ...previous, ...changes }));
     setErrors({});
-  };
+  }, []);
+  useKnownClientCountry(form, update);
 
   if (result) return <SendResult result={result} onCreateAnother={onCreateAnother} />;
 

@@ -8,7 +8,8 @@ import { failFromError } from "@/app/api/_lib/errors";
 import { fail, ok } from "@/app/api/_lib/respond";
 import { parseBody } from "@/app/api/_lib/validate";
 
-const UNAVAILABLE = "AI is unavailable right now. You can still fill the invoice by hand.";
+const UNAVAILABLE =
+  "The AI is busy right now. Try again in a minute, or fill the invoice in yourself.";
 
 // The radar is a hint beside the draft, so a failure to read it never fails the extraction.
 async function riskOf({ client }: ExtractResponse["draft"]): Promise<ClientRisk | null> {

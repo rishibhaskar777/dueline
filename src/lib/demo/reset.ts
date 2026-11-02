@@ -9,7 +9,7 @@ import { getStore } from "@/lib/store";
 import type { DemoResetResponse } from "@/types";
 import { DemoResetLimitError, DemoUnavailableError } from "./errors";
 import { seedNewGeneration } from "./seed";
-import { isDemoMemo } from "./story";
+import { isDemoMemo, RESEED_AFTER_DAYS } from "./story";
 
 const RESET_KEY = "demo-reset";
 const RESET_WINDOW_SECONDS = 10 * 60;
@@ -99,8 +99,6 @@ export async function resetDemo(): Promise<DemoResetResponse> {
     kept: others.kept,
   };
 }
-
-const RESEED_AFTER_DAYS = 7;
 
 // The story is dated from the day it was seeded, so it ages. A week on it is seeded again as a new
 // generation. This only cancels the open invoices of older generations and never touches any other

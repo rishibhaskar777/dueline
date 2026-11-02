@@ -155,6 +155,7 @@ async function recordHistory(
       at: storyMoment(story.paidOn),
     });
   }
+  if (story.bankReference) await store.saveBankReference(invoice.id, story.bankReference);
   if (story.reminder && (await store.reminderHistory(invoice.id)).length === 0) {
     await store.logReminder({
       invoiceId: invoice.id,

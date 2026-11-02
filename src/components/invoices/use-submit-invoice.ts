@@ -41,10 +41,12 @@ export function useSubmitInvoice(
   // The request body the server first held, to tell whether the form was edited since.
   const heldBody = useRef<string | null>(null);
   const [pending, setPending] = useState(false);
+  // State only changes on the next render, so a second click in the same moment needs this flag.
+  const running = useRef(false);
   const [result, setResult] = useState<CreateInvoiceResponse | null>(null);
 
   async function run(): Promise<void> {
-    if (pending) return;
+    if (running.current) return;
 
     const checked = toRequest(form, requestId, today);
     if (!checked.ok) {
@@ -52,6 +54,7 @@ export function useSubmitInvoice(
       return;
     }
 
+    running.current = true;
     setPending(true);
     setFormError(null);
     setHeld(null);
@@ -70,6 +73,7 @@ export function useSubmitInvoice(
         setFormError(describeFailure(caught));
       }
     } finally {
+      running.current = false;
       setPending(false);
     }
   }

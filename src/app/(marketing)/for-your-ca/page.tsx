@@ -85,11 +85,12 @@ export default function ForYourCaPage() {
         >
           <div className="flex flex-wrap items-baseline justify-between gap-2.5">
             <h2 id="register-title">October 2026 register</h2>
-            <p className="text-[15px] text-muted-foreground">Sample rows from the demo</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-[15px]">
-              <caption className="sr-only">Sample rows from the demo</caption>
+              <caption className="pb-3 text-left text-[15px] text-muted-foreground">
+                Sample rows from the demo
+              </caption>
               <thead>
                 <tr>
                   <th scope="col" className={HEAD}>

@@ -41,11 +41,21 @@ test.describe("New invoice", () => {
   test("a double click on the send button creates one invoice", async ({ page }) => {
     await draftFromSampleChat(page);
     const before = await invoiceCount(page);
+    const writes: string[] = [];
+    page.on("request", (request) => {
+      if (
+        request.method() === "POST" &&
+        new URL(request.url()).pathname.startsWith("/api/invoices")
+      ) {
+        writes.push(new URL(request.url()).pathname);
+      }
+    });
 
     await page.getByRole("button", { name: "Create and send invoice" }).dblclick();
     await expect(page.getByRole("heading", { name: /^Invoice INV-\d+ sent$/ })).toBeVisible();
 
     expect(await invoiceCount(page)).toBe(before + 1);
+    expect(writes).toEqual(["/api/invoices"]);
   });
 
   test("an address that is not a sandbox buyer is refused", async ({ page }) => {
