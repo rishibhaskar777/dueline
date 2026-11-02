@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { expectNoSeriousViolations } from "./support";
 
 async function overdueCountFromFilter(page: Page): Promise<number> {
   const button = page.getByRole("group", { name: "Filter by status" }).getByRole("button", {
@@ -369,15 +370,89 @@ test.describe("Phone layout, invoice and client pages", () => {
   });
 });
 
-test.describe("Sidebar", () => {
-  test("has no scrollbar on a 1536 x 711 viewport", async ({ page }) => {
-    await page.setViewportSize({ width: 1536, height: 711 });
-    await page.goto("/receivables");
-    const aside = page.locator("aside").first();
-    await expect(aside).toBeVisible();
-    const overflows = await aside.evaluate(
-      (element) => element.scrollHeight > element.clientHeight,
+test.describe("Top bar", () => {
+  async function expectNoSideways(page: Page): Promise<void> {
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
-    expect(overflows).toBe(false);
+    expect(overflow).toBeLessThanOrEqual(0);
+  }
+
+  for (const [width, height] of [
+    [1366, 768],
+    [1536, 711],
+  ]) {
+    test(`is one line with no sideways scroll at ${width} x ${height}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto("/receivables");
+      const header = page.getByRole("banner");
+      await expect(header.getByRole("link", { name: "Export register" })).toBeVisible();
+      const box = await header.boundingBox();
+      expect(box?.height ?? Infinity).toBeLessThan(80);
+      await expectNoSideways(page);
+    });
+  }
+
+  test("keeps the tabs on one line from 768 px up", async ({ page }) => {
+    for (const width of [768, 900, 1024, 1180]) {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto("/receivables");
+      const header = page.getByRole("banner");
+      await expect(header.getByRole("link", { name: "Export register" })).toBeVisible();
+      const box = await header.boundingBox();
+      expect(box?.height ?? Infinity, `${width} px`).toBeLessThan(80);
+      await expectNoSideways(page);
+    }
+  });
+
+  test("scrolls the tabs inside their track at 390 x 844", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/receivables");
+    const track = page.getByRole("navigation", { name: "Main" }).locator("div").first();
+    await expect(track).toBeVisible();
+    const scrolls = await track.evaluate((element) => element.scrollWidth > element.clientWidth);
+    expect(scrolls).toBe(true);
+    await expectNoSideways(page);
+  });
+
+  test("has Home, Clients and the rest as links, with the current page marked", async ({
+    page,
+  }) => {
+    await page.goto("/clients");
+    const main = page.getByRole("navigation", { name: "Main" });
+    await expect(main.getByRole("link", { name: "Clients" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    await expect(main.locator('[aria-current="page"]')).toHaveCount(1);
+    await expect(main.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/receivables");
+  });
+});
+
+test.describe("Account menu", () => {
+  test("opens with the button, lists its items and closes with Escape", async ({ page }) => {
+    await page.goto("/receivables");
+    const button = page.getByRole("button", { name: /^Account menu/ });
+    await button.click();
+    const menu = page.getByRole("menu");
+    await expect(menu.getByRole("menuitem", { name: "Profile" })).toBeVisible();
+    await expect(menu.getByRole("menuitem", { name: /^Fees and rates/ })).toBeVisible();
+    await expect(menu.getByRole("menuitem", { name: "Lock demo" })).toBeVisible();
+    await expect(
+      page.getByRole("status").filter({ hasText: "Simulated PayPal sandbox" }),
+    ).toBeVisible();
+    await expectNoSeriousViolations(page, "Account menu, open");
+
+    await page.keyboard.press("Escape");
+    await expect(menu).toBeHidden();
+    await expect(button).toBeFocused();
+  });
+
+  test("follows Profile to the profile page", async ({ page }) => {
+    await page.goto("/receivables");
+    await page.getByRole("button", { name: /^Account menu/ }).click();
+    await page.getByRole("menuitem", { name: "Profile" }).click();
+    await expect(page).toHaveURL(/\/profile$/);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   });
 });
