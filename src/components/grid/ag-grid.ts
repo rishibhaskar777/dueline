@@ -20,3 +20,13 @@ export const gridTheme = themeQuartz.withParams({
   wrapperBorder: false,
   oddRowBackgroundColor: "transparent",
 });
+
+// The tables inside frosted cards: 15 px rows, a 14 px muted header and one hairline between rows.
+export const tableGridTheme = gridTheme.withParams({
+  fontSize: 15,
+  cellHorizontalPadding: 12,
+  headerFontSize: 14,
+  borderColor: "var(--bar-line)",
+  headerColumnBorder: false,
+  headerColumnResizeHandleColor: "transparent",
+});

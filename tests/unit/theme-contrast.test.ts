@@ -43,6 +43,9 @@ const TEXT_ON_SURFACE = [
   ["subtle", "card"],
 ] as const;
 
+// Switch knobs and check marks are graphics, which need 3:1 against the colour they sit on.
+const GRAPHIC_ON_SURFACE = [["toggle-on-mark", "toggle-on"]] as const;
+
 function pair(layers: Record<string, string>[], text: string, surface: string): number {
   return contrastRatio(resolveToken(text, ...layers), resolveToken(surface, ...layers));
 }
@@ -66,6 +69,10 @@ describe.each([
 ] as const)("the %s theme", (_name, layers) => {
   it.each(TEXT_ON_SURFACE)("keeps %s readable on %s", (text, surface) => {
     expect(pair([...layers], text, surface)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it.each(GRAPHIC_ON_SURFACE)("keeps %s visible on %s", (mark, surface) => {
+    expect(pair([...layers], mark, surface)).toBeGreaterThanOrEqual(3);
   });
 });
 
