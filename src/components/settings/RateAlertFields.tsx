@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,15 +30,20 @@ export function RateAlertFields({ alerts, onChange }: RateAlertFieldsProps) {
     onChange(alerts.map((row) => (row.key === key ? { ...row, ...changes } : row)));
 
   return (
-    <fieldset className="grid gap-3">
-      <legend className="text-sm font-medium">Rate alerts</legend>
+    <fieldset className="grid gap-2 border-t border-bar-line pt-3.5">
+      <legend className="sr-only">Rate alerts</legend>
+      <p aria-hidden="true" className="font-bold">
+        Rate alerts
+      </p>
       <p className="text-sm text-muted-foreground">
         Mark a rate when it crosses a line you choose, for example USD above ₹96.
       </p>
       {alerts.map((row, index) => (
         <div key={row.key} className="flex flex-wrap items-end gap-2">
           <div className="grid gap-1.5">
-            <Label id={`alert-currency-${row.key}`}>Currency {index + 1}</Label>
+            <Label id={`alert-currency-${row.key}`} className="text-[13px] font-semibold">
+              Currency {index + 1}
+            </Label>
             <Select
               value={row.currency}
               items={CURRENCY_ITEMS}
@@ -57,7 +62,9 @@ export function RateAlertFields({ alerts, onChange }: RateAlertFieldsProps) {
             </Select>
           </div>
           <div className="grid gap-1.5">
-            <Label id={`alert-direction-${row.key}`}>When it is</Label>
+            <Label id={`alert-direction-${row.key}`} className="text-[13px] font-semibold">
+              When it is
+            </Label>
             <Select
               value={row.direction}
               items={DIRECTION_ITEMS}
@@ -76,7 +83,9 @@ export function RateAlertFields({ alerts, onChange }: RateAlertFieldsProps) {
             </Select>
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor={`alert-threshold-${row.key}`}>Rate (₹)</Label>
+            <Label htmlFor={`alert-threshold-${row.key}`} className="text-[13px] font-semibold">
+              Rate (₹)
+            </Label>
             <Input
               id={`alert-threshold-${row.key}`}
               inputMode="decimal"
@@ -101,11 +110,11 @@ export function RateAlertFields({ alerts, onChange }: RateAlertFieldsProps) {
         <Button
           type="button"
           variant="outline"
-          className="w-fit"
+          size="sm"
+          className="w-fit font-bold"
           onClick={() => onChange([...alerts, newAlertRow()])}
         >
-          <Plus aria-hidden data-icon="inline-start" />
-          Add alert
+          + Add alert
         </Button>
       )}
     </fieldset>

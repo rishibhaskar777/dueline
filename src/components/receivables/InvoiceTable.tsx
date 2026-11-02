@@ -3,7 +3,7 @@
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
-import { gridTheme } from "@/components/grid/ag-grid";
+import { tableGridTheme } from "@/components/grid/ag-grid";
 import { Segmented } from "@/components/shared/Segmented";
 import { useIsPhone } from "@/components/shared/use-phone";
 import type { InvoiceSummary } from "@/types";
@@ -24,14 +24,6 @@ interface InvoiceTableProps {
   onOpen: (invoice: InvoiceSummary) => void;
 }
 
-const invoiceGridTheme = gridTheme.withParams({
-  fontSize: 15,
-  cellHorizontalPadding: 12,
-  headerFontSize: 14,
-  borderColor: "var(--bar-line)",
-  headerColumnBorder: false,
-  headerColumnResizeHandleColor: "transparent",
-});
 const defaultColDef = { sortable: true, resizable: true, suppressMovable: true };
 // The columns share the width the page gives them, so none is pushed out of sight on a laptop.
 const autoSizeStrategy = { type: "fitGridWidth" } as const;
@@ -81,7 +73,7 @@ export function InvoiceTable({ invoices, today, onOpen }: InvoiceTableProps) {
       ) : (
         <div className="invoice-grid">
           <AgGridReact<InvoiceSummary>
-            theme={invoiceGridTheme}
+            theme={tableGridTheme}
             rowData={rows}
             columnDefs={invoiceColumns}
             autoSizeStrategy={autoSizeStrategy}

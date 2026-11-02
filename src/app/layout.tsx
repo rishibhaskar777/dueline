@@ -4,6 +4,7 @@ import { Backdrop } from "@/components/layout/Backdrop";
 import { THEME_INIT_SCRIPT } from "@/components/layout/theme";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
+import { SITE_URL } from "./site-url";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -19,7 +20,6 @@ const figtree = Figtree({
   display: "swap",
 });
 
-const SITE_URL = "https://dueline-azure.vercel.app";
 const TAGLINE = "Get paid by clients abroad without chasing them";
 const DESCRIPTION = "Cross-border receivables for freelancers in India, built on PayPal";
 

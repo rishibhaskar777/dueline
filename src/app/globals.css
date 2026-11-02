@@ -52,6 +52,7 @@
   --color-mark-amber: var(--mark-amber);
   --color-mark-red: var(--mark-red);
   --color-mark-green: var(--mark-green);
+  --color-navy-band: var(--navy-band);
   --color-navy-card: var(--navy-card);
   --color-navy-card-muted: var(--navy-card-muted);
   --color-search: var(--search);
@@ -171,7 +172,7 @@
   --field: rgba(255, 255, 255, 0.72);
   --field-focus: #1d63f0;
   --focus-halo: rgba(29, 99, 240, 0.18);
-  --toggle-on: #1d63f0;
+  --toggle-on: #0e8a4f;
   --toggle-on-mark: #ffffff;
 
   --link: #0b5fe8;
@@ -186,6 +187,8 @@
   --mark-amber: #e08a00;
   --mark-red: #d1322a;
   --mark-green: #0e8a4f;
+  --navy-band: #0a2a7a;
+  --sign-panel: linear-gradient(160deg, #0a2a7a 0%, #06184d 100%);
   --navy-card: rgba(10, 42, 122, 0.92);
   --navy-card-muted: #bcd3ff;
   --search: rgba(255, 255, 255, 0.8);
@@ -256,7 +259,7 @@
 
   --field: rgba(255, 255, 255, 0.06);
   --field-focus: #8fb8ff;
-  --toggle-on: #5b9bff;
+  --toggle-on: #34c27a;
   --toggle-on-mark: #0b0b0f;
 
   --link: #8fb8ff;
@@ -271,21 +274,20 @@
   --mark-amber: #f5a524;
   --mark-red: #ff6b61;
   --mark-green: #34c27a;
+  --navy-band: #173a94;
+  --sign-panel: linear-gradient(160deg, #0d1e52 0%, #071234 100%);
   --navy-card: rgba(36, 74, 180, 0.55);
   --navy-card-muted: #d0dcff;
   --search: rgba(10, 12, 18, 0.5);
   --search-edge: rgba(255, 255, 255, 0.16);
 }
 
-/* The new theme grows over the old one as a circle; the script sets the circle's size. */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-
-::view-transition-new(root) {
-  z-index: 1;
+/* Set on <html> for the frame in which the theme changes, so nothing fades between the colours. */
+.theme-changing,
+.theme-changing *,
+.theme-changing *::before,
+.theme-changing *::after {
+  transition: none !important;
 }
 
 @layer base {
@@ -370,6 +372,23 @@
 
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     background: var(--bar-solid);
+  }
+}
+
+/* Cards that rise a little under the pointer. */
+@utility lift {
+  transition: transform 0.35s var(--ease-spring);
+
+  &:hover {
+    transform: translateY(-4px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
   }
 }
 
@@ -596,6 +615,128 @@
   }
   to {
     transform: scaleX(1);
+  }
+}
+
+@keyframes dl-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes dl-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dl-flow {
+  0% {
+    left: 0%;
+    opacity: 0;
+  }
+  12%,
+  88% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes dl-float-a {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(-1deg);
+  }
+}
+
+@keyframes dl-float-b {
+  0%,
+  100% {
+    transform: translateY(0) rotate(2deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+}
+
+@keyframes dl-float-c {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-16px) rotate(0deg);
+  }
+}
+
+@keyframes dl-glow {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(40px, -30px) scale(1.12);
+  }
+}
+
+.dl-up {
+  animation: dl-up 0.8s cubic-bezier(0.3, 1.1, 0.4, 1) both;
+}
+
+.dl-fade {
+  animation: dl-fade 0.2s ease-out both;
+}
+
+.dl-flow {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  animation: dl-flow 3.6s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+.dl-float-a {
+  animation: dl-float-a 7s ease-in-out infinite;
+}
+
+.dl-float-b {
+  animation: dl-float-b 8s ease-in-out infinite;
+}
+
+.dl-float-c {
+  animation: dl-float-c 9s ease-in-out infinite;
+}
+
+.dl-glow {
+  animation: dl-glow 18s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-flow {
+    display: none;
+  }
+
+  .dl-float-a,
+  .dl-float-b,
+  .dl-float-c,
+  .dl-glow {
+    animation: none;
   }
 }
 

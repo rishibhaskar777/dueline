@@ -11,9 +11,3 @@ export function initialTheme(stored: string | null, systemPrefersDark: boolean):
 export function nextTheme(current: Theme): Theme {
   return current === "dark" ? "light" : "dark";
 }
-
-// The circle has to reach the corner farthest from where it starts, or the new theme would stop
-// short of covering the screen.
-export function revealRadius(x: number, y: number, width: number, height: number): number {
-  return Math.hypot(Math.max(x, width - x), Math.max(y, height - y));
-}

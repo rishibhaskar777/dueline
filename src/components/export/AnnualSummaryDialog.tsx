@@ -92,7 +92,9 @@ export function AnnualSummaryDialog({ fy }: { fy: string }) {
   const { from, to } = financialYearRange(fy);
   return (
     <Dialog>
-      <DialogTrigger render={<Button variant="outline" size="lg" />}>Year summary</DialogTrigger>
+      <DialogTrigger render={<Button variant="outline" size="lg" className="px-5 font-bold" />}>
+        Year summary
+      </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Year summary, {fy}</DialogTitle>

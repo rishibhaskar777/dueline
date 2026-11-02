@@ -6,7 +6,6 @@ import { NotifyToggle } from "@/components/notifications/NotifyToggle";
 import { ToggleSwitch } from "@/components/shared/ToggleSwitch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { getSettings, saveSettings } from "@/lib/api-client";
 import { toAutomationForm, toAutomationSettings, type AutomationForm } from "./automation-form";
 import { RateAlertFields } from "./RateAlertFields";
@@ -65,44 +64,44 @@ export function AutomationSettings() {
     <form
       onSubmit={(event) => void onSubmit(event)}
       aria-labelledby="automation-title"
-      className="grid gap-5 surface p-6"
+      className="surface flex flex-col gap-3.5 p-6 [--h2-size:20px] [--h2-tracking:-0.2px] [--surface-radius:24px]"
     >
-      <div>
-        <h2 id="automation-title" className="text-xl font-semibold">
-          Daily preparation and alerts
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Each morning Dueline writes reminder drafts and lists them under Nudges. Nothing is sent
-          until you click send.
-        </p>
-      </div>
+      <h2 id="automation-title">Each morning</h2>
+      <p className="text-sm text-muted-foreground">
+        Dueline writes reminder drafts and lists them under Nudges. Nothing is sent until you click
+        send.
+      </p>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-medium">Prepare reminder drafts each morning</span>
+        <span className="font-semibold">Prepare reminder drafts</span>
         <ToggleSwitch
           label="Prepare reminder drafts each morning"
           checked={form.prepareReminders}
           onChange={(prepareReminders) => setForm({ ...form, prepareReminders })}
         />
       </div>
-      <div className="grid gap-1.5">
-        <Label htmlFor="remind-after">Remind me when an invoice is this many days late</Label>
-        <Input
-          id="remind-after"
-          inputMode="numeric"
-          autoComplete="off"
-          value={form.remindAfterDays}
-          onChange={(event) => setForm({ ...form, remindAfterDays: event.target.value })}
-          className="w-24 tabular-nums"
-        />
+      <div className="flex items-center justify-between gap-3 font-semibold">
+        <span>Remind me after</span>
+        <span className="flex items-center gap-2">
+          <Input
+            id="remind-after"
+            aria-label="Remind me when an invoice is this many days late"
+            inputMode="numeric"
+            autoComplete="off"
+            value={form.remindAfterDays}
+            onChange={(event) => setForm({ ...form, remindAfterDays: event.target.value })}
+            className="h-10 w-[70px] rounded-xl px-2 text-center font-semibold tabular-nums"
+          />
+          <span aria-hidden="true">days late</span>
+        </span>
       </div>
-      <RateAlertFields alerts={form.alerts} onChange={(alerts) => setForm({ ...form, alerts })} />
       <NotifyToggle />
+      <RateAlertFields alerts={form.alerts} onChange={(alerts) => setForm({ ...form, alerts })} />
       {saveError && (
-        <p role="alert" className="text-sm text-late">
+        <p role="alert" className="text-sm font-semibold text-late">
           {saveError}
         </p>
       )}
-      <Button type="submit" disabled={pending} className="w-fit">
+      <Button type="submit" disabled={pending} className="self-end px-5 font-bold">
         {pending ? "Saving…" : "Save"}
       </Button>
     </form>

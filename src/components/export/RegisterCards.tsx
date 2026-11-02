@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SourceTag } from "@/components/shared/SourceTag";
 import { formatDate } from "@/lib/format-date";
 import { formatMoney, formatRupees } from "@/lib/money/format";
@@ -6,12 +7,18 @@ import type { ExportRegisterRow } from "@/types";
 // The register table as a list, for a narrow screen. The CSV has every column.
 export function RegisterCards({ rows }: { rows: ExportRegisterRow[] }) {
   return (
-    <ul className="grid gap-3 px-4 pb-4">
+    <ul className="grid gap-3">
       {rows.map((row) => (
-        <li key={row.invoiceId} className="grid gap-1 rounded-lg border border-line p-3 text-sm">
+        <li key={row.invoiceId} className="grid gap-1 rounded-2xl bg-inner p-3.5 text-sm">
           <span className="flex justify-between gap-2">
-            <span className="font-medium">{row.clientName}</span>
-            <span className="text-muted-foreground">{row.invoiceNumber}</span>
+            <span className="font-semibold">{row.clientName}</span>
+            <Link
+              href={`/invoices/${encodeURIComponent(row.invoiceId)}`}
+              aria-label={`Open invoice ${row.invoiceNumber}`}
+              className="font-bold text-link"
+            >
+              {row.invoiceNumber}
+            </Link>
           </span>
           <span className="flex justify-between gap-2 tabular-nums">
             <span>{formatMoney(row.foreign)}</span>

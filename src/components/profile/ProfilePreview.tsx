@@ -1,32 +1,40 @@
+import { initialsOf, PREVIEW_NAME_PLACEHOLDER, previewDetails } from "./profile-preview";
 import type { ProfileFormValues } from "./profile-form";
-
-function Line({ value, placeholder }: { value: string; placeholder?: string }) {
-  if (!value && !placeholder) return null;
-  return <p className={value ? undefined : "text-muted-foreground"}>{value || placeholder}</p>;
-}
+import { cn } from "@/lib/utils";
 
 export function ProfilePreview({ form }: { form: ProfileFormValues }) {
-  const name = form.yourName.trim();
   const business = form.businessName.trim();
-  const gstin = form.gstin.trim();
-  const website = form.website.trim();
 
   return (
-    <section aria-labelledby="preview-title" className="surface p-6">
-      <h2 id="preview-title" className="text-xl font-semibold">
-        How your invoice header will look
-      </h2>
-      <p className="mt-1 text-sm text-muted-foreground">
+    <section
+      aria-labelledby="preview-title"
+      className="surface flex flex-col gap-3 p-6 [--h2-size:20px] [--h2-tracking:-0.2px] [--surface-radius:24px]"
+    >
+      <h2 id="preview-title">How your invoice header looks</h2>
+      <div className="flex items-center gap-3.5 rounded-[18px] border-[1.5px] border-line p-5">
+        <span
+          aria-hidden="true"
+          className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#0b0b0f] font-extrabold text-white ring-1 ring-white/15"
+        >
+          {initialsOf(form)}
+        </span>
+        <p className="min-w-0">
+          <span
+            className={cn(
+              "block font-heading text-[22px] leading-tight font-extrabold tracking-[-0.3px] break-words",
+              !business && "text-muted-foreground",
+            )}
+          >
+            {business || PREVIEW_NAME_PLACEHOLDER}
+          </span>
+          <span className="block text-sm break-words text-muted-foreground">
+            {previewDetails(form)}
+          </span>
+        </p>
+      </div>
+      <p className="text-[13px] text-subtle">
         This is what your client sees at the top of the PayPal invoice.
       </p>
-      <div className="mt-5 rounded-lg border border-line bg-ground p-4 text-sm">
-        <p className={business ? "text-lg font-semibold" : "text-lg text-muted-foreground"}>
-          {business || "Your business name"}
-        </p>
-        <Line value={name} placeholder="Your name" />
-        <Line value={gstin ? `GSTIN ${gstin}` : ""} />
-        <Line value={website} />
-      </div>
     </section>
   );
 }

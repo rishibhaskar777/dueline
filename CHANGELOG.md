@@ -26,6 +26,20 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Clients, the client page and the invoice page have the new look ([decision 0023](docs/decisions/0023-visual-redesign.md)). Clients are cards (billed, owed, how long they take to pay, why they are rated as they are) instead of a table, and the search matches email as well as name. The client page has an avatar, a tinted reason strip with the early-payment offer, three totals cards and the merge card in one row. On the invoice page the payer link, copy and reminder buttons are in the header, the back link says "Home", the amount sits beside a blue panel of what reaches your bank, and History is a timeline.
 - New invoice and Nudges have the new look. A step pill and a heading change with each step, notes about the draft are coloured pills, the early-payment discount is in the Details card, and the summary has the create button in it. Each nudge shows PayPal's reminder and your own message as two panels, a note replaces the PayPal button once it has gone today, and the tone is the shared sliding control marked "suggested". The "Today" queue is a navy band. On the client page an invoice paid late says how late in its status pill, and the email preview opens across the whole nudge card.
 
+### Changed (Redesign, phase 6)
+
+- Export register, Profile, Fees and rates, Demo tools, the 404 page and the not-configured page have the new look ([decision 0023](docs/decisions/0023-visual-redesign.md)). The register shows four totals (invoices paid, rupees received, on PayPal's FIRA, by bank transfer), the invoice numbers link to the invoices and the GSTR-1 button is called "GSTR-1 rows (CSV)". Fees and rates shows how each rate sits against its 30-day average, and the calculator reads like the design.
+- The public website has four new pages (How it works, Features, For your CA, Built on PayPal), a site top bar and footer, a new landing page and a sitemap. The demo password page is a split page; its button now reads "Continue" and the password can be shown.
+- Switching between light and dark is now instant, with no circle animation.
+
+### Changed (Redesign, review)
+
+- Copy and names: "Sign-off" (was "Reminder sign-off"), the preview heading "How your invoice header looks", the calculator label "For an invoice of", and "Connect PayPal · coming next" on the profile. The export register's purpose code column is headed "Code" with a "Purpose code" tooltip, and the four summary cards replace "Totals by proof".
+- The fees calculator shows "After PayPal's fee", the amount in the invoice's currency, under "PayPal fee" again.
+- Every switch is green when on (`#0e8a4f` in light, `#34c27a` in dark).
+- The demo password page: Continue is always available, and sending it with an empty password shows "Enter the demo password." and sends nothing. After any password error the cursor returns to the password field. The Show and Hide button is named "Show password" and "Hide password". The split page with floating cards starts at 1280 px; narrower windows get the short band.
+- The rates table turns into one block per currency below 768 px, and the calculator amount fits at 360 px. The export register fits its card at every width: under 1280 px the LUT and Fee columns are hidden and the transaction ID sits under the client name, and the empty space under the table is gone.
+
 ### Added
 
 - Screens that answer their question ([decision 0022](docs/decisions/0022-screens-that-answer.md)). The invoice number in the Receivables table opens the invoice page and PayPal is an icon link, so all eight columns fit a 1366 px laptop; the risk badge sits under the client's name. The invoice page lists issued and due dates, days late, the client's email and country, the work, the purpose code with its label, the LUT line with its ARN and the client's average days to get paid, and asks in the page before cancelling. The due line moves an end label that would touch the Today line, marks a line that starts before the chart and shows every invoice number.

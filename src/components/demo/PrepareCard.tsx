@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Sun } from "lucide-react";
+import { IconTile } from "@/components/shared/IconTile";
 import { Button } from "@/components/ui/button";
 import { runDailyPreparation } from "@/lib/api-client";
+import { ResultStrip } from "./ResultStrip";
 import { useDemoMode } from "./use-demo-mode";
 
 type Outcome = { text: string; failed: boolean; ran: boolean };
@@ -38,29 +41,36 @@ export function PrepareCard() {
   }
 
   return (
-    <section aria-labelledby="prepare-title" className="max-w-xl surface p-6">
-      <h2 id="prepare-title" className="text-xl font-semibold">
-        Morning preparation
-      </h2>
-      <p className="mt-1 text-sm text-muted-foreground">
+    <section
+      aria-labelledby="prepare-title"
+      className="surface flex flex-col items-start gap-3.5 p-[30px] max-md:p-6 [--h2-size:28px] [--h2-tracking:-0.4px]"
+    >
+      <IconTile tone="amber">
+        <Sun aria-hidden="true" className="size-[26px]" />
+      </IconTile>
+      <h2 id="prepare-title">Morning preparation</h2>
+      <p className="text-base leading-relaxed text-muted-foreground">
         Write today&apos;s reminder drafts and monthly repeats now instead of waiting for the daily
         job. It runs once a day; nothing is sent to your clients.
       </p>
-      <Button variant="outline" className="mt-4" onClick={() => void run()} disabled={working}>
+      <Button
+        variant="outline"
+        size="lg"
+        className="px-6 font-bold"
+        onClick={() => void run()}
+        disabled={working}
+      >
         {working ? "Preparing…" : "Run today's preparation now"}
       </Button>
       {outcome && (
-        <p
-          role={outcome.failed ? "alert" : "status"}
-          className={`mt-4 text-sm ${outcome.failed ? "text-late" : "text-paid"}`}
-        >
+        <ResultStrip failed={outcome.failed}>
           {outcome.text}{" "}
           {!outcome.failed && (
             <Link href="/nudges" className="underline underline-offset-2">
               Open Nudges
             </Link>
           )}
-        </p>
+        </ResultStrip>
       )}
     </section>
   );

@@ -1,12 +1,13 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiClientError, signIn } from "@/lib/api-client";
 import { safeNextPath } from "@/lib/demo-access/next-path";
+import { checkPassword } from "./password-check";
 
 function messageFor(error: unknown): string {
   if (error instanceof ApiClientError && error.code === "unauthorized") {
@@ -21,46 +22,75 @@ function messageFor(error: unknown): string {
 export function DemoSignIn() {
   const next = safeNextPath(useSearchParams().get("next"));
   const [password, setPassword] = useState("");
+  const [show, setShow] = useState(false);
   const [pending, setPending] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const field = useRef<HTMLInputElement>(null);
+
+  function report(message: string): void {
+    setProblem(message);
+    field.current?.focus();
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
+    const missing = checkPassword(password);
+    if (missing) {
+      report(missing);
+      return;
+    }
     setPending(true);
     setProblem(null);
     try {
       await signIn(password);
       window.location.assign(next);
     } catch (error) {
-      setProblem(messageFor(error));
+      report(messageFor(error));
       setPending(false);
     }
   }
 
   return (
-    <form onSubmit={submit} className="grid gap-4" noValidate>
-      <h1 className="text-xl font-semibold">Enter the demo password</h1>
-      <div className="grid gap-1.5">
-        <Label htmlFor="demo-password">Demo password</Label>
-        <Input
-          id="demo-password"
-          type="password"
-          autoComplete="current-password"
-          required
-          maxLength={200}
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          aria-invalid={problem !== null}
-          aria-describedby={problem ? "demo-password-error" : undefined}
-        />
+    <form onSubmit={submit} className="grid gap-[22px]" noValidate>
+      <div className="grid gap-2">
+        <Label htmlFor="demo-password" className="text-[15px] font-semibold">
+          Demo password
+        </Label>
+        <div className="relative">
+          <Input
+            id="demo-password"
+            type={show ? "text" : "password"}
+            autoComplete="current-password"
+            ref={field}
+            maxLength={200}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            aria-invalid={problem !== null}
+            aria-describedby={problem ? "demo-password-error" : undefined}
+            className="h-[58px] rounded-2xl pr-[92px] pl-[18px] text-[17px] font-medium md:text-[17px]"
+          />
+          <button
+            type="button"
+            aria-label={show ? "Hide password" : "Show password"}
+            onClick={() => setShow(!show)}
+            className="absolute top-2 right-2 h-[42px] rounded-full bg-chip px-3.5 text-sm font-semibold hover:bg-hover focus-visible:outline-2 focus-visible:outline-ring"
+          >
+            {show ? "Hide" : "Show"}
+          </button>
+        </div>
         {problem && (
-          <p id="demo-password-error" role="alert" className="text-sm text-late">
+          <p id="demo-password-error" role="alert" className="text-sm font-semibold text-late">
             {problem}
           </p>
         )}
       </div>
-      <Button type="submit" size="lg" className="h-10" disabled={pending || password === ""}>
-        {pending ? "Opening…" : "Open the demo"}
+      <Button
+        type="submit"
+        size="lg"
+        className="h-[58px] w-full text-[17px] font-bold"
+        disabled={pending}
+      >
+        {pending ? "Opening…" : "Continue"}
       </Button>
     </form>
   );

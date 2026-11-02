@@ -633,7 +633,7 @@ itself. The Demo tools button calls `POST /api/demo/prepare`, which runs the sam
 ## Look and feel
 
 The colours are custom properties in `src/app/globals.css`, with a `.dark` block that redefines them.
-A script in the page head sets the class from the saved choice, or from the device on a first visit, and `ThemeToggle` (and the command palette) switch it with `toggleTheme`, which reveals the new theme as a growing circle where the browser supports view transitions. Components use the tokens
+A script in the page head sets the class from the saved choice, or from the device on a first visit, and `ThemeToggle` (and the command palette) switch it with `toggleTheme`, which changes the class at once: for one frame every CSS transition is switched off (a `theme-changing` class on `<html>`), so nothing fades between the colours. Components use the tokens
 (`bg-card`, `text-foreground`, `text-late`), the AG Grid theme and the SVG charts read them, and
 `tests/unit/theme-contrast.test.ts` checks the text pairs in both themes. Below 768 px the top bar has a second row for the tabs (`AppBar`, `MainTabs`), `useIsPhone` swaps the grids for card lists and the due line puts its labels under the line. The command palette (`CommandPalette`) builds its commands from the pages, the clients and
 the invoices (`buildCommands`) and searches them with `filterByQuery`.
@@ -645,6 +645,17 @@ background once from the root layout, and its colours switch with the `.dark` cl
 and Figtree through `next/font/google`. `useSlidingIndicator` and `pickIndicator` place the pill under
 the hovered, focused, clicked or active item; `Segmented` and the main tabs (`MainTabs`, in the sticky `AppBar` with `AccountMenu`) use them
 ([decision 0023](decisions/0023-visual-redesign.md)).
+
+## The public website
+
+The pages outside the app sit in the `(marketing)` route group, whose layout (`src/app/(marketing)/layout.tsx`)
+renders `SiteNav`, the page in `<main>` and `SiteFooter`. They are static: the landing page (`/`),
+`/how-it-works`, `/features`, `/for-your-ca` and `/built-on-paypal` fetch nothing and prerender at build time.
+`SiteNav` is the app bar's glass with the four site pages as sliding tabs (`SITE_LINKS`, `activeSiteLink`);
+the landing page has no current tab. The landing page's black section is a small client component
+(`ChoiceSection`) that shows one of three cards from `LANDING_CHOICES`. `/demo`, the password page, has no
+site bar: it is a split page, a navy panel (`SignInPanel`) and the form. `src/app/sitemap.ts` lists the five
+public pages (`SITEMAP_PATHS`) and `robots.ts` points to it.
 
 ## Demo story and reset
 

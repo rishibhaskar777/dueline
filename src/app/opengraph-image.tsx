@@ -4,11 +4,11 @@ export const alt = "Dueline: get paid by clients abroad without chasing them";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const NAVY = "#0D1B2E";
-const BLUE = "#1F47C7";
-const PAID = "#0B7A5C";
-const LATE = "#B3261E";
-const LINE = "#2A3B55";
+const NAVY = "#0A2A7A";
+const BLUE = "#7CC8FF";
+const PAID = "#34C27A";
+const LATE = "#FF6B61";
+const LINE = "#6F8AD0";
 
 interface Bar {
   from: number;
