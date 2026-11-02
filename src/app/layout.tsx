@@ -1,19 +1,22 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Sans, IBM_Plex_Sans_Condensed } from "next/font/google";
+import { Figtree, Outfit } from "next/font/google";
+import { Backdrop } from "@/components/layout/Backdrop";
 import { THEME_INIT_SCRIPT } from "@/components/layout/theme";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const plexSans = IBM_Plex_Sans({
-  variable: "--font-plex-sans",
-  weight: ["400", "500", "600"],
+const outfit = Outfit({
+  variable: "--font-outfit",
+  weight: ["500", "600", "700", "800"],
   subsets: ["latin"],
+  display: "swap",
 });
 
-const plexCondensed = IBM_Plex_Sans_Condensed({
-  variable: "--font-plex-condensed",
-  weight: ["500", "600"],
+const figtree = Figtree({
+  variable: "--font-figtree",
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
+  display: "swap",
 });
 
 const SITE_URL = "https://dueline-azure.vercel.app";
@@ -40,19 +43,25 @@ export const metadata: Metadata = {
   appleWebApp: { title: "Dueline", capable: true, statusBarStyle: "black-translucent" },
 };
 
-export const viewport: Viewport = { themeColor: "#0D1B2E" };
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4f7fc" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0c11" },
+  ],
+};
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${plexSans.variable} ${plexCondensed.variable} h-full antialiased`}
+      className={`${outfit.variable} ${figtree.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="min-h-full">
+      <body className="relative isolate min-h-full">
+        <Backdrop />
         {children}
         <Toaster />
       </body>

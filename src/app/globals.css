@@ -4,11 +4,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --ease-spring: cubic-bezier(0.4, 1.2, 0.2, 1);
+  --ease-indicator: cubic-bezier(0.34, 1.45, 0.4, 1);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-plex-condensed), var(--font-plex-sans), ui-sans-serif, sans-serif;
+  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-outfit), var(--font-figtree), ui-sans-serif, sans-serif;
   --color-navy: var(--navy);
   --color-blue: var(--blue);
   --color-blue-light: var(--blue-light);
@@ -19,6 +24,19 @@
   --color-late-on-dark: var(--late-on-dark);
   --color-ground: var(--ground);
   --color-line: var(--line);
+  --color-track: var(--track);
+  --color-hover: var(--hover);
+  --color-tint-blue: var(--tint-blue);
+  --color-tint-green: var(--tint-green);
+  --color-tint-amber: var(--tint-amber);
+  --color-tint-red: var(--tint-red);
+  --color-blue-line: var(--blue-line);
+  --color-field: var(--field);
+  --color-field-focus: var(--field-focus);
+  --color-focus-halo: var(--focus-halo);
+  --color-toggle-on: var(--toggle-on);
+  --color-scrim: var(--scrim);
+  --color-toggle-mark: var(--toggle-on-mark);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -58,43 +76,43 @@
 }
 
 :root {
-  --navy: #0d1b2e;
-  --blue: #1f47c7;
+  --navy: #0a2a7a;
+  --blue: #1450c8;
   --blue-light: #8ea8ff;
-  --paid: #0b7a5c;
-  --due-soon: #a35c00;
-  --late: #b3261e;
+  --paid: #0b6b3c;
+  --due-soon: #8a4f00;
+  --late: #b3241c;
   --paid-on-dark: #3ccb9c;
   --late-on-dark: #ffb4ab;
-  --ground: #f3f5f8;
-  --line: #dce1e8;
-  --muted-text: #4f5b6e;
+  --ground: #f4f7fc;
+  --line: #dfe5ef;
+  --muted-text: #4c5260;
 
   --background: var(--ground);
-  --foreground: var(--navy);
-  --card: #ffffff;
-  --card-foreground: var(--navy);
+  --foreground: #0b0b0f;
+  --card: #fbfcfe;
+  --card-foreground: var(--foreground);
   --popover: #ffffff;
-  --popover-foreground: var(--navy);
-  --primary: var(--blue);
+  --popover-foreground: var(--foreground);
+  --primary: #0c0e14;
   --primary-foreground: #ffffff;
-  --secondary: #e8ecf2;
-  --secondary-foreground: var(--navy);
-  --muted: #e8ecf2;
+  --secondary: #e9eef6;
+  --secondary-foreground: var(--foreground);
+  --muted: #e9eef6;
   --muted-foreground: var(--muted-text);
-  --accent: #e8ecf2;
-  --accent-foreground: var(--navy);
+  --accent: #e9eef6;
+  --accent-foreground: var(--foreground);
   --destructive: var(--late);
   --border: var(--line);
   --input: var(--line);
-  --ring: var(--blue);
+  --ring: #1d63f0;
   --chart-1: var(--blue);
   --chart-2: var(--paid);
   --chart-3: var(--due-soon);
   --chart-4: var(--late);
   --chart-5: var(--muted-text);
   --radius: 0.625rem;
-  --sidebar: var(--navy);
+  --sidebar: #0a2a7a;
   --sidebar-foreground: #e6ebf3;
   --sidebar-primary: var(--blue);
   --sidebar-primary-foreground: #ffffff;
@@ -102,38 +120,113 @@
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgb(255 255 255 / 12%);
   --sidebar-ring: var(--blue-light);
+
+  --page-glow-1: #8fbaff;
+  --page-glow-2: #a7e3ff;
+  --page-glow-3: #c4c0ff;
+  --page-glow-opacity-1: 0.55;
+  --page-glow-opacity-2: 0.5;
+  --page-glow-opacity-3: 0.35;
+  --page-glow-opacity-4: 0.28;
+  --page-dot: rgba(10, 40, 110, 0.1);
+  --page-grain: 0.05;
+  --page-grain-blend: multiply;
+
+  --glass: rgba(255, 255, 255, 0.66);
+  --glass-strong: rgba(255, 255, 255, 0.94);
+  --glass-edge: rgba(255, 255, 255, 0.75);
+  --glass-shadow: 0 18px 44px rgba(10, 30, 80, 0.07);
+  --glass-strong-shadow: 0 28px 60px rgba(5, 20, 60, 0.26), 0 4px 12px rgba(5, 20, 60, 0.1);
+  --scrim: rgba(5, 10, 25, 0.28);
+
+  --btn-primary-bg: rgba(12, 14, 20, 0.86);
+  --btn-primary-edge: rgba(255, 255, 255, 0.1);
+  --btn-primary-shadow: rgba(10, 20, 50, 0.22);
+  --btn-secondary-bg: rgba(255, 255, 255, 0.55);
+  --btn-secondary-edge: rgba(255, 255, 255, 0.85);
+
+  --track: rgba(255, 255, 255, 0.45);
+  --track-edge: rgba(255, 255, 255, 0.85);
+  --track-shadow: inset 0 1px 0 #ffffff, 0 6px 18px rgba(10, 30, 80, 0.06);
+  --indicator: rgba(12, 14, 20, 0.84);
+  --indicator-edge: rgba(255, 255, 255, 0.1);
+  --indicator-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 8px 20px rgba(10, 20, 50, 0.22);
+  --hover: rgba(11, 30, 70, 0.06);
+
+  --tint-blue: rgba(29, 99, 240, 0.12);
+  --tint-green: rgba(14, 138, 79, 0.12);
+  --tint-amber: rgba(224, 138, 0, 0.14);
+  --tint-red: rgba(209, 50, 42, 0.12);
+  --blue-line: #1d63f0;
+
+  --field: rgba(255, 255, 255, 0.72);
+  --field-focus: #1d63f0;
+  --focus-halo: rgba(29, 99, 240, 0.18);
+  --toggle-on: #1d63f0;
+  --toggle-on-mark: #ffffff;
 }
 
 .dark {
-  --blue: #8ea8ff;
-  --paid: #3ccb9c;
-  --due-soon: #f0a83a;
+  --blue: #8fb8ff;
+  --paid: #6fdba0;
+  --due-soon: #ffc266;
   --late: #ff8a80;
-  --ground: #0a1220;
-  --line: #2a3a52;
-  --muted-text: #a3afc2;
+  --ground: #0a0c11;
+  --line: #262c3a;
+  --muted-text: #b4bccb;
 
-  --background: var(--ground);
-  --foreground: #e6ebf3;
-  --card: #121f33;
-  --card-foreground: var(--foreground);
-  --popover: #16253b;
-  --popover-foreground: var(--foreground);
-  --primary: var(--blue);
-  --primary-foreground: #0d1b2e;
-  --secondary: #1b2a41;
-  --secondary-foreground: var(--foreground);
-  --muted: #1b2a41;
-  --muted-foreground: var(--muted-text);
-  --accent: #1b2a41;
-  --accent-foreground: var(--foreground);
-  --destructive: var(--late);
-  --border: var(--line);
-  --input: var(--line);
-  --ring: var(--blue);
+  --foreground: #f3f5f9;
+  --card: #121520;
+  --popover: #181c26;
+  --primary: #e9edf5;
+  --primary-foreground: #0b0b0f;
+  --secondary: #1c2130;
+  --muted: #1c2130;
+  --accent: #1c2130;
+  --ring: #8fb8ff;
   --sidebar: #070e19;
-  --sidebar-primary: var(--blue);
   --sidebar-primary-foreground: #0d1b2e;
+
+  --page-glow-1: #1e40af;
+  --page-glow-2: #0e7490;
+  --page-glow-3: #4f46e5;
+  --page-glow-opacity-1: 0.42;
+  --page-glow-opacity-2: 0.26;
+  --page-glow-opacity-3: 0.22;
+  --page-glow-opacity-4: 0.18;
+  --page-dot: rgba(255, 255, 255, 0.1);
+  --page-grain: 0.07;
+  --page-grain-blend: overlay;
+
+  --glass: rgba(24, 28, 38, 0.55);
+  --glass-strong: rgba(26, 30, 41, 0.95);
+  --glass-edge: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 18px 44px rgba(0, 0, 0, 0.35);
+
+  --btn-primary-bg: rgba(255, 255, 255, 0.16);
+  --btn-primary-edge: rgba(255, 255, 255, 0.3);
+  --btn-primary-shadow: rgba(0, 0, 0, 0.35);
+  --btn-secondary-bg: rgba(255, 255, 255, 0.07);
+  --btn-secondary-edge: rgba(255, 255, 255, 0.16);
+
+  --track: rgba(255, 255, 255, 0.06);
+  --track-edge: rgba(255, 255, 255, 0.12);
+  --track-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --indicator: rgba(255, 255, 255, 0.18);
+  --indicator-edge: rgba(255, 255, 255, 0.32);
+  --indicator-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 8px 22px rgba(0, 0, 0, 0.35);
+  --hover: rgba(255, 255, 255, 0.07);
+
+  --tint-blue: rgba(91, 155, 255, 0.16);
+  --tint-green: rgba(52, 194, 122, 0.16);
+  --tint-amber: rgba(245, 165, 36, 0.16);
+  --tint-red: rgba(255, 107, 97, 0.16);
+  --blue-line: #5b9bff;
+
+  --field: rgba(255, 255, 255, 0.06);
+  --field-focus: #8fb8ff;
+  --toggle-on: #5b9bff;
+  --toggle-on-mark: #0b0b0f;
 }
 
 /* The new theme grows over the old one as a circle; the script sets the circle's size. */
@@ -162,6 +255,12 @@
   h3 {
     @apply font-heading;
   }
+  a:not([class]) {
+    @apply text-blue underline decoration-[1.5px] underline-offset-[3px];
+  }
+  ::selection {
+    background: rgba(29, 99, 240, 0.18);
+  }
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -171,6 +270,215 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+  }
+}
+
+/* The frosted card. --card stands for its colour once blended with the page, and is the solid
+   fallback where backdrop-filter is missing. */
+@utility surface {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  backdrop-filter: blur(22px) saturate(160%);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    var(--glass-shadow);
+  border-radius: var(--surface-radius, 28px);
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background: var(--card);
+  }
+}
+
+/* Menus, popovers, dialogs, the invoice side panel and toasts. */
+@utility surface-strong {
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  backdrop-filter: blur(40px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 0 0 1px var(--glass-edge),
+    var(--glass-strong-shadow);
+  border-radius: var(--surface-radius, 22px);
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background: var(--popover);
+  }
+}
+
+/* The track behind tabs and segmented controls. */
+@utility glass-track {
+  background: var(--track);
+  box-shadow:
+    inset 0 0 0 1px var(--track-edge),
+    var(--track-shadow);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background: var(--card);
+  }
+}
+
+/* The pill that slides under the hovered or chosen item. */
+@utility glass-indicator {
+  background: var(--indicator);
+  box-shadow:
+    inset 0 0 0 1px var(--indicator-edge),
+    var(--indicator-shadow);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  backdrop-filter: blur(14px) saturate(180%);
+}
+
+@utility btn-primary {
+  background: var(--btn-primary-bg);
+  color: #ffffff;
+  box-shadow:
+    inset 0 0 0 1px var(--btn-primary-edge),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 10px 26px var(--btn-primary-shadow);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+@utility btn-secondary {
+  background: var(--btn-secondary-bg);
+  color: var(--foreground);
+  box-shadow:
+    inset 0 0 0 1px var(--btn-secondary-edge),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 6px 18px rgba(10, 30, 80, 0.08);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+/* Card headings. Unlayered so the heading's own utility classes do not win. */
+.surface h2 {
+  font-family: var(--font-outfit), var(--font-figtree), ui-sans-serif, sans-serif;
+  font-weight: 800;
+  font-size: var(--h2-size, 22px);
+  line-height: 1.15;
+  letter-spacing: -0.4px;
+}
+
+.surface,
+.surface * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+.dl-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  contain: strict;
+  pointer-events: none;
+  background: var(--ground);
+}
+
+.dl-aurora {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  will-change: transform;
+}
+
+.dl-aurora-1 {
+  left: -12%;
+  top: -260px;
+  width: 62%;
+  height: 620px;
+  background: var(--page-glow-1);
+  opacity: var(--page-glow-opacity-1);
+  animation: dl-aurora-a 48s ease-in-out infinite alternate;
+}
+
+.dl-aurora-2 {
+  right: -14%;
+  top: -200px;
+  width: 56%;
+  height: 560px;
+  background: var(--page-glow-2);
+  opacity: var(--page-glow-opacity-2);
+  animation: dl-aurora-b 56s ease-in-out infinite alternate;
+}
+
+.dl-aurora-3 {
+  left: 30%;
+  top: -120px;
+  width: 40%;
+  height: 380px;
+  background: var(--page-glow-3);
+  opacity: var(--page-glow-opacity-3);
+  animation: dl-aurora-a 64s ease-in-out infinite alternate;
+}
+
+.dl-aurora-4 {
+  right: -10%;
+  bottom: -320px;
+  width: 50%;
+  height: 560px;
+  background: var(--page-glow-1);
+  opacity: var(--page-glow-opacity-4);
+  animation: dl-aurora-b 56s ease-in-out infinite alternate;
+}
+
+.dl-dots {
+  position: absolute;
+  inset: 0;
+  opacity: 0.7;
+  background-image: radial-gradient(var(--page-dot) 1px, transparent 1.2px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 520px at 50% 0, #000 30%, transparent 100%);
+  mask-image: radial-gradient(ellipse 80% 520px at 50% 0, #000 30%, transparent 100%);
+  animation: dl-breathe 12s ease-in-out infinite;
+}
+
+.dl-grain {
+  position: absolute;
+  inset: 0;
+  opacity: var(--page-grain);
+  mix-blend-mode: var(--page-grain-blend);
+}
+
+@keyframes dl-aurora-a {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate3d(6%, 4%, 0) rotate(12deg) scale(1.08);
+  }
+  100% {
+    transform: translate3d(-4%, 7%, 0) rotate(-6deg) scale(0.96);
+  }
+}
+
+@keyframes dl-aurora-b {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-7%, 3%, 0) scale(1.12);
+  }
+  100% {
+    transform: translate3d(4%, -4%, 0) scale(1);
+  }
+}
+
+@keyframes dl-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-aurora,
+  .dl-dots {
+    animation: none;
   }
 }
 
