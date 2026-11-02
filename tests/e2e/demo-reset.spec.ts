@@ -13,7 +13,9 @@ test.describe("Reset the demo", () => {
     const activity = page.getByRole("region", { name: "Activity" });
     await expect(activity).toContainText("sent to Okafor & Reyes");
 
-    // The story's first invoices were sent more than 7 days ago, so they read as dates.
+    // Activity shows the newest six until asked for all; the story's first invoices were sent more
+    // than 7 days ago, so they read as dates.
+    await activity.getByRole("button", { name: /^Show all/ }).click();
     const times = await activity.locator("time").allTextContents();
     expect(times.filter((text) => /^\d{1,2} [A-Z][a-z]{2}$/.test(text)).length).toBeGreaterThan(6);
     expect(times.some((text) => /hour|minute|just now/.test(text))).toBe(false);

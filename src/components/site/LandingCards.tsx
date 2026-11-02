@@ -44,7 +44,7 @@ function Radar() {
           Late payer
         </span>
       </div>
-      <p className="text-[17px]">Late on 3 of 3 invoices, 14 days on average.</p>
+      <p className="text-[17px]">Late on 3 of 3 invoices, 12 days on average.</p>
       <div className="flex items-center justify-between gap-3 border-t border-white/12 pt-3.5 text-[17px]">
         <span>Reminder tone</span>
         <span className="rounded-full bg-[rgba(245,165,36,0.18)] px-3 py-1.5 text-[13px] font-bold text-[#ffc266]">
