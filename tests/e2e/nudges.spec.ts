@@ -129,9 +129,14 @@ test.describe("Nudges", () => {
     await page.goto("/nudges");
     const cards = page.getByRole("listitem").filter({ has: page.getByLabel("Subject") });
     const card = cards.first();
+    let sends = 0;
+    page.on("request", (request) => {
+      if (request.method() === "POST" && request.url().endsWith("/api/reminders/send")) sends += 1;
+    });
 
-    await card.getByRole("button", { name: "Send PayPal reminder" }).click();
+    await card.getByRole("button", { name: "Send PayPal reminder" }).dblclick();
     await expect(card.getByText(/Sent at .*standard reminder/)).toBeVisible();
+    expect(sends).toBe(1);
     await expect(card.getByText(/^✓ \w+ reminder sent through PayPal, \d+ \w+$/)).toBeVisible();
     await expect(card.getByRole("button", { name: "Send PayPal reminder" })).toHaveCount(0);
     await expect(card.getByRole("button", { name: "Copy message" })).toBeEnabled();

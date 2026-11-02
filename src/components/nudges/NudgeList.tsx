@@ -7,13 +7,12 @@ import { draftReminder } from "@/lib/api-client";
 import { createDraftQueue } from "./draft-queue";
 import { NudgeCard } from "./NudgeCard";
 import { LIMIT_REACHED_NOTICE } from "./nudge-model";
-import { useNudges } from "./use-nudges";
+import type { NudgesData } from "./use-nudges";
 
 // The model is asked for at most this many drafts at once, however many cards are waiting.
 const DRAFTS_IN_FLIGHT = 2;
 
-export function NudgeList() {
-  const { state, retry } = useNudges();
+export function NudgeList({ state, retry }: NudgesData) {
   const [sentHere, setSentHere] = useState(0);
   const [queue] = useState(() => createDraftQueue(DRAFTS_IN_FLIGHT));
   const improve = useCallback(

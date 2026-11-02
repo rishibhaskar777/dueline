@@ -6,6 +6,8 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { dismissQueueItem, getQueue } from "@/lib/api-client";
 import { useLoad } from "@/components/shared/use-load";
 import { cn } from "@/lib/utils";
+import { currentQueueItem } from "./queue-line";
+import type { Nudge } from "./use-nudges";
 import type { QueueItem } from "@/types";
 
 const BAND_PILL = "h-11 px-5 font-bold max-sm:flex-1";
@@ -55,13 +57,15 @@ function QueueRow({ item, first, onDismiss }: QueueRowProps) {
 }
 
 // What the morning run prepared. Nothing in it has been sent; each item is a draft to open.
-export function TodayQueue() {
+export function TodayQueue({ nudges }: { nudges: Nudge[] }) {
   const { state } = useLoad(getQueue);
   const [dismissed, setDismissed] = useState<string[]>([]);
   const [failure, setFailure] = useState<string | null>(null);
 
   if (state.kind !== "ready") return null;
-  const items = state.data.filter(({ id }) => !dismissed.includes(id));
+  const items = state.data
+    .filter(({ id }) => !dismissed.includes(id))
+    .map((item) => currentQueueItem(item, nudges));
   if (items.length === 0) return null;
 
   async function dismiss(id: string): Promise<void> {
