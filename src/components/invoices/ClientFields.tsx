@@ -33,57 +33,65 @@ interface ClientFieldsProps {
 export function ClientFields({ form, update, errors, demoEmail }: ClientFieldsProps) {
   return (
     <>
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <div className="grid gap-1.5">
-          <Label htmlFor="client-name">Client name</Label>
-          <Input
-            id="client-name"
-            autoComplete="off"
-            value={form.clientName}
-            onChange={(event) => update({ clientName: event.target.value })}
-            aria-invalid={Boolean(errors["client.name"])}
-            aria-describedby={errors["client.name"] ? "client-name-error" : undefined}
-          />
-          <FieldError id="client-name-error" message={errors["client.name"]} />
-        </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="client-email">Client email</Label>
-          <Input
-            id="client-email"
-            type="email"
-            autoComplete="off"
-            value={form.clientEmail}
-            onChange={(event) => update({ clientEmail: event.target.value })}
-            aria-invalid={Boolean(errors["client.email"])}
-            aria-describedby={errors["client.email"] ? "client-email-error" : undefined}
-          />
-          <FieldError id="client-email-error" message={errors["client.email"]} />
+      <div className="@container mt-4">
+        <div className="grid gap-3.5 @xl:grid-cols-3">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-1.5">
+            <Label htmlFor="client-name" className="font-bold">
+              Client name
+            </Label>
+            <Input
+              id="client-name"
+              autoComplete="off"
+              value={form.clientName}
+              onChange={(event) => update({ clientName: event.target.value })}
+              aria-invalid={Boolean(errors["client.name"])}
+              aria-describedby={errors["client.name"] ? "client-name-error" : undefined}
+            />
+            <FieldError id="client-name-error" message={errors["client.name"]} />
+          </div>
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-1.5">
+            <Label htmlFor="client-email" className="font-bold">
+              Client email
+            </Label>
+            <Input
+              id="client-email"
+              type="email"
+              autoComplete="off"
+              value={form.clientEmail}
+              onChange={(event) => update({ clientEmail: event.target.value })}
+              aria-invalid={Boolean(errors["client.email"])}
+              aria-describedby={errors["client.email"] ? "client-email-error" : undefined}
+            />
+            <FieldError id="client-email-error" message={errors["client.email"]} />
+          </div>
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-1.5">
+            <Label id="client-country-label" className="font-bold">
+              Country (optional)
+            </Label>
+            <Select
+              value={form.clientCountry || NOT_SET}
+              items={COUNTRY_ITEMS}
+              onValueChange={(value) =>
+                update({ clientCountry: !value || value === NOT_SET ? "" : value })
+              }
+            >
+              <SelectTrigger aria-labelledby="client-country-label" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {COUNTRY_ITEMS.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
-      <div className="mt-4 grid gap-1.5 sm:max-w-xs">
-        <Label id="client-country-label">Client country (optional)</Label>
-        <Select
-          value={form.clientCountry || NOT_SET}
-          items={COUNTRY_ITEMS}
-          onValueChange={(value) =>
-            update({ clientCountry: !value || value === NOT_SET ? "" : value })
-          }
-        >
-          <SelectTrigger aria-labelledby="client-country-label">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {COUNTRY_ITEMS.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <p className="text-sm text-muted-foreground">
-          Goes on the invoice as the client&apos;s billing country and in your export register.
-        </p>
-      </div>
+      <p className="mt-3 text-sm text-muted-foreground">
+        Goes on the invoice as the client&apos;s billing country and in your export register.
+      </p>
       {demoEmail && (
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
           <p>The PayPal sandbox can only email sandbox buyers.</p>
@@ -91,6 +99,7 @@ export function ClientFields({ form, update, errors, demoEmail }: ClientFieldsPr
             type="button"
             variant="outline"
             size="sm"
+            className="font-bold"
             onClick={() => update({ clientEmail: demoEmail })}
           >
             Send to the demo buyer
