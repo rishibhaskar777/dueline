@@ -50,3 +50,32 @@ product.
   top of the page.
 - The card headings use one unlayered rule (`.surface h2`) so the old utility classes on them no
   longer decide the size; a heading that needs another size sets `--h2-size`.
+
+## App frame
+
+The sidebar is replaced by a top bar on every app page (`AppBar`, `MainTabs`, `AccountMenu`).
+
+- **Top bar instead of a sidebar.** Five tabs in one glass track (Home, New invoice, Clients, Nudges
+  with its overdue count, Export register), then search, the theme switch and the account button.
+  Profile, Fees and rates and Demo tools are less used, so they moved into the account menu, with the
+  connection status and "Lock demo". The page gets the full width, up to 1280 px of content.
+- **Home.** The Receivables page is called Home in the bar and in the command palette ("Go to
+  Home"; "receivables" is still a search keyword). Its URL is still `/receivables`. An invoice's own
+  page belongs to Home, `/invoices/new` to New invoice, and Profile, Fees and rates and Demo tools
+  have no active tab, so the sliding pill is hidden there.
+- **The menu is portalled.** `AccountMenu` uses the Base UI `Menu` with a portal. A `backdrop-filter`
+  only blurs what is behind the element inside its own backdrop root, and the bar is one, so a menu
+  inside it would blur nothing. Portalled to `document.body`, its `surface-strong` glass blurs the
+  page. Base UI gives arrow keys,
+  Escape, outside click and focus back to the button.
+- **Phone tab row.** Below 768 px the bar has two rows: the wordmark with search, theme and account,
+  then the tab track at full width. The track scrolls sideways inside itself with its scrollbar
+  hidden, snaps to tabs and scrolls the current tab into view. There is no menu button. From 768 px
+  the bar is one line; on a narrow tablet (768 to 839 px) the word beside the mark and the tabs'
+  padding give way first, and search is an icon below 1024 px.
+- **Tokens.** `--bar`, `--bar-line` and `--bar-solid` (the bar blended with the page, used by the
+  contrast test and as the fallback without `backdrop-filter`). The `sidebar-*` tokens and the
+  on-dark status colours are gone. The overdue pill is `#d1322a` with white text in the light theme;
+  in the dark theme it is `#ff6b61` with near-black text, because white on that red is 2.8:1.
+- **Anchors.** The bar is sticky and in the flow, so the content starts below it, and
+  `scroll-padding-top` keeps anchor jumps (`/nudges#invoice-…`) from landing under it.
