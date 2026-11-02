@@ -57,7 +57,7 @@ export function MainTabs() {
               aria-label={count > 0 ? `${tab.label}, ${count} overdue` : undefined}
               {...slider.itemProps(index)}
               className={cn(
-                "relative z-10 flex h-11 shrink-0 snap-start items-center justify-center rounded-full px-[18px] text-[15px] whitespace-nowrap transition-colors duration-300 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring max-lg:md:px-3",
+                "relative z-10 flex h-11 shrink-0 snap-start items-center justify-center rounded-full px-[18px] text-[15px] whitespace-nowrap transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring max-lg:md:px-3",
                 index === active ? "font-bold" : "font-semibold",
                 index === slider.highlighted ? "text-white" : "text-foreground",
               )}

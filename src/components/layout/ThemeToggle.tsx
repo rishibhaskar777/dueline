@@ -21,7 +21,7 @@ export function ThemeToggle() {
         const box = event.currentTarget.getBoundingClientRect();
         toggleTheme({ x: box.left + box.width / 2, y: box.top + box.height / 2 });
       }}
-      className="bar-button relative w-11 text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      className="bar-button relative w-11 text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
       <Sun aria-hidden className={cn(ICON, dark ? "rotate-0 scale-100" : "-rotate-90 scale-0")} />
       <Moon aria-hidden className={cn(ICON, dark ? "rotate-90 scale-0" : "rotate-0 scale-100")} />

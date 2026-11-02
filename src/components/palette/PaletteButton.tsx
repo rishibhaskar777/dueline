@@ -10,7 +10,7 @@ export function PaletteButton() {
       type="button"
       aria-keyshortcuts="Control+K"
       onClick={() => window.dispatchEvent(new Event(OPEN_PALETTE_EVENT))}
-      className="bar-button w-11 gap-2 text-[15px] font-semibold text-muted-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:w-auto lg:px-3.5"
+      className="bar-button w-11 gap-2 text-[15px] font-semibold text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:w-auto lg:px-3.5"
     >
       <Search aria-hidden className="size-[18px] shrink-0 lg:size-4" strokeWidth={2.2} />
       <span className="max-lg:sr-only">Search</span>

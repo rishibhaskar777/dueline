@@ -14,7 +14,7 @@ export function AppBar() {
       <div className="mx-auto flex max-w-[1328px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 md:flex-nowrap md:gap-x-3 md:px-4 lg:gap-x-5 lg:px-6">
         <Link
           href="/"
-          className="flex min-h-11 flex-none items-center rounded-full outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          className="flex min-h-11 flex-none items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
           <Wordmark textClassName="md:max-[839px]:hidden" />
         </Link>
