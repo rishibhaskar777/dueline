@@ -1,84 +1,69 @@
 "use client";
 
-import { clientHref } from "@/components/clients/client-href";
-import { AgGridReact } from "ag-grid-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { gridTheme } from "@/components/grid/ag-grid";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { LoadFailure } from "@/components/shared/LoadFailure";
 import { SkeletonBlock } from "@/components/shared/SkeletonBlock";
 import { useLoad } from "@/components/shared/use-load";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useIsPhone } from "@/components/shared/use-phone";
 import { getClients } from "@/lib/api-client";
-import type { ClientSummary } from "@/types";
 import { ClientCards } from "./ClientCards";
-import { clientColumns } from "./client-columns";
-import { searchClients } from "./client-search";
+import { searchClients, sortClients } from "./client-list";
+import { ClientSearchBox } from "./ClientSearchBox";
 
-const defaultColDef = { sortable: true, resizable: true, suppressMovable: true };
+function Header({ search }: { search?: { value: string; onChange: (value: string) => void } }) {
+  return (
+    <PageHeader
+      title="Clients"
+      intro="Who you invoice, how reliably they pay, and what is still owed."
+      actions={search && <ClientSearchBox {...search} />}
+    />
+  );
+}
 
 export function ClientsScreen() {
   const { state, reload } = useLoad(getClients);
-  const router = useRouter();
   const [search, setSearch] = useState("");
-  const phone = useIsPhone();
 
   if (state.kind === "loading") {
-    return <SkeletonBlock className="h-80" />;
+    return (
+      <>
+        <Header />
+        <div aria-hidden="true" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }, (_, index) => (
+            <SkeletonBlock key={index} className="h-48 rounded-[24px]" />
+          ))}
+        </div>
+      </>
+    );
   }
   if (state.kind === "error") {
-    return <LoadFailure title="Couldn't load your clients" error={state.error} onRetry={reload} />;
+    return (
+      <>
+        <Header />
+        <LoadFailure title="Couldn't load your clients" error={state.error} onRetry={reload} />
+      </>
+    );
   }
   if (state.data.length === 0) {
     return (
-      <p className="max-w-xl surface p-6 text-sm">
-        Your clients appear here once you have sent an invoice.
-      </p>
+      <>
+        <Header />
+        <p className="max-w-xl surface p-6 text-sm">
+          Your clients appear here once you have sent an invoice.
+        </p>
+      </>
     );
   }
 
-  const open = (client: ClientSummary) => router.push(clientHref(client.key));
-
+  const shown = searchClients(sortClients(state.data), search);
   return (
-    <section aria-labelledby="clients-title" className="surface">
-      <div className="flex flex-wrap items-end justify-between gap-3 p-6">
-        <h2 id="clients-title" className="text-xl font-semibold">
-          Clients
-        </h2>
-        <div className="grid gap-1.5">
-          <Label htmlFor="client-search">Search clients</Label>
-          <Input
-            id="client-search"
-            type="search"
-            autoComplete="off"
-            placeholder="Client name"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            className="w-56 max-md:w-full"
-          />
-        </div>
-      </div>
-      {phone ? (
-        <ClientCards clients={searchClients(state.data, search)} />
+    <>
+      <Header search={{ value: search, onChange: setSearch }} />
+      {shown.length === 0 ? (
+        <p className="max-w-xl surface p-6 text-sm text-muted-foreground">No clients match.</p>
       ) : (
-        <AgGridReact<ClientSummary>
-          theme={gridTheme}
-          rowData={state.data}
-          columnDefs={clientColumns}
-          defaultColDef={defaultColDef}
-          quickFilterText={search}
-          includeHiddenColumnsInQuickFilter
-          getRowId={({ data }) => data.key}
-          domLayout="autoHeight"
-          onRowClicked={({ data }) => data && open(data)}
-          onCellKeyDown={({ event, data }) => {
-            if (event instanceof KeyboardEvent && event.key === "Enter" && data) open(data);
-          }}
-          overlayNoRowsTemplate="No clients match."
-        />
+        <ClientCards clients={shown} />
       )}
-    </section>
+    </>
   );
 }

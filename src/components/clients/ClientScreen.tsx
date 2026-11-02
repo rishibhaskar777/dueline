@@ -6,7 +6,7 @@ import { InvoiceList } from "@/components/clients/InvoiceList";
 import { LoadFailure } from "@/components/shared/LoadFailure";
 import { RiskBadge } from "@/components/shared/RiskBadge";
 import { SkeletonBlock } from "@/components/shared/SkeletonBlock";
-import { StatTile } from "@/components/shared/StatTile";
+import { TotalCard } from "@/components/shared/TotalCard";
 import { useLoad } from "@/components/shared/use-load";
 import { useToday } from "@/components/shared/use-today";
 import { buttonVariants } from "@/components/ui/button";
@@ -14,10 +14,13 @@ import { getClientDetail } from "@/lib/api-client";
 import { countryName } from "@/lib/countries";
 import { formatDays, wholeDays } from "@/lib/format-days";
 import { formatRupees } from "@/lib/money/format";
+import { cn } from "@/lib/utils";
+import { ClientAvatar } from "./ClientAvatar";
 import { ClientNotes } from "./ClientNotes";
 import { ClientRepeats } from "./ClientRepeats";
 import { MergeClient } from "./MergeClient";
 import { MergedClients } from "./MergedClients";
+import { ReasonStrip } from "./ReasonStrip";
 import { ReminderLanguageCard } from "./ReminderLanguageCard";
 
 function NotFound() {
@@ -48,59 +51,65 @@ export function ClientScreen({ clientKey }: { clientKey: string }) {
     );
   }
 
-  const { client, invoices, notes, language, merged } = state.data;
+  const { client, invoices, risk, notes, language, merged } = state.data;
   return (
-    <div className="grid gap-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-sm">
-            <Link href="/clients" className="text-blue underline underline-offset-2">
-              All clients
-            </Link>
-          </p>
-          <div className="mt-2 flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-semibold">{client.name}</h1>
-            {client.riskLevel && <RiskBadge level={client.riskLevel} />}
+    <div className="grid gap-5">
+      <Link href="/clients" className="w-fit text-[15px] font-semibold text-link underline">
+        <span aria-hidden="true">← </span>All clients
+      </Link>
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-[18px] gap-y-3">
+          <ClientAvatar name={client.name} level={client.riskLevel} size="lg" />
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h1 className="text-4xl font-extrabold tracking-[-1.2px] break-words md:text-[44px]">
+                {client.name}
+              </h1>
+              {client.riskLevel && <RiskBadge level={client.riskLevel} />}
+            </div>
+            <p className="mt-1.5 max-w-[860px] text-base break-words text-muted-foreground">
+              {[
+                client.email,
+                countryName(client.country),
+                client.paySpeed &&
+                  `pays in ${formatDays(client.paySpeed.averageDays)} on average, ${client.paySpeed.onTimePercent}% on time`,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
           </div>
-          <p className="mt-2 max-w-2xl text-muted-foreground">{client.riskReason}</p>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            {[
-              client.email,
-              countryName(client.country),
-              client.paySpeed &&
-                `pays in ${formatDays(client.paySpeed.averageDays)} on average, ${client.paySpeed.onTimePercent}% on time`,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          </p>
         </div>
         <Link
           href={`/invoices/new?client=${encodeURIComponent(client.name)}`}
-          className={buttonVariants({ size: "lg" })}
+          className={cn(buttonVariants({ size: "lg" }), "px-[22px] font-bold max-sm:w-full")}
         >
-          New invoice for this client
+          <span aria-hidden="true">+ </span>New invoice for this client
         </Link>
       </header>
-      <dl aria-label="Client totals" className="grid gap-4 sm:grid-cols-3">
-        <StatTile
+      <ReasonStrip level={client.riskLevel} risk={risk} />
+      <dl aria-label="Client totals" className="grid gap-4 lg:grid-cols-3">
+        <TotalCard
           label="Billed"
           value={formatRupees(client.billedInr)}
-          note="Across all invoices"
+          note={`Across ${client.invoices} ${client.invoices === 1 ? "invoice" : "invoices"}`}
         />
-        <StatTile
+        <TotalCard
           label="Outstanding"
           value={formatRupees(client.outstandingInr)}
+          tone={client.outstandingInr > 0 ? "late" : undefined}
           note="Estimated after fees"
         />
-        <StatTile
+        <TotalCard
           label="Average days late"
           value={client.averageDaysLate > 0 ? String(wholeDays(client.averageDaysLate)) : "–"}
           note="On invoices paid late or overdue"
         />
       </dl>
       <InvoiceList invoices={invoices} today={today} />
-      <ClientRepeats clientKey={client.key} />
-      <ReminderLanguageCard clientKey={client.key} initial={language} />
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <ReminderLanguageCard clientKey={client.key} initial={language} />
+        <ClientRepeats clientKey={client.key} />
+      </div>
       <ClientNotes clientKey={client.key} initial={notes} />
       <MergedClients
         clientKey={client.key}

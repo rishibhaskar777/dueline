@@ -31,11 +31,9 @@ export function MergedClients({ clientKey, clientName, merged, onChanged }: Merg
 
   if (merged.length === 0) return null;
   return (
-    <section aria-labelledby="merged-title" className="surface p-6">
-      <h2 id="merged-title" className="text-xl font-semibold">
-        Merged into {clientName}
-      </h2>
-      <ul className="mt-3 divide-y divide-line text-sm">
+    <section aria-labelledby="merged-title" className="surface p-6 [--surface-radius:24px]">
+      <h2 id="merged-title">Merged into {clientName}</h2>
+      <ul className="mt-3 divide-y divide-line text-[15px]">
         {merged.map(({ key, name, email }) => (
           <li key={key} className="flex flex-wrap items-center justify-between gap-3 py-2">
             <span>

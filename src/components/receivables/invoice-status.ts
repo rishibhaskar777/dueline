@@ -42,6 +42,13 @@ export function tableStatusLabel(invoice: InvoiceSummary, today: string): string
   return `${label} · ${invoice.daysLate} ${invoice.daysLate === 1 ? "day" : "days"}`;
 }
 
+// The client page also says how late a paid invoice was paid, so a habit shows in the list.
+export function clientStatusLabel(invoice: InvoiceSummary, today: string): string {
+  const label = statusLabel(invoice, today);
+  if (invoice.dueState !== "paid" || invoice.daysLate < 1) return tableStatusLabel(invoice, today);
+  return `${label} · ${invoice.daysLate} ${invoice.daysLate === 1 ? "day" : "days"} late`;
+}
+
 const SOURCE_WORDS: Record<PayoutSource, string> = {
   paypal: "PayPal",
   estimate: "est.",

@@ -16,6 +16,9 @@ interface MergeClientProps {
   hasMerged: boolean;
 }
 
+const EXPLANATION =
+  "Count this client's invoices as another client's, for risk, totals and reminders. PayPal invoices are not changed.";
+
 export function MergeClient({ client, hasMerged }: MergeClientProps) {
   const router = useRouter();
   const [picking, setPicking] = useState(false);
@@ -50,28 +53,35 @@ export function MergeClient({ client, hasMerged }: MergeClientProps) {
     }
   }
 
+  const idle = !hasMerged && !picking;
   return (
-    <section aria-labelledby="merge-title" className="surface p-6">
-      <h2 id="merge-title" className="text-xl font-semibold">
-        Same client under another name?
-      </h2>
-      {hasMerged ? (
-        <p className="mt-2 text-sm text-muted-foreground">
-          {endSentence(`Other clients are merged into ${client.name}`)} Unmerge them first to merge
-          this client into another.
-        </p>
-      ) : !picking ? (
-        <>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Count this client&apos;s invoices as another client&apos;s, for risk, totals and
-            reminders.
+    <section aria-labelledby="merge-title" className="surface p-6 [--surface-radius:24px]">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0 flex-1 basis-80">
+          <h2 id="merge-title">Same client under another name?</h2>
+          <p className="mt-1.5 text-[15px] text-muted-foreground">
+            {hasMerged
+              ? `${endSentence(`Other clients are merged into ${client.name}`)} Unmerge them first to merge this client into another.`
+              : EXPLANATION}
           </p>
-          <Button type="button" variant="outline" className="mt-3" onClick={() => setPicking(true)}>
+        </div>
+        {idle && (
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 px-[22px] font-bold max-sm:w-full"
+            onClick={() => setPicking(true)}
+          >
             Merge into another client
           </Button>
-        </>
-      ) : target ? (
-        <div className="mt-3 grid gap-3" role="group" aria-label="Confirm the merge">
+        )}
+      </div>
+      {!hasMerged && picking && target && (
+        <div
+          className="mt-4 grid gap-3 rounded-[20px] bg-inner p-4"
+          role="group"
+          aria-label="Confirm the merge"
+        >
           <p className="text-sm">{mergeSentence(client, target)}</p>
           <div className="flex flex-wrap gap-2">
             <Button type="button" disabled={pending} onClick={() => void merge(target)}>
@@ -82,8 +92,9 @@ export function MergeClient({ client, hasMerged }: MergeClientProps) {
             </Button>
           </div>
         </div>
-      ) : (
-        <div className="mt-3 grid gap-3">
+      )}
+      {!hasMerged && picking && !target && (
+        <div className="mt-4 grid gap-3 rounded-[20px] bg-inner p-4">
           {others ? (
             <SearchList
               label="Merge into which client?"
