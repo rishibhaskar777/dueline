@@ -5,7 +5,7 @@ import {
   toAutomationSettings,
 } from "@/components/settings/automation-form";
 import { formFromRepeat } from "@/components/invoices/invoice-form";
-import { searchClients } from "@/components/clients/client-search";
+import { searchClients } from "@/components/clients/client-list";
 import { searchInvoices } from "@/components/receivables/invoice-table-model";
 import {
   settingsSchema,

@@ -42,21 +42,54 @@ const SCREENS: Screen[] = [
     name: "New invoice",
     path: "/invoices/new",
     ready: (page) =>
-      expect(page.getByRole("heading", { name: "Paste the client chat" })).toBeVisible(),
+      expect(
+        page.getByRole("heading", { level: 1, name: "Paste what your client wrote." }),
+      ).toBeVisible(),
     later: {
       name: "New invoice, review",
       go: async (page) => {
         await page.getByRole("button", { name: "Use a sample chat" }).click();
         await page.getByRole("button", { name: "Draft invoice" }).click();
         await expect(page.getByRole("heading", { name: "Items", exact: true })).toBeVisible();
-        await expect(page.getByText(/reaches your bank$/)).toBeVisible();
+        await expect(page.getByText("About this reaches your bank")).toBeVisible();
+      },
+    },
+  },
+  {
+    name: "Clients",
+    path: "/clients",
+    ready: (page) => expect(page.getByRole("link", { name: /Halden Coffee Co\./ })).toBeVisible(),
+    later: {
+      name: "Client page",
+      go: async (page) => {
+        await page
+          .getByRole("link", { name: /Halden Coffee Co\./ })
+          .first()
+          .click();
+        await expect(page.getByRole("button", { name: "Merge into another client" })).toBeVisible();
+      },
+    },
+  },
+  {
+    name: "Invoice page",
+    path: "/receivables",
+    ready: (page) => expect(page.getByRole("heading", { name: "The due line" })).toBeVisible(),
+    later: {
+      name: "Invoice page, opened",
+      go: async (page) => {
+        await page
+          .getByRole("link", { name: /^Open invoice / })
+          .first()
+          .click();
+        await expect(page.getByLabel("Invoice facts")).toBeVisible();
       },
     },
   },
   {
     name: "Nudges",
     path: "/nudges",
-    ready: (page) => expect(page.getByLabel("Message").first()).not.toHaveValue(""),
+    ready: (page) =>
+      expect(page.getByLabel("Message", { exact: true }).first()).not.toHaveValue(""),
   },
   {
     name: "Export register",

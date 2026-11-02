@@ -3,6 +3,7 @@ import {
   payoutSourceNote,
   payoutSourceWord,
   rateNote,
+  clientStatusLabel,
   statusLabel,
   tableStatusLabel,
 } from "@/components/receivables/invoice-status";
@@ -80,6 +81,38 @@ describe("tableStatusLabel", () => {
       tableStatusLabel(invoice({ dueState: "due_soon", dueOn: "2026-11-01" }), "2026-10-30"),
     ).toBe("Due soon");
     expect(tableStatusLabel(invoice({ dueState: "paid" }), "2026-10-30")).toBe("Paid");
+  });
+});
+
+describe("clientStatusLabel", () => {
+  it("adds how late a paid invoice was paid", () => {
+    expect(clientStatusLabel(invoice({ dueState: "paid", daysLate: 3 }), "2026-10-30")).toBe(
+      "Paid · 3 days late",
+    );
+    expect(clientStatusLabel(invoice({ dueState: "paid", daysLate: 1 }), "2026-10-30")).toBe(
+      "Paid · 1 day late",
+    );
+    expect(
+      clientStatusLabel(
+        invoice({ dueState: "paid", payoutSource: "outside_paypal", daysLate: 16 }),
+        "2026-10-30",
+      ),
+    ).toBe("Paid outside PayPal · 16 days late");
+  });
+
+  it("leaves a paid invoice that was on time as it is", () => {
+    expect(clientStatusLabel(invoice({ dueState: "paid", daysLate: 0 }), "2026-10-30")).toBe(
+      "Paid",
+    );
+  });
+
+  it("keeps the table wording for unpaid invoices", () => {
+    expect(
+      clientStatusLabel(
+        invoice({ dueState: "overdue", dueOn: "2026-10-22", daysLate: 8 }),
+        "2026-10-30",
+      ),
+    ).toBe("Overdue · 8 days");
   });
 });
 

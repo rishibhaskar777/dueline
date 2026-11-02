@@ -5,7 +5,7 @@ test.describe("Nudges", () => {
     await page.goto("/nudges");
 
     await expect(page.getByLabel("Subject").first()).not.toHaveValue("");
-    await expect(page.getByLabel("Message").first()).not.toHaveValue("");
+    await expect(page.getByLabel("Message", { exact: true }).first()).not.toHaveValue("");
     await expect(page.getByRole("button", { name: "Send PayPal reminder" }).first()).toBeEnabled();
     await expect(page.getByText("Template draft (AI unavailable).").first()).toBeVisible();
   });
@@ -23,8 +23,10 @@ test.describe("Nudges", () => {
     await expect(
       card.getByRole("group", { name: "Tone" }).getByRole("button", { name: /^Firm/ }),
     ).toHaveAttribute("aria-pressed", "true");
-    await expect(card.getByLabel("Message")).not.toHaveValue(/\n{3}/);
-    await expect(card.getByLabel("Message")).not.toHaveValue(/last reminder|gently/i);
+    await expect(card.getByLabel("Message", { exact: true })).not.toHaveValue(/\n{3}/);
+    await expect(card.getByLabel("Message", { exact: true })).not.toHaveValue(
+      /last reminder|gently/i,
+    );
   });
 
   test("switching tone after an edit asks before replacing the text", async ({ page }) => {
@@ -33,7 +35,7 @@ test.describe("Nudges", () => {
       .getByRole("listitem")
       .filter({ has: page.getByLabel("Subject") })
       .first();
-    const message = card.getByLabel("Message");
+    const message = card.getByLabel("Message", { exact: true });
     const final = card.getByRole("group", { name: "Tone" }).getByRole("button", { name: /^Final/ });
     await expect(message).not.toHaveValue("");
 
@@ -116,7 +118,7 @@ test.describe("Nudges", () => {
     await paypal.click();
     await expect(card.getByText(/Sent at .*standard reminder/)).toBeVisible();
     await expect(card).toContainText("have both gone out for this invoice today");
-    await expect(paypal).toBeDisabled();
+    await expect(paypal).toHaveCount(0);
   });
 
   test("a PayPal reminder leaves the message to the client's email open, and a reload keeps the card closed once both went out", async ({
@@ -130,8 +132,8 @@ test.describe("Nudges", () => {
 
     await card.getByRole("button", { name: "Send PayPal reminder" }).click();
     await expect(card.getByText(/Sent at .*standard reminder/)).toBeVisible();
-    await expect(card.getByText("A PayPal reminder was already sent today.")).toBeVisible();
-    await expect(card.getByRole("button", { name: "Send PayPal reminder" })).toBeDisabled();
+    await expect(card.getByText(/^✓ \w+ reminder sent through PayPal, \d+ \w+$/)).toBeVisible();
+    await expect(card.getByRole("button", { name: "Send PayPal reminder" })).toHaveCount(0);
     await expect(card.getByRole("button", { name: "Copy message" })).toBeEnabled();
 
     await card.getByRole("button", { name: "Copy message" }).click();
