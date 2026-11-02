@@ -106,6 +106,15 @@ describe("seedDemo", () => {
     );
   });
 
+  it("gives the October bank transfer its FIRC number and no other payment one", async () => {
+    await seedDemo(GENERATION);
+
+    const withReference = story.filter((invoice) => invoice.bankReference);
+    expect(withReference.map((invoice) => invoice.key)).toEqual(["brightwell-icon-set"]);
+    const saved = Object.values((await holder.store?.listBankReferences()) ?? {});
+    expect(saved).toEqual(["FIRC/2026/001"]);
+  });
+
   it("skips what PayPal already has, so a second run changes nothing", async () => {
     await seedDemo(GENERATION);
     const before = fake.invoices.size;
