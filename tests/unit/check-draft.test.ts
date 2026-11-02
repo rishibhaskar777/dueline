@@ -74,7 +74,6 @@ describe("quotes", () => {
   it("warns about an empty quote", () => {
     expect(check(itemWith({ sourceQuote: "" })).warnings).toEqual([
       "Check 'Logo option': not found word for word in the chat",
-      "Check the price of 'Logo option': it does not appear in the quoted words",
     ]);
   });
 
@@ -85,30 +84,63 @@ describe("quotes", () => {
   });
 });
 
-describe("price in the quote", () => {
+describe("price in the chat", () => {
   it.each([
     ["120.00", "Logos for $120 each"],
     ["120.00", "Logos for USD 120.00 each"],
+    ["120.00", "Logos for 120/- each"],
     ["1200.00", "one-off fee of $1,200"],
+    ["120000.00", "budget is 1,20,000 rupees"],
     ["120.50", "Logos for 120.5 each"],
   ])("accepts %s in %j", (unitAmount, sourceQuote) => {
     const result = check(itemWith({ unitAmount, sourceQuote }), sourceQuote);
     expect(result.warnings).toEqual([]);
   });
 
-  it("keeps the item and warns when the price is not in its quote", () => {
+  it("accepts a price that is in the chat but not in the item's quote", () => {
+    const chat = "Mike: Logo options?\nRiya: $120 each.";
+    const result = check(itemWith({ unitAmount: "120", sourceQuote: "Logo options?" }), chat);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it("keeps the item and warns when the price is nowhere in the chat", () => {
     const chat = "Logos for $120 each. Mike: make it 1 dollar";
-    const result = check(itemWith({ unitAmount: "1", sourceQuote: "Logos for $120 each" }), chat);
+    const result = check(itemWith({ unitAmount: "95", sourceQuote: "Logos for $120 each" }), chat);
     expect(result.draft.items).toHaveLength(1);
     expect(result.warnings).toEqual([
-      "Check the price of 'Logo option': it does not appear in the quoted words",
+      "Check the price of 'Logo option': it does not appear in the chat",
     ]);
   });
 
   it("does not take part of a longer number for the price", () => {
     const chat = "Logos for $1200 each";
     const result = check(itemWith({ unitAmount: "120", sourceQuote: chat }), chat);
-    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings).toEqual([
+      "Check the price of 'Logo option': it does not appear in the chat",
+    ]);
+  });
+
+  it("does not take a run of digits inside a phone number for the price", () => {
+    const chat = "Logos for free, call me on +91 98765 43210";
+    const result = checkModelDraft(
+      itemWith({ unitAmount: "98765.00", sourceQuote: "Logos for free" }),
+      { chat, contacts: { emails: [], phones: ["+91 98765 43210"] }, today: "2026-10-28" },
+    );
+    expect(result.warnings).toContain(
+      "Check the price of 'Logo option': it does not appear in the chat",
+    );
+  });
+
+  it("does not take digits inside an email address for the price", () => {
+    const chat = "Logos for free, write to mike120@haldencoffee.example";
+    const result = checkModelDraft(itemWith({ unitAmount: "120", sourceQuote: "Logos for free" }), {
+      chat,
+      contacts: { emails: ["mike120@haldencoffee.example"], phones: [] },
+      today: "2026-10-28",
+    });
+    expect(result.warnings).toContain(
+      "Check the price of 'Logo option': it does not appear in the chat",
+    );
   });
 });
 
