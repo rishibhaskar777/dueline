@@ -6,10 +6,7 @@ import type { InvoiceSummary } from "@/types";
 
 export function InvoiceList({ invoices, today }: { invoices: InvoiceSummary[]; today: string }) {
   return (
-    <section
-      aria-labelledby="client-invoices-title"
-      className="rounded-xl border border-line bg-card p-6"
-    >
+    <section aria-labelledby="client-invoices-title" className="surface p-6">
       <h2 id="client-invoices-title" className="text-xl font-semibold">
         Invoices
       </h2>

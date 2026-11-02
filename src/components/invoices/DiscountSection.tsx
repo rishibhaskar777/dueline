@@ -11,7 +11,7 @@ interface DiscountSectionProps {
 
 export function DiscountSection({ form, update, errors }: DiscountSectionProps) {
   return (
-    <section aria-labelledby="discount-title" className="rounded-xl border border-line bg-card p-6">
+    <section aria-labelledby="discount-title" className="surface p-6">
       <h2 id="discount-title" className="sr-only">
         Early-payment discount
       </h2>

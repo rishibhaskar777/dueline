@@ -38,7 +38,7 @@ export function InvoiceTable({ invoices, today, onOpen }: InvoiceTableProps) {
   const rows = useMemo(() => sortForTable(filterByStatus(invoices, filter)), [invoices, filter]);
 
   return (
-    <section aria-labelledby="invoices-title" className="rounded-xl border border-line bg-card">
+    <section aria-labelledby="invoices-title" className="surface [--h2-size:26px]">
       <div className="flex flex-wrap items-end justify-between gap-3 p-6">
         <h2 id="invoices-title" className="text-xl font-semibold">
           Invoices

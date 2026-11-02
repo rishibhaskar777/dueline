@@ -11,12 +11,12 @@ interface StatTileProps {
 
 export function StatTile({ label, value, note, tone, compact = false }: StatTileProps) {
   return (
-    <div className="rounded-xl border border-line bg-card p-6">
+    <div className="surface p-6">
       <dt className="text-sm text-muted-foreground">{label}</dt>
       <dd
-        className={cn("mt-1 font-heading font-semibold text-foreground tabular-nums", {
-          "text-4xl": !compact,
-          "text-2xl": compact,
+        className={cn("mt-1 font-heading font-extrabold text-foreground tabular-nums", {
+          "text-4xl tracking-[-1px]": !compact,
+          "text-2xl tracking-[-0.5px]": compact,
           "text-late": tone === "late",
           "text-due-soon": tone === "due-soon",
         })}

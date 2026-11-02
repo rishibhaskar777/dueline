@@ -54,10 +54,7 @@ export function TodayQueue() {
   }
 
   return (
-    <section
-      aria-labelledby="today-title"
-      className="max-w-3xl rounded-xl border border-line bg-card p-6"
-    >
+    <section aria-labelledby="today-title" className="max-w-3xl surface p-6">
       <h2 id="today-title" className="text-xl font-semibold">
         Today
       </h2>

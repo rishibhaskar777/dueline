@@ -34,9 +34,7 @@ export function NudgeList() {
   }
   if (state.nudges.length === 0) {
     return (
-      <p className="max-w-xl rounded-xl border border-line bg-card p-8 text-lg">
-        No late invoices. Nothing to chase today.
-      </p>
+      <p className="max-w-xl surface p-8 text-lg">No late invoices. Nothing to chase today.</p>
     );
   }
 

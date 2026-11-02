@@ -41,7 +41,7 @@ export function ReminderLanguageCard({ clientKey, initial }: ReminderLanguageCar
   }
 
   return (
-    <section aria-labelledby="language-title" className="rounded-xl border border-line bg-card p-6">
+    <section aria-labelledby="language-title" className="surface p-6">
       <h2 id="language-title" className="text-xl font-semibold">
         Reminder language
       </h2>

@@ -40,10 +40,7 @@ export function NudgeCard({
   const locked = busy || closed;
 
   return (
-    <li
-      id={`invoice-${encodeURIComponent(invoice.id)}`}
-      className="scroll-mt-6 rounded-xl border border-line bg-card p-6"
-    >
+    <li id={`invoice-${encodeURIComponent(invoice.id)}`} className="scroll-mt-6 surface p-6">
       <NudgeHeader invoice={invoice} paySpeed={paySpeed} history={nudge.history} />
 
       <div className="mt-5 grid gap-4">

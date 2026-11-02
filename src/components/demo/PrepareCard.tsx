@@ -38,10 +38,7 @@ export function PrepareCard() {
   }
 
   return (
-    <section
-      aria-labelledby="prepare-title"
-      className="max-w-xl rounded-xl border border-line bg-card p-6"
-    >
+    <section aria-labelledby="prepare-title" className="max-w-xl surface p-6">
       <h2 id="prepare-title" className="text-xl font-semibold">
         Morning preparation
       </h2>

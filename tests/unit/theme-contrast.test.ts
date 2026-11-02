@@ -29,6 +29,12 @@ const TEXT_ON_SURFACE = [
   ["sidebar-foreground", "sidebar"],
   ["paid-on-dark", "sidebar"],
   ["late-on-dark", "sidebar"],
+  ["foreground", "secondary"],
+  ["muted-foreground", "secondary"],
+  ["blue", "secondary"],
+  ["paid", "secondary"],
+  ["due-soon", "secondary"],
+  ["late", "secondary"],
 ] as const;
 
 function pair(layers: Record<string, string>[], text: string, surface: string): number {

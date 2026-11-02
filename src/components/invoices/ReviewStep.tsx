@@ -21,7 +21,7 @@ import { WarningsPanel } from "@/components/invoices/WarningsPanel";
 import { Button } from "@/components/ui/button";
 import type { ClientRisk, Profile } from "@/types";
 
-const SECTION = "rounded-xl border border-line bg-card p-6";
+const SECTION = "surface p-6";
 
 interface ReviewStepProps {
   initial: {

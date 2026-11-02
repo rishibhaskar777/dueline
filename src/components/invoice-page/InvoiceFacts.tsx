@@ -26,7 +26,7 @@ export function InvoiceFacts({ invoice, details, today }: InvoiceFactsProps) {
   return (
     <dl
       aria-label="Invoice facts"
-      className="grid gap-x-8 gap-y-4 rounded-xl border border-line bg-card p-6 sm:grid-cols-2 lg:grid-cols-3"
+      className="grid gap-x-8 gap-y-4 surface p-6 sm:grid-cols-2 lg:grid-cols-3"
     >
       <Fact label="Issued">{formatDate(invoice.issuedOn)}</Fact>
       <Fact label="Due">{dueSentence(invoice, today)}</Fact>

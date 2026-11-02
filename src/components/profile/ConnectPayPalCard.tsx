@@ -5,10 +5,7 @@ const DECISION_URL = `${REPOSITORY_URL}/blob/main/docs/decisions/0019-many-freel
 
 export function ConnectPayPalCard() {
   return (
-    <section
-      aria-labelledby="connect-title"
-      className="max-w-3xl rounded-xl border border-line bg-card p-6"
-    >
+    <section aria-labelledby="connect-title" className="max-w-3xl surface p-6">
       <h2 id="connect-title" className="text-xl font-semibold">
         Connect your PayPal
       </h2>

@@ -211,7 +211,7 @@ export function SettingsForm() {
 
   if (loadError) {
     return (
-      <div role="alert" className="max-w-xl rounded-xl border border-line bg-card p-6">
+      <div role="alert" className="max-w-xl surface p-6">
         <p className="text-late">{loadError}</p>
         <Button variant="outline" className="mt-4" onClick={() => setAttempt(attempt + 1)}>
           Try again
@@ -254,11 +254,7 @@ export function SettingsForm() {
 
   return (
     <div className="grid items-start gap-6 lg:grid-cols-2">
-      <form
-        onSubmit={onSubmit}
-        aria-labelledby="fees-title"
-        className="rounded-xl border border-line bg-card p-6"
-      >
+      <form onSubmit={onSubmit} aria-labelledby="fees-title" className="surface p-6">
         <h2 id="fees-title" className="text-xl font-semibold">
           PayPal fees and rates
         </h2>

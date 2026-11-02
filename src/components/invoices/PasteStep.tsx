@@ -53,11 +53,7 @@ export function PasteStep({ onDrafted }: PasteStepProps) {
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      aria-labelledby="paste-title"
-      className="max-w-3xl rounded-xl border border-line bg-card p-6"
-    >
+    <form onSubmit={onSubmit} aria-labelledby="paste-title" className="max-w-3xl surface p-6">
       <h2 id="paste-title" className="text-xl font-semibold">
         Paste the client chat
       </h2>

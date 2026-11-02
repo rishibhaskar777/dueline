@@ -48,7 +48,7 @@ export function DueLineChart({ invoices, today, onOpen }: DueLineChartProps) {
   }
 
   return (
-    <section aria-labelledby="due-line-title" className="rounded-xl border border-line bg-card p-6">
+    <section aria-labelledby="due-line-title" className="surface p-6 [--h2-size:26px]">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="due-line-title" className="text-xl font-semibold">
           The due line

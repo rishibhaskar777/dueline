@@ -13,7 +13,7 @@ export function InvoiceSummaryCard({ totals }: InvoiceSummaryCardProps) {
   const { estimate, failure } = usePayoutEstimate(totals?.total ?? null);
 
   return (
-    <section aria-labelledby="summary-title" className="rounded-xl border border-line bg-card p-6">
+    <section aria-labelledby="summary-title" className="surface p-6">
       <h2 id="summary-title" className="text-xl font-semibold">
         Summary
       </h2>

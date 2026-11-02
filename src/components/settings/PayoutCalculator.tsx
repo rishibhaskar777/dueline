@@ -48,10 +48,7 @@ export function PayoutCalculator({ settingsVersion, rateSource }: PayoutCalculat
   );
 
   return (
-    <section
-      aria-labelledby="calculator-title"
-      className="rounded-xl border border-line bg-card p-6"
-    >
+    <section aria-labelledby="calculator-title" className="surface p-6">
       <h2 id="calculator-title" className="text-xl font-semibold">
         What reaches your bank
       </h2>

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { dismissChecklist, getChecklist } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
-const FRAME = "rounded-xl border border-line bg-card p-6";
+const FRAME = "surface p-6";
 
 // The first steps, ticked from what is already saved. Gone for good once dismissed.
 export function ChecklistWidget() {

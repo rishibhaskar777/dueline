@@ -22,10 +22,10 @@ export function ToneSwitch({ tone, suggestedTone, disabled, onChange }: ToneSwit
           disabled={disabled}
           onClick={() => onChange(option)}
           className={cn(
-            "flex min-h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60",
+            "flex min-h-9 max-md:min-h-11 items-center gap-2 rounded-full border px-3.5 text-sm font-medium outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60",
             option === tone
-              ? "border-primary bg-primary text-primary-foreground"
-              : "border-line bg-card hover:bg-muted",
+              ? "btn-primary border-transparent"
+              : "btn-secondary border-transparent hover:bg-hover",
           )}
         >
           {TONE_LABELS[option]}

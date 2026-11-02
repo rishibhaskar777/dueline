@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-ground">
+    <div className="min-h-screen">
       <Hero />
       <main>
         <WhyDueline />

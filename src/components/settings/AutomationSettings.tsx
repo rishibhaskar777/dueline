@@ -65,7 +65,7 @@ export function AutomationSettings() {
     <form
       onSubmit={(event) => void onSubmit(event)}
       aria-labelledby="automation-title"
-      className="grid gap-5 rounded-xl border border-line bg-card p-6"
+      className="grid gap-5 surface p-6"
     >
       <div>
         <h2 id="automation-title" className="text-xl font-semibold">
