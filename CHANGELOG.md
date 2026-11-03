@@ -7,6 +7,10 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Docs: README rewritten for judges, with an animated story and an animated workflow diagram (docs/media).
+
 ### Fixed
 
 - The late-payer card on the landing page now says "12 days on average", as the demo does everywhere.
