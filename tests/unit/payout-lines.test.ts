@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { averageGap, lostLine } from "@/components/settings/payout-lines";
+import { averageGap, costLines, lostLine } from "@/components/settings/payout-lines";
 import { payoutEstimate } from "@/mocks/fixtures";
 
 describe("lostLine", () => {
@@ -9,6 +9,21 @@ describe("lostLine", () => {
 
   it("keeps one decimal on a round share", () => {
     expect(lostLine({ ...payoutEstimate, lossPercent: 7 })).toContain("(7.0%)");
+  });
+});
+
+describe("costLines", () => {
+  it("shows the fee, the conversion and a total that is their sum", () => {
+    const lines = costLines(payoutEstimate);
+    expect(lines.map((line) => line.label)).toEqual([
+      "PayPal fee",
+      "Currency conversion",
+      "Total lost",
+    ]);
+    expect(lines[0].value).toBe("− $20.10 (about ₹1,769)");
+    expect(lines[1].value).toBe("− ₹1,135");
+    expect(lines[2].value).toBe("− ₹2,904 (7.3%)");
+    expect(payoutEstimate.feeInr + payoutEstimate.conversionLossInr).toBe(payoutEstimate.lossInr);
   });
 });
 

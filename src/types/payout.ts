@@ -11,6 +11,8 @@ export interface PayoutEstimate {
   marketRateDate: string;
   marketRateSource: RateSource;
   netInr: number;
+  feeInr: number;
+  conversionLossInr: number;
   lossInr: number;
   lossPercent: number;
 }

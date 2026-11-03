@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { LANDING_PAYOUT } from "./sample-payouts";
 import type { ChoiceCard } from "./landing-choices";
 
 const SHELL =
@@ -18,15 +19,18 @@ function Payout() {
     <div className={SHELL}>
       <p className="text-[15px] font-semibold text-[#b4bccb]">Invoice 0025 · Tandem Health</p>
       <p className="font-heading text-[52px] leading-none font-extrabold tracking-[-1.4px] max-md:text-[44px]">
-        $900.00
+        {LANDING_PAYOUT.gross}
       </p>
       <div>
-        <Line label="PayPal fee" value="− $39.90" />
-        <Line label="Conversion loss" value="− ₹2,450" />
+        <Line label="PayPal fee" value={LANDING_PAYOUT.fee} />
+        <Line label="Currency conversion" value={LANDING_PAYOUT.conversion} />
+        <Line label="Total lost" value={LANDING_PAYOUT.total} />
       </div>
       <p className="flex items-baseline justify-between gap-3 rounded-[18px] bg-[rgba(91,155,255,0.18)] px-5 py-4">
         <span className="font-bold">Reaches your bank</span>
-        <span className="font-heading text-[30px] font-extrabold text-[#b8d2ff]">₹79,221</span>
+        <span className="font-heading text-[30px] font-extrabold text-[#b8d2ff]">
+          {LANDING_PAYOUT.bank}
+        </span>
       </p>
     </div>
   );

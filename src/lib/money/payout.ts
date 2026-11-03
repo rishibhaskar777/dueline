@@ -63,6 +63,11 @@ export function estimatePayout(
   const netInr = toRupees(net, conversionRate);
   const marketValue = toRupees(gross, marketRate);
   const lossInr = marketValue - netInr;
+  // The fee at the market rate, never more than the whole loss, so the fee and the currency
+  // conversion always add up to lossInr to the rupee.
+  const feeAtMarket = toRupees(fee < gross ? fee : gross, marketRate);
+  const feeInr = feeAtMarket < lossInr ? feeAtMarket : lossInr;
+  const conversionLossInr = lossInr - feeInr;
   const lossPercent =
     marketValue === BigInt(0)
       ? 0
@@ -77,6 +82,8 @@ export function estimatePayout(
     marketRateDate: rate.onDate,
     marketRateSource: rate.source,
     netInr: Number(netInr),
+    feeInr: Number(feeInr),
+    conversionLossInr: Number(conversionLossInr),
     lossInr: Number(lossInr),
     lossPercent,
   };

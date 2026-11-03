@@ -2,8 +2,10 @@
 
 import type { InvoiceTotals } from "@/components/invoices/invoice-form";
 import { usePayoutEstimate } from "@/components/shared/use-payout-estimate";
+import { costLines } from "@/components/settings/payout-lines";
 import { Button } from "@/components/ui/button";
 import { formatMoney, formatRupees } from "@/lib/money/format";
+import { cn } from "@/lib/utils";
 
 interface InvoiceSummaryCardProps {
   totals: InvoiceTotals | null;
@@ -11,9 +13,14 @@ interface InvoiceSummaryCardProps {
   pending: boolean;
 }
 
-function Line({ label, value }: { label: string; value: string }) {
+function Line({ label, value, total }: { label: string; value: string; total?: boolean }) {
   return (
-    <div className="flex justify-between gap-4">
+    <div
+      className={cn(
+        "flex justify-between gap-4",
+        total && "border-t border-line pt-2.5 font-semibold",
+      )}
+    >
       <dt>{label}</dt>
       <dd className="tabular-nums">{value}</dd>
     </div>
@@ -59,11 +66,9 @@ export function InvoiceSummaryCard({ totals, pending }: InvoiceSummaryCardProps)
         {totals && estimate && (
           <>
             <dl className="grid gap-2.5 text-muted-foreground">
-              <Line label="PayPal fee" value={`− ${formatMoney(estimate.fee)}`} />
-              <Line
-                label="Conversion loss"
-                value={`− ${formatRupees(estimate.lossInr)} (${estimate.lossPercent}%)`}
-              />
+              {costLines(estimate).map((line, index, lines) => (
+                <Line key={line.label} {...line} total={index === lines.length - 1} />
+              ))}
             </dl>
             <p className="rounded-[18px] bg-tint-blue px-[18px] py-4">
               <span className="block text-sm font-semibold text-blue">
