@@ -1,3 +1,4 @@
+import { displayEmail } from "@/lib/sandbox-buyer";
 import { previewEmail } from "./nudge-email";
 
 interface EmailPreviewPanelProps {
@@ -20,7 +21,9 @@ export function EmailPreviewPanel({ id, to, subject, message, payLink }: EmailPr
     >
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
         <dt className="text-muted-foreground">To</dt>
-        <dd className="break-all">{to}</dd>
+        <dd title={to} className="[overflow-wrap:anywhere]">
+          {displayEmail(to)}
+        </dd>
         <dt className="text-muted-foreground">Subject</dt>
         <dd className="font-medium">{subject}</dd>
       </dl>

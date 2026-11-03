@@ -1,5 +1,6 @@
 import "server-only";
-import { getEnv, SANDBOX_BUYER_DOMAIN } from "@/lib/env";
+import { getEnv } from "@/lib/env";
+import { SANDBOX_BUYER_DOMAIN } from "@/lib/sandbox-buyer";
 
 export class RecipientNotAllowedError extends Error {
   constructor() {
