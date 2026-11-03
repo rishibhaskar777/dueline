@@ -22,12 +22,12 @@ import "../support/next-server";
 
 const paypal = vi.hoisted(() => ({
   loadInvoices: vi.fn(),
-  clearInvoiceCaches: vi.fn(),
+  refreshSnapshotNow: vi.fn(),
   getInvoiceDetail: vi.fn(),
 }));
 vi.mock("@/lib/paypal/summaries", () => ({
   loadInvoices: paypal.loadInvoices,
-  clearInvoiceCaches: paypal.clearInvoiceCaches,
+  refreshSnapshotNow: paypal.refreshSnapshotNow,
 }));
 vi.mock("@/lib/payouts/load-summaries", () => ({
   loadSummaries: async () => (await paypal.loadInvoices()).map(({ summary }: never) => summary),

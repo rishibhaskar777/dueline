@@ -24,6 +24,7 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Faster first load: the PayPal invoices are kept in a stored snapshot that is refreshed in the background, so Home and Nudges fill in about a second after the demo has been idle. A page asks once for the profile, the invoices and the demo buyer, draws each part as it arrives, and shows its last answer when opened again until you change something or lock the demo. Due and late states are worked out on every read, so a snapshot from yesterday is right today. "Updating from PayPal…" shows while a snapshot older than five minutes is being replaced.
 - A full site footer, and sandbox wording that explains what judges can do.
 - The demo story keeps something due soon on every day of its seven-day life (Tandem Health is now due in 7 days at the start), and a test checks it for 1 to 15 December.
 - When Gemini is busy or out of quota, New invoice says "The AI is busy right now. Try again in a minute, or fill the invoice in yourself." and offers "Start without a chat" as the main button.

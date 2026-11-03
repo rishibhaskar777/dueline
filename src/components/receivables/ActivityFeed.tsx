@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { formatTimestamp } from "@/lib/format-date";
+import { SkeletonBlock } from "@/components/shared/SkeletonBlock";
 import { cn } from "@/lib/utils";
 import type { ActivityEvent } from "@/types";
 import { ACTIVITY_PREVIEW, describeEvent, eventWhen, visibleEvents } from "./activity-text";
 
 interface ActivityFeedProps {
-  events: ActivityEvent[];
+  // Null until the activity has loaded.
+  events: ActivityEvent[] | null;
   today: string;
   freshEvents: ActivityEvent[];
 }
@@ -22,7 +24,13 @@ export function ActivityFeed({ events, today, freshEvents }: ActivityFeedProps) 
       <p aria-live="polite" className="sr-only">
         {freshEvents.map(describeEvent).join(". ")}
       </p>
-      {events.length === 0 ? (
+      {events === null ? (
+        <div role="status" aria-label="Loading activity" className="mt-3 grid gap-3">
+          <SkeletonBlock className="h-5" />
+          <SkeletonBlock className="h-5" />
+          <SkeletonBlock className="h-5" />
+        </div>
+      ) : events.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">
           Payments and sends will appear here as PayPal reports them.
         </p>
@@ -48,7 +56,7 @@ export function ActivityFeed({ events, today, freshEvents }: ActivityFeedProps) 
           ))}
         </ul>
       )}
-      {events.length > ACTIVITY_PREVIEW && (
+      {events !== null && events.length > ACTIVITY_PREVIEW && (
         <button
           type="button"
           aria-expanded={expanded}

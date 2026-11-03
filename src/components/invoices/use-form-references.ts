@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { getDemoRecipient, getHealth, getPurposeCodes } from "@/lib/api-client";
+import { readDemoRecipient } from "@/components/demo/use-demo-mode";
+import { getHealth, getPurposeCodes } from "@/lib/api-client";
 import type { PurposeCode } from "@/types";
 
 interface FormReferences {
@@ -20,7 +21,7 @@ export function useFormReferences(): FormReferences {
       (loaded) => current && setCodes(loaded),
       () => {},
     );
-    getDemoRecipient().then(
+    readDemoRecipient().then(
       (email) => current && setDemoEmail(email),
       () => {},
     );

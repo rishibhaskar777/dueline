@@ -3,7 +3,6 @@ import { getEnv } from "@/lib/env";
 import { InvoiceNotFoundError } from "@/lib/invoices/errors";
 import { PayPalApiError } from "@/lib/paypal/errors";
 import { getInvoice } from "@/lib/paypal/invoices";
-import { clearInvoiceCaches } from "@/lib/paypal/summaries";
 import { getStore } from "@/lib/store";
 import { DemoUnavailableError } from "./errors";
 
@@ -18,5 +17,4 @@ export async function setInvoiceHiddenInDemo(invoiceId: string, hidden: boolean)
     throw error;
   }
   await getStore().setInvoiceHidden(invoiceId, hidden);
-  clearInvoiceCaches();
 }

@@ -28,10 +28,10 @@ const marked = (invoice: PayPalInvoice): PayPalInvoice => ({
 const unpaid = marked(unpaidFixture as PayPalInvoice);
 const paid = marked(paidFixture as PayPalInvoice);
 
-beforeEach(() => {
+beforeEach(async () => {
   stubEnv({ DEMO_TODAY: "2026-10-17" });
   clearAccessToken();
-  clearInvoiceCaches();
+  await clearInvoiceCaches();
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });

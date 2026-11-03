@@ -6,6 +6,7 @@ import { widgetSize } from "@/components/dashboard/dashboard-layout";
 import { useDashboard } from "@/components/dashboard/use-dashboard";
 import { useLayout } from "@/components/dashboard/use-layout";
 import { LoadFailure } from "@/components/shared/LoadFailure";
+import { UpdatingNote } from "@/components/shared/UpdatingNote";
 import { cn } from "@/lib/utils";
 import { HomeHeader } from "./HomeHeader";
 import { InvoicePanel } from "./InvoicePanel";
@@ -24,7 +25,7 @@ const COLUMNS = {
 const ROWS = { 1: "", 2: "lg:row-span-2" } as const;
 
 export function Receivables() {
-  const { data, error, freshEvents, retry } = useReceivables();
+  const { data, events, health, error, updating, freshEvents, retry } = useReceivables();
   const dashboard = useDashboard();
   const { layout, change, reset } = useLayout();
   const [openId, setOpenId] = useState<string | null>(null);
@@ -43,7 +44,7 @@ export function Receivables() {
     );
   }
 
-  const { invoices, health } = data;
+  const { invoices, today } = data;
   if (invoices.length === 0) {
     return (
       <div className="grid gap-5">
@@ -60,6 +61,7 @@ export function Receivables() {
     <div className="grid gap-5">
       <HomeHeader health={health} onCustomise={() => setCustomising(true)} />
       {error && <RefreshNote error={error} />}
+      {!error && updating && <UpdatingNote />}
       {shown.length === 0 && (
         <p className="text-sm text-muted-foreground">
           Every widget is hidden. Use Customise to show some again.
@@ -73,6 +75,7 @@ export function Receivables() {
               <ReceivablesWidget
                 id={id}
                 data={data}
+                events={events}
                 freshEvents={freshEvents}
                 dashboard={dashboard}
                 onOpen={(invoice) => setOpenId(invoice.id)}
@@ -81,7 +84,7 @@ export function Receivables() {
           );
         })}
       </div>
-      <InvoicePanel invoice={open} today={health.today} onClose={() => setOpenId(null)} />
+      <InvoicePanel invoice={open} today={today} onClose={() => setOpenId(null)} />
       <CustomisePanel
         open={customising}
         onOpenChange={setCustomising}

@@ -15,7 +15,7 @@ const paypal = vi.hoisted(() => ({
   cancelInvoice: vi.fn(),
   deleteDraftInvoice: vi.fn(),
   listInvoicesInFull: vi.fn(),
-  clearInvoiceCaches: vi.fn(),
+  refreshSnapshotNow: vi.fn(),
 }));
 
 vi.mock("@/lib/paypal/invoices", () => ({
@@ -28,7 +28,7 @@ vi.mock("@/lib/paypal/invoices", () => ({
 }));
 vi.mock("@/lib/paypal/summaries", () => ({
   listInvoicesInFull: paypal.listInvoicesInFull,
-  clearInvoiceCaches: paypal.clearInvoiceCaches,
+  refreshSnapshotNow: paypal.refreshSnapshotNow,
 }));
 
 let store: Store;
@@ -57,7 +57,7 @@ beforeEach(() => {
   paypal.cancelInvoice.mockImplementation(fake.cancelInvoice);
   paypal.deleteDraftInvoice.mockImplementation(fake.deleteDraftInvoice);
   paypal.listInvoicesInFull.mockImplementation(fake.listInvoicesInFull);
-  paypal.clearInvoiceCaches.mockReset();
+  paypal.refreshSnapshotNow.mockReset();
 });
 
 afterEach(() => {
@@ -92,7 +92,7 @@ describe("POST /api/demo/reset", () => {
     expect(fake.statusOf(outside.id)).toBe("MARKED_AS_PAID");
     expect(fake.statusOf(partly.id)).toBe("PARTIALLY_PAID");
     expect(fake.statusOf(storyOpen.id)).toBe("CANCELLED");
-    expect(paypal.clearInvoiceCaches).toHaveBeenCalledTimes(1);
+    expect(paypal.refreshSnapshotNow).toHaveBeenCalledTimes(1);
   });
 
   it("clears the queued reminders of the old story, and keeps the retainers", async () => {

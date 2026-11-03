@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { SkeletonBlock } from "@/components/shared/SkeletonBlock";
-import { useLoad } from "@/components/shared/use-load";
+import { useProfile } from "@/components/profile/use-profile";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { getProfile } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import type { HealthResponse } from "@/types";
 import { connectionStatus, dateLine, greeting, kolkataHour } from "./home-header";
@@ -26,9 +25,9 @@ function useKolkataHour(): number | null {
 
 function Greeting() {
   const hour = useKolkataHour();
-  const { state } = useLoad(getProfile);
-  const name = state.kind === "ready" ? state.data.yourName : null;
-  const settled = state.kind !== "loading";
+  const { profile, error } = useProfile();
+  const name = profile?.yourName ?? null;
+  const settled = profile !== null || error !== null;
 
   return (
     <h1 className="font-heading text-4xl font-extrabold tracking-[-1.4px] md:text-5xl">

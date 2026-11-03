@@ -9,10 +9,12 @@ import { NudgeCard } from "./NudgeCard";
 import { LIMIT_REACHED_NOTICE } from "./nudge-model";
 import type { NudgesData } from "./use-nudges";
 
+type NudgeListProps = Pick<NudgesData, "state" | "retry">;
+
 // The model is asked for at most this many drafts at once, however many cards are waiting.
 const DRAFTS_IN_FLIGHT = 2;
 
-export function NudgeList({ state, retry }: NudgesData) {
+export function NudgeList({ state, retry }: NudgeListProps) {
   const [sentHere, setSentHere] = useState(0);
   const [queue] = useState(() => createDraftQueue(DRAFTS_IN_FLIGHT));
   const improve = useCallback(

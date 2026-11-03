@@ -17,6 +17,7 @@ import { TotalsStrip } from "./TotalsStrip";
 interface ReceivablesWidgetProps {
   id: WidgetId;
   data: NonNullable<Receivables["data"]>;
+  events: Receivables["events"];
   freshEvents: Receivables["freshEvents"];
   dashboard: ReturnType<typeof useDashboard>;
   onOpen: (invoice: InvoiceSummary) => void;
@@ -25,11 +26,12 @@ interface ReceivablesWidgetProps {
 export function ReceivablesWidget({
   id,
   data,
+  events,
   freshEvents,
   dashboard,
   onOpen,
 }: ReceivablesWidgetProps) {
-  const { invoices, totals, events, health } = data;
+  const { invoices, totals, today } = data;
   const { state, retry } = dashboard;
 
   switch (id) {
@@ -42,7 +44,7 @@ export function ReceivablesWidget({
     case "forecast":
       return <ForecastWidget state={state} onRetry={retry} />;
     case "dueLine":
-      return <DueLineChart invoices={invoices} today={health.today} onOpen={onOpen} />;
+      return <DueLineChart invoices={invoices} today={today} onOpen={onOpen} />;
     case "upcomingDue":
       return <UpcomingDueWidget state={state} onRetry={retry} />;
     case "lateClients":
@@ -52,8 +54,8 @@ export function ReceivablesWidget({
     case "rates":
       return <RatesWidget state={state} onRetry={retry} />;
     case "invoices":
-      return <InvoiceTable invoices={invoices} today={health.today} onOpen={onOpen} />;
+      return <InvoiceTable invoices={invoices} today={today} onOpen={onOpen} />;
     case "activity":
-      return <ActivityFeed events={events} today={health.today} freshEvents={freshEvents} />;
+      return <ActivityFeed events={events} today={today} freshEvents={freshEvents} />;
   }
 }

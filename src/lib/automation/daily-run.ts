@@ -5,7 +5,7 @@ import { reseedStaleDemo } from "@/lib/demo/reset";
 import { prepareReminderDrafts } from "@/lib/reminders/reminder-drafts";
 import { loadVisibleInvoices } from "@/lib/demo/visible-invoices";
 import { reconcilePaidInvoices } from "@/lib/paypal/reconcile-paid";
-import { clearInvoiceCaches } from "@/lib/paypal/summaries";
+import { refreshSnapshotNow } from "@/lib/paypal/summaries";
 import { runClaimed } from "@/lib/requests/run-claimed";
 import { getSettings } from "@/lib/settings";
 import { getStore } from "@/lib/store";
@@ -61,7 +61,7 @@ async function prepare(): Promise<void> {
   } catch {
     console.error("Re-seeding the demo story failed");
   }
-  clearInvoiceCaches();
+  await refreshSnapshotNow();
   const reminders = (await getSettings()).prepareReminders ? await prepareReminders(day) : [];
   await getStore().replaceQueueItems("reminder", reminders);
   await prepareDueRepeats(today());
@@ -70,6 +70,7 @@ async function prepare(): Promise<void> {
   } catch {
     console.error("Reconciling paid invoices failed");
   }
+  await refreshSnapshotNow();
 }
 
 // Once per India day, however many times it is asked for: a second call, a retry by the cron

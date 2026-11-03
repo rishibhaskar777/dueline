@@ -18,6 +18,7 @@ import {
   signIn,
   signOut,
 } from "@/lib/api-client";
+import { recall, remember } from "@/lib/remembered";
 import { extraction } from "@/mocks/fixtures";
 
 const unauthorized = { error: { code: "unauthorized", message: "Enter the demo password." } };
@@ -215,6 +216,101 @@ describe("api client", () => {
 
   it("builds the CSV download URL", () => {
     expect(exportRegisterCsvUrl("2026-10")).toBe("/api/export-register?month=2026-10&format=csv");
+  });
+});
+
+describe("reads that arrive together", () => {
+  const invoices = { invoices: [], totals: {}, loadedAt: null };
+
+  it("share one request while it is on its way, and ask again afterwards", async () => {
+    const fetchSpy = vi.fn().mockImplementation(async () => Response.json(invoices));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const [first, second] = await Promise.all([getInvoices(), getInvoices()]);
+    expect(first).toBe(second);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+    await getInvoices();
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("keep different addresses apart", async () => {
+    const fetchSpy = vi.fn().mockImplementation(async () => Response.json({}));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await Promise.all([getClientRisk("a@example.com"), getClientRisk("b@example.com")]);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("all see the same failure, and the next read tries again", async () => {
+    const fetchSpy = vi
+      .fn()
+      .mockImplementationOnce(async () =>
+        Response.json({ error: { code: "paypal_error", message: "No." } }, { status: 502 }),
+      )
+      .mockImplementation(async () => Response.json(invoices));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const results = await Promise.allSettled([getInvoices(), getInvoices()]);
+    expect(results.map(({ status }) => status)).toEqual(["rejected", "rejected"]);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    await expect(getInvoices()).resolves.toEqual(invoices);
+  });
+
+  it("never share a write", async () => {
+    const fetchSpy = vi.fn().mockImplementation(async () => Response.json({}));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await Promise.all([resetDemo(), resetDemo()]);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("after a write, a sign-in or a sign-out", () => {
+  it("forgets every remembered screen, whether the write worked or not", async () => {
+    remember("receivables", { invoices: 1 });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async () => new Response(null, { status: 204 })),
+    );
+    await signOut();
+    expect(recall("receivables")).toBeUndefined();
+
+    remember("nudges", { drafts: 1 });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json(unauthorized, { status: 401 })));
+    stubBrowser("/demo");
+    await signIn("wrong").catch(() => undefined);
+    expect(recall("nudges")).toBeUndefined();
+  });
+
+  it("keeps remembered screens when only reading", async () => {
+    remember("receivables", { invoices: 1 });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async () => Response.json({})),
+    );
+    await getInvoices();
+    expect(recall("receivables")).toEqual({ invoices: 1 });
+  });
+
+  it("sends the first read after a sign-out to the server instead of a read still on its way", async () => {
+    let release: (response: Response) => void = () => undefined;
+    const fetchSpy = vi
+      .fn()
+      .mockImplementationOnce(() => new Promise<Response>((resolve) => (release = resolve)))
+      .mockImplementation(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const before = getInvoices();
+    await signOut();
+    await signIn("open sesame");
+    fetchSpy.mockImplementation(async () => Response.json({ invoices: ["second session"] }));
+    const after = getInvoices();
+    release(Response.json({ invoices: ["first session"] }));
+
+    expect(await after).toEqual({ invoices: ["second session"] });
+    expect(await before).toEqual({ invoices: ["first session"] });
+    expect(fetchSpy).toHaveBeenCalledTimes(4);
   });
 });
 

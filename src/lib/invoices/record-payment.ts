@@ -3,7 +3,7 @@ import { today } from "@/lib/clock";
 import { InvoiceNotFoundError } from "@/lib/invoices/errors";
 import { PayPalApiError } from "@/lib/paypal/errors";
 import { getInvoice, recordExternalPayment } from "@/lib/paypal/invoices";
-import { clearInvoiceCaches, summarise } from "@/lib/paypal/summaries";
+import { refreshSnapshotNow, summarise } from "@/lib/paypal/summaries";
 import { runClaimed } from "@/lib/requests/run-claimed";
 import { getStore } from "@/lib/store";
 import type { Json } from "@/lib/store/store";
@@ -47,12 +47,15 @@ export function recordPayment(
     readStored: fromStored,
     run: async () => {
       await checkRecordable(id, request);
-      await recordExternalPayment(id, {
-        paymentDate: request.paidOn,
-        method: request.method,
-        note: request.note?.trim() || DEFAULT_NOTE,
-      });
-      clearInvoiceCaches();
+      try {
+        await recordExternalPayment(id, {
+          paymentDate: request.paidOn,
+          method: request.method,
+          note: request.note?.trim() || DEFAULT_NOTE,
+        });
+      } finally {
+        await refreshSnapshotNow([id]);
+      }
       return { recorded: true, paidOn: request.paidOn };
     },
   });

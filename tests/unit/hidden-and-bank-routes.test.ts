@@ -6,9 +6,8 @@ import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
 import { stubEnv } from "../support/env";
 
-const paypal = vi.hoisted(() => ({ getInvoice: vi.fn(), clearInvoiceCaches: vi.fn() }));
+const paypal = vi.hoisted(() => ({ getInvoice: vi.fn() }));
 vi.mock("@/lib/paypal/invoices", () => ({ getInvoice: paypal.getInvoice }));
-vi.mock("@/lib/paypal/summaries", () => ({ clearInvoiceCaches: paypal.clearInvoiceCaches }));
 let store: Store;
 vi.mock("@/lib/store", () => ({ getStore: () => store }));
 
@@ -30,7 +29,6 @@ beforeEach(() => {
   store = createMemoryStore();
   stubEnv({});
   paypal.getInvoice.mockReset();
-  paypal.clearInvoiceCaches.mockReset();
 });
 
 describe("POST /api/demo/hidden-invoices", () => {
@@ -41,7 +39,6 @@ describe("POST /api/demo/hidden-invoices", () => {
     expect(hidden.status).toBe(200);
     expect(await hidden.json()).toEqual({ invoiceId: "INV2-A", hidden: true });
     expect(await store.listHiddenInvoices()).toEqual(["INV2-A"]);
-    expect(paypal.clearInvoiceCaches).toHaveBeenCalledTimes(1);
 
     await postHidden(request({ invoiceId: "INV2-A", hidden: false }));
     expect(await store.listHiddenInvoices()).toEqual([]);

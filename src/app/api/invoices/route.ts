@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import { today } from "@/lib/clock";
 import { createAndSendInvoice } from "@/lib/invoices/create-invoice";
 import { computeTotals } from "@/lib/money/totals";
+import { invoicesLoadedAt } from "@/lib/paypal/summaries";
 import { loadSummaries } from "@/lib/payouts/load-summaries";
 import {
   createInvoiceRequestSchema,
@@ -16,7 +17,12 @@ export async function GET(): Promise<Response> {
   await connection();
   try {
     const invoices = await loadSummaries();
-    return ok<InvoicesResponse>({ invoices, totals: computeTotals(invoices, today()) });
+    return ok<InvoicesResponse>({
+      invoices,
+      totals: computeTotals(invoices, today()),
+      today: today(),
+      loadedAt: invoicesLoadedAt(),
+    });
   } catch (error) {
     return failFromError(error);
   }
