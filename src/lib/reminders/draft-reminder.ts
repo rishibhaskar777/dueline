@@ -14,7 +14,7 @@ import { amountText, formatDateIn, languageInfo } from "./languages";
 import { templateReminder } from "./templates";
 
 // Part of the cache key, so a draft written under older rules is not reused.
-const PROMPT_VERSION = "v4";
+const PROMPT_VERSION = "v5";
 const CACHE_TTL_SECONDS = 24 * 60 * 60;
 
 const modelReminderSchema = z.object({
@@ -22,7 +22,7 @@ const modelReminderSchema = z.object({
   message: z
     .string()
     .describe(
-      "The email body under 100 words: a greeting line, then two or three short paragraphs separated by a blank line, with at most one thank you and no sign-off or name",
+      "The email body under 100 words: a greeting line, then two or three short paragraphs separated by a blank line, without any thank you, sign-off or name",
     ),
 });
 
@@ -53,7 +53,7 @@ function toneGuidance(tone: Tone, remindersSent: number): string {
 function systemPrompt(tone: Tone, language: ReminderLanguage, remindersSent: number): string {
   const written =
     language === "en"
-      ? "Write polite, plain Indian English in under 100 words, the way a person writes to a client they know."
+      ? "Write polite, plain Indian English in under 100 words, the way a person writes to a client they know. Write correct, natural British English; no filler such as 'it is likely just'."
       : `Write the whole email in ${languageInfo(language).name}, polite and natural, in under 100 words. Write numbers the way ${languageInfo(language).name} does.`;
   return [
     "You write a short payment reminder email from a freelancer in India to a client abroad about an overdue invoice.",
@@ -65,7 +65,7 @@ function systemPrompt(tone: Tone, language: ReminderLanguage, remindersSent: num
     'Never include links or email addresses. Say that the PayPal email has a "Pay now" button.',
     "Do not write a sign-off or a name. They are added afterwards.",
     "Greet the client by name when one is given, on a line of its own.",
-    "Write two or three short paragraphs of one or two sentences each, separated by a blank line. Say thank you at most once.",
+    "Write two or three short paragraphs of one or two sentences each, separated by a blank line. Do not thank the client in the body, because the sign-off added afterwards does; end with the request or, in a gentle reminder, the line about ignoring the note if it is already paid.",
   ].join("\n");
 }
 

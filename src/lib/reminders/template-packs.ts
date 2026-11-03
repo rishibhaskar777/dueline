@@ -78,7 +78,7 @@ const french: Pack = {
   }),
   final: (p, days) => ({
     subject: `Dernier rappel : facture ${p.number}`,
-    message: `${p.greeting}\n\nCeci est mon dernier rappel concernant la facture ${p.number} d'un montant de ${p.owed}${p.work}. Elle était due le ${p.due} et a ${days} de retard.\n\nMerci de la régler dans les 3 jours avec le bouton « Pay now » de l'e-mail PayPal, ou de m'indiquer la date de paiement prévue.`,
+    message: `${p.greeting}\n\nCeci est mon dernier rappel concernant la facture ${p.number} d'un montant de ${p.owed}${p.work}. Elle était due le ${p.due} et a ${days} de retard.\n\nVeuillez la régler dans les 3 jours avec le bouton « Pay now » de l'e-mail PayPal, ou m'indiquer la date de paiement prévue.`,
   }),
 };
 
@@ -170,7 +170,7 @@ Please pay it within the next 3 days using the Pay now button in the PayPal emai
   }),
   fr: (p, days) => ({
     subject: `Facture ${p.number} : paiement nécessaire (${days} de retard)`,
-    message: `${p.greeting}\n\nLa facture ${p.number} d'un montant de ${p.owed}${p.work} était due le ${p.due} et a ${days} de retard. Je n'ai reçu ni paiement ni date de paiement.\n\nMerci de la régler dans les 3 jours avec le bouton « Pay now » de l'e-mail PayPal, ou de m'indiquer la date de paiement prévue.`,
+    message: `${p.greeting}\n\nLa facture ${p.number} d'un montant de ${p.owed}${p.work} était due le ${p.due} et a ${days} de retard. Je n'ai reçu ni paiement ni date de paiement.\n\nVeuillez la régler dans les 3 jours avec le bouton « Pay now » de l'e-mail PayPal, ou m'indiquer la date de paiement prévue.`,
   }),
   es: (p, days) => ({
     subject: `Factura ${p.number}: se necesita el pago (${days} de retraso)`,
