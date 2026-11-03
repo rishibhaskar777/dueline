@@ -12,6 +12,7 @@ const facts: ReminderFacts = {
   invoiceId: "INV2-TEST",
   invoiceNumber: "INV-0046",
   clientName: "Brightwell Labs",
+  contactName: null,
   work: "Dashboard design",
   amount: { currency: "USD", value: "450.00" },
   issuedOn: "2026-10-01",

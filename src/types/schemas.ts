@@ -19,6 +19,13 @@ export const clientSchema = z.object({
   name: z.string().min(1).max(200),
   email: z.email(),
   country: z.string().refine(isCountryCode, "must be a supported country code").optional(),
+  contactName: z
+    .string()
+    .trim()
+    .min(1)
+    .max(100)
+    .refine((name) => !name.includes("@"), "must be a name, not an email address")
+    .optional(),
 });
 
 export const sacSchema = z.string().regex(/^99[0-9]{4}$/, "must be 6 digits starting with 99");

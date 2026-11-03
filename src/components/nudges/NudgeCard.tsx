@@ -1,10 +1,12 @@
 "use client";
 
 import { useId, useState } from "react";
+import { LanguageSuggestion } from "@/components/shared/LanguageSuggestion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { clientKey } from "@/lib/risk/client-key";
 import { DraftStatus } from "./DraftStatus";
 import { EmailMessageActions } from "./EmailMessageActions";
 import { EmailPreviewPanel } from "./EmailPreviewPanel";
@@ -60,6 +62,16 @@ export function NudgeCard({
           />
         </div>
         <p className="text-[15px] text-muted-foreground">{draft.reason}</p>
+        {nudge.languageSuggestion && (
+          <LanguageSuggestion
+            clientKey={clientKey(invoice.client.name)}
+            clientName={invoice.client.name}
+            country={invoice.client.country}
+            suggestion={nudge.languageSuggestion}
+            disabled={busy}
+            onChosen={nudge.adoptClientLanguage}
+          />
+        )}
         <LanguageNote
           clientLanguage={nudge.clientLanguage}
           language={draft.language}

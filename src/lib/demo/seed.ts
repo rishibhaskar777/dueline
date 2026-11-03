@@ -71,7 +71,12 @@ async function createDraft(
   const requestId = crypto.randomUUID();
   const body = toPayPalInvoice(
     {
-      client: { name: story.clientName, email, country: story.country },
+      client: {
+        name: story.clientName,
+        email,
+        country: story.country,
+        contactName: story.contactName,
+      },
       currency: story.amount.currency,
       dueOn: story.dueOn,
       items: [
@@ -205,10 +210,12 @@ export async function seedDemo(generation: number): Promise<SeedRow[]> {
 // Starts the next generation, dated from today, and seeds it. The generation is recorded first, so
 // the older ones stop being shown at once even if a seeding step fails and has to be repeated. The
 // queued reminders belonged to the old story, so they go too; the next preparation run refills them.
+// Chosen reminder languages go as well, so the demo offers its language suggestion again.
 export async function seedNewGeneration(): Promise<{ generation: number; rows: SeedRow[] }> {
   const store = getStore();
   const generation = ((await store.getDemoGeneration())?.id ?? 0) + 1;
   await store.saveDemoGeneration({ id: generation, seededOn: today() });
   await store.replaceQueueItems("reminder", []);
+  await store.clearClientLanguages();
   return { generation, rows: await seedDemo(generation) };
 }

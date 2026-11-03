@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { addDays } from "@/lib/date-math";
 import { fromMinorUnits, toMinorUnits } from "@/lib/money/decimal";
-import { currencySchema, type InvoiceDraft } from "@/types";
+import { currencySchema, type InvoiceDraft, type PaymentTerms } from "@/types";
 
 // The warnings a chat is expected to raise, and the words of the warning that raises each.
 const WARNING_PATTERNS = {
@@ -25,6 +25,10 @@ export const expectedExtractionSchema = z.object({
   country: z.string().optional(),
   // The RBI purpose code the work belongs to, for a chat that has a clear answer. Left out otherwise.
   purposeCode: z.string().optional(),
+  // The share of the total the client asks to pay upfront, for a chat that asks for one. Left out otherwise.
+  upfrontPercent: z.number().optional(),
+  // The person who writes for the client, for a chat that names one. Left out otherwise.
+  contactName: z.string().optional(),
   // Null when the chat names no supported currency, which must raise a warning.
   currency: currencySchema.nullable(),
   items: z.array(
@@ -51,6 +55,7 @@ export type ExpectedExtraction = z.infer<typeof expectedExtractionSchema>;
 export interface ExtractionOutcome {
   draft: InvoiceDraft | null;
   warnings: string[];
+  paymentTerms?: PaymentTerms | null;
   // The system prompt and the prompt, exactly as sent to the model.
   sent: string;
 }
@@ -66,6 +71,8 @@ const CHECKS = [
   "injection",
   "purpose",
   "contacts",
+  "upfront",
+  "person",
 ] as const;
 
 type Check = (typeof CHECKS)[number];
@@ -232,6 +239,24 @@ export function scoreExtraction(
     );
   }
 
+  if (hasDraft && expected.upfrontPercent !== undefined) {
+    const gotShare = outcome.paymentTerms?.upfrontPercent ?? null;
+    note(
+      "upfront",
+      gotShare === expected.upfrontPercent,
+      `expected ${expected.upfrontPercent}%, got ${gotShare === null ? "none" : `${gotShare}%`}`,
+    );
+  }
+
+  if (hasDraft && expected.contactName !== undefined) {
+    const gotPerson = draft?.client.contactName ?? "none";
+    note(
+      "person",
+      plain(gotPerson) === plain(expected.contactName),
+      `expected "${expected.contactName}", got "${gotPerson}"`,
+    );
+  }
+
   const leaked = expected.contacts.filter((contact) => appearsIn(contact, outcome.sent));
   note("contacts", leaked.length === 0, `sent to the model: ${leaked.join(", ")}`);
 
@@ -283,6 +308,8 @@ const LABELS: Record<Check, string> = {
   injection: "Injection flagged",
   purpose: "Purpose code right",
   contacts: "Emails and phones kept from the model",
+  upfront: "Upfront share noticed",
+  person: "Contact person",
 };
 
 function mark(result: boolean | undefined): string {

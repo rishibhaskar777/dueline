@@ -34,7 +34,7 @@ export function InvoiceCards({ invoices, today, onOpen }: InvoiceCardsProps) {
               <span>
                 {invoice.number} · due {formatDate(invoice.dueOn)}
               </span>
-              {invoice.riskLevel && invoice.riskLevel !== "reliable" && (
+              {(invoice.riskLevel === "watch" || invoice.riskLevel === "late_payer") && (
                 <RiskBadge level={invoice.riskLevel} />
               )}
             </span>

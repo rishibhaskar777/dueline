@@ -126,7 +126,7 @@ describe("GET /api/invoices", () => {
     });
     expect(body.invoices.map((invoice: { riskLevel: unknown }) => invoice.riskLevel)).toEqual([
       null,
-      "reliable",
+      "new",
     ]);
     expect(body.invoices[1].actualPayout.netInr).toBe(35617);
     expect(body.invoices[1].payoutInr).toBe(35617);

@@ -1,4 +1,5 @@
 import { addDays } from "@/lib/date-math";
+import { speakersOf, stripChatPrefixes } from "./chat-prefix";
 import type { ModelDraft } from "./check-draft";
 
 type ModelItem = ModelDraft["items"][number];
@@ -10,7 +11,7 @@ interface PurposeRule {
 }
 
 const PRICE =
-  /(?:\b(?:USD|EUR|GBP|CAD|AUD)\s?|CA\$|A\$|C\$|[$€£])(\d[\d,]*(?:\.\d{1,2})?)|\b(\d[\d,]*(?:\.\d{1,2})?)\s?(?:USD|EUR|GBP|CAD|AUD)\b/g;
+  /(?:\b(?:USD|EUR|GBP|CAD|AUD)\s?|CA\$|A\$|C\$|[$€£])(\d+(?:,\d{2,3})*(?:\.\d{1,2})?)|\b(\d+(?:,\d{2,3})*(?:\.\d{1,2})?)\s?(?:USD|EUR|GBP|CAD|AUD)\b/g;
 
 // The more specific symbols come first, because "CA$" also contains a "$".
 const CURRENCIES: [RegExp, string][] = [
@@ -44,6 +45,8 @@ const PURPOSE_RULES: PurposeRule[] = [
   },
 ];
 
+// "10 page brand guideline" asks for one guideline, so a count of pages, words or time is no quantity.
+const MEASURES = "(?:pages?|words?|minutes?|days?|weeks?|months?)";
 const CLAUSE_BREAK = /[.?!;]\s|\n|,\s/g;
 const SPEAKER = /^[^:\n\d$€£]{1,40}:\s+/;
 const LEADING_FILLER = /^(?:ok(?:ay)?|sure|so|and|then|yes|yeah|please|also)[\s,]+/i;
@@ -52,7 +55,12 @@ const UNIT = /^\s*(?:each\b|apiece\b|(?:an?|per)\s+([a-z]+)|\/\s*([a-z]+))/i;
 // What comes before a price when nothing in it names the work: "I can pay", "the total is".
 const NO_NAME =
   /^(?:(?:i|we|you|they)(?:'ll|'d)?\s+)?(?:(?:can|could|will|would|shall)\s+)?(?:pay|charge|do|offer|budget|bill|quote|(?:the\s+)?(?:total|price|fee|cost|budget|rate|amount)(?:\s+is)?|it'?s|that'?s)$/i;
+// A line that adds the others up is not an item of its own.
+const SUMMARY_LINE = /^\s*(?:(?:the\s+)?(?:grand\s+|sub)?total|altogether|in all)\b/i;
 const NAMED_COMPANY = /^[^\n:(]{1,40}\(([^)\n]{2,60})\)\s*:/m;
+// "50% now", "30% upfront", "20 % in advance" or "half now": a share asked for before delivery.
+const UPFRONT =
+  /\b(?:(\d{1,2}(?:\.\d+)?)\s?%|(half))\s+(?:now|upfront|up front|in advance|advance)\b/i;
 const BILLED_TO = /\b(?:bill|invoice)\s+(?:to\s+)?([A-Z][\w&.' -]{2,40}?)(?=[,.\n]|\s+at\b|$)/;
 
 function amountOf(match: RegExpExecArray): string {
@@ -104,7 +112,10 @@ function quantityNear(name: string, unit: string | undefined, rest: string): num
     .filter((word) => word.length >= 3)
     .map((word) => word.toLowerCase().slice(0, Math.max(3, word.length - 1)));
   for (const stem of stems) {
-    const found = new RegExp(`\\b(\\d{1,3})\\s+(?:[a-z-]+\\s+){0,2}?${stem}`, "i").exec(rest);
+    const found = new RegExp(
+      `\\b(\\d{1,3})\\s+(?!${MEASURES}\\b)(?:[a-z-]+\\s+){0,2}?${stem}`,
+      "i",
+    ).exec(rest);
     if (found) return Number(found[1]);
   }
   return 1;
@@ -114,6 +125,7 @@ function itemAt(text: string, match: RegExpExecArray): ModelItem | null {
   const start = match.index;
   const [from, to] = clauseBounds(text, start, start + match[0].length);
   const clause = text.slice(from, to).replace(SPEAKER, "");
+  if (SUMMARY_LINE.test(clause)) return null;
   const priceAt = clause.indexOf(match[0]);
   const after = clause.slice(priceAt + match[0].length);
   const before = withoutConnectors(clause.slice(0, priceAt));
@@ -152,21 +164,63 @@ function dueDateIn(text: string, today: string): string | null {
   return stated?.[1] ?? null;
 }
 
-function clientIn(text: string): string {
-  return NAMED_COMPANY.exec(text)?.[1].trim() ?? BILLED_TO.exec(text)?.[1].trim() ?? "";
+interface ClientReading {
+  name: string;
+  contactName: string | null;
+}
+
+// The freelancer writes in the chat too, so a speaker who shares the freelancer's name, or its first
+// word, is never the client.
+function isFreelancer(person: string, freelancer: string): boolean {
+  const own = freelancer.trim().toLowerCase();
+  if (own === "") return false;
+  const name = person.trim().toLowerCase();
+  return name === own || name === own.split(/\s+/)[0];
+}
+
+function clientIn(text: string, freelancer: string): ClientReading {
+  const company = speakersOf(text).find(
+    (speaker) => speaker.company !== null && !isFreelancer(speaker.person, freelancer),
+  );
+  if (company?.company) return { name: company.company, contactName: company.person };
+  const named = NAMED_COMPANY.exec(text)?.[1].trim() ?? BILLED_TO.exec(text)?.[1].trim() ?? "";
+  return { name: named, contactName: null };
+}
+
+// The sentence around the match, so the notice can quote what the client wrote.
+function sentenceAround(text: string, at: number, length: number): string {
+  const start = Math.max(...[".", "?", "!", "\n"].map((mark) => text.lastIndexOf(mark, at))) + 1;
+  const after = text.slice(at + length).search(/[.?!\n]/);
+  const stop = after < 0 ? text.length : at + length + after + 1;
+  return text.slice(start, stop).replace(SPEAKER, "").trim();
+}
+
+function paymentTermsIn(text: string): ModelDraft["paymentTerms"] {
+  const found = UPFRONT.exec(text);
+  if (!found) return null;
+  const percent = found[2] ? 50 : Number(found[1]);
+  return {
+    upfrontPercent: percent,
+    note: null,
+    quote: sentenceAround(text, found.index, found[0].length),
+  };
 }
 
 // Dueline's stand-in for the model when it runs offline. It reads the masked chat the same way the
 // model would see it and returns the same shape, so every check in code still applies to it.
-export function offlineModelDraft(masked: string, today: string): ModelDraft {
+export function offlineModelDraft(rawMasked: string, today: string, freelancer = ""): ModelDraft {
+  const masked = stripChatPrefixes(rawMasked);
   const items = [...masked.matchAll(PRICE)]
     .map((match) => itemAt(masked, match))
     .filter((item): item is ModelItem => item !== null);
   const currency = CURRENCIES.find(([marker]) => marker.test(masked))?.[1] ?? null;
   const purpose = PURPOSE_RULES.find(({ pattern }) => pattern.test(masked));
 
+  const client = clientIn(masked, freelancer);
+
   return {
-    clientName: clientIn(masked),
+    clientName: client.name,
+    clientContactName: client.contactName,
     clientEmail: /\[EMAIL_\d+\]/.exec(masked)?.[0] ?? null,
     clientCountry: null,
     countryQuote: null,
@@ -176,5 +230,6 @@ export function offlineModelDraft(masked: string, today: string): ModelDraft {
     note: null,
     purposeCode: purpose?.code ?? null,
     purposeReason: purpose?.reason ?? null,
+    paymentTerms: paymentTermsIn(masked),
   };
 }

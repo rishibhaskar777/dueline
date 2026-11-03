@@ -422,10 +422,15 @@ test.describe("New invoice", () => {
     expect(fee + conversion).toBe(total);
   });
 
-  test("the paste box shows an example and says what is hidden from the AI", async ({ page }) => {
+  test("the paste box asks for a chat in one line and says what is hidden from the AI", async ({
+    page,
+  }) => {
     await page.goto("/invoices/new");
     const box = page.getByRole("textbox", { name: "Client chat" });
-    expect(await box.getAttribute("placeholder")).toContain("\n");
+    await expect(box).toHaveAttribute(
+      "placeholder",
+      "Paste the chat here, for example from WhatsApp or email",
+    );
     await expect(
       page.getByText("Emails and phone numbers are hidden before the AI reads it"),
     ).toBeVisible();
@@ -633,5 +638,20 @@ test.describe("Account menu", () => {
     await page.getByRole("menuitem", { name: "Profile" }).click();
     await expect(page).toHaveURL(/\/profile$/);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  });
+});
+
+test.describe("Draft invoice hint", () => {
+  test("explains the greyed button while the box is empty and goes once there is a chat", async ({
+    page,
+  }) => {
+    await page.goto("/invoices/new");
+    const draft = page.getByRole("button", { name: "Draft invoice" });
+    await expect(draft).toBeDisabled();
+    await expect(draft).toHaveAccessibleDescription("Paste a chat or use the sample to start");
+
+    await page.getByRole("button", { name: "Use a sample chat" }).click();
+    await expect(draft).toBeEnabled();
+    await expect(page.getByText("Paste a chat or use the sample to start")).toHaveCount(0);
   });
 });

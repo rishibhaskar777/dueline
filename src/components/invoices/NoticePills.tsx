@@ -1,13 +1,15 @@
+import type { PaymentTerms } from "@/types";
 import { cn } from "@/lib/utils";
 import { NOTICE_CLASSES, noticePills } from "./notice-pills";
 
 interface NoticePillsProps {
   notice: string | null;
   warnings: string[];
+  paymentTerms: PaymentTerms | null;
 }
 
-export function NoticePills({ notice, warnings }: NoticePillsProps) {
-  const pills = noticePills(notice, warnings);
+export function NoticePills({ notice, warnings, paymentTerms }: NoticePillsProps) {
+  const pills = noticePills(notice, warnings, paymentTerms);
   if (pills.length === 0) return null;
   return (
     <section aria-label="Notes on this draft">

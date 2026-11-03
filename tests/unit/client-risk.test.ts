@@ -52,7 +52,7 @@ describe("getClientRisk", () => {
       invoicesConsidered: 0,
       lateCount: 0,
       averageDaysLate: 0,
-      level: "reliable",
+      level: "new",
       suggestion: null,
       reason: "No earlier invoices to this client.",
     });

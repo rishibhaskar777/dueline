@@ -137,6 +137,14 @@ export function createMemoryStore(): Store {
       clientLanguages.set(clientKey, language);
     },
 
+    async hasClientLanguage(clientKey): Promise<boolean> {
+      return clientLanguages.has(clientKey);
+    },
+
+    async clearClientLanguages(): Promise<void> {
+      clientLanguages.clear();
+    },
+
     async addQueueItem(item): Promise<boolean> {
       if (queue.has(item.id)) return false;
       queue.set(item.id, item);

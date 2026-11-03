@@ -320,6 +320,7 @@ describe("extractInvoiceDraft offline", () => {
     expect(result.draft.client).toEqual({
       name: "Halden Coffee Co.",
       email: "mike@haldencoffee.example",
+      contactName: "Mike",
     });
     expect(result.draft.items.map((item) => [item.quantity, item.unitAmount])).toEqual([
       [3, "120.00"],

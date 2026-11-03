@@ -11,6 +11,7 @@ export interface ReminderDraft {
   suggestedTone: Tone;
   reason: string;
   language: ReminderLanguage;
+  languageSuggestion: ReminderLanguage | null;
   subject: string;
   message: string;
   source: "ai" | "template";

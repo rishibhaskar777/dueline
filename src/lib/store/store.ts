@@ -82,6 +82,10 @@ export interface Store {
   // The language reminders to this client are written in; English until one is saved.
   getClientLanguage(clientKey: string): Promise<ReminderLanguage>;
   saveClientLanguage(clientKey: string, language: ReminderLanguage): Promise<void>;
+  // Whether a language was saved for the client, as opposed to the English default.
+  hasClientLanguage(clientKey: string): Promise<boolean>;
+  // Forgets every saved language, so the demo can offer its suggestion again after a reset.
+  clearClientLanguages(): Promise<void>;
 
   // Queue items stay until they are removed. An item whose ID is already there is not added twice.
   addQueueItem(item: QueueItem): Promise<boolean>;

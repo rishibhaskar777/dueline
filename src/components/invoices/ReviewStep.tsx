@@ -19,7 +19,7 @@ import { SendResult } from "@/components/invoices/SendResult";
 import { StepHeader } from "@/components/invoices/StepHeader";
 import { useFormReferences } from "@/components/invoices/use-form-references";
 import { useSubmitInvoice } from "@/components/invoices/use-submit-invoice";
-import type { ClientRisk, Profile } from "@/types";
+import type { ClientRisk, PaymentTerms, Profile } from "@/types";
 
 const SECTION = "surface p-[26px] [--h2-size:24px] [--surface-radius:24px]";
 
@@ -29,6 +29,7 @@ interface ReviewStepProps {
     warnings: string[];
     notice: string | null;
     risk: ClientRisk | null;
+    paymentTerms: PaymentTerms | null;
   };
   profile: Profile | null;
   onCreateAnother: () => void;
@@ -59,7 +60,11 @@ export function ReviewStep({ initial, profile, onCreateAnother }: ReviewStepProp
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-5">
       <StepHeader state="review" />
-      <NoticePills notice={initial.notice} warnings={initial.warnings} />
+      <NoticePills
+        notice={initial.notice}
+        warnings={initial.warnings}
+        paymentTerms={initial.paymentTerms}
+      />
       <form
         onSubmit={submit}
         noValidate

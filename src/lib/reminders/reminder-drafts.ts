@@ -11,6 +11,7 @@ import { getStore } from "@/lib/store";
 import type { Profile, ReminderDraft, ReminderLanguage, Tone } from "@/types";
 import { cachedReminderText, draftReminderText } from "./draft-reminder";
 import { factsOf } from "./facts";
+import { languageSuggestionFor } from "./country-language";
 import { assertRemindable, isRemindable } from "./overdue";
 import { withSignOff } from "./sign-off";
 import { templateReminder } from "./templates";
@@ -47,6 +48,12 @@ function languageOf(
     : getStore().getClientLanguage(clientKey(loaded.summary.client.name));
 }
 
+// Offered while the freelancer has not chosen a language for the client and their country suggests one.
+async function suggestionOf({ loaded }: Context): Promise<ReminderLanguage | null> {
+  const { name, country } = loaded.summary.client;
+  return languageSuggestionFor(country, await getStore().hasClientLanguage(clientKey(name)));
+}
+
 // Without a tone the draft is in the suggested one. A draft that calls the model is the finished
 // answer; `pending` is only for the quick draft that has not asked the model yet.
 async function draftFor(
@@ -55,9 +62,10 @@ async function draftFor(
   options: DraftOptions,
 ): Promise<ReminderDraft> {
   const { loaded, lateness, profile } = context;
-  const [history, language] = await Promise.all([
+  const [history, language, languageSuggestion] = await Promise.all([
     historyOf(loaded.summary.id),
     languageOf(context, options.language),
+    suggestionOf(context),
   ]);
   const suggestedTone = suggestTone(loaded.summary.daysLate, history, lateness?.level ?? null);
   const chosen = tone ?? suggestedTone;
@@ -75,6 +83,7 @@ async function draftFor(
     suggestedTone,
     reason: toneReason(suggestedTone, loaded.summary.daysLate, history.length, lateness),
     language,
+    languageSuggestion,
     subject: text.subject,
     message: withSignOff(text.message, profile, language),
     source: text.source,
@@ -87,9 +96,10 @@ async function draftFor(
 // screen can ask for a better draft afterwards. It never calls the model.
 async function quickDraftFor(context: Context): Promise<ReminderDraft> {
   const { loaded, lateness, profile } = context;
-  const [history, language] = await Promise.all([
+  const [history, language, languageSuggestion] = await Promise.all([
     historyOf(loaded.summary.id),
     languageOf(context, undefined),
+    suggestionOf(context),
   ]);
   const tone = suggestTone(loaded.summary.daysLate, history, lateness?.level ?? null);
   const facts = factsOf(loaded.summary, loaded.amountDue, history.length);
@@ -104,6 +114,7 @@ async function quickDraftFor(context: Context): Promise<ReminderDraft> {
     suggestedTone: tone,
     reason: toneReason(tone, loaded.summary.daysLate, history.length, lateness),
     language,
+    languageSuggestion,
     subject: text.subject,
     message: withSignOff(text.message, profile, language),
     source: text.source,

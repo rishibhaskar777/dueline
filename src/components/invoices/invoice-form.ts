@@ -25,6 +25,8 @@ export interface FormItem {
 export interface InvoiceForm {
   clientName: string;
   clientEmail: string;
+  // The person at the client, "" when not set.
+  clientContactName: string;
   // ISO country code, "" when not set.
   clientCountry: string;
   currency: CurrencyCode;
@@ -55,6 +57,7 @@ const MAX_QUANTITY = 999;
 const MESSAGES: Record<string, string> = {
   "client.name": "Enter the client's name",
   "client.email": "Enter the client's email address",
+  "client.contactName": "Use a person's name, not an email address",
   dueOn: "Choose a due date",
   items: "Add at least one item",
   "items.*.name": "Enter an item name",
@@ -69,10 +72,11 @@ export function newItem(sac = ""): FormItem {
   return { key: crypto.randomUUID(), name: "", quantity: "1", unitAmount: "", sac };
 }
 
-export function blankForm(defaultSac = ""): InvoiceForm {
+export function blankForm(defaultSac = "", includeLutNote = false): InvoiceForm {
   return {
     clientName: "",
     clientEmail: "",
+    clientContactName: "",
     clientCountry: "",
     currency: "USD",
     dueOn: "",
@@ -80,18 +84,19 @@ export function blankForm(defaultSac = ""): InvoiceForm {
     note: "",
     purposeCode: null,
     purposeReason: "",
-    includeLutNote: false,
+    includeLutNote,
     discountOn: false,
     discountPercent: DEFAULT_DISCOUNT_PERCENT,
     discountDays: DEFAULT_DISCOUNT_DAYS,
   };
 }
 
-export function formFromDraft(draft: InvoiceDraft): InvoiceForm {
+export function formFromDraft(draft: InvoiceDraft, includeLutNote = false): InvoiceForm {
   return {
     ...blankForm(),
     clientName: draft.client.name,
     clientEmail: draft.client.email,
+    clientContactName: draft.client.contactName ?? "",
     clientCountry: draft.client.country ?? "",
     currency: draft.currency,
     dueOn: draft.dueOn ?? "",
@@ -106,8 +111,14 @@ export function formFromDraft(draft: InvoiceDraft): InvoiceForm {
     note: draft.note ?? "",
     purposeCode: draft.purposeCode,
     purposeReason: draft.purposeReason ?? "",
-    includeLutNote: draft.includeLutNote,
+    includeLutNote: draft.includeLutNote || includeLutNote,
   };
+}
+
+// A registered exporter sends nearly every invoice under LUT, and one sent without the line implies
+// IGST is due. So the line starts ticked when the profile has an ARN and the LUT has not run out.
+export function lutIsCurrent(profile: Profile | null, today: string): boolean {
+  return Boolean(profile?.lutArn && profile.lutValidUntil && profile.lutValidUntil >= today);
 }
 
 export type LutIssue = "missing_arn" | "expired";
@@ -213,6 +224,7 @@ export function toRequest(form: InvoiceForm, requestId: string, today?: string):
         name: form.clientName.trim(),
         email: form.clientEmail.trim(),
         ...(form.clientCountry ? { country: form.clientCountry } : {}),
+        ...(form.clientContactName.trim() ? { contactName: form.clientContactName.trim() } : {}),
       },
       currency: form.currency,
       dueOn: form.dueOn,
@@ -261,6 +273,7 @@ export function formFromInvoice(
     ...blankForm(defaultSac),
     clientName: invoice.client.name,
     clientEmail: invoice.client.email,
+    clientContactName: invoice.client.contactName ?? "",
     clientCountry: invoice.client.country ?? "",
     currency: invoice.amount.currency,
     items: details.items.map((item) => ({

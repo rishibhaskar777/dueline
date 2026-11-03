@@ -18,6 +18,7 @@ function checked(items: ModelDraft["items"], purposeCode: string | null) {
   const raw: ModelDraft = {
     clientName: "Kraftwerk Studio",
     clientEmail: null,
+    clientContactName: null,
     clientCountry: null,
     countryQuote: null,
     currency: "EUR",
@@ -26,6 +27,7 @@ function checked(items: ModelDraft["items"], purposeCode: string | null) {
     note: null,
     purposeCode,
     purposeReason: "Brand identity work is advertising.",
+    paymentTerms: null,
   };
   return checkModelDraft(raw, { chat, contacts: maskContacts(chat), today: TODAY }).draft;
 }

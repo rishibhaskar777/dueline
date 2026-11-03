@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { InvoiceList } from "@/components/clients/InvoiceList";
+import { LanguageSuggestion } from "@/components/shared/LanguageSuggestion";
 import { LoadFailure } from "@/components/shared/LoadFailure";
 import { RiskBadge } from "@/components/shared/RiskBadge";
 import { SkeletonBlock } from "@/components/shared/SkeletonBlock";
@@ -16,6 +17,7 @@ import { formatDays, wholeDays } from "@/lib/format-days";
 import { formatRupees } from "@/lib/money/format";
 import { displayEmail } from "@/lib/sandbox-buyer";
 import { cn } from "@/lib/utils";
+import type { ReminderLanguage } from "@/types";
 import { ClientAvatar } from "./ClientAvatar";
 import { ClientNotes } from "./ClientNotes";
 import { ClientRepeats } from "./ClientRepeats";
@@ -42,6 +44,8 @@ export function ClientScreen({ clientKey }: { clientKey: string }) {
   const load = useCallback(() => getClientDetail(clientKey), [clientKey]);
   const { state, reload } = useLoad(load);
   const today = useToday();
+  // The language the freelancer picked from the suggestion, until the page is loaded again.
+  const [picked, setPicked] = useState<ReminderLanguage | null>(null);
 
   if (state.kind === "loading") return <SkeletonBlock className="h-96" />;
   if (state.kind === "error") {
@@ -52,7 +56,8 @@ export function ClientScreen({ clientKey }: { clientKey: string }) {
     );
   }
 
-  const { client, invoices, risk, notes, language, merged } = state.data;
+  const { client, invoices, risk, notes, merged, languageSuggestion } = state.data;
+  const language = picked ?? state.data.language;
   return (
     <div className="grid gap-5">
       <Link href="/clients" className="w-fit text-[15px] font-semibold text-link underline">
@@ -91,6 +96,15 @@ export function ClientScreen({ clientKey }: { clientKey: string }) {
         </Link>
       </header>
       <ReasonStrip level={client.riskLevel} risk={risk} />
+      {languageSuggestion && picked === null && (
+        <LanguageSuggestion
+          clientKey={client.key}
+          clientName={client.name}
+          country={client.country}
+          suggestion={languageSuggestion}
+          onChosen={setPicked}
+        />
+      )}
       <dl aria-label="Client totals" className="grid gap-4 lg:grid-cols-3">
         <TotalCard
           label="Billed"
@@ -111,7 +125,7 @@ export function ClientScreen({ clientKey }: { clientKey: string }) {
       </dl>
       <InvoiceList invoices={invoices} today={today} />
       <div className="grid items-start gap-4 lg:grid-cols-2">
-        <ReminderLanguageCard clientKey={client.key} initial={language} />
+        <ReminderLanguageCard key={language} clientKey={client.key} initial={language} />
         <ClientRepeats clientKey={client.key} />
       </div>
       <ClientNotes clientKey={client.key} initial={notes} />

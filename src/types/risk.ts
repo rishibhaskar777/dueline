@@ -1,4 +1,4 @@
-export type RiskLevel = "reliable" | "watch" | "late_payer";
+export type RiskLevel = "new" | "reliable" | "watch" | "late_payer";
 
 export interface ClientRisk {
   clientEmail: string;

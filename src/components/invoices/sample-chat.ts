@@ -4,7 +4,4 @@ export const SAMPLE_CHAT = [
   "Mike: Works for us. Can you get it to us by Friday the 30th? Send the invoice to mike@haldencoffee.example",
 ].join("\n");
 
-export const CHAT_PLACEHOLDER = [
-  "Maya: Can you do 3 logo options at $120 each, due in 14 days?",
-  "Riya: Yes. I'll invoice maya@client.example today.",
-].join("\n");
+export const CHAT_PLACEHOLDER = "Paste the chat here, for example from WhatsApp or email";

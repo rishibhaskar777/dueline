@@ -37,7 +37,7 @@ function expectedOf(id: string): ExpectedExtraction {
 function outcomeFor(id: string): ExtractionOutcome {
   const chat = chatOf(id);
   const contacts = maskContacts(chat);
-  const { draft, warnings } = checkModelDraft(modelDraftSchema.parse(answers[id]), {
+  const { draft, warnings, paymentTerms } = checkModelDraft(modelDraftSchema.parse(answers[id]), {
     chat,
     contacts,
     today: TODAY,
@@ -46,6 +46,7 @@ function outcomeFor(id: string): ExtractionOutcome {
   return {
     draft: draft.items.length > 0 ? draft : null,
     warnings,
+    paymentTerms,
     sent: `${system}\n${prompt}`,
   };
 }
@@ -59,8 +60,8 @@ describe("the chat fixtures", () => {
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name);
 
-  it("hold 26 chats that each have an expected answer", () => {
-    expect(ids).toHaveLength(26);
+  it("hold 27 chats that each have an expected answer", () => {
+    expect(ids).toHaveLength(27);
     for (const id of ids) {
       expect(() => expectedOf(id), id).not.toThrow();
       expect(chatOf(id).length, id).toBeLessThanOrEqual(6000);
@@ -131,6 +132,39 @@ describe("scoreExtraction", () => {
       contacts: true,
     });
     expect(scoreOf("01-logo-pack").passed).not.toHaveProperty("purpose");
+  });
+
+  it("checks the upfront share and the contact person only for a chat that has them", () => {
+    expect(scoreOf("27-whatsapp-upfront").passed).toEqual({
+      client: true,
+      currency: true,
+      purpose: true,
+      items: true,
+      prices: true,
+      due: true,
+      warnings: true,
+      contacts: true,
+      upfront: true,
+      person: true,
+    });
+    expect(scoreOf("01-logo-pack").passed).not.toHaveProperty("upfront");
+    expect(scoreOf("01-logo-pack").passed).not.toHaveProperty("person");
+  });
+
+  it("fails the upfront check when the share is missed and the person when it is another", () => {
+    const outcome = outcomeFor("27-whatsapp-upfront");
+    const missed = {
+      ...outcome,
+      paymentTerms: null,
+      draft: outcome.draft && {
+        ...outcome.draft,
+        client: { ...outcome.draft.client, contactName: "Riya" },
+      },
+    };
+    const score = scoreExtraction(expectedOf("27-whatsapp-upfront"), missed, TODAY);
+    expect(score.passed).toMatchObject({ upfront: false, person: false });
+    expect(score.misses).toContain("upfront: expected 50%, got none");
+    expect(score.misses).toContain('person: expected "Lena Fischer", got "Riya"');
   });
 
   it("fails the purpose check when the code is not the expected one", () => {
@@ -269,7 +303,7 @@ describe("tally and renderEvaluation", () => {
     expect(report).toContain("| Items exactly right | 1 of 2 | 50% |");
     expect(report).toContain("| Injection flagged | 0 of 0 | n/a |");
     expect(report).toContain(
-      "| 01-logo-pack | pass | pass | n/a | pass | pass | pass | pass | n/a | n/a | pass |",
+      "| 01-logo-pack | pass | pass | n/a | pass | pass | pass | pass | n/a | n/a | pass | n/a | n/a |",
     );
     expect(report).toContain("| 13-hinglish-logo | pass | pass | n/a | FAIL | pass |");
     expect(report).toContain("| 99-not-run | not run: the allowance is used up |");

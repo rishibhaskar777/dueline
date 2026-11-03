@@ -56,7 +56,7 @@ const PAID_INVOICES: PaidInvoice[] = [
     work: "Onboarding screens",
     amount: { currency: "USD", value: "1150.00" },
     purposeCode: "P1099",
-    underLut: false,
+    underLut: true,
     daysFromDue: 4,
     paidOnDay: 21,
   },

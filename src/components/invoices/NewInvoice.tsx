@@ -1,20 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { blankForm, formFromDraft, type InvoiceForm } from "@/components/invoices/invoice-form";
+import {
+  blankForm,
+  formFromDraft,
+  lutIsCurrent,
+  type InvoiceForm,
+} from "@/components/invoices/invoice-form";
 import { PasteStep, type Drafted } from "@/components/invoices/PasteStep";
 import { ReviewStep } from "@/components/invoices/ReviewStep";
 import { StepHeader } from "@/components/invoices/StepHeader";
 import { useProfile } from "@/components/profile/use-profile";
+import { useLoad } from "@/components/shared/use-load";
+import { getHealth } from "@/lib/api-client";
 import { useStepFocus } from "@/components/invoices/step-focus";
 import { usePrefill, type Prefill } from "@/components/invoices/use-prefill";
-import type { ClientRisk } from "@/types";
+import type { ClientRisk, PaymentTerms } from "@/types";
 
 interface Review {
   form: InvoiceForm;
   warnings: string[];
   notice: string | null;
   risk: ClientRisk | null;
+  paymentTerms: PaymentTerms | null;
 }
 
 export function NewInvoice({ prefill }: { prefill: Prefill }) {
@@ -22,17 +30,24 @@ export function NewInvoice({ prefill }: { prefill: Prefill }) {
   const [review, setReview] = useState<Review | null>(null);
   // A new form gets a new request ID, so a counter remounts the review step.
   const [formNumber, setFormNumber] = useState(0);
-  const profileReady = profile !== null || profileError !== null;
-  const prefilled = usePrefill(prefill, profile?.defaultSac ?? "", profileReady);
+  const { state: health } = useLoad(getHealth);
+  const today = health.kind === "ready" ? health.data.today : "";
+  // Both are needed to start the form: the default SAC and whether the LUT line starts ticked.
+  const profileReady = (profile !== null || profileError !== null) && health.kind !== "loading";
+  const includeLutNote = lutIsCurrent(profile, today);
+  const prefilled = usePrefill(prefill, profile?.defaultSac ?? "", includeLutNote, profileReady);
 
   useStepFocus(review || prefilled.kind !== "ready" || prefilled.review ? "review" : "paste");
 
-  function onDrafted({ draft, warnings, notice, risk }: Drafted) {
+  function onDrafted({ draft, warnings, notice, risk, paymentTerms }: Drafted) {
     setReview({
-      form: draft ? formFromDraft(draft) : blankForm(profile?.defaultSac ?? ""),
+      form: draft
+        ? formFromDraft(draft, includeLutNote)
+        : blankForm(profile?.defaultSac ?? "", includeLutNote),
       warnings,
       notice,
       risk,
+      paymentTerms,
     });
     setFormNumber((number) => number + 1);
   }

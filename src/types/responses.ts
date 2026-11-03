@@ -1,7 +1,7 @@
 import type { LibraryItem, QueueItem, RepeatSchedule, TriggeredRateAlert } from "./automation";
 import type { ClientSummary } from "./clients";
 import type { ActivityEvent } from "./activity";
-import type { InvoiceDraft, InvoiceSummary, Totals } from "./invoice";
+import type { InvoiceDraft, InvoiceSummary, PaymentTerms, Totals } from "./invoice";
 import type { PurposeCode } from "./export";
 import type { ReminderDraft, ReminderLanguage } from "./reminder";
 import type { ClientRisk } from "./risk";
@@ -17,6 +17,7 @@ export interface ExtractResponse {
   draft: InvoiceDraft;
   warnings: string[];
   risk: ClientRisk | null;
+  paymentTerms: PaymentTerms | null;
   masked: { emails: number; phones: number };
 }
 

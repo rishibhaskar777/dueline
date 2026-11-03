@@ -312,3 +312,56 @@ describe("a client's reminder language", () => {
     expect(missing.status).toBe(404);
   });
 });
+
+describe("the language suggestion on a client page", () => {
+  async function detail() {
+    return (
+      await getClient(call("/api/clients/by-key/okafor-reyes"), keyContext("okafor-reyes"))
+    ).json();
+  }
+
+  function clientIn(country: string) {
+    const summary = overdueInvoice("2026-10-26", 10, { ...OKAFOR, country });
+    paypal.loadInvoices.mockResolvedValue([
+      {
+        summary,
+        amountDue: summary.amount,
+        underLut: false,
+        sac: null,
+        paymentId: null,
+        marker: "dueline-request:test",
+      },
+    ]);
+  }
+
+  it("offers Portuguese to a client in Portugal until the freelancer chooses", async () => {
+    clientIn("PT");
+    expect(await detail()).toMatchObject({ language: "en", languageSuggestion: "pt" });
+
+    await putLanguage(
+      call("/api/clients/by-key/okafor-reyes/language", {
+        method: "PUT",
+        body: { language: "pt" },
+      }),
+      keyContext("okafor-reyes"),
+    );
+    expect(await detail()).toMatchObject({ language: "pt", languageSuggestion: null });
+  });
+
+  it("stops offering after Keep English, which is saved as English", async () => {
+    clientIn("PT");
+    await putLanguage(
+      call("/api/clients/by-key/okafor-reyes/language", {
+        method: "PUT",
+        body: { language: "en" },
+      }),
+      keyContext("okafor-reyes"),
+    );
+    expect(await detail()).toMatchObject({ language: "en", languageSuggestion: null });
+  });
+
+  it("offers nothing to a client in the US", async () => {
+    clientIn("US");
+    expect(await detail()).toMatchObject({ language: "en", languageSuggestion: null });
+  });
+});

@@ -32,6 +32,15 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- New invoice: the empty chat box asks for a chat in one line, and the greyed Draft invoice button says "Paste a chat or use the sample to start".
+- New invoice: a client who asks for "50% now" or other payment terms gets an amber notice with their own words. The terms are a notice only; nothing on the invoice changes.
+- New invoice: Export under LUT starts ticked when the profile has a LUT ARN that has not run out, and the demo's offline paid invoices are all under LUT.
+- Late-payer radar: a client with 0 or 1 paid or overdue invoices and none late is "New" ("Paid on time once.") instead of "Reliable"; Reliable needs 2. The demo's Halden Coffee Co. is Reliable.
+- Reminders: a client in Portugal, Brazil, Germany, Austria, Switzerland, France, Luxembourg, Spain, Mexico, Argentina, Colombia, Chile, Peru or the Netherlands is offered reminders in their language on the client page and on Nudges, with "Use Portuguese" and "Keep English" style buttons; either answer is saved and ends the question.
+- Reminders: a firm or final draft always says when the invoice was due and how many days overdue it is, and greets the contact by first name ("Hi Lena,") when the invoice has one. New invoice has a Contact name field that goes to PayPal as the recipient's name, and the demo's clients have contacts.
+- New invoice: the green privacy pill shows only when an email or phone number was hidden.
+- Features: a first group, "Draft in seconds", for chat to invoice, the seven reminder languages and the item library.
+- Offline drafting reads WhatsApp exports (iOS and Android lines) and takes the company in brackets as the client and the person as the contact; the AI sees the chat without the date prefixes.
 - Faster first load: the PayPal invoices are kept in a stored snapshot that is refreshed in the background, so Home and Nudges fill in about a second after the demo has been idle. A page asks once for the profile, the invoices and the demo buyer, draws each part as it arrives, and shows its last answer when opened again until you change something or lock the demo. Due and late states are worked out on every read, so a snapshot from yesterday is right today. "Updating from PayPal…" shows while a snapshot older than five minutes is being replaced.
 - A full site footer, and sandbox wording that explains what judges can do.
 - The demo story keeps something due soon on every day of its seven-day life (Tandem Health is now due in 7 days at the start), and a test checks it for 1 to 15 December.

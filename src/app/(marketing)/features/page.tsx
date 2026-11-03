@@ -6,7 +6,7 @@ import { PageIntro } from "@/components/site/PageIntro";
 export const metadata: Metadata = {
   title: "Features",
   description:
-    "Rupee truth, a cash forecast, a late-payer radar, reminders in the right tone, purpose codes and a register that matches PayPal's FIRA and your bank's FIRC.",
+    "Invoices drafted from a chat, reminders in your client’s language, rupee truth, a cash forecast, a late-payer radar, reminders in the right tone, purpose codes and a register that matches PayPal's FIRA and your bank's FIRC.",
 };
 
 interface Group {
@@ -16,6 +16,27 @@ interface Group {
 }
 
 const GROUPS: Group[] = [
+  {
+    title: "Draft in seconds",
+    tone: "amber",
+    items: [
+      {
+        mark: "→",
+        title: "Chat to invoice",
+        body: "Paste a WhatsApp or email chat. The AI drafts every line and quotes the words it came from; every number is checked in code.",
+      },
+      {
+        mark: "7",
+        title: "Seven languages",
+        body: "Reminders drafted in English, Hindi, German, French, Spanish, Dutch or Portuguese, with a tone check before you send.",
+      },
+      {
+        mark: "+",
+        title: "Your item library",
+        body: "Save lines you bill often and add them in one click.",
+      },
+    ],
+  },
   {
     title: "Know your rupees",
     tone: "blue",

@@ -32,7 +32,11 @@ describe("toInvoiceSummary", () => {
     expect(toInvoiceSummary(unpaid, TODAY, null)).toEqual({
       id: "INV2-TEST-0001-AAAA-BBBB",
       number: "INV-0101",
-      client: { name: "Tandem Health", email: "buyer@personal.example.com" },
+      client: {
+        name: "Tandem Health",
+        email: "buyer@personal.example.com",
+        contactName: "Jordan Lee",
+      },
       work: "Pitch deck design",
       amount: { currency: "USD", value: "900.00" },
       issuedOn: "2026-10-09",
