@@ -71,7 +71,7 @@ export function SiteFooter() {
             >
               <Wordmark />
             </Link>
-            <p className="text-[15px] text-muted-foreground">
+            <p className="text-[15px] text-balance text-muted-foreground">
               Get paid from abroad. Without chasing.
             </p>
             <p className="btn-secondary rounded-full px-[13px] py-[7px] text-[13px] font-bold text-muted-foreground">

@@ -120,7 +120,7 @@ export default function BuiltOnPayPalPage() {
           aria-labelledby="reminders-title"
           className="surface flex flex-col gap-2.5 p-8 [--h2-size:24px] [--surface-radius:30px]"
         >
-          <h2 id="reminders-title">An honest note on reminders</h2>
+          <h2 id="reminders-title">Two ways to remind a client</h2>
           <p className="text-[17px] leading-relaxed text-muted-foreground">
             PayPal sends its own reminder wording, whatever message we pass. So Nudges gives you two
             buttons: send PayPal’s reminder, or send the message Dueline drafted from your own

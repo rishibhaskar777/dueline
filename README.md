@@ -75,7 +75,7 @@ month.
 - **The paperwork is manual.** Export of services needs a purpose code per payment, a LUT line on
   the invoice, and PayPal's monthly FIRA or a bank FIRC matched to every payment for the CA.
 
-## What Dueline does
+## What Dueline Does
 
 | Feature              | What it does                                                                                                           | Where                           |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
@@ -100,7 +100,7 @@ month.
   </tr>
 </table>
 
-## How it works
+## How It Works
 
 ### PayPal
 
@@ -206,7 +206,7 @@ client column on narrower screens.
 | Tests      | Vitest, Playwright, axe                                                |
 | CI         | GitHub Actions, CodeQL, Dependabot                                     |
 
-## Design and accessibility
+## Design and Accessibility
 
 - A complete product, not a prototype: a public website, a demo sign-in, and ten app screens in one design language.
 - Light and dark themes, with 4.5:1 text contrast checked by a unit test.
@@ -226,7 +226,7 @@ client column on narrower screens.
 | Access           | Demo password with a signed session and sign-in limits                                               |
 | Safety           | Verified webhooks, idempotent writes, a strict Content Security Policy, no secrets in the repository |
 
-## Run it yourself
+## Run It Yourself
 
 **Offline mode, no accounts or keys.** PayPal and the AI are simulated, so every screen works.
 
@@ -269,13 +269,13 @@ npm run dev
 
 </details>
 
-## Built During The Hackathon
+## Built During the Hackathon
 
 Dueline was started on 29 Oct 2026, inside the PayPal AI Hackathon 2026 submission period, and
 everything in this repository was built for it. The [changelog](CHANGELOG.md) and the
 [decision records](docs/decisions/) follow the work step by step.
 
-## Limits and what is next
+## Limits and What Is Next
 
 **Today:** runs on the PayPal sandbox; one PayPal business account for the demo; rupee figures before payment are
 estimates; purpose codes and GSTR-1 values are suggestions to confirm with a CA.
