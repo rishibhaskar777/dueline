@@ -184,15 +184,44 @@ again (`dueline-request:<id> purpose:P1007`, `paypal/memo.ts`), so the client do
 "Reference no.". `toInvoiceSummary` reads the memo first and falls back to the reference field of
 older invoices.
 
-Two caches keep the receivables page, which polls every 10 seconds, from calling PayPal each time.
-Both are per process:
+### The invoice snapshot
 
-- Full invoices are kept by ID for 10 minutes and reused while the listed status is unchanged. They
-  are read at most 4 at a time.
-- The finished list is kept for 20 seconds, and callers that arrive while it loads share one load.
-  Rupee figures are not part of it, so a change to the settings shows on the next poll.
+PayPal's sandbox answers a full invoice read in about a second, and a function that has just woken
+has nothing in memory. So PayPal's invoices, each with the payout figures found for it, are kept as
+a snapshot in `cache_entries` under `invoices:snapshot:v2` (`paypal/invoice-cache.ts`,
+`paypal/summaries.ts`). The key carries a version that changes with the shape of the value, and a
+stored value that does not parse reads as no snapshot. The snapshot holds no token or credential. Everything that builds on the loaded
+invoices (Receivables, the dashboard, clients, reminders, the export register, the checklist) reads
+it through `loadInvoices()`. See [decision 0024](decisions/0024-invoice-snapshot.md).
 
-`clearInvoiceCaches()` resets both.
+- **Read.** The snapshot is served at once, however old. The loaded invoices (`LoadedInvoice[]`,
+  before rupee figures) are worked out from it on every read with that read's India date, so due
+  states and days late are right on the first read of a new day even if the daily run did not happen;
+  building them for the demo's invoices takes under a millisecond. An instance trusts its own copy
+  for 5 seconds, then looks at the stored one, so a write on another instance shows up quickly. With
+  no snapshot at all the first request builds it.
+- **Refresh.** A snapshot older than 60 seconds starts one refresh with `after()`, behind the
+  response, one at a time per instance. A refresh lists the invoices (one PayPal call) and reads in
+  full only those that are new or whose list entry changed: PayPal's list carries no update time, so
+  the change mark is the status, the amounts, the dates, the memo, the note and the recipient. Every
+  full invoice is kept in `cache_entries` by ID (`invoices:full:v1:<id>`) with its mark, and trusted
+  for 6 hours while the mark holds. A refresh that fails leaves the snapshot as it was and is not
+  retried for 30 seconds. Payouts keep their stored lookup. Invoices PayPal no longer lists (deleted
+  by a demo reset) leave the snapshot and the stored full copies at the next refresh.
+- **Writes and events.** Create, send, cancel, record payment, sending a reminder, the PayPal webhook
+  handler, the demo reset and re-seed and the daily run call `refreshSnapshotNow(ids)`, which waits
+  for a rebuild that reads the named invoices again. The next read is exact. If that rebuild fails,
+  the snapshot is dropped so the next read builds from PayPal. The refresh runs even when the PayPal
+  call itself fails, since the invoice may have changed before the failure. Hiding an invoice in the demo needs no
+  refresh: the hidden list is applied after the snapshot.
+- **Warm.** The daily run rebuilds the snapshot at its start and end. A successful demo sign-in
+  starts `warmInvoiceSnapshot()` with `after()`, so the first screen finds it ready.
+- **Screens.** `GET /api/invoices` also answers `today` and `loadedAt`. Home draws from the invoices
+  alone; the activity and the connection status fill in when they answer. A snapshot older than five
+  minutes shows "Updating from PayPal…" until a newer reading arrives.
+
+`findInvoiceByMemo` and `listInvoicesInFull` skip the snapshot (an invoice made a moment ago must be
+found, drafts and cancelled ones included) but use the same stored full invoices.
 
 ## PayPal token flow
 
