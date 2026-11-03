@@ -1,240 +1,234 @@
+<div align="center">
+
+<img src="docs/media/logo.svg" width="72" height="72" alt="Dueline logo">
+
 # Dueline
 
-**Get paid by clients abroad without chasing them.**
+### Get paid from abroad. Without chasing.
 
-Dueline is for freelancers in India who are paid by clients abroad through PayPal.
+PayPal invoicing, AI drafting and export paperwork for freelancers in India
+who are paid by clients abroad.
+
+[![Live demo](https://img.shields.io/badge/Live_demo-dueline--azure.vercel.app-0A2A7A?style=for-the-badge)](https://dueline-azure.vercel.app)
+[![Demo video](https://img.shields.io/badge/Demo_video-3_minutes-D1322A?style=for-the-badge)](https://www.youtube.com/watch?v=VIDEO_ID)
 
 [![CI](https://github.com/rishibhaskar777/dueline/actions/workflows/ci.yml/badge.svg)](https://github.com/rishibhaskar777/dueline/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Live demo](https://img.shields.io/badge/live%20demo-dueline--azure.vercel.app-0D1B2E.svg)](https://dueline-azure.vercel.app)
+[![License: MIT](https://img.shields.io/badge/license-MIT-1D63F0.svg)](LICENSE)
+![PayPal sandbox](https://img.shields.io/badge/PayPal-Invoicing_v2_·_Webhooks_·_Transactions-0E8A4F.svg)
+![Gemini](https://img.shields.io/badge/AI-Gemini_via_AI_SDK-7C3AED.svg)
+![AG Grid](https://img.shields.io/badge/tables-AG_Grid-E08A00.svg)
+
+**[Try the demo](#for-judges)** · **[Watch the video](https://www.youtube.com/watch?v=VIDEO_ID)** · **[How it works](#how-it-works)** · **[Architecture](#architecture)** · **[Run it locally](#run-it-yourself)**
+
+</div>
+
+<br>
 
 <p align="center">
-  <img src="docs/images/home.webp" alt="Dueline Home in the light theme: this morning's summary, three totals in rupees, the due line with one line per invoice, and what will arrive next." width="100%">
+  <img src="docs/media/story.svg" width="100%" alt="An animated story in four scenes. Riya, a freelance designer in Pune, copies client chats into invoices by hand, cannot tell how many rupees a $900 invoice will bring, avoids chasing a client who is 8 days late, and rebuilds FIRA and FIRC paperwork for her CA every month. Her friend Arjun suggests Dueline. Dueline drafts the PayPal invoice from the chat, shows that about ₹79,221 reaches her bank, flags the late payer with a firm reminder ready, and keeps the monthly export register. Get paid from abroad. Without chasing.">
 </p>
 
-<table>
-  <tr>
-    <td width="33%"><img src="docs/images/new-invoice-review.webp" alt="New invoice, review step: a draft made from a pasted chat, with the words each item came from and what will reach the bank in rupees." width="100%"></td>
-    <td width="33%"><img src="docs/images/nudges.webp" alt="Nudges: a firm reminder drafted for a late client, sent as PayPal's reminder or as your own email." width="100%"></td>
-    <td width="33%"><img src="docs/images/export-register.webp" alt="Export register for October 2026: payments with purpose codes and transaction IDs, matched to PayPal's FIRA and the bank's FIRC." width="100%"></td>
-  </tr>
-</table>
+<p align="center"><sub>The 30-second story above loops. If your browser hides animation, it shows the finished Dueline screen.</sub></p>
 
-The screenshots come from the offline mode (see below), which uses a simulated PayPal.
+## For judges
 
-## Try it in two minutes
+|                          |                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------- |
+| **Live demo**            | [dueline-azure.vercel.app](https://dueline-azure.vercel.app)                    |
+| **Password**             | In the testing instructions of the Devpost submission                           |
+| **No accounts or keys?** | Run the offline mode locally, password `offline` ([steps](#run-it-yourself))    |
+| **Video**                | [3-minute walkthrough on YouTube](https://www.youtube.com/watch?v=VIDEO_ID)     |
+| **PayPal**               | Sandbox only. Every invoice goes to a PayPal sandbox buyer. No real money moves |
+| **Built**                | Entirely during the hackathon, from 29 Oct 2026 ([changelog](CHANGELOG.md))     |
 
-Open the live demo: **https://dueline-azure.vercel.app**
+**A two-minute path through every feature**
 
-The password is in the testing instructions of the Devpost submission. Everything runs on the PayPal
-sandbox, so no real money moves, and every invoice goes to a PayPal sandbox buyer only.
+1. **Home.** Each invoice is a line from the day it was sent to the day it was paid. Late ones turn red.
+2. **Clients behind.** Open a late client to see how often they paid late and the tone Dueline suggests.
+3. **New invoice → Use a sample chat → Draft invoice.** Every line quotes the chat, and the summary shows the rupees that reach the bank.
+4. **Nudges.** Switch Gentle, Firm and Final, then Preview. Nothing is sent until you press a button.
+5. **Export register.** Go to the previous month and download the CSV for a CA.
+6. **Account menu → Fees and rates.** What a $1,000 invoice really pays after PayPal's fee and conversion.
+7. **Account menu → Demo tools → Reset the demo.** Rebuilds the story with dates counted back from today.
 
-A path that shows each main feature:
+**Where to find each judging criterion**
 
-1. **Home.** Read the due line: each invoice is one line from the day it was sent to the day it was
-   paid, and late ones stand out in red.
-2. **Open a late client** under "Clients behind". See how often they paid late and the reminder tone
-   Dueline suggests.
-3. **New invoice.** Choose "Use a sample chat", then "Draft invoice". Read the words each item came
-   from and the rupees that will reach your bank. Use "Send to the demo buyer" if you send it.
-4. **Nudges.** Switch the tone between gentle, firm and final, then choose "Preview" on the email.
-   Nothing is sent until you press a button.
-5. **Export register.** Go to the previous month and choose "Download CSV for your CA".
-6. **Fees and rates** (account menu). Try the calculator: what a $1,000 invoice pays after PayPal's
-   fee and conversion.
-7. **Demo tools** (account menu), then "Reset the demo". It rebuilds the story with dates counted
-   back from today.
-
-To run it on your own computer with no accounts and no keys, use the offline mode
-([how](#run-it-yourself)). Its password is `offline`.
+| Criterion                    | Where it shows                                                                                                                                                  |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Technological implementation | [PayPal](#paypal) (thirteen API calls and verified webhooks), [AI](#ai) (masked input, checks in code, a measured evaluation), [quality](#quality-and-security) |
+| Design                       | [Screens](#what-dueline-does), [design and accessibility](#design-and-accessibility)                                                                            |
+| Potential impact             | [The problem](#the-problem) and what reaches the bank on a real $1,000 invoice                                                                                  |
+| Innovation                   | The due line, rupees before sending, quote-checked AI drafts, a two-channel reminder                                                                            |
+| Presentation                 | [The 3-minute video](https://www.youtube.com/watch?v=VIDEO_ID) and the animations in this README                                                                |
 
 ## The problem
 
-PayPal India's published fees for international commercial payments are 4.40% plus a fixed fee (USD
-0.30), and PayPal adds a 3.0% markup over the base exchange rate when it converts the money to
-rupees ([PayPal India fees](https://www.paypal.com/in/webapps/mpp/merchant-fees), checked on 29 Oct
-2026; see [decision 0007](docs/decisions/0007-fees-and-rates.md)). Together they take about 7.3
-percent of a $1,000 invoice, and a freelancer only learns the rupee figure after the money arrives.
-PayPal issues one digital FIRA a month ([PayPal's guide](https://www.paypal.com/in/brc/article/paypal-monthly-digital-firc)),
-so an accountant has to match each payment by hand. Dueline shows the rupees before the invoice is
-sent, keeps the export paperwork ready, and drafts the reminders that late clients need.
+Many freelancers in India are paid by clients abroad through PayPal. Three things go wrong every
+month.
+
+- **The rupees are a surprise.** PayPal India charges 4.40% plus a fixed fee on international
+  commercial payments and adds a 3.0% markup when it converts to rupees
+  ([PayPal India fees](https://www.paypal.com/in/webapps/mpp/merchant-fees), see
+  [decision 0007](docs/decisions/0007-fees-and-rates.md)). On a $1,000 invoice that is about
+  7.3%, and the freelancer only learns the rupee figure after the money lands.
+- **Chasing feels awkward.** Late clients are rarely chased on time, so the same clients stay late.
+- **The paperwork is manual.** Export of services needs a purpose code per payment, a LUT line on
+  the invoice, and PayPal's monthly FIRA or a bank FIRC matched to every payment for the CA.
 
 ## What Dueline does
 
-| Feature                          | What it does                                                                                                                                                       | Where                                     |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
-| Rupee truth                      | Shows what will reach your bank before you send, as an estimate, and PayPal's own fee and net after the invoice is paid.                                           | New invoice, invoice page, Fees and rates |
-| Late-payer radar                 | Scores each client from their history and offers an early-payment discount through PayPal.                                                                         | Home, Clients, New invoice                |
-| Nudges, two channels             | Drafts a reminder in a tone that fits the client. Send PayPal's reminder, or your own message from your email.                                                     | Nudges                                    |
-| Chat to invoice                  | Reads a pasted client chat and drafts an invoice, with the words each item came from.                                                                              | New invoice                               |
-| Due line                         | Draws every invoice as a line from sent to paid.                                                                                                                   | Home                                      |
-| Cash forecast                    | Shows what should arrive in the next 30, 60 and 90 days, weighted by each client's history.                                                                        | Home ("What will arrive next")            |
-| Export register                  | Lists each month's payments with purpose code, LUT and transaction ID, matched to PayPal's FIRA, and bank transfers with the bank's FIRC number. Downloads as CSV. | Export register                           |
-| GST details and GSTR-1 rows      | Prints GSTIN, LUT ARN, SAC and place of supply on invoices and exports GSTR-1 rows.                                                                                | Profile, Export register                  |
-| Year summary for 44ADA           | Adds up the financial year's receipts for presumptive taxation.                                                                                                    | Export register ("Year summary")          |
-| Morning preparation              | Writes reminder drafts, monthly repeat invoices and rate alerts each morning.                                                                                      | Home ("This morning"), Nudges ("Today")   |
-| Command palette and keyboard use | Ctrl+K opens a search for pages, clients, invoices and actions. "?" lists the shortcuts.                                                                           | Every screen                              |
+| Feature              | What it does                                                                                                           | Where                           |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| **Rupee truth**      | Shows what reaches the bank after PayPal's fee and conversion before you send, then PayPal's own figures after payment | New invoice, Home, invoice page |
+| **Chat to invoice**  | Paste a client chat; Gemini drafts the PayPal invoice and every line quotes the words it came from                     | New invoice                     |
+| **The due line**     | Every invoice as a line from sent to paid, so late payments stand out at a glance                                      | Home                            |
+| **Late-payer radar** | Scores each client from their history, in plain words: "Late on 3 of 3 invoices, 12 days on average"                   | Home, Clients, New invoice      |
+| **Nudges**           | Drafts the reminder in the right tone and language; send PayPal's reminder, your own email, or both                    | Nudges                          |
+| **Morning run**      | A daily job prepares reminder drafts, monthly repeats and rate alerts; you approve each one                            | Nudges, Home                    |
+| **Export register**  | Monthly CSV with purpose codes, LUT, transaction IDs and FIRC numbers, matched to PayPal's FIRA                        | Export register                 |
+| **GST and tax**      | GSTIN, LUT ARN and SAC on every invoice, GSTR-1 rows, and a year summary for presumptive tax (44ADA)                   | Profile, Export register        |
+| **Cash forecast**    | Rupees expected in 30, 60 and 90 days, weighted by each client's history                                               | Home                            |
 
-## How it uses PayPal
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/home.webp" alt="Home: greeting, this morning's summary, three totals in rupees, the due line and what will arrive next."><br><sub><b>Home.</b> Totals in rupees, the due line, the forecast and clients behind.</sub></td>
+    <td width="50%"><img src="docs/images/new-invoice-review.webp" alt="New invoice review: items drafted from a chat with the quoted words, and the rupees that reach the bank."><br><sub><b>New invoice.</b> Drafted from a chat, every line quoted, rupees shown before sending.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/images/nudges.webp" alt="Nudges: a firm reminder for a late client with PayPal and personal email options."><br><sub><b>Nudges.</b> The tone follows the client's history. Two ways to send.</sub></td>
+    <td width="50%"><img src="docs/images/export-register.webp" alt="Export register for October 2026 with purpose codes, transaction IDs and FIRC numbers."><br><sub><b>Export register.</b> One file a month for the CA, matched to FIRA and FIRC.</sub></td>
+  </tr>
+</table>
 
-Everything runs against the PayPal sandbox. The app refuses to start with any other environment.
+## How it works
 
-| Capability                      | Call                                                                            | What Dueline does with it                                                                                                                                                                                 | Source                                                |
-| ------------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| OAuth token                     | `POST /v1/oauth2/token`                                                         | Gets and caches the access token.                                                                                                                                                                         | [token.ts](src/lib/paypal/token.ts)                   |
-| Invoicing v2: next number       | `POST /v2/invoicing/generate-next-invoice-number`                               | Numbers each new invoice.                                                                                                                                                                                 | [invoices.ts](src/lib/paypal/invoices.ts)             |
-| Invoicing v2: create            | `POST /v2/invoicing/invoices`                                                   | Saves the draft first, with the purpose code and SAC in its private memo.                                                                                                                                 | [invoices.ts](src/lib/paypal/invoices.ts)             |
-| Invoicing v2: send              | `POST /v2/invoicing/invoices/{id}/send`                                         | Sends the saved draft after you click. A failed send is retried on the same draft.                                                                                                                        | [invoices.ts](src/lib/paypal/invoices.ts)             |
-| Invoicing v2: remind            | `POST /v2/invoicing/invoices/{id}/remind`                                       | Sends PayPal's reminder when you press the button.                                                                                                                                                        | [invoices.ts](src/lib/paypal/invoices.ts)             |
-| Invoicing v2: cancel and delete | `POST /v2/invoicing/invoices/{id}/cancel`, `DELETE /v2/invoicing/invoices/{id}` | Cancels an invoice on request; the demo reset also deletes drafts.                                                                                                                                        | [invoices.ts](src/lib/paypal/invoices.ts)             |
-| Invoicing v2: record payment    | `POST /v2/invoicing/invoices/{id}/payments`                                     | Records a payment made outside PayPal, such as a bank transfer.                                                                                                                                           | [invoices.ts](src/lib/paypal/invoices.ts)             |
-| Invoicing v2: get and list      | `GET /v2/invoicing/invoices/{id}`, `GET /v2/invoicing/invoices`                 | Reads invoices. PayPal's state is the truth.                                                                                                                                                              | [invoices.ts](src/lib/paypal/invoices.ts)             |
-| Payments: capture               | `GET /v2/payments/captures/{capture_id}`                                        | Reads the real fee, net amount and any rupee figure for a paid invoice.                                                                                                                                   | [payments.ts](src/lib/paypal/payments.ts)             |
-| Transaction Search              | `GET /v1/reporting/transactions`                                                | Reads the fee and date when no capture is available.                                                                                                                                                      | [payments.ts](src/lib/paypal/payments.ts)             |
-| Webhook signature check         | `POST /v1/notifications/verify-webhook-signature`                               | Verifies every webhook with the exact received headers and raw body.                                                                                                                                      | [webhooks.ts](src/lib/paypal/webhooks.ts)             |
-| Webhook events                  | `POST /api/webhooks/paypal` (our route)                                         | Handles `INVOICING.INVOICE.*`: each event triggers a fresh read of the invoice, `PAID` also stores PayPal's payout figures, and `PAID` and `SENT` add a row to Activity. Each event ID is processed once. | [webhook-events.ts](src/lib/paypal/webhook-events.ts) |
+### PayPal
 
-PayPal writes the wording of its own reminder, so Nudges also offers "Send my message" from your own
-email. The demo uses one sandbox business account; onboarding many freelancers through PayPal's
-partner programme is the next step.
+Dueline is built on the PayPal developer platform. The freelancer's client pays on PayPal's own
+page, and Dueline never sees a card or bank number.
 
-## How it uses AI
+| PayPal API         | Endpoint                                          | What Dueline does with it                                                                     |
+| ------------------ | ------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| OAuth 2.0          | `POST /v1/oauth2/token`                           | Client-credentials token, cached until it expires                                             |
+| Invoicing v2       | `POST /v2/invoicing/generate-next-invoice-number` | Numbers each invoice                                                                          |
+| Invoicing v2       | `POST /v2/invoicing/invoices`                     | Creates the invoice with GSTIN, LUT, SAC, purpose code and an optional early-payment discount |
+| Invoicing v2       | `POST /v2/invoicing/invoices/{id}/send`           | Sends it to the client                                                                        |
+| Invoicing v2       | `POST /v2/invoicing/invoices/{id}/remind`         | Sends PayPal's reminder from Nudges                                                           |
+| Invoicing v2       | `POST /v2/invoicing/invoices/{id}/cancel`         | Cancels it, after an in-page confirmation                                                     |
+| Invoicing v2       | `DELETE /v2/invoicing/invoices/{id}`              | Deletes a draft when the demo is reset                                                        |
+| Invoicing v2       | `POST /v2/invoicing/invoices/{id}/payments`       | Records a bank transfer received outside PayPal                                               |
+| Invoicing v2       | `GET /v2/invoicing/invoices`                      | Reads every invoice and its status                                                            |
+| Invoicing v2       | `GET /v2/invoicing/invoices/{id}`                 | Reads one invoice fresh after a webhook or an action                                          |
+| Payments           | `GET /v2/payments/captures/{id}`                  | Reads the capture behind a paid invoice                                                       |
+| Transaction Search | `GET /v1/reporting/transactions`                  | Reads the real fee and net amount                                                             |
+| Webhooks           | `POST /v1/notifications/verify-webhook-signature` | Verifies every webhook before acting on it                                                    |
 
-Dueline uses Google Gemini through the AI SDK. The primary model is `gemini-3.5-flash-lite` and the
-fallback is `gemini-3.1-flash-lite` (set with `GEMINI_MODEL` and `GEMINI_FALLBACK_MODEL`). The
-fallback is used when the first model is out of quota or does not answer.
+Any invoice event (`INVOICING.INVOICE.*`) makes Dueline read that invoice again from PayPal, and paid and
+sent events also add to the activity feed. Each event is processed once, and the daily job reconciles any payment a missed webhook would have dropped.
 
-**Invoice drafting** ([decision 0010](docs/decisions/0010-ai-invoice-drafting.md)):
+PayPal writes its own reminder wording, so Nudges also offers **Send my message**: the drafted text
+in the freelancer's own email, with the PayPal pay link before the sign-off.
 
-- Emails and phone numbers are found by code and replaced with placeholders before the model sees
-  the chat. Code puts them back in the draft.
-- Every item must quote the chat. Quantities, prices, totals, currency and dates are checked and
-  worked out in code.
-- A gap or a doubtful price becomes a warning for you, never a guess.
-- Text in the chat that looks like an instruction to the AI is flagged and treated as data.
+### AI
 
-Results over 25 test chats ([full report](docs/evaluation/extraction.md), run on 2026-11-03 with
-`gemini-3.5-flash-lite`):
+Dueline uses Google Gemini through the AI SDK, with a fallback model for busy periods. The AI drafts;
+a person approves. It never sends anything on its own.
 
-| Check                                 | Passed   | Share |
-| ------------------------------------- | -------- | ----- |
-| Client                                | 24 of 24 | 100%  |
-| Currency                              | 24 of 24 | 100%  |
-| Country kept only when stated         | 1 of 1   | 100%  |
-| Items exactly right                   | 21 of 25 | 84%   |
-| Prices right                          | 24 of 25 | 96%   |
-| Due date rule                         | 24 of 24 | 100%  |
-| Warnings raised when expected         | 16 of 16 | 100%  |
-| Injection flagged                     | 1 of 1   | 100%  |
-| Emails and phones kept from the model | 25 of 25 | 100%  |
+**Invoice drafting**
 
-**Reminder drafting:** the tone (gentle, firm or final) is chosen from how late the invoice is, how
-many reminders were sent and how the client has paid before. A check rejects a draft whose wording
-does not fit its tone. Reminders can be written in English, German, French, Spanish, Dutch,
-Portuguese and Hindi. If the AI is busy or out of quota, a built-in template is used and the card
-says so.
+- Emails and phone numbers are masked before the chat reaches the model.
+- Every item must quote the chat word for word, and every price must appear in the chat.
+- Quantities, prices, totals and dates are checked in code. Anything unclear becomes a warning to fix, never a guess.
+- Text in the chat that tries to instruct the model is flagged as a prompt injection.
+- Accuracy on 25 test chats, run with `npm run ai:eval` ([full results](docs/evaluation/extraction.md)):
 
-**The AI never sends anything.** It only fills drafts. A person approves every invoice and every
-reminder.
+| Check                                 | Result |
+| ------------------------------------- | ------ |
+| Client found                          | 100%   |
+| Prices right                          | 96%    |
+| Due date rule                         | 100%   |
+| Warnings raised when expected         | 100%   |
+| Prompt injection flagged              | 100%   |
+| Emails and phones kept from the model | 100%   |
 
-## The morning run (agentic, with a person in charge)
+**Reminder drafting.** The tone (gentle, firm, final) comes from the client's payment history, a
+second check confirms the draft matches that tone, and reminders can be written in English, Hindi,
+German, French, Spanish, Dutch or Portuguese. Built-in templates take over if the model is unavailable.
 
-Once a day Vercel calls `GET /api/cron/daily` (`30 0 * * *`, which is 06:00 in India). The route is
-protected by `CRON_SECRET`. The run prepares work on its own:
+### The morning run
 
-- reminder drafts for invoices that are late enough,
-- the next invoice of each monthly repeat,
-- rate alerts you set,
-- and, in the demo, a fresh story when the old one is a week old.
+Every day at 06:00 India time a Vercel cron calls `GET /api/cron/daily`. On its own, it prepares
+reminder drafts for newly late invoices, the month's repeat invoices, triggered rate alerts and a
+reconciliation of payments. Everything lands in **Today** on Nudges. Nothing leaves until the
+freelancer presses a button.
 
-It puts the result in **Today** on Nudges and in **This morning** on Home. Nothing leaves until the
-freelancer presses a button: the run only writes drafts and queue entries, and never calls PayPal to
-send. It also adds the activity row for any PayPal payment whose webhook was missed.
+### AG Grid
 
-## Built with AG Grid
-
-Dueline uses AG Grid Community 36 for its three data tables.
-
-| Where                                  | File                                                                                                                                   |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Invoice table on Home                  | [InvoiceTable.tsx](src/components/receivables/InvoiceTable.tsx), [invoice-columns.tsx](src/components/receivables/invoice-columns.tsx) |
-| Export register, "Paid through PayPal" | [RegisterTable.tsx](src/components/export/RegisterTable.tsx), [register-columns.tsx](src/components/export/register-columns.tsx)       |
-| Export register, "Bank transfers"      | [BankTransfers.tsx](src/components/export/BankTransfers.tsx), [bank-columns.tsx](src/components/export/bank-columns.tsx)               |
-| Module registration and theme          | [ag-grid.ts](src/components/grid/ag-grid.ts)                                                                                           |
-
-- **Custom cell renderers** draw invoice links, status pills, the PayPal link and the editable bank
-  reference field.
-- **Quick filter** searches client, invoice and work, including columns that are hidden.
-- **Sorting** on every column.
-- **Theming** uses the Theming API (`themeQuartz.withParams`) with the app's own design tokens, so
-  the grids follow the light and dark themes.
-- **Keyboard row opening:** Enter on a row opens the invoice.
-- **Responsive columns:** the register hides the LUT and Fee columns under 1280 px, and on a phone
-  Home swaps the table for cards.
+The invoice table on Home and the PayPal and bank tables in the export register use AG Grid:
+custom cell renderers for invoice links, status pills and the FIRC field, sorting, and a theme built
+from Dueline's own design tokens so it follows light and dark mode. Home adds quick-filter search
+and opening a row with the keyboard; the export register folds the transaction ID column into the
+client column on narrower screens.
 
 ## Architecture
 
-```mermaid
-flowchart LR
-  Browser["Browser: React 19 screens"] -->|"api-client.ts"| App
-  subgraph Vercel["Vercel, Singapore"]
-    App["Next.js 16 app: pages and API routes"]
-    Cron["Vercel cron: daily at 00:30 UTC"]
-  end
-  Cron -->|"GET /api/cron/daily"| App
-  App -->|"Invoicing v2, Payments, Transaction Search"| PayPal["PayPal sandbox"]
-  PayPal -->|"signed webhooks"| App
-  App -->|"masked chat, structured output"| Gemini["Google Gemini"]
-  App -->|"invoices, drafts, activity, settings"| Neon[("Neon Postgres")]
-  App -->|"daily rates"| ECB["ECB rates via Frankfurter"]
-```
+<p align="center">
+  <img src="docs/media/architecture.svg" width="100%" alt="Architecture: the freelancer uses Dueline in the browser. Dueline runs on Vercel with screens, API routes, checks in code and a daily job. It calls PayPal Invoicing v2, Payments and Transaction Search in the sandbox, receives verified webhooks when a client pays on PayPal's page, sends masked chats to Gemini, stores data in Neon Postgres and reads ECB rates through Frankfurter. A Vercel cron runs the daily job.">
+</p>
 
-| Area       | Choice                                                        |
-| ---------- | ------------------------------------------------------------- |
-| Hosting    | Vercel Hobby (functions in Singapore) and Neon free tier      |
-| Runtime    | Node.js 24                                                    |
-| Framework  | Next.js 16 (App Router, Cache Components), React 19           |
-| Language   | TypeScript 5.9, strict                                        |
-| Styling    | Tailwind CSS 4, shadcn/ui, lucide-react                       |
-| Tables     | AG Grid 36                                                    |
-| PayPal     | PayPal Server SDK 2 and a small typed client for Invoicing v2 |
-| AI         | AI SDK 7 with Google Gemini                                   |
-| Validation | Zod 4                                                         |
-| Data       | Neon Postgres, or in memory when no database is set           |
-| Rates      | Frankfurter (European Central Bank), cached once a day        |
-| Tests      | Vitest 5, Playwright with axe                                 |
+<p align="center"><sub>The diagram plays the life of one invoice in eight steps, from a pasted chat to the rupees on Home. It loops every 24 seconds.</sub></p>
 
-More in [docs/architecture.md](docs/architecture.md).
+<details>
+<summary><b>The eight steps in words</b></summary>
+
+1. The freelancer pastes a client chat into New invoice.
+2. The chat goes to Gemini with emails and phone numbers masked.
+3. A draft comes back, and Dueline checks every line, price and date in code.
+4. Dueline creates and sends the invoice through PayPal Invoicing v2.
+5. The client pays on PayPal's own page, by card or PayPal balance.
+6. PayPal's webhook arrives, and Dueline verifies its signature before acting.
+7. Transaction Search returns the real fee and the net amount.
+8. Home, the due line and the export register show what reached the bank. If a webhook never arrives, the next morning run records the payment once.
+
+</details>
+
+| Layer      | Choice                                                                 |
+| ---------- | ---------------------------------------------------------------------- |
+| App        | Next.js 16 (App Router, Cache Components), React 19, TypeScript strict |
+| Styling    | Tailwind CSS 4, Base UI, Outfit and Figtree fonts                      |
+| Tables     | AG Grid                                                                |
+| Payments   | PayPal Server SDK and a typed Invoicing v2 client                      |
+| AI         | AI SDK with Google Gemini                                              |
+| Validation | Zod                                                                    |
+| Data       | Neon Postgres, or in memory when no database is set                    |
+| Rates      | European Central Bank via Frankfurter                                  |
+| Hosting    | Vercel with a daily cron                                               |
+| Tests      | Vitest, Playwright, axe                                                |
+| CI         | GitHub Actions, CodeQL, Dependabot                                     |
 
 ## Design and accessibility
 
-- A frosted-glass design in a light and a dark theme, with Outfit and Figtree fonts.
-- One `h1` on every page. Everything works from the keyboard, with visible focus rings.
-- Motion is switched off when the system asks for reduced motion.
-- Text contrast of 4.5:1 is checked by a unit test ([palette.test.ts](tests/unit/palette.test.ts)).
-- axe checks every screen in both themes in the end-to-end tests
-  ([accessibility.spec.ts](tests/e2e/accessibility.spec.ts)).
-- Phone layouts are tested at 390 px ([phones.spec.ts](tests/e2e/phones.spec.ts)).
-- A strict Content Security Policy, tested in [csp.spec.ts](tests/e2e/csp.spec.ts).
+- A complete product, not a prototype: a public website, a demo sign-in, and ten app screens in one design language.
+- Light and dark themes, with 4.5:1 text contrast checked by a unit test.
+- Automated axe checks on every screen in both themes.
+- Full keyboard use, visible focus rings, and a command palette (Ctrl K).
+- Phone layouts tested at 390 px with no sideways scroll.
+- Reduced motion respected everywhere, including the animations in this README.
 
-## Quality
+## Quality and security
 
-- **Tests:** 1,730 unit tests in 146 files (Vitest) and 119 end-to-end tests
-  (Playwright with axe), run against a production build in offline mode.
-- **CI** runs on every push: format check, lint, typecheck, tests, build and the end-to-end suite,
-  plus CodeQL and Dependabot.
-- **Documentation:** 23 [decision records](docs/decisions/), the [API contract](docs/api-contract.md)
-  and the [architecture](docs/architecture.md).
-- **Security:** a demo password with a signed session cookie; rate limits on sign-in, AI calls and
-  the demo reset; webhooks verified with PayPal; every create and send carries a request ID that the
-  server stores once, so a repeat returns the first result; secrets only in environment variables
-  and only in server code. See [SECURITY.md](SECURITY.md).
+|                  |                                                                                                      |
+| ---------------- | ---------------------------------------------------------------------------------------------------- |
+| Unit tests       | 1,730 in 146 files (Vitest)                                                                          |
+| End-to-end tests | 119 (Playwright), including axe in both themes                                                       |
+| CI               | Format, lint, typecheck, tests, build and end-to-end tests on every pull request; CodeQL; Dependabot |
+| Decisions        | [23 decision records](docs/decisions/) and an [API contract](docs/api-contract.md)                   |
+| Access           | Demo password with a signed session and sign-in limits                                               |
+| Safety           | Verified webhooks, idempotent writes, a strict Content Security Policy, no secrets in the repository |
 
 ## Run it yourself
 
-You need Node.js 24.
-
-### Offline: no accounts, no keys
+**Offline mode, no accounts or keys.** PayPal and the AI are simulated, so every screen works.
 
 ```bash
 git clone https://github.com/rishibhaskar777/dueline.git
@@ -243,106 +237,86 @@ npm ci
 npm run dev:offline
 ```
 
-Open http://localhost:3000 and sign in with the password `offline`. Offline mode uses a simulated
-PayPal, built-in reminder templates, saved exchange rates and data in memory. Every screen works. It
-is refused on Vercel and in production.
+Open http://localhost:3000 and sign in with the password `offline`.
 
-### Full sandbox
+**Full sandbox mode.**
 
-1. Create a PayPal developer sandbox app and note its client ID and secret. Note the "US Personal"
-   sandbox account that will pay the invoices; its email ends in `@personal.example.com`.
-2. Create a Gemini API key in Google AI Studio.
-3. Optional: create a free Neon database and copy its pooled connection string. Without one, data
-   stays in memory.
-4. Copy the settings file and fill it in:
+1. Node.js 24 and a [PayPal developer](https://developer.paypal.com/) sandbox app (client ID and secret).
+2. A webhook on that app pointing at `https://<your-host>/api/webhooks/paypal` with the Invoicing invoice events.
+3. A Gemini API key from Google AI Studio.
+4. Optional: a Neon Postgres database. Without one, data is kept in memory.
+5. Copy `.env.example` to `.env.local` and fill it in (each setting is explained there), then run
+   the migration only if you set a database:
 
-   ```bash
-   cp .env.example .env.local
-   npm run db:migrate   # only with DATABASE_URL
-   npm run seed         # builds the demo story, needs SANDBOX_BUYER_EMAIL
-   npm run dev
-   ```
+```bash
+npm run db:migrate
+npm run seed
+npm run dev
+```
 
-5. To receive payments, add a webhook to your sandbox app that points at
-   `https://<your-domain>/api/webhooks/paypal` and select the Invoicing events (created, sent, paid,
-   cancelled, refunded, updated, scheduled). Put its ID in `PAYPAL_WEBHOOK_ID`. Webhooks need a
-   public address, so this step is for a deployment.
+<details>
+<summary><b>Scripts</b></summary>
 
-[CONTRIBUTING.md](CONTRIBUTING.md) has the full setup, including the checks `sandbox:check` and
-`ai:check`.
+| Script                                                               | What it does                                  |
+| -------------------------------------------------------------------- | --------------------------------------------- |
+| `npm run dev` / `npm run dev:offline`                                | Start the app, live or offline                |
+| `npm run build` / `npm start`                                        | Build and run for production                  |
+| `npm test` / `npm run test:e2e`                                      | Unit tests / end-to-end tests                 |
+| `npm run lint` / `npm run typecheck`                                 | ESLint / TypeScript                           |
+| `npm run db:migrate` / `npm run seed`                                | Database migrations / sandbox seed            |
+| `npm run sandbox:check` / `npm run ai:check` / `npm run rates:check` | Check the PayPal, Gemini and rate connections |
+| `npm run ai:eval`                                                    | Re-run the extraction accuracy test           |
 
-### Environment variables
-
-| Name                    | Needed for     | What it is                                                                               |
-| ----------------------- | -------------- | ---------------------------------------------------------------------------------------- |
-| `PAYPAL_CLIENT_ID`      | live           | Sandbox app client ID.                                                                   |
-| `PAYPAL_CLIENT_SECRET`  | live           | Sandbox app secret.                                                                      |
-| `PAYPAL_ENVIRONMENT`    | live           | Always `sandbox`; anything else stops the app.                                           |
-| `PAYPAL_WEBHOOK_ID`     | live           | ID of the webhook that points at `/api/webhooks/paypal`.                                 |
-| `GEMINI_API_KEY`        | live           | Google AI Studio key. Without it, drafts are filled by hand and reminders use templates. |
-| `GEMINI_MODEL`          | live           | Primary Gemini model.                                                                    |
-| `GEMINI_FALLBACK_MODEL` | live, optional | Used when the primary is busy or out of quota.                                           |
-| `DATABASE_URL`          | live, optional | Neon pooled connection string. Empty means in-memory data.                               |
-| `DEMO_MODE`             | live, optional | `true` (default) keeps recipients to sandbox buyers.                                     |
-| `DEMO_TODAY`            | both, optional | A date (`YYYY-MM-DD`) the app treats as today.                                           |
-| `DEMO_PASSWORD`         | live           | Password that opens the app. Required in production.                                     |
-| `SESSION_SECRET`        | live           | Signs the session cookie, 32 characters or more. Required in production.                 |
-| `CRON_SECRET`           | live           | Protects the daily job, 16 characters or more.                                           |
-| `SANDBOX_BUYER_EMAIL`   | live           | The sandbox buyer that pays demo invoices.                                               |
-| `DUELINE_OFFLINE`       | offline        | `true` runs without accounts. Use `npm run dev:offline` instead of setting it.           |
-
-[.env.example](.env.example) lists each one with an example.
-
-### Scripts
-
-| Script                                   | What it does                                                                                            |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `npm run dev`                            | Start the development server against the sandbox.                                                       |
-| `npm run dev:offline`                    | Start it with no accounts or keys; password `offline`.                                                  |
-| `npm run build`                          | Build for production.                                                                                   |
-| `npm start`                              | Run the production build.                                                                               |
-| `npm run lint`                           | Lint with ESLint, failing on any warning.                                                               |
-| `npm run typecheck`                      | Generate Next.js types and run TypeScript.                                                              |
-| `npm test`                               | Run the unit tests once.                                                                                |
-| `npm run test:watch`                     | Run the unit tests in watch mode.                                                                       |
-| `npm run test:e2e`                       | Build, then run the Playwright end-to-end tests in offline mode.                                        |
-| `npm run format`, `npm run format:check` | Format with Prettier, or check formatting.                                                              |
-| `npm run db:migrate`                     | Apply the SQL migrations to `DATABASE_URL`.                                                             |
-| `npm run seed`                           | Create the demo story in the sandbox.                                                                   |
-| `npm run sandbox:check`                  | Create and send a test invoice, and read a payment's figures.                                           |
-| `npm run ai:check`                       | Make one small call to each Gemini model.                                                               |
-| `npm run ai:eval`                        | Run the extraction test chats and write [docs/evaluation/extraction.md](docs/evaluation/extraction.md). |
-| `npm run extract:check`                  | Draft an invoice from one chat and print the checked result.                                            |
-| `npm run rates:check`                    | Fetch today's exchange rates.                                                                           |
+</details>
 
 ## Built during the hackathon
 
-The repository started on 29 Oct 2026, inside the submission period (1 Oct to 12 Nov 2026).
-Everything in it was built for this hackathon. The [CHANGELOG](CHANGELOG.md) lists what changed.
+Dueline was started on 29 Oct 2026, inside the PayPal AI Hackathon 2026 submission period, and
+everything in this repository was built for it. The [changelog](CHANGELOG.md) and the
+[decision records](docs/decisions/) follow the work step by step.
 
 ## Limits and what is next
 
-- Dueline runs on the PayPal sandbox only. No real money moves.
-- It uses one PayPal business account.
-- Rupee figures before payment are estimates, worked out from published fees and the ECB rate.
-- Purpose codes and GSTR-1 values are suggestions to confirm with a chartered accountant.
+**Today:** sandbox only; one PayPal business account for the demo; rupee figures before payment are
+estimates; purpose codes and GSTR-1 values are suggestions to confirm with a CA.
 
-Next steps:
+**Next:** PayPal partner onboarding so each freelancer connects their own account; INR payout figures
+when PayPal reports them; more reminder languages; a share sheet to send a chat to Dueline from a phone.
 
-- PayPal partner onboarding, so many freelancers can connect their own accounts.
-- Payouts in rupees, shown when PayPal reports them.
-- More languages for reminders.
-- A mobile share sheet, to send a chat straight to Dueline.
+## Team
 
-## More
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <b>Rishi Bhaskar</b><br><sub>Engineering</sub><br><br>
+      PayPal integration: Invoicing v2, webhooks and Transaction Search<br>
+      The AI drafting pipeline and its checks in code<br>
+      Data, API routes and the daily job<br>
+      Tests, CI and the hosted demo
+    </td>
+    <td width="50%" valign="top">
+      <b>Nitin Mittal</b><br><sub>Product and design</sub><br><br>
+      Research with freelancers and the problem definition<br>
+      Export rules: FIRA, FIRC, purpose codes, GST, LUT and 44ADA<br>
+      The product design, screens and demo story<br>
+      The demo video and the submission
+    </td>
+  </tr>
+</table>
 
-- [Architecture](docs/architecture.md)
-- [API contract](docs/api-contract.md)
-- [Decision records](docs/decisions/)
-- [Extraction evaluation](docs/evaluation/extraction.md)
-- [Contributing](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Security](SECURITY.md)
-- [Licence](LICENSE) (MIT)
+Both of us shaped the feature scope, reviewed every change and tested the demo end to end on the
+PayPal sandbox.
 
-Dueline is an independent project for the PayPal AI Hackathon 2026 and is not affiliated with
-PayPal.
+---
+
+<p align="center">
+<a href="docs/architecture.md">Architecture</a> ·
+<a href="docs/api-contract.md">API contract</a> ·
+<a href="docs/decisions/">Decision records</a> ·
+<a href="docs/evaluation/extraction.md">AI evaluation</a> ·
+<a href="CONTRIBUTING.md">Contributing</a> ·
+<a href="SECURITY.md">Security</a> ·
+<a href="LICENSE">MIT licence</a>
+<br><br>
+<sub>Dueline is an independent project for the PayPal AI Hackathon 2026 and is not affiliated with PayPal.</sub>
+</p>
