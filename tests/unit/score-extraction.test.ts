@@ -59,8 +59,8 @@ describe("the chat fixtures", () => {
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name);
 
-  it("hold 25 chats that each have an expected answer", () => {
-    expect(ids).toHaveLength(25);
+  it("hold 26 chats that each have an expected answer", () => {
+    expect(ids).toHaveLength(26);
     for (const id of ids) {
       expect(() => expectedOf(id), id).not.toThrow();
       expect(chatOf(id).length, id).toBeLessThanOrEqual(6000);
@@ -117,6 +117,31 @@ describe("scoreExtraction", () => {
   it("checks the country only for a chat that states one", () => {
     expect(scoreOf("25-country-stated").passed).toMatchObject({ country: true });
     expect(scoreOf("01-logo-pack").passed).not.toHaveProperty("country");
+  });
+
+  it("checks the purpose code only for a chat that has a clear answer", () => {
+    expect(scoreOf("26-brand-kit-p1099").passed).toEqual({
+      client: true,
+      currency: true,
+      purpose: true,
+      items: true,
+      prices: true,
+      due: true,
+      warnings: true,
+      contacts: true,
+    });
+    expect(scoreOf("01-logo-pack").passed).not.toHaveProperty("purpose");
+  });
+
+  it("fails the purpose check when the code is not the expected one", () => {
+    const outcome = outcomeFor("26-brand-kit-p1099");
+    const wrong = {
+      ...outcome,
+      draft: outcome.draft && { ...outcome.draft, purposeCode: "P1007" },
+    };
+    const score = scoreExtraction(expectedOf("26-brand-kit-p1099"), wrong, TODAY);
+    expect(score.passed.purpose).toBe(false);
+    expect(score.misses).toContain("purpose: expected P1099, got P1007");
   });
 
   it("fails the items and prices of a draft that applied a discount nobody agreed to", () => {
@@ -244,7 +269,7 @@ describe("tally and renderEvaluation", () => {
     expect(report).toContain("| Items exactly right | 1 of 2 | 50% |");
     expect(report).toContain("| Injection flagged | 0 of 0 | n/a |");
     expect(report).toContain(
-      "| 01-logo-pack | pass | pass | n/a | pass | pass | pass | pass | n/a | pass |",
+      "| 01-logo-pack | pass | pass | n/a | pass | pass | pass | pass | n/a | n/a | pass |",
     );
     expect(report).toContain("| 13-hinglish-logo | pass | pass | n/a | FAIL | pass |");
     expect(report).toContain("| 99-not-run | not run: the allowance is used up |");
