@@ -129,8 +129,8 @@ export default function BuiltOnPayPalPage() {
         </section>
 
         <CtaBand tone="navy" title="Real PayPal sandbox, end to end.">
-          The demo uses PayPal’s sandbox, so no real money moves. Dueline is not affiliated with
-          PayPal.
+          The demo runs on PayPal’s sandbox, so you can send and pay real invoices without real
+          money.
         </CtaBand>
       </div>
     </>
