@@ -13,7 +13,7 @@ describe("scoreClient", () => {
       invoicesConsidered: 0,
       lateCount: 0,
       averageDaysLate: 0,
-      level: "reliable",
+      level: "new",
       suggestion: null,
       reason: "No earlier invoices to this client.",
     });
@@ -22,25 +22,37 @@ describe("scoreClient", () => {
   it("does not count an invoice that is open and not yet due", () => {
     const score = scoreClient([openInvoice("2026-11-20")], TODAY);
     expect(score.invoicesConsidered).toBe(0);
-    expect(score.level).toBe("reliable");
+    expect(score.level).toBe("new");
   });
 
-  it("calls a client who always paid on time reliable", () => {
-    const score = scoreClient(
-      [
-        paidInvoice("2026-10-16", "2026-10-15", HALDEN),
-        paidInvoice("2026-10-08", "2026-10-08", HALDEN),
-        openInvoice("2026-11-30", HALDEN),
-      ],
-      TODAY,
-    );
-    expect(score).toMatchObject({
-      invoicesConsidered: 2,
-      lateCount: 0,
-      level: "reliable",
-      suggestion: null,
-      reason: "Halden Coffee Co. has paid on time.",
+  it("calls a client new until they have paid on time twice", () => {
+    const paid = [
+      paidInvoice("2026-10-16", "2026-10-15", HALDEN),
+      paidInvoice("2026-10-08", "2026-10-08", HALDEN),
+      paidInvoice("2026-09-20", "2026-09-19", HALDEN),
+    ];
+    const on = (readings: number) =>
+      scoreClient([...paid.slice(0, readings), openInvoice("2026-11-30", HALDEN)], TODAY);
+    expect(on(0)).toMatchObject({
+      invoicesConsidered: 0,
+      level: "new",
+      reason: "No earlier invoices to this client.",
     });
+    expect(on(1)).toMatchObject({
+      invoicesConsidered: 1,
+      level: "new",
+      suggestion: null,
+      reason: "Paid on time once.",
+    });
+    for (const readings of [2, 3]) {
+      expect(on(readings)).toMatchObject({
+        invoicesConsidered: readings,
+        lateCount: 0,
+        level: "reliable",
+        suggestion: null,
+        reason: "Halden Coffee Co. has paid on time.",
+      });
+    }
   });
 
   it("puts a client with one late payment on watch and suggests 1%", () => {
@@ -120,11 +132,27 @@ describe("scoreClient", () => {
     expect(score.reason).toBe("Okafor & Reyes was late on 2 of 2 invoices, 15 days on average.");
   });
 
-  it("treats a payment one day late as reliable", () => {
-    const score = scoreClient([paidInvoice("2026-10-10", "2026-10-11")], TODAY);
+  it("treats a payment one day late as reliable once there are two readings", () => {
+    const score = scoreClient(
+      [paidInvoice("2026-10-10", "2026-10-11"), paidInvoice("2026-09-10", "2026-09-10")],
+      TODAY,
+    );
     expect(score).toMatchObject({ lateCount: 1, averageDaysLate: 1, level: "reliable" });
     expect(score.suggestion).toBeNull();
     expect(score.reason).toBe("Okafor & Reyes has never been more than 2 days late.");
+  });
+
+  it("keeps a client with one day of lateness and too few readings new", () => {
+    const score = scoreClient([paidInvoice("2026-10-10", "2026-10-11")], TODAY);
+    expect(score).toMatchObject({ lateCount: 1, level: "new", suggestion: null });
+  });
+
+  it("keeps a client late twice a late payer, whatever the number of readings", () => {
+    const score = scoreClient(
+      [paidInvoice("2026-08-01", "2026-08-11"), paidInvoice("2026-09-01", "2026-09-11")],
+      TODAY,
+    );
+    expect(score.level).toBe("late_payer");
   });
 
   it("rounds the average to one decimal", () => {
@@ -176,6 +204,6 @@ describe("client identity", () => {
         TODAY,
       );
     expect(of(OKAFOR).level).toBe("late_payer");
-    expect(of(BRIGHTWELL).level).toBe("reliable");
+    expect(of(BRIGHTWELL).level).toBe("new");
   });
 });

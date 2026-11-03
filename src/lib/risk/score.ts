@@ -11,6 +11,8 @@ interface Reading {
 
 // A client who is a day or two late is still treated as reliable.
 const MINOR_LATE_DAYS = 2;
+// Fewer readings than this say too little to call a client reliable.
+const READINGS_FOR_RELIABLE = 2;
 const LATE_PAYER_AVERAGE_DAYS = 5;
 const LONG_OVERDUE_DAYS = 30;
 
@@ -19,6 +21,7 @@ const DISCOUNT_PERCENT: Record<RiskLevel, number | null> = {
   late_payer: 2,
   watch: 1,
   reliable: null,
+  new: null,
 };
 
 // An invoice that is open and not yet due says nothing about the client, so it is left out.
@@ -35,8 +38,10 @@ function readingOf(invoice: InvoiceSummary, today: string): Reading | null {
 
 const isOverdueNow = ({ invoice }: Reading): boolean => invoice.dueState === "overdue";
 
-function levelOf(late: Reading[], averageDaysLate: number): RiskLevel {
-  if (late.every(({ daysLate }) => daysLate <= MINOR_LATE_DAYS)) return "reliable";
+function levelOf(readings: number, late: Reading[], averageDaysLate: number): RiskLevel {
+  if (late.every(({ daysLate }) => daysLate <= MINOR_LATE_DAYS)) {
+    return readings < READINGS_FOR_RELIABLE ? "new" : "reliable";
+  }
   const longOverdue = late.some(
     (reading) => isOverdueNow(reading) && reading.daysLate > LONG_OVERDUE_DAYS,
   );
@@ -48,7 +53,10 @@ function levelOf(late: Reading[], averageDaysLate: number): RiskLevel {
 
 function reasonOf(name: string, readings: Reading[], late: Reading[], average: number): string {
   if (readings.length === 0) return "No earlier invoices to this client.";
-  if (late.length === 0) return `${name} has paid on time.`;
+  if (late.length === 0) {
+    if (readings.length === 1) return "Paid on time once.";
+    return `${name} has paid on time.`;
+  }
   if (late.every(({ daysLate }) => daysLate <= MINOR_LATE_DAYS)) {
     return `${name} has never been more than ${formatDays(MINOR_LATE_DAYS)} late.`;
   }
@@ -74,7 +82,7 @@ export function scoreClient(invoices: InvoiceSummary[], today: string): ClientSc
   const total = late.reduce((sum, { daysLate }) => sum + daysLate, 0);
   const averageDaysLate = late.length === 0 ? 0 : Math.round((total / late.length) * 10) / 10;
 
-  const level = levelOf(late, averageDaysLate);
+  const level = levelOf(readings.length, late, averageDaysLate);
   const percent = DISCOUNT_PERCENT[level];
   return {
     invoicesConsidered: readings.length,

@@ -22,10 +22,14 @@ export function RiskRadar({ clientName, clientEmail, known, form, update }: Risk
   const { applied, offer } = useDiscountOffer(form, risk?.suggestion ?? null, update);
   if (!risk || risk.invoicesConsidered === 0) return null;
 
-  if (risk.level === "reliable") {
+  if (risk.level === "reliable" || risk.level === "new") {
+    const reliable = risk.level === "reliable";
     return (
       <p className="text-sm text-muted-foreground">
-        <span className="font-medium text-paid">Reliable payer.</span> <RiskReason risk={risk} />
+        <span className={reliable ? "font-medium text-paid" : "font-medium text-blue"}>
+          {reliable ? "Reliable payer." : "New client."}
+        </span>{" "}
+        <RiskReason risk={risk} />
       </p>
     );
   }

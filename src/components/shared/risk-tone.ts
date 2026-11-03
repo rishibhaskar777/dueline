@@ -11,6 +11,7 @@ export function riskTone(level: RiskLevel | null): RiskTone {
       return "watch";
     case "reliable":
       return "reliable";
+    case "new":
     case null:
       return "new";
   }
@@ -23,8 +24,8 @@ export const AVATAR_CLASSES: Record<RiskTone, string> = {
   new: "bg-tint-blue text-blue",
 };
 
-// The full-width strip under a client's name; a client without a level has none.
+// The full-width strip under a client's name; a client without a level has none, and a new client
+// has one only to say how few invoices there are.
 export function reasonStripClasses(level: RiskLevel | null): string | null {
-  const tone = riskTone(level);
-  return tone === "new" ? null : AVATAR_CLASSES[tone];
+  return level === null ? null : AVATAR_CLASSES[riskTone(level)];
 }

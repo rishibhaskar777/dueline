@@ -10,7 +10,12 @@ interface ForecastInput {
 const FORECAST_BASIS =
   "Weighted by each client's payment history. Best case assumes everyone pays on time.";
 
-const WEIGHTS: Record<RiskLevel, number> = { reliable: 0.95, watch: 0.85, late_payer: 0.7 };
+const WEIGHTS: Record<RiskLevel, number> = {
+  new: 0.95,
+  reliable: 0.95,
+  watch: 0.85,
+  late_payer: 0.7,
+};
 // Nothing is known about a client with no history, so they are weighed like one to watch.
 const UNKNOWN_WEIGHT = WEIGHTS.watch;
 const LONG_OVERDUE_DAYS = 30;
@@ -31,7 +36,9 @@ function weightOf(invoice: InvoiceSummary): number {
 }
 
 function usualDelay({ invoice, averageDaysLate }: ForecastInput): number {
-  return invoice.riskLevel === null || invoice.riskLevel === "reliable"
+  return invoice.riskLevel === null ||
+    invoice.riskLevel === "reliable" ||
+    invoice.riskLevel === "new"
     ? 0
     : Math.round(averageDaysLate);
 }
