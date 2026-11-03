@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" width="72" height="72" role="img" aria-labelledby="t d">
+<title id="t">Dueline</title>
+<desc id="d">The Dueline mark: a line that ends in a dot, on a navy square.</desc>
+<rect width="34" height="34" rx="10" fill="#0a2a7a"/>
+<path d="M7 21h14" stroke="#7cc8ff" stroke-width="3" stroke-linecap="round"/>
+<circle cx="25" cy="21" r="3.5" fill="#ffffff"/>
+<path d="M25 9v6" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"/>
+</svg>
