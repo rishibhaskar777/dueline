@@ -32,14 +32,14 @@ who are paid by clients abroad.
 
 ## For judges
 
-|                          |                                                                                 |
-| ------------------------ | ------------------------------------------------------------------------------- |
-| **Live demo**            | [dueline-azure.vercel.app](https://dueline-azure.vercel.app)                    |
-| **Password**             | In the testing instructions of the Devpost submission                           |
-| **No accounts or keys?** | Run the offline mode locally, password `offline` ([steps](#run-it-yourself))    |
-| **Video**                | [3-minute walkthrough on YouTube](https://www.youtube.com/watch?v=VIDEO_ID)     |
-| **PayPal**               | Sandbox only. Every invoice goes to a PayPal sandbox buyer. No real money moves |
-| **Built**                | Entirely during the hackathon, from 29 Oct 2026 ([changelog](CHANGELOG.md))     |
+|                          |                                                                              |
+| ------------------------ | ---------------------------------------------------------------------------- |
+| **Live demo**            | [dueline-azure.vercel.app](https://dueline-azure.vercel.app)                 |
+| **Password**             | In the testing instructions of the Devpost submission                        |
+| **No accounts or keys?** | Run the offline mode locally, password `offline` ([steps](#run-it-yourself)) |
+| **Video**                | [3-minute walkthrough on YouTube](https://www.youtube.com/watch?v=VIDEO_ID)  |
+| **PayPal**               | Runs on the PayPal sandbox, so you can send and pay invoices safely          |
+| **Built**                | Entirely during the hackathon, from 29 Oct 2026 ([changelog](CHANGELOG.md))  |
 
 **A two-minute path through every feature**
 
@@ -277,7 +277,7 @@ everything in this repository was built for it. The [changelog](CHANGELOG.md) an
 
 ## Limits and what is next
 
-**Today:** sandbox only; one PayPal business account for the demo; rupee figures before payment are
+**Today:** runs on the PayPal sandbox; one PayPal business account for the demo; rupee figures before payment are
 estimates; purpose codes and GSTR-1 values are suggestions to confirm with a CA.
 
 **Next:** PayPal partner onboarding so each freelancer connects their own account; INR payout figures
@@ -318,5 +318,5 @@ PayPal sandbox.
 <a href="SECURITY.md">Security</a> ·
 <a href="LICENSE">MIT licence</a>
 <br><br>
-<sub>Dueline is an independent project for the PayPal AI Hackathon 2026 and is not affiliated with PayPal.</sub>
+<sub>© 2026 Rishi Bhaskar and Nitin Mittal · Built for the PayPal AI Hackathon 2026 · PayPal is a trademark of PayPal, Inc.</sub>
 </p>

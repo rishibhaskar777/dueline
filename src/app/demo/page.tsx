@@ -41,7 +41,7 @@ export default function DemoPage() {
             Judges: the password is in the Devpost entry.
           </p>
         </div>
-        <p className="text-center text-[13px] text-muted-foreground">Not affiliated with PayPal.</p>
+        <p className="text-center text-[13px] text-muted-foreground">© 2026 Dueline</p>
       </main>
     </div>
   );

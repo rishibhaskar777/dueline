@@ -24,6 +24,7 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- A full site footer, and sandbox wording that explains what judges can do.
 - The demo story keeps something due soon on every day of its seven-day life (Tandem Health is now due in 7 days at the start), and a test checks it for 1 to 15 December.
 - When Gemini is busy or out of quota, New invoice says "The AI is busy right now. Try again in a minute, or fill the invoice in yourself." and offers "Start without a chat" as the main button.
 - A page that loads after the database or functions were asleep reads again once before it shows an error, and a network failure says "Could not reach Dueline" instead of the browser's own wording. The health check and the demo sign-in try the database a second time before they fail.

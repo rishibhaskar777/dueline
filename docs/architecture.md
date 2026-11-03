@@ -652,7 +652,9 @@ The pages outside the app sit in the `(marketing)` route group, whose layout (`s
 renders `SiteNav`, the page in `<main>` and `SiteFooter`. They are static: the landing page (`/`),
 `/how-it-works`, `/features`, `/for-your-ca` and `/built-on-paypal` fetch nothing and prerender at build time.
 `SiteNav` is the app bar's glass with the four site pages as sliding tabs (`SITE_LINKS`, `activeSiteLink`);
-the landing page has no current tab. The landing page's black section is a small client component
+the landing page has no current tab. `SiteFooter` is the same glass with a brand block and a "Footer"
+navigation of three columns (Product, Try it, Project) built from `SITE_LINKS`, `DEMO_HREF` and
+`REPOSITORY_URL`. The landing page's black section is a small client component
 (`ChoiceSection`) that shows one of three cards from `LANDING_CHOICES`. `/demo`, the password page, has no
 site bar: it is a split page, a navy panel (`SignInPanel`) and the form. `src/app/sitemap.ts` lists the five
 public pages (`SITEMAP_PATHS`) and `robots.ts` points to it.
