@@ -375,6 +375,18 @@
   }
 }
 
+/* The public site's footer: the top bar's glass, with its line on top. */
+@utility site-footer {
+  background: var(--bar);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  border-top: 1px solid var(--bar-line);
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background: var(--bar-solid);
+  }
+}
+
 /* Cards that rise a little under the pointer. */
 @utility lift {
   transition: transform 0.35s var(--ease-spring);

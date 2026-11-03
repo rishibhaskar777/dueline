@@ -32,6 +32,27 @@ test.describe("public website", () => {
     });
   }
 
+  test("the footer has its navigation, the project links and the trademark line", async ({
+    page,
+  }) => {
+    await page.goto("/features");
+    const footer = page.getByRole("contentinfo");
+    const nav = footer.getByRole("navigation", { name: "Footer" });
+    for (const { link } of PAGES) {
+      await expect(nav.getByRole("link", { name: link })).toBeVisible();
+    }
+    await expect(nav.getByRole("link", { name: "Open the demo" })).toHaveAttribute(
+      "href",
+      "/receivables",
+    );
+    const source = nav.getByRole("link", { name: "Source on GitHub" });
+    await expect(source).toHaveAttribute("target", "_blank");
+    await expect(source).toHaveAttribute("rel", "noopener noreferrer");
+    await expect(footer.getByText("PayPal is a trademark of PayPal, Inc.")).toBeVisible();
+    await expect(footer.getByText("© 2026 Dueline")).toBeVisible();
+    await expect(page.getByText("Not affiliated with PayPal")).toHaveCount(0);
+  });
+
   test("the landing page marks no link current", async ({ page }) => {
     await page.goto("/");
     await expect(
@@ -78,7 +99,7 @@ test.describe("public website", () => {
 
   for (const path of ["/", "/demo", ...PAGES.map(({ path }) => path)]) {
     test(`${path} does not scroll sideways on a phone`, async ({ page }) => {
-      await page.setViewportSize({ width: 390, height: 844 });
+      await page.setViewportSize({ width: 360, height: 844 });
       await page.goto(path);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       const overflow = await page.evaluate(
