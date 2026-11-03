@@ -147,6 +147,8 @@ export interface PayoutEstimate {
   marketRateDate: string; // date of the rate used
   marketRateSource: "ecb" | "manual";
   netInr: number;
+  feeInr: number; // the fee at the market rate, whole rupees (never more than the gross)
+  conversionLossInr: number; // what the markup took on the rupees after the fee; feeInr and this add up to lossInr
   lossInr: number; // market value minus netInr
   lossPercent: number; // one decimal place
 }

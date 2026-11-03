@@ -2,6 +2,7 @@ import { countryName } from "@/lib/countries";
 import { daysBetween } from "@/lib/date-math";
 import { formatDate } from "@/lib/format-date";
 import { formatDays } from "@/lib/format-days";
+import { displayEmail } from "@/lib/sandbox-buyer";
 import type { InvoiceSummary } from "@/types";
 
 // "Due 15 Aug 2026 · 3 days late", "Due 15 Aug 2026 · due in 4 days" or the paid date.
@@ -25,8 +26,10 @@ export function lutSentence(underLut: boolean, note: string): string {
   return arn ? `Under LUT · ARN ${arn}` : "Under LUT · no ARN on this invoice";
 }
 
-// "United States · name@example.com" when the country is known, otherwise just the email.
+// "United States · name@example.com" when the country is known, otherwise just the email. A sandbox
+// buyer's address is replaced by its label.
 export function clientLine(email: string, country: string | null | undefined): string {
   const name = countryName(country ?? null);
-  return name ? `${name} · ${email}` : email;
+  const shown = displayEmail(email);
+  return name ? `${name} · ${shown}` : shown;
 }

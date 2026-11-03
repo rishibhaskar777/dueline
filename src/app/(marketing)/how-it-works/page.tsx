@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import { CtaBand } from "@/components/site/CtaBand";
 import { PageIntro } from "@/components/site/PageIntro";
+import {
+  HOW_IT_WORKS_PAYOUT,
+  SAMPLE_INVOICE_TOTAL,
+  SAMPLE_ITEMS,
+  sampleItemTotal,
+} from "@/components/site/sample-payouts";
+import { formatMoney } from "@/lib/money/format";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -33,17 +40,26 @@ const STEPS: Step[] = [
         left: "Maya: 3 social media templates at €120 each, plus one newsletter layout for €250?",
       },
       { kind: "mine", left: "Riya: Sure, I’ll deliver by Friday." },
-      { kind: "line", left: "Drafted: 3 × Social media template", right: "€360.00" },
+      ...SAMPLE_ITEMS.map((item): Row => ({
+        kind: "line",
+        left: `Drafted: ${item.quantity} × ${item.name}`,
+        right: formatMoney({ currency: "EUR", value: sampleItemTotal(item) }),
+      })),
     ],
   },
   {
     title: "Check it and send through PayPal",
     body: "You see every number, the RBI purpose code, the LUT line and what will reach your bank after PayPal’s fee and conversion. Nothing is sent until you click.",
     rows: [
-      { kind: "line", left: "Invoice total", right: "€597.80" },
-      { kind: "line", left: "PayPal fee", right: "− €26.65" },
-      { kind: "line", left: "Conversion loss", right: "− ₹1,818" },
-      { kind: "line", left: "About this reaches your bank", right: "₹58,770" },
+      {
+        kind: "line",
+        left: "Invoice total",
+        right: formatMoney({ currency: "EUR", value: SAMPLE_INVOICE_TOTAL }),
+      },
+      { kind: "line", left: "PayPal fee", right: HOW_IT_WORKS_PAYOUT.fee },
+      { kind: "line", left: "Currency conversion", right: HOW_IT_WORKS_PAYOUT.conversion },
+      { kind: "line", left: "Total lost", right: HOW_IT_WORKS_PAYOUT.total },
+      { kind: "line", left: "About this reaches your bank", right: HOW_IT_WORKS_PAYOUT.bank },
     ],
   },
   {

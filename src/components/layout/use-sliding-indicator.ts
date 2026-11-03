@@ -1,7 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
-import { pickIndicator, type IndicatorItem } from "./sliding-indicator";
+import {
+  useCallback,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FocusEvent,
+  type PointerEvent,
+  type RefObject,
+} from "react";
+import {
+  NO_INTERACTION,
+  indicatorState,
+  interact,
+  pickIndicator,
+  type IndicatorItem,
+  type InteractionEvent,
+} from "./sliding-indicator";
 
 const SPRING = "cubic-bezier(0.34, 1.45, 0.4, 1)";
 const MOVE = `transform 0.55s ${SPRING}, width 0.55s ${SPRING}`;
@@ -13,18 +30,14 @@ function sameItems(a: IndicatorItem[], b: IndicatorItem[]): boolean {
   );
 }
 
-interface Click {
-  index: number;
-  // The active index when the click happened; the click stops counting once that changes.
-  whileActive: number | null;
-}
-
 interface SlidingIndicatorOptions {
   // The positioned element that holds the items, and the items themselves in order.
   containerRef: RefObject<HTMLElement | null>;
   itemRefs: RefObject<(HTMLElement | null)[]>;
   count: number;
   active: number | null;
+  // Hover, focus and clicks are forgotten when this changes; a bar passes the page it is on.
+  resetKey?: string | null;
 }
 
 // Measures the items of a tab bar or segmented control and returns the style of the pill that
@@ -34,16 +47,22 @@ export function useSlidingIndicator({
   itemRefs,
   count,
   active,
+  resetKey = null,
 }: SlidingIndicatorOptions) {
   const measured = useRef(false);
   const frame = useRef(0);
   const [items, setItems] = useState<IndicatorItem[]>([]);
-  const [hovered, setHovered] = useState<number | null>(null);
-  const [focused, setFocused] = useState<number | null>(null);
-  const [click, setClick] = useState<Click | null>(null);
+  const [interaction, dispatch] = useReducer(interact, NO_INTERACTION);
   // Off until the first measurement has been painted, so the pill does not fly in from the left.
   const [settled, setSettled] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
+
+  const send = useCallback(
+    (event: InteractionEvent) => dispatch({ ...event, key: resetKey }),
+    [resetKey],
+  );
+  const { hovered, focused, clicked } = indicatorState(interaction, resetKey, active);
+  const isHovered = hovered !== null;
 
   useEffect(() => {
     function measure(): void {
@@ -73,7 +92,28 @@ export function useSlidingIndicator({
     };
   }, [containerRef, itemRefs, count]);
 
-  const clicked = click && click.whileActive === active ? click.index : null;
+  // A pointer can go away without a pointerleave, when a menu opens or the page changes under it, so
+  // the pill must not stay behind under the last tab it passed.
+  useEffect(() => {
+    const clear = () => send({ type: "reset" });
+    window.addEventListener("blur", clear);
+    document.addEventListener("visibilitychange", clear);
+    return () => {
+      window.removeEventListener("blur", clear);
+      document.removeEventListener("visibilitychange", clear);
+    };
+  }, [send]);
+
+  useEffect(() => {
+    if (!isHovered) return;
+    function onPointerOver(event: globalThis.PointerEvent): void {
+      const inside = event.target instanceof Node && containerRef.current?.contains(event.target);
+      if (!inside) send({ type: "pointerleave" });
+    }
+    document.addEventListener("pointerover", onPointerOver);
+    return () => document.removeEventListener("pointerover", onPointerOver);
+  }, [isHovered, containerRef, send]);
+
   const target = pickIndicator({ items, active, hovered, focused, clicked });
 
   const indicatorStyle: CSSProperties = target
@@ -87,15 +127,14 @@ export function useSlidingIndicator({
   return {
     highlighted: target?.index ?? null,
     indicatorStyle,
-    containerProps: { onPointerLeave: () => setHovered(null) },
+    containerProps: { onPointerLeave: () => send({ type: "pointerleave" }) },
     itemProps: (index: number) => ({
-      onPointerEnter: () => setHovered(index),
-      onFocus: () => setFocused(index),
-      onBlur: () => setFocused((current) => (current === index ? null : current)),
-      onClick: () => {
-        setClick({ index, whileActive: active });
-        setHovered(null);
-      },
+      onPointerEnter: (event: PointerEvent<HTMLElement>) =>
+        send({ type: "pointerenter", index, pointerType: event.pointerType }),
+      onFocus: (event: FocusEvent<HTMLElement>) =>
+        send({ type: "focus", index, visible: event.currentTarget.matches(":focus-visible") }),
+      onBlur: () => send({ type: "blur", index }),
+      onClick: () => send({ type: "click", index, active }),
     }),
   };
 }

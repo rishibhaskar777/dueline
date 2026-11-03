@@ -1,20 +1,20 @@
 import { formatMonthName } from "@/lib/format-date";
-import { formatRupees } from "@/lib/money/format";
 import type { ExportRegister } from "@/types";
 
-// One note under the one rupee figure, never the figure again. A bank transfer is worked out at the
-// ECB rate of the payment date, so it counts as estimated.
-export function describeRupees({
-  totalInr,
-  paypalInr,
-  estimatedInr,
-  bankInr,
-}: ExportRegister): string {
+// One note under the one rupee figure, never the figure again: how many payments rest on PayPal's
+// figures (the rupees it reported, or its fee and net with the rupees worked out at the ECB rate),
+// how many were paid by bank transfer, and how many are estimates from the published fees.
+export function describeRupees({ totalInr, rows, outsideRows }: ExportRegister): string {
   if (totalInr === 0) return "No rupees to report";
-  const estimated = estimatedInr + bankInr;
-  if (paypalInr === 0) return "All estimated";
-  if (estimated === 0) return "All from PayPal";
-  return `${formatRupees(paypalInr)} from PayPal, ${formatRupees(estimated)} estimated`;
+  const fromPayPal = rows.filter((row) => row.inrSource === "paypal" || row.fee !== null).length;
+  const parts: [number, string, string][] = [
+    [fromPayPal, "from PayPal's figures", "All from PayPal's figures"],
+    [rows.length - fromPayPal, "estimated", "All estimated"],
+    [outsideRows.length, "by bank", "All by bank"],
+  ];
+  const present = parts.filter(([count]) => count > 0);
+  if (present.length === 1) return present[0][2];
+  return present.map(([count, words]) => `${count} ${words}`).join(", ");
 }
 
 // Said when the register opens on an earlier month because the current one has no payments.

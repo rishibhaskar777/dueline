@@ -193,5 +193,36 @@
     "note": null,
     "purposeCode": "P1099",
     "purposeReason": "Illustration work has no closer match."
+  },
+  "26-brand-kit-p1099": {
+    "clientName": "Kraftwerk Studio",
+    "clientEmail": null,
+    "clientCountry": null,
+    "countryQuote": null,
+    "currency": "EUR",
+    "dueOn": "2026-11-19",
+    "items": [
+      {
+        "name": "Logo final files",
+        "quantity": 1,
+        "unitAmount": "400.00",
+        "sourceQuote": "Logo files €400"
+      },
+      {
+        "name": "Business card design",
+        "quantity": 2,
+        "unitAmount": "90.00",
+        "sourceQuote": "business cards €90 each"
+      },
+      {
+        "name": "Brand guideline PDF",
+        "quantity": 1,
+        "unitAmount": "650.00",
+        "sourceQuote": "guideline €650"
+      }
+    ],
+    "note": null,
+    "purposeCode": "P1007",
+    "purposeReason": "Brand identity work is advertising and design."
   }
 }

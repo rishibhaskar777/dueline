@@ -1,0 +1,14 @@
+{
+  "summary": "Identity and design work, which is P1099 and not advertising",
+  "client": "Kraftwerk Studio",
+  "currency": "EUR",
+  "purposeCode": "P1099",
+  "items": [
+    { "nameIncludes": "logo", "quantity": 1, "unitAmount": "400.00" },
+    { "nameIncludes": "business card", "quantity": 2, "unitAmount": "90.00" },
+    { "nameIncludes": "guideline", "quantity": 1, "unitAmount": "650.00" }
+  ],
+  "due": { "rule": "net", "days": 15 },
+  "warnings": ["no_client_email"],
+  "contacts": []
+}

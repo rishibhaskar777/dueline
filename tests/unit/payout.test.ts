@@ -16,6 +16,8 @@ describe("estimatePayout", () => {
       marketRateDate: "2026-10-28",
       marketRateSource: "ecb",
       netInr: 8135,
+      feeInr: 414,
+      conversionLossInr: 251,
       lossInr: 665,
       lossPercent: 7.6,
     });
@@ -85,6 +87,35 @@ describe("estimatePayout", () => {
       marketRateDate: "2026-10-01",
       marketRateSource: "manual",
     });
+  });
+});
+
+describe("estimatePayout loss split", () => {
+  const eur = (value: string) => ({ currency: "EUR" as const, value });
+  const marketValue = (estimate: ReturnType<typeof estimatePayout>) =>
+    estimate.netInr + estimate.lossInr;
+
+  it("splits 1,230.00 EUR into the fee and the markup without counting the fee twice", () => {
+    const estimate = estimatePayout(eur("1230.00"), DEFAULT_SETTINGS, rate(106.45));
+    expect(estimate.fee).toEqual(eur("54.47"));
+    expect(estimate.feeInr + estimate.conversionLossInr).toBe(estimate.lossInr);
+    expect(marketValue(estimate) - estimate.lossInr).toBe(estimate.netInr);
+    expect(estimate.feeInr).toBe(5798);
+    expect(estimate.conversionLossInr).toBe(3755);
+    expect(estimate.lossInr).toBe(9553);
+  });
+
+  it("puts the whole loss on the fee when the fee is larger than the gross", () => {
+    const estimate = estimatePayout(usd("0.10"), DEFAULT_SETTINGS, rate(88));
+    expect(estimate.conversionLossInr).toBe(0);
+    expect(estimate.feeInr).toBe(estimate.lossInr);
+  });
+
+  it("has no conversion loss when the markup is zero", () => {
+    const settings: Settings = { ...DEFAULT_SETTINGS, fxMarkupPercent: 0 };
+    const estimate = estimatePayout(usd("100.00"), settings, rate(88));
+    expect(estimate.conversionLossInr).toBe(0);
+    expect(estimate.feeInr).toBe(estimate.lossInr);
   });
 });
 

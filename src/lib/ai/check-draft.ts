@@ -171,13 +171,33 @@ function checkEmail(raw: string | null, contacts: ContactMap, warnings: string[]
   return "";
 }
 
+// Identity and design work (logos, brand guidelines, business cards, decks, UI) is P1099 on our list.
+// A model that calls it advertising only because it is brand work is corrected, but only when no
+// item is about ads, campaigns or marketing.
+const DESIGN_WORK =
+  /\b(?:logos?|brand(?:ing)?|guidelines?|style guides?|business cards?|pitch decks?|decks?|ui|ux|web(?:site)? design|mock-?ups?|wireframes?)\b/i;
+const ADVERTISING_WORK =
+  /\b(?:social media|ads?|adverts?|advertising|campaigns?|seo|marketing|banners?)\b/i;
+const DESIGN_REASON = "Design work with no closer RBI code; confirm with your CA.";
+
+function isDesignOnly(items: LineItem[]): boolean {
+  return (
+    items.length > 0 &&
+    items.every(({ name }) => DESIGN_WORK.test(name) && !ADVERTISING_WORK.test(name))
+  );
+}
+
 // The reason is only kept for a code on our list, so it never explains a code that was dropped.
 function checkPurpose(
   raw: ModelDraft,
   contacts: ContactMap,
+  items: LineItem[],
 ): { purposeCode: string | null; purposeReason: string } {
   const suggested = raw.purposeCode?.trim() ?? "";
   if (!isPurposeCode(suggested)) return { purposeCode: null, purposeReason: "" };
+  if (suggested === "P1007" && isDesignOnly(items)) {
+    return { purposeCode: "P1099", purposeReason: DESIGN_REASON };
+  }
   return {
     purposeCode: suggested,
     purposeReason: cleanText(raw.purposeReason, contacts, MAX_REASON_LENGTH),
@@ -213,7 +233,7 @@ export function checkModelDraft(raw: ModelDraft, input: CheckInput): CheckedDraf
   const email = checkEmail(raw.clientEmail, contacts, warnings);
   const country = checkCountry(raw, input.chat);
 
-  const { purposeCode, purposeReason } = checkPurpose(raw, contacts);
+  const { purposeCode, purposeReason } = checkPurpose(raw, contacts, items);
   const note = cleanText(raw.note, contacts, MAX_NOTE_LENGTH);
 
   return {

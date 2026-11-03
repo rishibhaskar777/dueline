@@ -7,6 +7,31 @@ const GREETING =
 const SENTENCE_END = /(?<=[.!?।])\s+/u;
 const SENTENCES_PER_PARAGRAPH = 2;
 
+// The thanks words of every language pack, plus the short forms models like. A thanks only counts
+// when punctuation follows it, so "Merci de la régler" (please pay) and "Thank you for your
+// patience" are left alone.
+const THANKS_WORDS = [
+  "thank you very much",
+  "thank you so much",
+  "thank you",
+  "thanks",
+  "vielen dank",
+  "danke",
+  "merci",
+  "gracias",
+  "alvast bedankt",
+  "bedankt",
+  "obrigado",
+  "obrigada",
+  "धन्यवाद",
+];
+const LEADING_THANKS = new RegExp(
+  String.raw`^(?:${THANKS_WORDS.join("|")})\s*[,.!]\s*(?:(?:and|und|et|y|en|e|और)\s+)?`,
+  "iu",
+);
+const STARTS_WITH_THANKS = new RegExp(String.raw`^(?:${THANKS_WORDS.join("|")}|thank)`, "iu");
+const SLIPPED = /\b(It|it) is likely just slipped\b/g;
+
 function paragraphsOf(block: string): string[] {
   const sentences = block.split(SENTENCE_END).filter(Boolean);
   if (sentences.length <= SENTENCES_PER_PARAGRAPH) return [block];
@@ -17,12 +42,30 @@ function paragraphsOf(block: string): string[] {
   return paragraphs;
 }
 
+export function startsWithThanks(word: string): boolean {
+  return STARTS_WITH_THANKS.test(word.trim());
+}
+
+// A sign-off that says thanks makes a thank you at the start of the last paragraph a second one:
+// "Thank you, and please ignore this note" becomes "Please ignore this note". A paragraph that was
+// only a thank you goes.
+export function withoutRepeatedThanks(body: string): string {
+  const paragraphs = body.trimEnd().split(/\n{2,}/);
+  const last = paragraphs.pop() ?? "";
+  const rest = last.trim().replace(LEADING_THANKS, "");
+  if (rest !== "") {
+    paragraphs.push(rest.charAt(0).toLocaleUpperCase() + rest.slice(1));
+  }
+  return paragraphs.join("\n\n");
+}
+
 export function normaliseMessage(message: string): string {
   const text = message
     .replace(/\r\n?/g, "\n")
     .split("\n")
     .map((line) => line.trimEnd())
     .join("\n")
+    .replace(SLIPPED, "$1 may have slipped")
     .trim();
 
   const greeting = GREETING.exec(text)?.[0];

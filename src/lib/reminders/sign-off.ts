@@ -1,5 +1,6 @@
 import type { Profile, ReminderLanguage } from "@/types";
 import { signOffIn } from "./languages";
+import { startsWithThanks, withoutRepeatedThanks } from "./normalise-message";
 
 // A model that signs off anyway would otherwise leave two closings.
 const TRAILING_CLOSING =
@@ -23,5 +24,6 @@ export function withSignOff(
     businessName.trim().toLowerCase() === yourName.trim().toLowerCase() ? "" : businessName;
   const lines = [yourName, business].filter((line) => line.trim() !== "");
   const closing = lines.length > 0 ? `${word},\n${lines.join("\n")}` : word;
-  return `${body.trim().replace(TRAILING_CLOSING, "")}\n\n${closing}`;
+  const text = body.trim().replace(TRAILING_CLOSING, "");
+  return `${startsWithThanks(word) ? withoutRepeatedThanks(text) : text}\n\n${closing}`;
 }

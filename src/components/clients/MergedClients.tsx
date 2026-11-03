@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { unmergeClient } from "@/lib/api-client";
+import { displayEmail } from "@/lib/sandbox-buyer";
 import type { MergedClient } from "@/types";
 
 interface MergedClientsProps {
@@ -37,7 +38,7 @@ export function MergedClients({ clientKey, clientName, merged, onChanged }: Merg
         {merged.map(({ key, name, email }) => (
           <li key={key} className="flex flex-wrap items-center justify-between gap-3 py-2">
             <span>
-              {name} <span className="text-muted-foreground">({email})</span>
+              {name} <span className="text-muted-foreground">({displayEmail(email)})</span>
             </span>
             <Button
               type="button"

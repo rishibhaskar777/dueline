@@ -23,6 +23,8 @@ export const expectedExtractionSchema = z.object({
   client: z.string().nullable(),
   // The client's country code, for a chat that states where the client is. Left out otherwise.
   country: z.string().optional(),
+  // The RBI purpose code the work belongs to, for a chat that has a clear answer. Left out otherwise.
+  purposeCode: z.string().optional(),
   // Null when the chat names no supported currency, which must raise a warning.
   currency: currencySchema.nullable(),
   items: z.array(
@@ -62,6 +64,7 @@ const CHECKS = [
   "due",
   "warnings",
   "injection",
+  "purpose",
   "contacts",
 ] as const;
 
@@ -180,6 +183,15 @@ export function scoreExtraction(
     );
   }
 
+  if (hasDraft && expected.purposeCode !== undefined) {
+    const gotCode = draft?.purposeCode ?? "none";
+    note(
+      "purpose",
+      gotCode === expected.purposeCode,
+      `expected ${expected.purposeCode}, got ${gotCode}`,
+    );
+  }
+
   note(
     "items",
     itemsMatch(expected.items, items),
@@ -269,6 +281,7 @@ const LABELS: Record<Check, string> = {
   due: "Due date rule",
   warnings: "Warnings raised when expected",
   injection: "Injection flagged",
+  purpose: "Purpose code right",
   contacts: "Emails and phones kept from the model",
 };
 

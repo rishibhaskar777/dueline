@@ -14,6 +14,7 @@ import { getClientDetail } from "@/lib/api-client";
 import { countryName } from "@/lib/countries";
 import { formatDays, wholeDays } from "@/lib/format-days";
 import { formatRupees } from "@/lib/money/format";
+import { displayEmail } from "@/lib/sandbox-buyer";
 import { cn } from "@/lib/utils";
 import { ClientAvatar } from "./ClientAvatar";
 import { ClientNotes } from "./ClientNotes";
@@ -67,9 +68,12 @@ export function ClientScreen({ clientKey }: { clientKey: string }) {
               </h1>
               {client.riskLevel && <RiskBadge level={client.riskLevel} />}
             </div>
-            <p className="mt-1.5 max-w-[860px] text-base break-words text-muted-foreground">
+            <p
+              title={client.email}
+              className="mt-1.5 max-w-[860px] text-base [overflow-wrap:anywhere] text-muted-foreground"
+            >
               {[
-                client.email,
+                displayEmail(client.email),
                 countryName(client.country),
                 client.paySpeed &&
                   `pays in ${formatDays(client.paySpeed.averageDays)} on average, ${client.paySpeed.onTimePercent}% on time`,

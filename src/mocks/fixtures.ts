@@ -205,6 +205,8 @@ export const payoutEstimate: PayoutEstimate = {
   marketRateSource: "ecb",
   conversionRate: 85.36,
   netInr: 36696,
+  feeInr: 1769,
+  conversionLossInr: 1135,
   lossInr: 2904,
   lossPercent: 7.3,
 };

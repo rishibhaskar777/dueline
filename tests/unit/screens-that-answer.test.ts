@@ -191,6 +191,9 @@ describe("clientLine", () => {
 
   it("is just the email when the country is not known", () => {
     expect(clientLine("maya@example.com", null)).toBe("maya@example.com");
+    expect(clientLine("sb-s471e753484744@personal.example.com", "DE")).toBe(
+      "Germany · PayPal sandbox buyer",
+    );
     expect(clientLine("maya@example.com", undefined)).toBe("maya@example.com");
   });
 });

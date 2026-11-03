@@ -23,6 +23,7 @@ export function MainTabs() {
     itemRefs,
     count: NAV_TABS.length,
     active,
+    resetKey: pathname,
   });
 
   useEffect(() => {

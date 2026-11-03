@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { SearchList } from "@/components/shared/SearchList";
 import { Button } from "@/components/ui/button";
 import { getClients, mergeClient } from "@/lib/api-client";
+import { displayEmail } from "@/lib/sandbox-buyer";
 import { endSentence } from "@/lib/sentence";
 import type { ClientSummary } from "@/types";
 import { clientHref } from "./client-href";
@@ -104,7 +105,7 @@ export function MergeClient({ client, hasMerged }: MergeClientProps) {
                 id: key,
                 label: name,
                 keywords: email,
-                hint: email,
+                hint: displayEmail(email),
               }))}
               onChoose={(key) => setTarget(others.find((other) => other.key === key) ?? null)}
             />

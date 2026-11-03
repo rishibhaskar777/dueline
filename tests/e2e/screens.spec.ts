@@ -199,7 +199,7 @@ test.describe("Export register", () => {
     const tile = page.locator("dt", { hasText: "Rupees received" }).locator("..");
     await expect(tile).toContainText(/₹[\d,]+/);
     await expect(tile).toContainText(
-      /All estimated|All from PayPal|from PayPal, ₹[\d,]+ estimated/,
+      /All estimated|All from PayPal's figures|All by bank|\d+ (from PayPal's figures|estimated|by bank)/,
     );
   });
 
@@ -406,7 +406,20 @@ test.describe("New invoice", () => {
       await expect(page.getByRole("button", { name: /^Offer \d+% if paid within/ })).toHaveCount(0);
     }
     await expect(page.getByText("PayPal fee", { exact: true })).toBeVisible();
-    await expect(page.getByText("Conversion loss", { exact: true })).toBeVisible();
+    await expect(page.getByText("Conversion loss", { exact: true })).toHaveCount(0);
+
+    const rupees = async (label: string): Promise<number> => {
+      const value = await page
+        .getByText(label, { exact: true })
+        .locator("xpath=following-sibling::dd")
+        .innerText();
+      const matches = value.match(/₹([\d,]+)/g) ?? [];
+      return Number((matches[matches.length - 1] ?? "").replace(/[^\d]/g, ""));
+    };
+    const fee = await rupees("PayPal fee");
+    const conversion = await rupees("Currency conversion");
+    const total = await rupees("Total lost");
+    expect(fee + conversion).toBe(total);
   });
 
   test("the paste box shows an example and says what is hidden from the AI", async ({ page }) => {
@@ -561,6 +574,37 @@ test.describe("Top bar", () => {
     );
     await expect(main.locator('[aria-current="page"]')).toHaveCount(1);
     await expect(main.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/receivables");
+  });
+
+  test("keeps the pill on the current tab when an invoice is opened from Home", async ({
+    page,
+  }) => {
+    await page.goto("/receivables");
+    const main = page.getByRole("navigation", { name: "Main" });
+    await main.getByRole("link", { name: /^Nudges/ }).dispatchEvent("pointerover", {
+      pointerType: "mouse",
+    });
+    await page.locator('a[href^="/invoices/INV"]').first().click();
+    await expect(page).toHaveURL(/\/invoices\/INV/);
+    await expect(main.getByRole("link", { name: "Home" })).toHaveClass(/text-white/);
+    await expect(main.getByRole("link", { name: /^Nudges/ })).not.toHaveClass(/text-white/);
+  });
+
+  test("names the browser tab after the page the menu calls Home", async ({ page }) => {
+    await page.goto("/receivables");
+    await expect(page).toHaveTitle("Home · Dueline");
+  });
+
+  test("keeps the pill on Export while the account menu is open", async ({ page }) => {
+    await page.goto("/export");
+    const main = page.getByRole("navigation", { name: "Main" });
+    await main.getByRole("link", { name: /^Nudges/ }).dispatchEvent("pointerover", {
+      pointerType: "mouse",
+    });
+    await page.getByRole("button", { name: /^Account menu/ }).click();
+    await expect(page.getByRole("menu")).toBeVisible();
+    await expect(main.getByRole("link", { name: "Export" })).toHaveClass(/text-white/);
+    await expect(main.getByRole("link", { name: /^Nudges/ })).not.toHaveClass(/text-white/);
   });
 });
 

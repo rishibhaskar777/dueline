@@ -13,7 +13,8 @@ import { SitePill } from "./SitePill";
 // The public site's top bar: the app bar's glass, with the four site pages as tabs. On the landing
 // page no tab is current, so the pill only appears under the pointer.
 export function SiteNav() {
-  const active = activeSiteLink(usePathname());
+  const pathname = usePathname();
+  const active = activeSiteLink(pathname);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const slider = useSlidingIndicator({
@@ -21,6 +22,7 @@ export function SiteNav() {
     itemRefs,
     count: SITE_LINKS.length,
     active,
+    resetKey: pathname,
   });
 
   return (

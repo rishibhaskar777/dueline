@@ -3,7 +3,7 @@ import { RiskBadge } from "@/components/shared/RiskBadge";
 import { formatDate } from "@/lib/format-date";
 import { formatMoney, formatRupees } from "@/lib/money/format";
 import type { InvoiceSummary } from "@/types";
-import { payoutSourceWord } from "./invoice-status";
+import { payoutSourceWord } from "@/components/shared/payout-source";
 import { StatusBadge } from "./StatusBadge";
 
 interface InvoiceCardsProps {
@@ -45,7 +45,7 @@ export function InvoiceCards({ invoices, today, onOpen }: InvoiceCardsProps) {
                   {formatRupees(invoice.payoutInr)}
                   {invoice.payoutSource && (
                     <span className="ml-1 text-xs text-subtle">
-                      {payoutSourceWord(invoice.payoutSource)}
+                      {payoutSourceWord(invoice.payoutSource, invoice.actualPayout !== null)}
                     </span>
                   )}{" "}
                   to your bank

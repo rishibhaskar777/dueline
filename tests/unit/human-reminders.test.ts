@@ -210,7 +210,7 @@ describe("a draft that contradicts its tone", () => {
     modelAnswers(firmAnswer);
     await draftReminderText(facts, "firm");
 
-    await store.putCached(`reminder:${facts.invoiceId}:final:en:4:0:v4`, friendly, 3600);
+    await store.putCached(`reminder:${facts.invoiceId}:final:en:4:0:v5`, friendly, 3600);
     expect(await cachedReminderText(facts, "final")).toBeNull();
     expect(await cachedReminderText(facts, "firm")).toMatchObject({ source: "ai" });
   });

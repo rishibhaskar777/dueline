@@ -16,7 +16,12 @@ function RupeesCell({ data }: Params) {
   if (!data) return null;
   return (
     <span className="tabular-nums">
-      {formatRupees(data.inrReceived)} <SourceTag source={data.inrSource} />
+      {formatRupees(data.inrReceived)}{" "}
+      <SourceTag
+        source={data.inrSource}
+        feeFromPayPal={data.fee !== null}
+        rateDate={data.rateDate}
+      />
     </span>
   );
 }
@@ -24,7 +29,10 @@ function RupeesCell({ data }: Params) {
 function rupeesTooltip(row: ExportRegisterRow): string {
   if (row.inrSource === "paypal") return "The rupees PayPal reported for this payment.";
   if (row.rateUsed === null || row.rateDate === null) return "Estimated.";
-  return `Estimated at ${formatRate(row.rateUsed)} rupees per ${row.foreign.currency}: the ECB rate of ${formatDate(row.rateDate)} less PayPal's markup.`;
+  const rate = `${formatRate(row.rateUsed)} rupees per ${row.foreign.currency}: the ECB rate of ${formatDate(row.rateDate)} less PayPal's markup`;
+  return row.fee !== null
+    ? `Fee and net from PayPal. The rupees are estimated at ${rate}.`
+    : `Estimated at ${rate}.`;
 }
 
 function PurposeCell({ data }: Params) {

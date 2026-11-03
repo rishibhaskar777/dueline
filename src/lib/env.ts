@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { SANDBOX_BUYER_DOMAIN } from "@/lib/sandbox-buyer";
 
 export class ConfigError extends Error {
   constructor(message: string) {
@@ -7,8 +8,6 @@ export class ConfigError extends Error {
     this.name = "ConfigError";
   }
 }
-
-export const SANDBOX_BUYER_DOMAIN = "@personal.example.com";
 
 // Offline mode needs no accounts, so the settings it would otherwise ask for have fixed values.
 export const OFFLINE_DEMO_PASSWORD = "offline";

@@ -52,7 +52,7 @@ export function InvoiceFacts({ invoice, details, today }: InvoiceFactsProps) {
       <Fact label="Issued">{formatDate(invoice.issuedOn)}</Fact>
       <Fact label="Due">{dueSentence(invoice, today)}</Fact>
       <Fact label="Client">
-        <span className="[overflow-wrap:anywhere]">
+        <span title={invoice.client.email} className="[overflow-wrap:anywhere]">
           {clientLine(invoice.client.email, country)}
         </span>
       </Fact>
