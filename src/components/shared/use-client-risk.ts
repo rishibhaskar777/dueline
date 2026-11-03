@@ -22,9 +22,15 @@ function keyOf(email: string, name: string): string | null {
   return query.success ? `${query.data.name ?? ""}|${query.data.email}` : null;
 }
 
-// Reads the client's history once the email is valid and the typing has paused. A reading the
-// server already made for the starting email and name is used as it is.
-export function useClientRisk(email: string, name: string, known?: KnownRisk): ClientRisk | null {
+// Reads the client's history once the email is valid and the typing has paused (`pauseMs` is 0 for
+// a client who is not being typed). A reading the server already made for the starting email and
+// name is used as it is.
+export function useClientRisk(
+  email: string,
+  name: string,
+  known?: KnownRisk,
+  pauseMs: number = TYPING_PAUSE_MS,
+): ClientRisk | null {
   const key = keyOf(email, name);
   const knownKey = known?.risk ? keyOf(known.email, known.name) : null;
   const [outcome, setOutcome] = useState<Outcome | null>(
@@ -39,12 +45,12 @@ export function useClientRisk(email: string, name: string, known?: KnownRisk): C
         (risk) => current && setOutcome({ key, risk }),
         () => current && setOutcome({ key, risk: null }),
       );
-    }, TYPING_PAUSE_MS);
+    }, pauseMs);
     return () => {
       current = false;
       clearTimeout(timer);
     };
-  }, [email, name, key, knownKey]);
+  }, [email, name, key, knownKey, pauseMs]);
 
   return outcome && outcome.key === key ? outcome.risk : null;
 }

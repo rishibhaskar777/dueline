@@ -1,3 +1,4 @@
+import { forgetRemembered } from "@/lib/remembered";
 import type {
   ActivityResponse,
   AnnualSummary,
@@ -121,7 +122,20 @@ async function fetchWithColdStartRetry(path: string, init?: RequestInit): Promis
   return outcome.response;
 }
 
+// A write may change anything a screen showed, and a sign-in or sign-out changes who is asking, so
+// after one nothing earlier is reused: no read still on its way is shared and no remembered screen
+// is shown again.
 async function request(path: string, init?: RequestInit): Promise<Response> {
+  if (isRead(init)) return checkedRequest(path, init);
+  pendingReads.clear();
+  try {
+    return await checkedRequest(path, init);
+  } finally {
+    forgetRemembered();
+  }
+}
+
+async function checkedRequest(path: string, init?: RequestInit): Promise<Response> {
   const response = await fetchWithColdStartRetry(path, init);
   if (response.ok) return response;
 
@@ -130,9 +144,22 @@ async function request(path: string, init?: RequestInit): Promise<Response> {
   throw error;
 }
 
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await request(path, init);
   return (await response.json()) as T;
+}
+
+// Reads of the same address that are still on their way share one request, so a page whose parts
+// each ask for the profile, the invoices or the demo recipient asks the server once.
+const pendingReads = new Map<string, Promise<unknown>>();
+
+function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+  if (init) return fetchJson<T>(path, init);
+  const pending = pendingReads.get(path);
+  if (pending) return pending as Promise<T>;
+  const read = fetchJson<T>(path).finally(() => pendingReads.delete(path));
+  pendingReads.set(path, read);
+  return read;
 }
 
 function jsonInit(method: string, body: unknown): RequestInit {

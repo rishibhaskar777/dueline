@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toLoadError, type LoadError } from "@/components/shared/load-error";
+import { recall, remember } from "@/lib/remembered";
 import { getProfile } from "@/lib/api-client";
 import type { Profile } from "@/types";
 
@@ -13,14 +14,18 @@ interface ProfileState {
 }
 
 const savedListeners = new Set<(profile: Profile) => void>();
+const REMEMBERED_AS = "profile";
 
 // The profile form announces what it saved, so the account menu shows the new name at once.
 export function publishSavedProfile(profile: Profile): void {
+  remember(REMEMBERED_AS, profile);
   savedListeners.forEach((listener) => listener(profile));
 }
 
 export function useProfile(): ProfileState {
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(
+    () => recall<Profile>(REMEMBERED_AS) ?? null,
+  );
   const [error, setError] = useState<LoadError | null>(null);
   const [attempt, setAttempt] = useState(0);
 
@@ -35,6 +40,7 @@ export function useProfile(): ProfileState {
     let current = true;
     getProfile().then(
       (loaded) => {
+        remember(REMEMBERED_AS, loaded);
         if (!current) return;
         setProfile(loaded);
         setError(null);
