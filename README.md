@@ -30,7 +30,7 @@ who are paid by clients abroad.
 
 <p align="center"><sub>The 30-second story above loops. If your browser hides animation, it shows the finished Dueline screen.</sub></p>
 
-## For judges
+## For Judges
 
 |                          |                                                                              |
 | ------------------------ | ---------------------------------------------------------------------------- |
@@ -61,7 +61,7 @@ who are paid by clients abroad.
 | Innovation                   | The due line, rupees before sending, quote-checked AI drafts, a two-channel reminder                                                                            |
 | Presentation                 | [The 3-minute video](https://www.youtube.com/watch?v=VIDEO_ID) and the animations in this README                                                                |
 
-## The problem
+## The Problem
 
 Many freelancers in India are paid by clients abroad through PayPal. Three things go wrong every
 month.
@@ -155,7 +155,7 @@ a person approves. It never sends anything on its own.
 second check confirms the draft matches that tone, and reminders can be written in English, Hindi,
 German, French, Spanish, Dutch or Portuguese. Built-in templates take over if the model is unavailable.
 
-### The morning run
+### The Morning Run
 
 Every day at 06:00 India time a Vercel cron calls `GET /api/cron/daily`. On its own, it prepares
 reminder drafts for newly late invoices, the month's repeat invoices, triggered rate alerts and a
@@ -215,7 +215,7 @@ client column on narrower screens.
 - Phone layouts tested at 390 px with no sideways scroll.
 - Reduced motion respected everywhere, including the animations in this README.
 
-## Quality and security
+## Quality and Security
 
 |                  |                                                                                                      |
 | ---------------- | ---------------------------------------------------------------------------------------------------- |
@@ -269,7 +269,7 @@ npm run dev
 
 </details>
 
-## Built during the hackathon
+## Built During The Hackathon
 
 Dueline was started on 29 Oct 2026, inside the PayPal AI Hackathon 2026 submission period, and
 everything in this repository was built for it. The [changelog](CHANGELOG.md) and the
