@@ -9,6 +9,8 @@ import type { ClientRisk } from "./risk";
 export interface InvoicesResponse {
   invoices: InvoiceSummary[];
   totals: Totals;
+  today: string; // the date the server is using, so the screen needs no second call for it
+  loadedAt: string | null; // when Dueline last read the invoices from PayPal, ISO timestamp
 }
 
 export interface ExtractResponse {
