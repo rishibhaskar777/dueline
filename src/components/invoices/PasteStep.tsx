@@ -3,12 +3,13 @@
 import { Lock } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { CHAT_PLACEHOLDER, SAMPLE_CHAT } from "@/components/invoices/sample-chat";
+import { maskedNotice } from "@/components/invoices/notice-pills";
 import { StepHeader } from "@/components/invoices/StepHeader";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ApiClientError, extractInvoice } from "@/lib/api-client";
-import type { ClientRisk, ExtractResponse, InvoiceDraft } from "@/types";
+import type { ClientRisk, InvoiceDraft, PaymentTerms } from "@/types";
 
 const MAX_CHAT_LENGTH = 6000;
 const NO_ITEMS_FOUND = "We couldn't find invoice items in that chat. Fill them in below.";
@@ -18,14 +19,7 @@ export interface Drafted {
   warnings: string[];
   notice: string | null;
   risk: ClientRisk | null;
-}
-
-function plural(count: number, one: string, many: string): string {
-  return `${count} ${count === 1 ? one : many}`;
-}
-
-function maskedNotice({ emails, phones }: ExtractResponse["masked"]): string {
-  return `We hid ${plural(emails, "email", "emails")} and ${plural(phones, "phone number", "phone numbers")} before the AI read the chat`;
+  paymentTerms: PaymentTerms | null;
 }
 
 interface PasteStepProps {
@@ -41,17 +35,25 @@ export function PasteStep({ onDrafted }: PasteStepProps) {
   // When the AI cannot be asked, filling the invoice in by hand is the way on.
   const [aiDown, setAiDown] = useState(false);
 
+  const empty = chat.trim() === "";
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
     setError(null);
     setAiDown(false);
     try {
-      const { draft, warnings, masked, risk } = await extractInvoice(chat);
-      onDrafted({ draft, warnings, notice: maskedNotice(masked), risk });
+      const { draft, warnings, masked, risk, paymentTerms } = await extractInvoice(chat);
+      onDrafted({ draft, warnings, notice: maskedNotice(masked), risk, paymentTerms });
     } catch (caught) {
       if (caught instanceof ApiClientError && caught.code === "extraction_failed") {
-        onDrafted({ draft: null, warnings: [NO_ITEMS_FOUND], notice: null, risk: null });
+        onDrafted({
+          draft: null,
+          warnings: [NO_ITEMS_FOUND],
+          notice: null,
+          risk: null,
+          paymentTerms: null,
+        });
         return;
       }
       setAiDown(caught instanceof ApiClientError && caught.code === "ai_unavailable");
@@ -80,7 +82,7 @@ export function PasteStep({ onDrafted }: PasteStepProps) {
             onChange={(event) => setChat(event.target.value)}
             placeholder={CHAT_PLACEHOLDER}
             aria-describedby="chat-hint chat-count"
-            className="min-h-48 rounded-[18px] p-[18px] text-[17px] leading-[1.55]"
+            className="min-h-48 rounded-[18px] p-[18px] text-[17px] leading-[1.55] placeholder:text-subtle"
           />
           <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
             <Lock aria-hidden className="size-4 shrink-0" />
@@ -112,18 +114,32 @@ export function PasteStep({ onDrafted }: PasteStepProps) {
               type="button"
               variant={aiDown ? "default" : "outline"}
               className={PILL}
-              onClick={() => onDrafted({ draft: null, warnings: [], notice: null, risk: null })}
+              onClick={() =>
+                onDrafted({
+                  draft: null,
+                  warnings: [],
+                  notice: null,
+                  risk: null,
+                  paymentTerms: null,
+                })
+              }
             >
               Start without a chat
             </Button>
             <Button
               type="submit"
               className="h-11 px-6 font-bold"
-              disabled={pending || chat.trim() === ""}
+              disabled={pending || empty}
+              aria-describedby={empty ? "draft-hint" : undefined}
             >
               {pending ? "Drafting…" : "Draft invoice"}
             </Button>
           </div>
+          {empty && (
+            <p id="draft-hint" className="text-[13px] text-muted-foreground">
+              Paste a chat or use the sample to start
+            </p>
+          )}
         </form>
 
         <aside className="grid gap-3.5">

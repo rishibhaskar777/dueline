@@ -61,8 +61,8 @@ function noteOf(
 }
 
 // PayPal takes a given name and a surname, so the last word is the surname.
-function nameOf(yourName: string): { given_name: string; surname?: string } | undefined {
-  const words = yourName.split(/\s+/).filter(Boolean);
+function nameOf(fullName: string): { given_name: string; surname?: string } | undefined {
+  const words = fullName.split(/\s+/).filter(Boolean);
   if (words.length === 0) return undefined;
   if (words.length === 1) return { given_name: words[0] };
   return { given_name: words.slice(0, -1).join(" "), surname: words.at(-1) };
@@ -98,6 +98,7 @@ export function toPayPalInvoice(
   const dueDate = early?.validUntil ?? draft.dueOn;
   const note = noteOf(draft, profile, early);
   const invoicer = invoicerOf(profile);
+  const contact = nameOf(draft.client.contactName ?? "");
 
   return {
     detail: {
@@ -114,6 +115,7 @@ export function toPayPalInvoice(
         billing_info: {
           email_address: draft.client.email,
           business_name: draft.client.name,
+          ...(contact ? { name: contact } : {}),
           ...(draft.client.country ? { address: { country_code: draft.client.country } } : {}),
         },
       },

@@ -2,6 +2,7 @@
   "01-logo-pack": {
     "clientName": "Cobalt Bakery",
     "clientEmail": "[EMAIL_1]",
+    "clientContactName": null,
     "clientCountry": null,
     "countryQuote": null,
     "currency": "USD",
@@ -22,11 +23,13 @@
     ],
     "note": null,
     "purposeCode": "P1099",
-    "purposeReason": "Logo and brand work has no closer match."
+    "purposeReason": "Logo and brand work has no closer match.",
+    "paymentTerms": null
   },
   "05-discount-mentioned": {
     "clientName": "Maple Row Studio",
     "clientEmail": "[EMAIL_1]",
+    "clientContactName": null,
     "clientCountry": null,
     "countryQuote": null,
     "currency": "CAD",
@@ -41,11 +44,13 @@
     ],
     "note": null,
     "purposeCode": null,
-    "purposeReason": null
+    "purposeReason": null,
+    "paymentTerms": null
   },
   "09-phone-number": {
     "clientName": "Harbor Light Coffee",
     "clientEmail": "[EMAIL_1]",
+    "clientContactName": null,
     "clientCountry": null,
     "countryQuote": null,
     "currency": "USD",
@@ -60,11 +65,13 @@
     ],
     "note": "Call [PHONE_1] if anything is unclear.",
     "purposeCode": "P1099",
-    "purposeReason": "Artwork has no closer match."
+    "purposeReason": "Artwork has no closer match.",
+    "paymentTerms": null
   },
   "10-prompt-injection": {
     "clientName": "Orbit Gadgets",
     "clientEmail": "[EMAIL_1]",
+    "clientContactName": null,
     "clientCountry": null,
     "countryQuote": null,
     "currency": "USD",
@@ -79,11 +86,13 @@
     ],
     "note": null,
     "purposeCode": null,
-    "purposeReason": null
+    "purposeReason": null,
+    "paymentTerms": null
   },
   "11-no-prices": {
     "clientName": "Tidewater Books",
     "clientEmail": "[EMAIL_1]",
+    "clientContactName": null,
     "clientCountry": null,
     "countryQuote": null,
     "currency": null,
@@ -91,11 +100,13 @@
     "items": [],
     "note": null,
     "purposeCode": null,
-    "purposeReason": null
+    "purposeReason": null,
+    "paymentTerms": null
   },
   "12-unsupported-currency": {
     "clientName": "Alpenblick AG",
     "clientEmail": "[EMAIL_1]",
+    "clientContactName": null,
     "clientCountry": null,
     "countryQuote": null,
     "currency": "CHF",
@@ -110,11 +121,13 @@
     ],
     "note": null,
     "purposeCode": null,
-    "purposeReason": null
+    "purposeReason": null,
+    "paymentTerms": null
   },
   "13-hinglish-logo": {
     "clientName": "Zest Juice Bar",
     "clientEmail": "[EMAIL_1]",
+    "clientContactName": null,
     "clientCountry": null,
     "countryQuote": null,
     "currency": "USD",
@@ -135,11 +148,13 @@
     ],
     "note": null,
     "purposeCode": "P1099",
-    "purposeReason": "Logo work has no closer match."
+    "purposeReason": "Logo work has no closer match.",
+    "paymentTerms": null
   },
   "22-no-email": {
     "clientName": "Thistle Interiors",
     "clientEmail": null,
+    "clientContactName": null,
     "clientCountry": null,
     "countryQuote": null,
     "currency": "GBP",
@@ -154,11 +169,13 @@
     ],
     "note": null,
     "purposeCode": null,
-    "purposeReason": null
+    "purposeReason": null,
+    "paymentTerms": null
   },
   "23-past-date": {
     "clientName": "Fjord Textiles",
     "clientEmail": "[EMAIL_1]",
+    "clientContactName": null,
     "clientCountry": null,
     "countryQuote": null,
     "currency": "EUR",
@@ -173,11 +190,13 @@
     ],
     "note": null,
     "purposeCode": "P1017",
-    "purposeReason": "Catalogue layout is publishing work."
+    "purposeReason": "Catalogue layout is publishing work.",
+    "paymentTerms": null
   },
   "25-country-stated": {
     "clientName": "Casa Verde Studio",
     "clientEmail": "[EMAIL_1]",
+    "clientContactName": null,
     "clientCountry": "PT",
     "countryQuote": "we're in Lisbon",
     "currency": "EUR",
@@ -192,11 +211,13 @@
     ],
     "note": null,
     "purposeCode": "P1099",
-    "purposeReason": "Illustration work has no closer match."
+    "purposeReason": "Illustration work has no closer match.",
+    "paymentTerms": null
   },
   "26-brand-kit-p1099": {
     "clientName": "Kraftwerk Studio",
     "clientEmail": null,
+    "clientContactName": null,
     "clientCountry": null,
     "countryQuote": null,
     "currency": "EUR",
@@ -223,6 +244,44 @@
     ],
     "note": null,
     "purposeCode": "P1007",
-    "purposeReason": "Brand identity work is advertising and design."
+    "purposeReason": "Brand identity work is advertising and design.",
+    "paymentTerms": null
+  },
+  "27-whatsapp-upfront": {
+    "clientName": "Kraftwerk Studio",
+    "clientEmail": null,
+    "clientContactName": "Lena Fischer",
+    "clientCountry": null,
+    "countryQuote": null,
+    "currency": "EUR",
+    "dueOn": "2026-11-19",
+    "items": [
+      {
+        "name": "Logo final files",
+        "quantity": 1,
+        "unitAmount": "400.00",
+        "sourceQuote": "Logo files €400"
+      },
+      {
+        "name": "Business card design",
+        "quantity": 2,
+        "unitAmount": "90.00",
+        "sourceQuote": "business cards €90 each"
+      },
+      {
+        "name": "Brand guideline PDF",
+        "quantity": 1,
+        "unitAmount": "650.00",
+        "sourceQuote": "guideline €650"
+      }
+    ],
+    "note": null,
+    "purposeCode": "P1099",
+    "purposeReason": "Design work with no closer RBI code; confirm with your CA.",
+    "paymentTerms": {
+      "upfrontPercent": 50,
+      "note": null,
+      "quote": "Can we do 50% now and rest on delivery?"
+    }
   }
 }

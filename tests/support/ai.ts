@@ -22,6 +22,7 @@ export function noObjectError(): NoObjectGeneratedError {
 export const haldenGuess: ModelDraft = {
   clientName: "Halden Coffee Co.",
   clientEmail: "[EMAIL_1]",
+  clientContactName: null,
   clientCountry: null,
   countryQuote: null,
   currency: "USD",
@@ -43,6 +44,7 @@ export const haldenGuess: ModelDraft = {
   note: null,
   purposeCode: "P1099",
   purposeReason: "Logo design has no closer match, so it is other services.",
+  paymentTerms: null,
 };
 
 // The Halden chat gives only a delivery date, so the model rightly returns no payment due date.

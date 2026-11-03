@@ -255,6 +255,7 @@ export const extraction: ExtractResponse = {
     "No payment terms in the chat; due date set to 14 days from today. Change it if needed.",
   ],
   risk: haldenRisk,
+  paymentTerms: null,
   masked: { emails: 1, phones: 0 },
 };
 

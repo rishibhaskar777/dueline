@@ -43,11 +43,11 @@ async function evaluate(id: string, date: string): Promise<EvaluatedChat> {
 
   let outcome: ExtractionOutcome;
   try {
-    const { draft, warnings } = await extractInvoiceDraft(chat, {
+    const { draft, warnings, paymentTerms } = await extractInvoiceDraft(chat, {
       beforeModelCall: reserveDailyModelCall,
       fresh: true,
     });
-    outcome = { draft, warnings, sent };
+    outcome = { draft, warnings, paymentTerms, sent };
   } catch (error) {
     if (!(error instanceof ExtractionFailedError)) throw error;
     outcome = { draft: null, warnings: [], sent };

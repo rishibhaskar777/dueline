@@ -49,6 +49,7 @@ function clientOf(invoice: PayPalInvoice): InvoiceSummary["client"] {
     name: billing?.business_name || person || email,
     email,
     ...(country ? { country } : {}),
+    ...(person ? { contactName: person } : {}),
   };
 }
 

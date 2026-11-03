@@ -8,7 +8,7 @@ import {
   type InvoiceForm,
 } from "@/components/invoices/invoice-form";
 import { getInvoiceDetail, getRepeats } from "@/lib/api-client";
-import type { ClientRisk } from "@/types";
+import type { ClientRisk, PaymentTerms } from "@/types";
 
 export interface Prefill {
   // Both are checked on the page before they get here.
@@ -22,6 +22,7 @@ interface PrefilledReview {
   warnings: string[];
   notice: string | null;
   risk: ClientRisk | null;
+  paymentTerms: PaymentTerms | null;
 }
 
 type Prefilled =
@@ -37,7 +38,7 @@ const COULD_NOT_COPY =
   "We couldn't copy that invoice. Paste a chat or start without one to make a new invoice.";
 
 function review(form: InvoiceForm, warnings: string[] = []): PrefilledReview {
-  return { form, warnings, notice: null, risk: null };
+  return { form, warnings, notice: null, risk: null, paymentTerms: null };
 }
 
 // An invoice for a known client, or a copy of an earlier invoice, skips the chat and opens the
@@ -45,6 +46,7 @@ function review(form: InvoiceForm, warnings: string[] = []): PrefilledReview {
 export function usePrefill(
   { clientName, duplicateId, repeatId }: Prefill,
   defaultSac: string,
+  includeLutNote: boolean,
   profileReady: boolean,
 ): Prefilled & { clear: () => void } {
   const [copied, setCopied] = useState<PrefilledReview | null>(null);
@@ -55,17 +57,17 @@ export function usePrefill(
     let active = true;
     getInvoiceDetail(duplicateId).then(
       (detail) => active && setCopied(review(formFromInvoice(detail, defaultSac))),
-      () => active && setCopied(review(blankForm(defaultSac), [COULD_NOT_COPY])),
+      () => active && setCopied(review(blankForm(defaultSac, includeLutNote), [COULD_NOT_COPY])),
     );
     return () => {
       active = false;
     };
-  }, [duplicateId, profileReady, defaultSac]);
+  }, [duplicateId, profileReady, defaultSac, includeLutNote]);
 
   useEffect(() => {
     if (repeatId === null || !profileReady) return;
     let active = true;
-    const missing = () => review(blankForm(defaultSac), [COULD_NOT_FIND_REPEAT]);
+    const missing = () => review(blankForm(defaultSac, includeLutNote), [COULD_NOT_FIND_REPEAT]);
     getRepeats().then(
       (repeats) => {
         const found = repeats.find(({ id }) => id === repeatId);
@@ -77,11 +79,12 @@ export function usePrefill(
     return () => {
       active = false;
     };
-  }, [repeatId, profileReady, defaultSac]);
+  }, [repeatId, profileReady, defaultSac, includeLutNote]);
 
   const named = useMemo(
-    () => (clientName === null ? null : review({ ...blankForm(defaultSac), clientName })),
-    [clientName, defaultSac],
+    () =>
+      clientName === null ? null : review({ ...blankForm(defaultSac, includeLutNote), clientName }),
+    [clientName, defaultSac, includeLutNote],
   );
 
   const fromSaved = duplicateId !== null || repeatId !== null;

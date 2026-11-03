@@ -83,12 +83,18 @@ describe("POST /api/invoices/extract", () => {
 
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(Object.keys(body).sort()).toEqual(["draft", "masked", "risk", "warnings"]);
+    expect(Object.keys(body).sort()).toEqual([
+      "draft",
+      "masked",
+      "paymentTerms",
+      "risk",
+      "warnings",
+    ]);
     expect(body.risk).toMatchObject({
       clientEmail: "mike@haldencoffee.example",
       clientName: "Halden Coffee Co.",
       invoicesConsidered: 0,
-      level: "reliable",
+      level: "new",
     });
     expect(body.masked).toEqual({ emails: 1, phones: 0 });
     expect(body.draft.client.email).toBe("mike@haldencoffee.example");

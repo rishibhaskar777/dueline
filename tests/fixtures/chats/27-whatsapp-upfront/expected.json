@@ -1,0 +1,16 @@
+{
+  "summary": "A WhatsApp export where the client asks for half upfront and names the person writing",
+  "client": "Kraftwerk Studio",
+  "currency": "EUR",
+  "purposeCode": "P1099",
+  "upfrontPercent": 50,
+  "contactName": "Lena Fischer",
+  "items": [
+    { "nameIncludes": "logo", "quantity": 1, "unitAmount": "400.00" },
+    { "nameIncludes": "business card", "quantity": 2, "unitAmount": "90.00" },
+    { "nameIncludes": "guideline", "quantity": 1, "unitAmount": "650.00" }
+  ],
+  "due": { "rule": "net", "days": 15 },
+  "warnings": ["no_client_email"],
+  "contacts": []
+}

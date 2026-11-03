@@ -34,7 +34,7 @@ export function ClientFields({ form, update, errors, demoEmail }: ClientFieldsPr
   return (
     <>
       <div className="@container mt-4">
-        <div className="grid gap-3.5 @xl:grid-cols-3">
+        <div className="grid gap-3.5 @xl:grid-cols-2">
           <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-1.5">
             <Label htmlFor="client-name" className="font-bold">
               Client name
@@ -48,6 +48,20 @@ export function ClientFields({ form, update, errors, demoEmail }: ClientFieldsPr
               aria-describedby={errors["client.name"] ? "client-name-error" : undefined}
             />
             <FieldError id="client-name-error" message={errors["client.name"]} />
+          </div>
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-1.5">
+            <Label htmlFor="client-contact" className="font-bold">
+              Contact name (optional)
+            </Label>
+            <Input
+              id="client-contact"
+              autoComplete="off"
+              value={form.clientContactName}
+              onChange={(event) => update({ clientContactName: event.target.value })}
+              aria-invalid={Boolean(errors["client.contactName"])}
+              aria-describedby={errors["client.contactName"] ? "client-contact-error" : undefined}
+            />
+            <FieldError id="client-contact-error" message={errors["client.contactName"]} />
           </div>
           <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-1.5">
             <Label htmlFor="client-email" className="font-bold">
@@ -90,7 +104,8 @@ export function ClientFields({ form, update, errors, demoEmail }: ClientFieldsPr
         </div>
       </div>
       <p className="mt-3 text-sm text-muted-foreground">
-        Goes on the invoice as the client&apos;s billing country and in your export register.
+        The contact name is who your reminders greet. The country goes on the invoice as the
+        client&apos;s billing country and in your export register.
       </p>
       {demoEmail && (
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">

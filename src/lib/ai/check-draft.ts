@@ -4,11 +4,18 @@ import { isCountryCode } from "@/lib/countries";
 import { isPurposeCode } from "@/lib/export/purpose-codes";
 import { fromMinorUnits, toMinorUnits } from "@/lib/money/decimal";
 import { unmask, type ContactMap } from "@/lib/privacy/mask";
-import { currencySchema, type CurrencyCode, type InvoiceDraft, type LineItem } from "@/types";
+import {
+  currencySchema,
+  type CurrencyCode,
+  type InvoiceDraft,
+  type LineItem,
+  type PaymentTerms,
+} from "@/types";
 
 export const modelDraftSchema = z.object({
   clientName: z.string(),
   clientEmail: z.string().nullable(),
+  clientContactName: z.string().nullable(),
   clientCountry: z.string().nullable(),
   countryQuote: z.string().nullable(),
   currency: z.string().nullable(),
@@ -24,6 +31,13 @@ export const modelDraftSchema = z.object({
   note: z.string().nullable(),
   purposeCode: z.string().nullable(),
   purposeReason: z.string().nullable(),
+  paymentTerms: z
+    .object({
+      upfrontPercent: z.number().nullable(),
+      note: z.string().nullable(),
+      quote: z.string(),
+    })
+    .nullable(),
 });
 
 export type ModelDraft = z.infer<typeof modelDraftSchema>;
@@ -37,6 +51,7 @@ interface CheckInput {
 interface CheckedDraft {
   draft: InvoiceDraft;
   warnings: string[];
+  paymentTerms: PaymentTerms | null;
 }
 
 const DEFAULT_CURRENCY: CurrencyCode = "USD";
@@ -46,6 +61,10 @@ const MAX_NAME_LENGTH = 200;
 const MAX_QUOTE_LENGTH = 500;
 const MAX_NOTE_LENGTH = 500;
 const MAX_REASON_LENGTH = 300;
+const MAX_TERMS_NOTE_LENGTH = 100;
+const MAX_CONTACT_LENGTH = 100;
+const MIN_UPFRONT_PERCENT = 1;
+const MAX_UPFRONT_PERCENT = 99;
 
 const DECIMAL_AMOUNT = /^\d+(\.\d{1,2})?$/;
 const THOUSANDS_AMOUNT = /^\d{1,3}(,\d{3})+(\.\d+)?$/;
@@ -214,6 +233,29 @@ function checkCountry(raw: ModelDraft, chat: string): string | undefined {
     : undefined;
 }
 
+// The terms are kept only when the words they came from are in the chat. The share is a whole or
+// part percent from 1 to 99, so "100%" or a nonsense number is dropped and the note, if any, stays.
+function checkPaymentTerms(raw: ModelDraft, input: CheckInput): PaymentTerms | null {
+  const terms = raw.paymentTerms;
+  if (!terms) return null;
+  const quote = cleanText(terms.quote, input.contacts, MAX_QUOTE_LENGTH);
+  if (quote === "" || !quoteIsInChat(quote, input.chat)) return null;
+
+  const percent = terms.upfrontPercent;
+  const upfrontPercent =
+    percent !== null && percent >= MIN_UPFRONT_PERCENT && percent <= MAX_UPFRONT_PERCENT
+      ? percent
+      : null;
+  const note = cleanText(terms.note, input.contacts, MAX_TERMS_NOTE_LENGTH) || null;
+  return upfrontPercent === null && note === null ? null : { upfrontPercent, note, quote };
+}
+
+// The person is kept only when their name is in the chat, and never when it is an email address.
+function checkContactName(raw: ModelDraft, input: CheckInput): string | undefined {
+  const name = cleanText(raw.clientContactName, input.contacts, MAX_CONTACT_LENGTH);
+  return name !== "" && !name.includes("@") && quoteIsInChat(name, input.chat) ? name : undefined;
+}
+
 export function checkModelDraft(raw: ModelDraft, input: CheckInput): CheckedDraft {
   const warnings: string[] = [];
   const { contacts } = input;
@@ -232,13 +274,19 @@ export function checkModelDraft(raw: ModelDraft, input: CheckInput): CheckedDraf
   const dueOn = checkDueOn(raw.dueOn, input.today, warnings);
   const email = checkEmail(raw.clientEmail, contacts, warnings);
   const country = checkCountry(raw, input.chat);
+  const contactName = checkContactName(raw, input);
 
   const { purposeCode, purposeReason } = checkPurpose(raw, contacts, items);
   const note = cleanText(raw.note, contacts, MAX_NOTE_LENGTH);
 
   return {
     draft: {
-      client: { name, email, ...(country ? { country } : {}) },
+      client: {
+        name,
+        email,
+        ...(country ? { country } : {}),
+        ...(contactName ? { contactName } : {}),
+      },
       currency,
       dueOn,
       items,
@@ -248,5 +296,6 @@ export function checkModelDraft(raw: ModelDraft, input: CheckInput): CheckedDraf
       includeLutNote: false,
     },
     warnings,
+    paymentTerms: checkPaymentTerms(raw, input),
   };
 }

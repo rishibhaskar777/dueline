@@ -11,6 +11,7 @@ export interface Client {
   name: string;
   email: string;
   country?: string;
+  contactName?: string; // the person at the client, kept as the recipient's name on the PayPal invoice
 }
 
 export interface ActualPayout {
@@ -60,6 +61,13 @@ export interface LineItem {
   unitAmount: string;
   sourceQuote?: string;
   sac: string | null;
+}
+
+// What the chat said about when the client pays, shown on the review step as a notice only.
+export interface PaymentTerms {
+  upfrontPercent: number | null; // 1 to 99: the share of the total the client asked to pay before delivery
+  note: string | null; // any other term the client wrote, like "net 30" or "after approval"
+  quote: string; // the exact words from the chat
 }
 
 export interface InvoiceDraft {
