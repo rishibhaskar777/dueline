@@ -15,7 +15,7 @@ const paypal = vi.hoisted(() => ({
   cancelInvoice: vi.fn(),
   recordExternalPayment: vi.fn(),
   loadInvoices: vi.fn(),
-  clearInvoiceCaches: vi.fn(),
+  refreshSnapshotNow: vi.fn(),
 }));
 
 vi.mock("@/lib/paypal/invoices", () => ({
@@ -26,7 +26,7 @@ vi.mock("@/lib/paypal/invoices", () => ({
 vi.mock("@/lib/paypal/summaries", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/paypal/summaries")>()),
   loadInvoices: paypal.loadInvoices,
-  clearInvoiceCaches: paypal.clearInvoiceCaches,
+  refreshSnapshotNow: paypal.refreshSnapshotNow,
 }));
 
 let store: Store;
@@ -82,7 +82,7 @@ describe("POST /api/invoices/{id}/cancel", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ cancelled: true, notified: false });
     expect(paypal.cancelInvoice).toHaveBeenCalledWith(id, { notifyClient: false });
-    expect(paypal.clearInvoiceCaches).toHaveBeenCalledTimes(1);
+    expect(paypal.refreshSnapshotNow).toHaveBeenCalledTimes(1);
   });
 
   it("emails the client only when asked", async () => {
@@ -186,7 +186,7 @@ describe("POST /api/invoices/{id}/record-payment", () => {
       method: "WIRE_TRANSFER",
       note: "Wire",
     });
-    expect(paypal.clearInvoiceCaches).toHaveBeenCalledTimes(1);
+    expect(paypal.refreshSnapshotNow).toHaveBeenCalledTimes(1);
   });
 
   it("notes where a payment was recorded when no note is given", async () => {

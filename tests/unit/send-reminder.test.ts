@@ -16,7 +16,7 @@ import unpaidFixture from "../fixtures/paypal/invoice-unpaid.json";
 const paypal = vi.hoisted(() => ({
   getInvoice: vi.fn(),
   remindInvoice: vi.fn(),
-  clearInvoiceCaches: vi.fn(),
+  refreshSnapshotNow: vi.fn(),
 }));
 
 vi.mock("@/lib/paypal/invoices", () => ({
@@ -29,7 +29,7 @@ vi.mock("@/lib/paypal/invoices", () => ({
 vi.mock("@/lib/paypal/summaries", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/paypal/summaries")>()),
   findInvoiceByMemo: vi.fn(),
-  clearInvoiceCaches: paypal.clearInvoiceCaches,
+  refreshSnapshotNow: paypal.refreshSnapshotNow,
 }));
 
 let store: Store;
@@ -86,7 +86,7 @@ describe("sendReminder through PayPal", () => {
         amount: { currency: "USD", value: "900.00" },
       },
     ]);
-    expect(paypal.clearInvoiceCaches).toHaveBeenCalledTimes(1);
+    expect(paypal.refreshSnapshotNow).toHaveBeenCalledTimes(1);
   });
 
   it("returns the stored time for a repeat without calling PayPal", async () => {

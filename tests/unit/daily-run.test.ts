@@ -12,14 +12,14 @@ import { BRIGHTWELL, OKAFOR, openInvoice, overdueInvoice, paidInvoice } from "..
 
 const paypal = vi.hoisted(() => ({
   loadInvoices: vi.fn(),
-  clearInvoiceCaches: vi.fn(),
+  refreshSnapshotNow: vi.fn(),
   sendInvoice: vi.fn(),
   remindInvoice: vi.fn(),
   createDraftInvoice: vi.fn(),
 }));
 vi.mock("@/lib/paypal/summaries", () => ({
   loadInvoices: paypal.loadInvoices,
-  clearInvoiceCaches: paypal.clearInvoiceCaches,
+  refreshSnapshotNow: paypal.refreshSnapshotNow,
 }));
 vi.mock("@/lib/paypal/invoices", () => ({
   sendInvoice: paypal.sendInvoice,
@@ -115,12 +115,12 @@ describe("the daily preparation", () => {
 
   it("does the work once a day, however often it is asked", async () => {
     await runDailyPreparation();
-    const preparations = paypal.clearInvoiceCaches.mock.calls.length;
+    const preparations = paypal.refreshSnapshotNow.mock.calls.length;
 
     const again = await runDailyPreparation();
     expect(again.ran).toBe(false);
     expect(await listQueue()).toHaveLength(2);
-    expect(paypal.clearInvoiceCaches).toHaveBeenCalledTimes(preparations);
+    expect(paypal.refreshSnapshotNow).toHaveBeenCalledTimes(preparations);
   });
 
   it("hides a dismissed reminder until the next run", async () => {
@@ -255,7 +255,7 @@ describe("the daily preparation", () => {
     expect(paypal.sendInvoice).not.toHaveBeenCalled();
     expect(paypal.remindInvoice).not.toHaveBeenCalled();
     expect(paypal.createDraftInvoice).not.toHaveBeenCalled();
-    expect(paypal.clearInvoiceCaches).toHaveBeenCalled();
+    expect(paypal.refreshSnapshotNow).toHaveBeenCalled();
   });
 
   it("can be run again after a failure", async () => {

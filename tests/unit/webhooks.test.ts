@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as getActivity } from "@/app/api/activity/route";
 import { POST as webhook } from "@/app/api/webhooks/paypal/route";
-import { clearInvoiceCaches } from "@/lib/paypal/summaries";
+import { refreshSnapshotNow } from "@/lib/paypal/summaries";
 import { clearAccessToken } from "@/lib/paypal/token";
 import type { PayPalInvoice } from "@/lib/paypal/types";
 import { createMemoryStore } from "@/lib/store/memory-store";
@@ -23,7 +23,7 @@ let store: Store;
 const getStore = (): Store => store;
 vi.mock("@/lib/store", () => ({ getStore: () => store }));
 
-vi.mock("@/lib/paypal/summaries", () => ({ clearInvoiceCaches: vi.fn() }));
+vi.mock("@/lib/paypal/summaries", () => ({ refreshSnapshotNow: vi.fn() }));
 
 const paid = paidFixture as PayPalInvoice;
 const nestedPaid = nestedPaidFixture;
@@ -76,7 +76,7 @@ beforeEach(() => {
   store = createMemoryStore();
   stubEnv({ PAYPAL_WEBHOOK_ID: "WH-ID", DEMO_TODAY: "2026-10-29", DEMO_MODE: "false" });
   clearAccessToken();
-  vi.mocked(clearInvoiceCaches).mockClear();
+  vi.mocked(refreshSnapshotNow).mockClear();
   sdk.getCapturedPayment.mockReset();
   vi.spyOn(console, "warn").mockImplementation(() => {});
   vi.spyOn(console, "error").mockImplementation(() => {});
@@ -159,7 +159,7 @@ describe("POST /api/webhooks/paypal processing", () => {
 
     expect(response.status).toBe(204);
     expect(callsTo(fetchSpy, INVOICE_PATH)).toBe(1);
-    expect(clearInvoiceCaches).toHaveBeenCalledTimes(1);
+    expect(refreshSnapshotNow).toHaveBeenCalledTimes(1);
     expect((await getStore().getActualPayout(paid.id))?.netInr).toBe(35617);
     expect(await getStore().isProcessed("WH-B1")).toBe(true);
 
@@ -246,7 +246,7 @@ describe("POST /api/webhooks/paypal processing", () => {
     expect((await webhook(delivery(raw))).status).toBe(204);
 
     expect(callsTo(fetchSpy, INVOICE_PATH)).toBe(1);
-    expect(clearInvoiceCaches).toHaveBeenCalledTimes(1);
+    expect(refreshSnapshotNow).toHaveBeenCalledTimes(1);
     const events = (await getStore().latestActivity(50)).filter((event) => event.id === "WH-B2");
     expect(events).toHaveLength(1);
   });
@@ -334,7 +334,7 @@ describe("POST /api/webhooks/paypal processing", () => {
     );
 
     expect(callsTo(fetchSpy, INVOICE_PATH)).toBe(1);
-    expect(clearInvoiceCaches).toHaveBeenCalledTimes(1);
+    expect(refreshSnapshotNow).toHaveBeenCalledTimes(1);
     expect((await getStore().latestActivity(50)).some((event) => event.id === "WH-B4")).toBe(false);
   });
 

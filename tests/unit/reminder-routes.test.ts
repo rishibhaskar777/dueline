@@ -27,7 +27,7 @@ vi.mock("@/lib/paypal/summaries", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/paypal/summaries")>()),
   loadInvoices: paypal.loadInvoices,
   findInvoiceByMemo: vi.fn(),
-  clearInvoiceCaches: vi.fn(),
+  refreshSnapshotNow: vi.fn(),
 }));
 vi.mock("@/lib/paypal/invoices", () => ({
   nextInvoiceNumber: vi.fn(),

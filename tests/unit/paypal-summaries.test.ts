@@ -1,6 +1,15 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { clearInvoiceCaches, findInvoiceByMemo, loadInvoices } from "@/lib/paypal/summaries";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  clearInvoiceCaches,
+  findInvoiceByMemo,
+  invoicesLoadedAt,
+  loadInvoices,
+  refreshSnapshotNow,
+  warmInvoiceSnapshot,
+} from "@/lib/paypal/summaries";
+import { readStoredInvoice } from "@/lib/paypal/invoice-cache";
 import { getStore } from "@/lib/store";
+import { createMemoryStore } from "@/lib/store/memory-store";
 import type { PayPalInvoice } from "@/lib/paypal/types";
 import type { ActualPayout } from "@/types";
 import { stubEnv } from "../support/env";
@@ -64,10 +73,10 @@ async function summaries() {
 }
 
 describe("loadInvoices", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     stubEnv({ DEMO_TODAY: "2026-10-17" });
     vi.resetAllMocks();
-    clearInvoiceCaches();
+    await clearInvoiceCaches();
   });
 
   it("drops drafts and cancelled invoices and sorts newest first", async () => {
@@ -125,55 +134,19 @@ describe("loadInvoices", () => {
     expect(busiest).toBe(4);
   });
 
-  it("does not call PayPal again within 20 seconds", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
-    try {
-      serve(withId(unpaid, "open"));
-      await loadInvoices();
-      vi.setSystemTime(Date.now() + 19_000);
-      await loadInvoices();
-      expect(paypal.listInvoices).toHaveBeenCalledTimes(1);
-
-      vi.setSystemTime(Date.now() + 2_000);
-      await loadInvoices();
-      expect(paypal.listInvoices).toHaveBeenCalledTimes(2);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
   it("shares one load between callers that arrive together", async () => {
     serve(withId(unpaid, "open"));
     await Promise.all([loadInvoices(), loadInvoices(), loadInvoices()]);
     expect(paypal.listInvoices).toHaveBeenCalledTimes(1);
   });
 
-  it("reuses a full invoice while its status is unchanged and reads it again when it changes", async () => {
+  it("reads a full invoice again once the stored copy is older than 6 hours", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     try {
       serve(withId(unpaid, "open"));
       await loadInvoices();
-      vi.setSystemTime(Date.now() + 30_000);
-      await loadInvoices();
-      expect(paypal.getInvoice).toHaveBeenCalledTimes(1);
-
-      serve({ ...withId(unpaid, "open"), status: "PARTIALLY_PAID" });
-      paypal.getActualPayout.mockResolvedValue(null);
-      vi.setSystemTime(Date.now() + 30_000);
-      await loadInvoices();
-      expect(paypal.getInvoice).toHaveBeenCalledTimes(2);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it("reads a full invoice again after 10 minutes", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
-    try {
-      serve(withId(unpaid, "open"));
-      await loadInvoices();
-      vi.setSystemTime(Date.now() + 11 * 60_000);
-      await loadInvoices();
+      vi.setSystemTime(Date.now() + 7 * 60 * 60_000);
+      await refreshSnapshotNow();
       expect(paypal.getInvoice).toHaveBeenCalledTimes(2);
     } finally {
       vi.useRealTimers();
@@ -183,7 +156,7 @@ describe("loadInvoices", () => {
   it("starts again after the caches are cleared", async () => {
     serve(withId(unpaid, "open"));
     await loadInvoices();
-    clearInvoiceCaches();
+    await clearInvoiceCaches();
     await loadInvoices();
     expect(paypal.listInvoices).toHaveBeenCalledTimes(2);
     expect(paypal.getInvoice).toHaveBeenCalledTimes(2);
@@ -194,7 +167,7 @@ describe("loadInvoices", () => {
     paypal.getActualPayout.mockResolvedValue(payout);
 
     const first = await summaries();
-    clearInvoiceCaches();
+    await clearInvoiceCaches();
     serve(withId(paid, "stored-payout"));
     const second = await summaries();
     expect(first[0].actualPayout).toEqual(payout);
@@ -208,7 +181,7 @@ describe("loadInvoices", () => {
     paypal.getActualPayout.mockResolvedValue(payout);
 
     expect((await summaries())[0].actualPayout).toEqual(payout);
-    clearInvoiceCaches();
+    await clearInvoiceCaches();
     serve(withId(paid, "legacy-payout"));
     expect((await summaries())[0].actualPayout).toEqual(payout);
     expect(paypal.getActualPayout).toHaveBeenCalledTimes(1);
@@ -250,10 +223,10 @@ describe("findInvoiceByMemo", () => {
     return { ...withId(invoice, id), detail: { ...invoice.detail, memo } };
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
     stubEnv({ DEMO_TODAY: "2026-10-17" });
     vi.resetAllMocks();
-    clearInvoiceCaches();
+    await clearInvoiceCaches();
   });
 
   it("finds an invoice by the memo only a full read shows, drafts included", async () => {
@@ -277,5 +250,242 @@ describe("findInvoiceByMemo", () => {
       withMemo(unpaid, "second", "dueline-request:bbb"),
     );
     expect((await findInvoiceByMemo("dueline-request:bbb"))?.id).toBe("second");
+  });
+});
+
+describe("the invoice snapshot", () => {
+  const SECOND = 1000;
+
+  beforeEach(async () => {
+    stubEnv({ DEMO_TODAY: "2026-10-17" });
+    vi.resetAllMocks();
+    await clearInvoiceCaches();
+    vi.useFakeTimers({ toFake: ["Date"] });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  function later(seconds: number): void {
+    vi.setSystemTime(Date.now() + seconds * SECOND);
+  }
+
+  async function statuses(): Promise<string[]> {
+    return (await summaries()).map((summary) => summary.paypalStatus);
+  }
+
+  it("answers from the snapshot while it is fresh", async () => {
+    serve(withId(unpaid, "open"));
+    await loadInvoices();
+    later(59);
+    await loadInvoices();
+    expect(paypal.listInvoices).toHaveBeenCalledTimes(1);
+    expect(paypal.getInvoice).toHaveBeenCalledTimes(1);
+  });
+
+  it("answers from an old snapshot at once and refreshes it in the background", async () => {
+    serve(withId(unpaid, "open"));
+    await loadInvoices();
+    serve(withId(unpaid, "open"), withId(unpaid, "new"));
+    later(61);
+
+    expect(await summaries()).toHaveLength(1);
+    await vi.waitFor(async () => expect(await summaries()).toHaveLength(2));
+    expect(paypal.listInvoices).toHaveBeenCalledTimes(2);
+  });
+
+  it("reads again only the invoices that are new or changed", async () => {
+    serve(withId(unpaid, "steady"), withId(unpaid, "moves"));
+    await loadInvoices();
+    expect(paypal.getInvoice).toHaveBeenCalledTimes(2);
+
+    paypal.getActualPayout.mockResolvedValue(null);
+    serve(
+      withId(unpaid, "steady"),
+      { ...withId(unpaid, "moves"), status: "PARTIALLY_PAID" },
+      withId(unpaid, "added"),
+    );
+    later(61);
+    await loadInvoices();
+    await vi.waitFor(() => expect(paypal.listInvoices).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(paypal.getInvoice).toHaveBeenCalledTimes(4));
+    expect(
+      paypal.getInvoice.mock.calls
+        .slice(2)
+        .map(([id]) => id)
+        .sort(),
+    ).toEqual(["added", "moves"]);
+  });
+
+  it("makes the next read exact after a write", async () => {
+    serve(withId(unpaid, "open"));
+    expect(await statuses()).toEqual(["SENT"]);
+
+    paypal.getActualPayout.mockResolvedValue(null);
+    serve({ ...withId(unpaid, "open"), status: "PAID" });
+    await refreshSnapshotNow(["open"]);
+
+    expect(await statuses()).toEqual(["PAID"]);
+    expect(paypal.listInvoices).toHaveBeenCalledTimes(2);
+  });
+
+  it("reads a named invoice again even when the list shows no change", async () => {
+    serve(withId(unpaid, "open"));
+    await loadInvoices();
+    await refreshSnapshotNow(["open"]);
+    expect(paypal.getInvoice).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps the old snapshot when a background refresh fails, and tries again later", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    serve(withId(unpaid, "open"));
+    await loadInvoices();
+
+    paypal.listInvoices.mockRejectedValue(new Error("PayPal is down"));
+    later(61);
+    expect(await summaries()).toHaveLength(1);
+    await vi.waitFor(() => expect(warn).toHaveBeenCalledWith(expect.stringContaining("keeping")));
+    expect(await summaries()).toHaveLength(1);
+    expect(paypal.listInvoices).toHaveBeenCalledTimes(2);
+
+    serve(withId(unpaid, "open"), withId(unpaid, "new"));
+    later(31);
+    expect(await summaries()).toHaveLength(1);
+    await vi.waitFor(async () => expect(await summaries()).toHaveLength(2));
+  });
+
+  it("drops the snapshot when the refresh after a write fails", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    serve(withId(unpaid, "open"));
+    await loadInvoices();
+
+    paypal.listInvoices.mockRejectedValueOnce(new Error("PayPal is down"));
+    await refreshSnapshotNow(["open"]);
+
+    paypal.getActualPayout.mockResolvedValue(null);
+    serve({ ...withId(unpaid, "open"), status: "PAID" });
+    expect(await statuses()).toEqual(["PAID"]);
+  });
+
+  it("starts one refresh for requests that arrive together", async () => {
+    serve(withId(unpaid, "open"));
+    await loadInvoices();
+    later(61);
+
+    await Promise.all([loadInvoices(), loadInvoices(), loadInvoices()]);
+    await vi.waitFor(() => expect(paypal.listInvoices).toHaveBeenCalledTimes(2));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(paypal.listInvoices).toHaveBeenCalledTimes(2);
+  });
+
+  describe("across the India day boundary", () => {
+    function dueOn(id: string, due: string): PayPalInvoice {
+      return {
+        ...withId(unpaid, id),
+        detail: { ...unpaid.detail, payment_term: { due_date: due } },
+      };
+    }
+
+    async function states() {
+      return Object.fromEntries(
+        (await summaries()).map(({ id, dueState, daysLate }) => [id, { dueState, daysLate }]),
+      );
+    }
+
+    beforeEach(async () => {
+      stubEnv({ DEMO_TODAY: "2026-12-01" });
+      serve(dueOn("tomorrow", "2026-12-02"), dueOn("today", "2026-12-01"));
+      expect(await states()).toEqual({
+        tomorrow: { dueState: "due_soon", daysLate: 0 },
+        today: { dueState: "due_soon", daysLate: 0 },
+      });
+      paypal.listInvoices.mockRejectedValue(new Error("PayPal is down"));
+      paypal.getInvoice.mockRejectedValue(new Error("PayPal is down"));
+      vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    });
+
+    it("works out due and late states for the new day from yesterday's snapshot", async () => {
+      stubEnv({ DEMO_TODAY: "2026-12-02" });
+      later(5);
+      expect(await states()).toEqual({
+        tomorrow: { dueState: "due_soon", daysLate: 0 },
+        today: { dueState: "overdue", daysLate: 1 },
+      });
+      expect(paypal.listInvoices).toHaveBeenCalledTimes(1);
+      expect(paypal.getInvoice).toHaveBeenCalledTimes(2);
+    });
+
+    it("serves a day-old snapshot at once and keeps it when the refresh fails", async () => {
+      stubEnv({ DEMO_TODAY: "2026-12-02" });
+      later(24 * 60 * 60);
+      expect(await states()).toEqual({
+        tomorrow: { dueState: "due_soon", daysLate: 0 },
+        today: { dueState: "overdue", daysLate: 1 },
+      });
+      await vi.waitFor(() => expect(paypal.listInvoices).toHaveBeenCalledTimes(2));
+    });
+
+    it("builds the summaries of the demo's invoices in milliseconds", async () => {
+      const many = Array.from({ length: 40 }, (_, index) => dueOn(`inv-${index}`, "2026-12-05"));
+      paypal.listInvoices.mockResolvedValue(many.map(listed));
+      paypal.getInvoice.mockImplementation(async (id: string) =>
+        many.find((invoice) => invoice.id === id),
+      );
+      await refreshSnapshotNow();
+      const started = performance.now();
+      for (let read = 0; read < 20; read += 1) await loadInvoices();
+      expect((performance.now() - started) / 20).toBeLessThan(25);
+    });
+  });
+
+  it("stops keeping an invoice that PayPal no longer lists", async () => {
+    const gone = withId(unpaid, "gone");
+    serve(withId(unpaid, "stays"), gone);
+    await loadInvoices();
+    serve(withId(unpaid, "stays"));
+    await refreshSnapshotNow();
+
+    expect(await readStoredInvoice("gone")).toBeNull();
+    expect(await readStoredInvoice("stays")).not.toBeNull();
+    expect(await summaries()).toHaveLength(1);
+  });
+
+  it("treats a stored snapshot of the wrong shape as missing", async () => {
+    await getStore().putCached("invoices:snapshot:v2", { builtAt: 1, invoices: [] }, 60);
+    serve(withId(unpaid, "open"));
+    expect(await summaries()).toHaveLength(1);
+    expect(paypal.listInvoices).toHaveBeenCalledTimes(1);
+  });
+
+  it("gives a new instance the stored snapshot without asking PayPal", async () => {
+    const shared = createMemoryStore();
+    vi.doMock("@/lib/store", () => ({ getStore: () => shared }));
+    try {
+      vi.resetModules();
+      serve(withId(unpaid, "open"));
+      await (await import("@/lib/paypal/summaries")).loadInvoices();
+      expect(paypal.listInvoices).toHaveBeenCalledTimes(1);
+
+      vi.resetModules();
+      const second = await import("@/lib/paypal/summaries");
+      later(20);
+      expect(await second.loadInvoices()).toHaveLength(1);
+      expect(paypal.listInvoices).toHaveBeenCalledTimes(1);
+      expect(second.invoicesLoadedAt()).toEqual(expect.any(String));
+    } finally {
+      vi.doUnmock("@/lib/store");
+      vi.resetModules();
+    }
+  });
+
+  it("warms a missing snapshot and leaves a fresh one alone", async () => {
+    serve(withId(unpaid, "open"));
+    expect(invoicesLoadedAt()).toBeNull();
+    await warmInvoiceSnapshot();
+    expect(invoicesLoadedAt()).not.toBeNull();
+    await warmInvoiceSnapshot();
+    expect(paypal.listInvoices).toHaveBeenCalledTimes(1);
   });
 });

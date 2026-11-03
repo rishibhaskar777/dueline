@@ -18,7 +18,7 @@ const paypal = vi.hoisted(() => ({
   sendInvoice: vi.fn(),
   getInvoice: vi.fn(),
   findInvoiceByMemo: vi.fn(),
-  clearInvoiceCaches: vi.fn(),
+  refreshSnapshotNow: vi.fn(),
 }));
 
 vi.mock("@/lib/paypal/invoices", () => ({
@@ -30,7 +30,7 @@ vi.mock("@/lib/paypal/invoices", () => ({
 vi.mock("@/lib/paypal/summaries", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/paypal/summaries")>()),
   findInvoiceByMemo: paypal.findInvoiceByMemo,
-  clearInvoiceCaches: paypal.clearInvoiceCaches,
+  refreshSnapshotNow: paypal.refreshSnapshotNow,
 }));
 
 let store: Store;
@@ -103,7 +103,7 @@ describe("createAndSendInvoice", () => {
     });
     expect(paypal.sendInvoice).toHaveBeenCalledWith("INV2-NEW", expect.any(String));
     expect(paypal.getInvoice).toHaveBeenCalledWith("INV2-NEW");
-    expect(paypal.clearInvoiceCaches).toHaveBeenCalledTimes(1);
+    expect(paypal.refreshSnapshotNow).toHaveBeenCalledTimes(1);
   });
 
   it("replays the stored result for the same request without calling PayPal", async () => {
@@ -321,7 +321,7 @@ describe("sendExistingDraft", () => {
     const result = await sendExistingDraft("INV2-NEW", otherRequestId);
     expect(paypal.sendInvoice).toHaveBeenCalledWith("INV2-NEW", otherRequestId);
     expect(result).toMatchObject({ sent: true, invoice: { paypalStatus: "SENT" } });
-    expect(paypal.clearInvoiceCaches).toHaveBeenCalledTimes(1);
+    expect(paypal.refreshSnapshotNow).toHaveBeenCalledTimes(1);
 
     vi.clearAllMocks();
     expect(await sendExistingDraft("INV2-NEW", otherRequestId)).toEqual(result);
