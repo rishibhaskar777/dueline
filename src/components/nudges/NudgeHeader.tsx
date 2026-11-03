@@ -13,7 +13,7 @@ interface NudgeHeaderProps {
 }
 
 export function NudgeHeader({ invoice, history }: NudgeHeaderProps) {
-  const risk = useClientRisk(invoice.client.email, invoice.client.name);
+  const risk = useClientRisk(invoice.client.email, invoice.client.name, undefined, 0);
   const judged = risk && risk.invoicesConsidered > 0 ? risk : null;
 
   return (
