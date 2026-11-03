@@ -10,7 +10,7 @@ import { getInvoice } from "./invoices";
 import { invoicesWithPaidRow } from "./reconcile-paid";
 import { toInvoiceSummary } from "./map";
 import { getActualPayout } from "./payments";
-import { clearInvoiceCaches } from "./summaries";
+import { refreshSnapshotNow } from "./summaries";
 
 const webhookEventSchema = z.object({
   id: z.string().min(1),
@@ -55,7 +55,7 @@ function happenedAt(event: WebhookEvent): string {
 async function refreshInvoice(event: WebhookEvent, invoiceId: string): Promise<void> {
   const store = getStore();
   const invoice = await getInvoice(invoiceId);
-  clearInvoiceCaches();
+  await refreshSnapshotNow([invoiceId]);
 
   const kind = ACTIVITY_KINDS[event.event_type];
   const payout = kind === "paid" ? await getActualPayout(invoice) : null;

@@ -3,7 +3,7 @@ import { today } from "@/lib/clock";
 import { daysBetween } from "@/lib/date-math";
 import { getEnv } from "@/lib/env";
 import { cancelInvoice, deleteDraftInvoice } from "@/lib/paypal/invoices";
-import { clearInvoiceCaches, listInvoicesInFull } from "@/lib/paypal/summaries";
+import { listInvoicesInFull, refreshSnapshotNow } from "@/lib/paypal/summaries";
 import type { PayPalInvoice } from "@/lib/paypal/types";
 import { getStore } from "@/lib/store";
 import type { DemoResetResponse } from "@/types";
@@ -73,10 +73,17 @@ export async function resetDemo(): Promise<DemoResetResponse> {
   await claimReset();
 
   const invoices = await listInvoicesInFull();
-  const olderStory = await cancelOpenStory(invoices);
-  const others = await clearOtherInvoices(invoices);
-  const { generation, rows } = await seedNewGeneration();
-  clearInvoiceCaches();
+  let olderStory: number;
+  let others: Awaited<ReturnType<typeof clearOtherInvoices>>;
+  let seeded: Awaited<ReturnType<typeof seedNewGeneration>>;
+  try {
+    olderStory = await cancelOpenStory(invoices);
+    others = await clearOtherInvoices(invoices);
+    seeded = await seedNewGeneration();
+  } finally {
+    await refreshSnapshotNow();
+  }
+  const { generation, rows } = seeded;
 
   const created = rows.filter((row) => row.result === "created" || row.result === "repaired");
   const skipped = rows.filter((row) => row.result === "skipped");
@@ -115,9 +122,15 @@ export async function reseedStaleDemo(): Promise<void> {
     console.warn("Demo re-seed skipped", { reason: "reset_limit", generation: current.id });
     return;
   }
-  const cancelled = await cancelOpenStory(await listInvoicesInFull());
-  const { generation, rows } = await seedNewGeneration();
-  clearInvoiceCaches();
+  let cancelled: number;
+  let seeded: Awaited<ReturnType<typeof seedNewGeneration>>;
+  try {
+    cancelled = await cancelOpenStory(await listInvoicesInFull());
+    seeded = await seedNewGeneration();
+  } finally {
+    await refreshSnapshotNow();
+  }
+  const { generation, rows } = seeded;
   const failed = rows.filter((row) => row.result === "failed").length;
   console.info("Demo re-seeded", { generation, cancelled, created: rows.length - failed, failed });
 }

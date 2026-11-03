@@ -75,6 +75,7 @@ export interface PayPalInvoice {
   primary_recipients?: PayPalRecipient[];
   items?: PayPalItem[];
   amount?: PayPalMoney;
+  due_amount?: PayPalMoney;
   payments?: { paid_amount?: PayPalMoney; transactions?: PayPalPayment[] };
 }
 

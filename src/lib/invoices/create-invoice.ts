@@ -11,7 +11,7 @@ import {
   sendInvoice,
 } from "@/lib/paypal/invoices";
 import {
-  clearInvoiceCaches,
+  refreshSnapshotNow,
   findInvoiceByMemo,
   recipientsOf,
   summarise,
@@ -95,9 +95,12 @@ async function sendCreated(
       throw error;
     }
   }
-  const current = await getInvoice(draft.id);
-  clearInvoiceCaches();
-  return { invoice: summarise(current), sent: true };
+  // The invoice is sent by now, so the snapshot is renewed even if reading it back fails.
+  try {
+    return { invoice: summarise(await getInvoice(draft.id)), sent: true };
+  } finally {
+    await refreshSnapshotNow([draft.id]);
+  }
 }
 
 export async function createAndSendInvoice(
@@ -147,10 +150,13 @@ export async function sendExistingDraft(
     const invoice = await getInvoice(invoiceId);
     if (invoice.status === "DRAFT") {
       assertSandboxBuyers(recipientsOf(invoice));
-      await sendInvoice(invoiceId, requestId);
+      try {
+        await sendInvoice(invoiceId, requestId);
+      } finally {
+        await refreshSnapshotNow([invoiceId]);
+      }
     }
     const current = invoice.status === "DRAFT" ? await getInvoice(invoiceId) : invoice;
-    clearInvoiceCaches();
     const result: SendInvoiceResponse = { invoice: summarise(current), sent: true };
     await store.complete(requestId, toStored(result));
     return result;

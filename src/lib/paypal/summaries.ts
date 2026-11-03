@@ -1,9 +1,23 @@
 import "server-only";
+import { afterResponse } from "@/lib/after-response";
 import { applyAliases } from "@/lib/clients/aliases";
 import { today } from "@/lib/clock";
 import { inBatches } from "@/lib/in-batches";
 import { getStore } from "@/lib/store";
 import type { ActualPayout, InvoiceSummary, Money } from "@/types";
+import {
+  changeMarkOf,
+  dropSnapshot,
+  dropStoredInvoice,
+  FULL_INVOICE_TTL_MS,
+  readSnapshot,
+  readStoredInvoice,
+  saveSnapshot,
+  saveStoredInvoice,
+  type InvoiceSnapshot,
+  type SnapshotEntry,
+  type StoredInvoice,
+} from "./invoice-cache";
 import { getInvoice, listInvoices } from "./invoices";
 import { markerOf, sacOf } from "./memo";
 import { amountDueOf, isUnderLut, latestPayment, PAYOUT_STATUSES, toInvoiceSummary } from "./map";
@@ -24,40 +38,81 @@ export interface LoadedInvoice {
 
 const HIDDEN_STATUSES = ["DRAFT", "CANCELLED"];
 const READS_AT_A_TIME = 4;
+const STORE_READS_AT_A_TIME = 10;
 const RETRY_AFTER_MS = 5 * 60 * 1000;
-const FULL_INVOICE_TTL_MS = 10 * 60 * 1000;
-const RESULT_TTL_MS = 20 * 1000;
+// A snapshot older than this is still served at once, and a refresh starts behind the response.
+const REFRESH_AFTER_MS = 60 * 1000;
+const RETRY_REFRESH_AFTER_MS = 30 * 1000;
+// How long this instance trusts its own copy before it looks at the stored one, which another
+// instance may have replaced after a write.
+const LOCAL_TRUST_MS = 5 * 1000;
 
 // PayPal can take hours to report fees, and the receivables page polls every 10 seconds.
 const lastLookup = new Map<string, number>();
 
-// PayPal's list leaves out items and the payer link, so every listed invoice is read in full.
-const fullInvoices = new Map<string, { invoice: PayPalInvoice; readAt: number }>();
+// PayPal's list leaves out items and the payer link, so every listed invoice is read in full. The
+// read is kept here and in the store, and is read again only when the list shows a change.
+const fullInvoices = new Map<string, StoredInvoice>();
+// Invoices a write or an event just changed: read again whatever the list says.
+const changed = new Set<string>();
 
-let finished: { loadedAt: number; invoices: LoadedInvoice[] } | undefined;
-let inFlight: Promise<LoadedInvoice[]> | undefined;
+let local: { snapshot: InvoiceSnapshot; checkedAt: number } | undefined;
+let rebuilding: Promise<InvoiceSnapshot> | undefined;
+let refreshQueued = false;
+let lastRefreshFailedAt = 0;
 let generation = 0;
 
-export function clearInvoiceCaches(): void {
+// Forgets everything held here and in the store, so the next read builds from PayPal.
+export async function clearInvoiceCaches(): Promise<void> {
+  const ids = [...fullInvoices.keys()];
   lastLookup.clear();
   fullInvoices.clear();
-  finished = undefined;
-  inFlight = undefined;
+  changed.clear();
+  local = undefined;
+  rebuilding = undefined;
+  lastRefreshFailedAt = 0;
   generation += 1;
+  await Promise.all([dropSnapshot(), ...ids.map(dropStoredInvoice)]);
 }
 
-async function readInFull(listed: PayPalInvoice): Promise<PayPalInvoice> {
-  const cached = fullInvoices.get(listed.id);
-  if (
-    cached &&
-    cached.invoice.status === listed.status &&
-    Date.now() - cached.readAt < FULL_INVOICE_TTL_MS
-  ) {
-    return cached.invoice;
-  }
+function isCurrent(
+  stored: StoredInvoice | null | undefined,
+  mark: string,
+): stored is StoredInvoice {
+  return !!stored && stored.mark === mark && Date.now() - stored.readAt < FULL_INVOICE_TTL_MS;
+}
+
+async function recallFullInvoice(listed: PayPalInvoice): Promise<PayPalInvoice | undefined> {
+  if (changed.has(listed.id)) return undefined;
+  const mark = changeMarkOf(listed);
+  const remembered = fullInvoices.get(listed.id);
+  if (isCurrent(remembered, mark)) return remembered.invoice;
+  const stored = await readStoredInvoice(listed.id);
+  if (!isCurrent(stored, mark)) return undefined;
+  fullInvoices.set(listed.id, stored);
+  return stored.invoice;
+}
+
+async function readFullInvoice(listed: PayPalInvoice): Promise<PayPalInvoice> {
   const invoice = await getInvoice(listed.id);
-  fullInvoices.set(listed.id, { invoice, readAt: Date.now() });
+  const read = { invoice, mark: changeMarkOf(listed), readAt: Date.now() };
+  fullInvoices.set(listed.id, read);
+  changed.delete(listed.id);
+  await saveStoredInvoice(listed.id, read);
   return invoice;
+}
+
+// Takes each invoice from the copies kept here or in the store while the list shows no change, and
+// reads only the rest from PayPal.
+async function readInFull(listed: PayPalInvoice[]): Promise<PayPalInvoice[]> {
+  const recalled = await inBatches(listed, STORE_READS_AT_A_TIME, recallFullInvoice);
+  const missing = listed.filter((_, index) => !recalled[index]);
+  const read = await inBatches(missing, READS_AT_A_TIME, readFullInvoice);
+  const fetched = new Map(missing.map((invoice, index) => [invoice.id, read[index]]));
+  return listed.flatMap((invoice, index) => {
+    const found = recalled[index] ?? fetched.get(invoice.id);
+    return found ? [found] : [];
+  });
 }
 
 // Payouts stored before paid times were recorded have no paidAt key at all. They are read from
@@ -86,17 +141,35 @@ async function findPayouts(invoices: PayPalInvoice[]): Promise<Map<string, Actua
   return new Map(paid.map((invoice, index) => [invoice.id, found[index]]));
 }
 
-async function loadFresh(): Promise<LoadedInvoice[]> {
-  const listed = (await listInvoices()).filter(
-    (invoice) => !HIDDEN_STATUSES.includes(invoice.status),
-  );
-  const invoices = await inBatches(listed, READS_AT_A_TIME, readInFull);
-  const payouts = await findPayouts(invoices);
-  const date = today();
+// Invoices PayPal no longer lists (deleted by a demo reset) leave the copies kept here and in the
+// store, so nothing can bring them back.
+async function forgetUnlisted(listed: PayPalInvoice[]): Promise<void> {
+  const ids = new Set(listed.map((invoice) => invoice.id));
+  const gone = [...fullInvoices.keys()].filter((id) => !ids.has(id));
+  gone.forEach((id) => fullInvoices.delete(id));
+  [...changed].filter((id) => !ids.has(id)).forEach((id) => changed.delete(id));
+  await Promise.all(gone.map(dropStoredInvoice));
+}
 
-  return invoices
-    .flatMap((invoice) => {
-      const summary = toInvoiceSummary(invoice, date, payouts.get(invoice.id) ?? null);
+async function buildSnapshot(): Promise<InvoiceSnapshot> {
+  const all = await listInvoices();
+  await forgetUnlisted(all);
+  const invoices = await readInFull(
+    all.filter((invoice) => !HIDDEN_STATUSES.includes(invoice.status)),
+  );
+  const payouts = await findPayouts(invoices);
+  return {
+    builtAt: Date.now(),
+    entries: invoices.map((invoice) => ({ invoice, payout: payouts.get(invoice.id) ?? null })),
+  };
+}
+
+// Worked out on every read, with the date of that read: a snapshot from yesterday shows today's due
+// and late states without a call to PayPal.
+function toLoadedInvoices(entries: SnapshotEntry[], date: string): LoadedInvoice[] {
+  return entries
+    .flatMap(({ invoice, payout }) => {
+      const summary = toInvoiceSummary(invoice, date, payout);
       return summary
         ? [
             {
@@ -128,7 +201,7 @@ export function summarise(invoice: PayPalInvoice): InvoiceSummary {
 // The list leaves out the memo, so every invoice is read in full, drafts and cancelled ones too.
 // It skips the finished list on purpose: an invoice created a moment ago must be found.
 export async function listInvoicesInFull(): Promise<PayPalInvoice[]> {
-  return inBatches(await listInvoices(), READS_AT_A_TIME, readInFull);
+  return readInFull(await listInvoices());
 }
 
 export async function findInvoiceByMemo(memo: string): Promise<PayPalInvoice | undefined> {
@@ -137,28 +210,100 @@ export async function findInvoiceByMemo(memo: string): Promise<PayPalInvoice | u
   );
 }
 
-function loadCached(): Promise<LoadedInvoice[]> {
-  if (finished && Date.now() - finished.loadedAt < RESULT_TTL_MS) {
-    return Promise.resolve(finished.invoices);
+function startRebuild(): Promise<InvoiceSnapshot> {
+  const startedIn = generation;
+  const build: Promise<InvoiceSnapshot> = buildSnapshot()
+    .then(async (snapshot) => {
+      if (startedIn === generation) {
+        local = { snapshot, checkedAt: Date.now() };
+        await saveSnapshot(snapshot);
+      }
+      return snapshot;
+    })
+    .finally(() => {
+      if (rebuilding === build) rebuilding = undefined;
+    });
+  rebuilding = build;
+  return build;
+}
+
+async function knownSnapshot(): Promise<InvoiceSnapshot | undefined> {
+  if (local && Date.now() - local.checkedAt < LOCAL_TRUST_MS) return local.snapshot;
+  const stored = await readSnapshot();
+  if (!stored) {
+    local = undefined;
+    return undefined;
   }
-  if (!inFlight) {
-    const startedIn = generation;
-    const load = loadFresh()
-      .then((invoices) => {
-        if (startedIn === generation) finished = { loadedAt: Date.now(), invoices };
-        return invoices;
-      })
-      .finally(() => {
-        if (startedIn === generation) inFlight = undefined;
-      });
-    inFlight = load;
+  const newest = local && local.snapshot.builtAt > stored.builtAt ? local.snapshot : stored;
+  local = { snapshot: newest, checkedAt: Date.now() };
+  return newest;
+}
+
+// One refresh at a time, started after the response is sent. One that fails leaves the snapshot as
+// it was and is not tried again for a short while.
+function refreshInBackground(): void {
+  if (refreshQueued || rebuilding || Date.now() - lastRefreshFailedAt < RETRY_REFRESH_AFTER_MS) {
+    return;
   }
-  return inFlight;
+  refreshQueued = true;
+  afterResponse(async () => {
+    try {
+      await (rebuilding ?? startRebuild());
+    } catch {
+      lastRefreshFailedAt = Date.now();
+      console.warn("Invoice refresh failed, keeping the last snapshot");
+    } finally {
+      refreshQueued = false;
+    }
+  });
+}
+
+// Answers from the snapshot at once, however old; only a missing one is built before answering.
+async function currentSnapshot(): Promise<InvoiceSnapshot> {
+  const known = await knownSnapshot();
+  if (!known) return rebuilding ?? startRebuild();
+  if (Date.now() - known.builtAt >= REFRESH_AFTER_MS) refreshInBackground();
+  return known;
+}
+
+// Makes the snapshot exact after a write or an event. The named invoices are read again from
+// PayPal. If the refresh fails the snapshot is dropped, so the next read builds from PayPal
+// instead of showing what is known to be old.
+export async function refreshSnapshotNow(changedIds: readonly string[] = []): Promise<void> {
+  changedIds.forEach((id) => changed.add(id));
+  lastLookup.clear();
+  generation += 1;
+  try {
+    await startRebuild();
+  } catch {
+    console.warn("Invoice refresh failed, the next read builds from PayPal");
+    await clearInvoiceCaches();
+  }
+}
+
+// Builds the snapshot when there is none or it is old, so the first screen finds it ready.
+export async function warmInvoiceSnapshot(): Promise<void> {
+  try {
+    const known = await knownSnapshot();
+    if (!known || Date.now() - known.builtAt >= REFRESH_AFTER_MS) {
+      await (rebuilding ?? startRebuild());
+    }
+  } catch {
+    console.warn("Warming the invoice snapshot failed");
+  }
+}
+
+// When the invoices a request just used were read from PayPal, as an ISO time; null before any.
+export function invoicesLoadedAt(): string | null {
+  return local ? new Date(local.snapshot.builtAt).toISOString() : null;
 }
 
 // Rupee figures are filled in later, so a settings change shows up without waiting for PayPal.
-// Merged clients are applied after the cache, so a merge shows at once.
+// Merged clients are applied after the snapshot, so a merge shows at once.
 export async function loadInvoices(): Promise<LoadedInvoice[]> {
-  const [loaded, aliases] = await Promise.all([loadCached(), getStore().listClientAliases()]);
-  return applyAliases(loaded, aliases);
+  const [snapshot, aliases] = await Promise.all([
+    currentSnapshot(),
+    getStore().listClientAliases(),
+  ]);
+  return applyAliases(toLoadedInvoices(snapshot.entries, today()), aliases);
 }

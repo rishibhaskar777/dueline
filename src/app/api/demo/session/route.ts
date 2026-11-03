@@ -14,6 +14,8 @@ import {
 } from "@/lib/demo-access/constants";
 import { passwordMatches } from "@/lib/demo-access/password";
 import { createSessionToken } from "@/lib/demo-access/session";
+import { afterResponse } from "@/lib/after-response";
+import { warmInvoiceSnapshot } from "@/lib/paypal/summaries";
 import { getStore } from "@/lib/store";
 import { retryOnce } from "@/lib/store/retry-once";
 import { demoSessionRequestSchema } from "@/types";
@@ -75,6 +77,7 @@ export async function POST(req: Request): Promise<Response> {
       await createSessionToken(access.secret, new Date()),
       demoCookieOptions(),
     );
+    afterResponse(warmInvoiceSnapshot);
     return withBrowserId(response, browser);
   } catch (error) {
     return withBrowserId(failFromError(error), browser);

@@ -4,7 +4,7 @@ import { assertSandboxBuyers } from "@/lib/demo-guard";
 import { InvoiceNotFoundError } from "@/lib/invoices/errors";
 import { PayPalApiError } from "@/lib/paypal/errors";
 import { getInvoice, remindInvoice } from "@/lib/paypal/invoices";
-import { clearInvoiceCaches, recipientsOf, summarise } from "@/lib/paypal/summaries";
+import { recipientsOf, refreshSnapshotNow, summarise } from "@/lib/paypal/summaries";
 import { runClaimed } from "@/lib/requests/run-claimed";
 import { getStore } from "@/lib/store";
 import type { Json, Store } from "@/lib/store/store";
@@ -96,7 +96,7 @@ async function recordSent(
     at: sentAt,
     amount: invoice.amount,
   });
-  clearInvoiceCaches();
+  await refreshSnapshotNow([invoice.id]);
 }
 
 // "paypal" asks PayPal to send its standard reminder. "email" is the freelancer saying they sent their

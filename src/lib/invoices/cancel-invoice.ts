@@ -3,7 +3,7 @@ import { assertSandboxBuyers } from "@/lib/demo-guard";
 import { InvoiceNotFoundError } from "@/lib/invoices/errors";
 import { PayPalApiError } from "@/lib/paypal/errors";
 import { cancelInvoice as cancelAtPayPal, getInvoice } from "@/lib/paypal/invoices";
-import { clearInvoiceCaches, recipientsOf, summarise } from "@/lib/paypal/summaries";
+import { recipientsOf, refreshSnapshotNow, summarise } from "@/lib/paypal/summaries";
 import { runClaimed } from "@/lib/requests/run-claimed";
 import { getStore } from "@/lib/store";
 import type { Json } from "@/lib/store/store";
@@ -46,8 +46,11 @@ export function cancelInvoice(
     readStored: fromStored,
     run: async () => {
       await checkCancellable(id, notifyClient);
-      await cancelAtPayPal(id, { notifyClient });
-      clearInvoiceCaches();
+      try {
+        await cancelAtPayPal(id, { notifyClient });
+      } finally {
+        await refreshSnapshotNow([id]);
+      }
       return { cancelled: true, notified: notifyClient };
     },
   });
