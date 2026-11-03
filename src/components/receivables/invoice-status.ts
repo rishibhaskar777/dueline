@@ -14,8 +14,10 @@ const SOURCE_NOTES: Record<PayoutSource, string> = {
   outside_paypal: "outside PayPal",
 };
 
-export function payoutSourceNote(source: PayoutSource): string {
-  return SOURCE_NOTES[source];
+export function payoutSourceNote(source: PayoutSource, feeFromPayPal = false): string {
+  return source === "estimate" && feeFromPayPal
+    ? "PayPal fee, estimated rate"
+    : SOURCE_NOTES[source];
 }
 
 export function isPaidOutsidePayPal(invoice: InvoiceSummary): boolean {
@@ -47,15 +49,4 @@ export function clientStatusLabel(invoice: InvoiceSummary, today: string): strin
   const label = statusLabel(invoice, today);
   if (invoice.dueState !== "paid" || invoice.daysLate < 1) return tableStatusLabel(invoice, today);
   return `${label} · ${invoice.daysLate} ${invoice.daysLate === 1 ? "day" : "days"} late`;
-}
-
-const SOURCE_WORDS: Record<PayoutSource, string> = {
-  paypal: "PayPal",
-  estimate: "est.",
-  outside_paypal: "bank",
-};
-
-// The small word beside a rupee figure in the table.
-export function payoutSourceWord(source: PayoutSource): string {
-  return SOURCE_WORDS[source];
 }

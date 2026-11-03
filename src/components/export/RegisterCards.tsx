@@ -23,7 +23,12 @@ export function RegisterCards({ rows }: { rows: ExportRegisterRow[] }) {
           <span className="flex justify-between gap-2 tabular-nums">
             <span>{formatMoney(row.foreign)}</span>
             <span>
-              {formatRupees(row.inrReceived)} <SourceTag source={row.inrSource} />
+              {formatRupees(row.inrReceived)}{" "}
+              <SourceTag
+                source={row.inrSource}
+                feeFromPayPal={row.fee !== null}
+                rateDate={row.rateDate}
+              />
             </span>
           </span>
           <span className="flex justify-between gap-2 text-muted-foreground">

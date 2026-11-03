@@ -4,7 +4,8 @@ import { RiskBadge } from "@/components/shared/RiskBadge";
 import { formatDate } from "@/lib/format-date";
 import { formatMoney, formatRupees } from "@/lib/money/format";
 import type { InvoiceSummary } from "@/types";
-import { payoutSourceWord, tableStatusLabel } from "./invoice-status";
+import { payoutSourceHint, payoutSourceWord } from "@/components/shared/payout-source";
+import { tableStatusLabel } from "./invoice-status";
 import { StatusBadge } from "./StatusBadge";
 
 type Params = ICellRendererParams<InvoiceSummary>;
@@ -53,7 +54,12 @@ function PayoutCell({ data }: Params) {
     <span className="tabular-nums">
       {formatRupees(data.payoutInr)}
       {data.payoutSource && (
-        <span className="ml-1 text-xs text-subtle">{payoutSourceWord(data.payoutSource)}</span>
+        <span
+          title={payoutSourceHint(data.payoutSource, data.actualPayout !== null, data.rateDate)}
+          className="ml-1 text-xs text-subtle"
+        >
+          {payoutSourceWord(data.payoutSource, data.actualPayout !== null)}
+        </span>
       )}
     </span>
   );

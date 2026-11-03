@@ -13,6 +13,14 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- New invoice: the summary now shows PayPal's fee, the currency conversion and the total lost as three lines that add up, instead of counting the fee twice. The landing page and How it works use the same figures.
+- How it works: step 2 is the same €610.00 invoice that step 1 drafts, with its fee, conversion and rupees worked out from it.
+- Nudges: a reminder no longer says thank you twice (once in the text, once in the sign-off), "it is likely just slipped your mind" reads "it may have slipped your mind", and the French templates no longer open their request with "Merci". Stored drafts are written again.
+- The dark pill in the top tabs follows the page you are on: it no longer stays under a tab you passed over when you open an invoice, the account menu or another window.
+- PayPal sandbox buyers show as "PayPal sandbox buyer" instead of a long generated address; real addresses wrap or truncate with the full address on hover.
+- A brand kit (logo, business cards, brand guidelines) is suggested as P1099, like the same work elsewhere, and the AI now sees each purpose code's examples. New invoice chat 26 in the evaluation set checks it.
+- A payment PayPal has reported the fee for shows "PayPal fee · est. rate" instead of "est.", and the export register counts it as PayPal's figures.
+- The browser tab for Home says "Home".
 - The late-payer card on the landing page now says "12 days on average", as the demo does everywhere.
 - For your CA: "Sample rows from the demo" is the table's caption, once. The public pages and the sign-in page balance their headings and the last line of their intro text.
 - Home: Clients behind says "About ₹71,038 overdue." and gives the basis ("Based on 2 invoices.") only when it is under 3 invoices. Activity shows the 6 newest events with "Show all 16" and "Show fewer".

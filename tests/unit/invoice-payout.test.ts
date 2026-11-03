@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { payoutSourceWord } from "@/components/shared/payout-source";
 import { payoutFor, rateDateFor } from "@/lib/money/invoice-payout";
 import { tandemInvoice } from "@/mocks/fixtures";
 import {
@@ -96,5 +97,29 @@ describe("rateDateFor", () => {
   it("is none for an unpaid invoice, which keeps today's rate, or when PayPal reported rupees", () => {
     expect(rateDateFor(unpaid)).toBeNull();
     expect(rateDateFor({ ...paid, actualPayout: { ...sandboxPayout, netInr: 7874 } })).toBeNull();
+  });
+});
+
+describe("the word beside a paid invoice's rupees", () => {
+  const label = (invoice: InvoiceSummary): string => {
+    const payout = payoutFor(invoice, noDue, DEFAULT_SETTINGS, market);
+    return payoutSourceWord(payout.source, invoice.actualPayout !== null);
+  };
+
+  it("is PayPal when PayPal reported the rupees", () => {
+    const actual = { ...sandboxPayout, exchangeRate: 82.85, netInr: 7874 };
+    expect(label({ ...paid, actualPayout: actual })).toBe("PayPal");
+  });
+
+  it("says the fee is PayPal's and the rate an estimate when only the rupees are worked out", () => {
+    expect(label({ ...paid, actualPayout: sandboxPayout })).toBe("PayPal fee · est. rate");
+  });
+
+  it("stays est. when PayPal gave no figures at all", () => {
+    expect(label(paid)).toBe("est.");
+  });
+
+  it("stays bank for a payment made outside PayPal", () => {
+    expect(label({ ...paid, paypalStatus: "MARKED_AS_PAID" })).toBe("bank");
   });
 });

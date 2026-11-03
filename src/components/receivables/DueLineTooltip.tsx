@@ -57,7 +57,8 @@ export function DueLineTooltip({ target }: { target: TooltipTarget }) {
             <dt className="text-muted-foreground">To your bank</dt>
             <dd>
               {formatRupees(invoice.payoutInr)}{" "}
-              {invoice.payoutSource && `(${payoutSourceNote(invoice.payoutSource)})`}
+              {invoice.payoutSource &&
+                `(${payoutSourceNote(invoice.payoutSource, invoice.actualPayout !== null)})`}
             </dd>
           </>
         )}

@@ -102,7 +102,13 @@ export function EstimateComparison({ invoice }: { invoice: InvoiceSummary }) {
               ) : (
                 <>
                   {formatRupees(invoice.payoutInr)}{" "}
-                  {invoice.payoutSource && <SourceTag source={invoice.payoutSource} />}
+                  {invoice.payoutSource && (
+                    <SourceTag
+                      source={invoice.payoutSource}
+                      feeFromPayPal
+                      rateDate={invoice.rateDate}
+                    />
+                  )}
                 </>
               )
             }

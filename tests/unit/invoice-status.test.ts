@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   payoutSourceNote,
-  payoutSourceWord,
   rateNote,
   clientStatusLabel,
   statusLabel,
@@ -113,13 +112,5 @@ describe("clientStatusLabel", () => {
         "2026-10-30",
       ),
     ).toBe("Overdue · 8 days");
-  });
-});
-
-describe("payoutSourceWord", () => {
-  it("is the short word the table shows beside the rupees", () => {
-    expect(payoutSourceWord("estimate")).toBe("est.");
-    expect(payoutSourceWord("paypal")).toBe("PayPal");
-    expect(payoutSourceWord("outside_paypal")).toBe("bank");
   });
 });

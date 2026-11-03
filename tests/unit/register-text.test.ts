@@ -1,47 +1,51 @@
 import { describe, expect, it } from "vitest";
 import { describeRupees, fallbackNote } from "@/components/export/register-text";
 import { exportRegister } from "@/mocks/fixtures";
+import type { ExportRegister, ExportRegisterRow } from "@/types";
 
-function register(paypalInr: number, estimatedInr: number, bankInr: number) {
-  return {
-    ...exportRegister,
-    paypalInr,
-    estimatedInr,
-    bankInr,
-    paypalFiraInr: paypalInr + estimatedInr,
-    totalInr: paypalInr + estimatedInr + bankInr,
-  };
+const [estimatedRow, reportedRow] = exportRegister.rows;
+const feeKnownRow = { ...estimatedRow, fee: reportedRow.fee, net: reportedRow.net };
+const bankRow = {
+  ...estimatedRow,
+  bankReference: null,
+};
+
+function register(rows: ExportRegisterRow[], bankPayments = 0): ExportRegister {
+  const outsideRows = Array.from({ length: bankPayments }, () => bankRow);
+  return { ...exportRegister, rows, outsideRows, totalInr: 1000 };
 }
 
 describe("describeRupees", () => {
-  it("says from PayPal and estimated when both are there", () => {
-    expect(describeRupees(register(58441, 22824, 0))).toBe(
-      "₹58,441 from PayPal, ₹22,824 estimated",
+  it("counts payments on PayPal's figures, estimates and bank transfers", () => {
+    expect(describeRupees(register([reportedRow, estimatedRow], 2))).toBe(
+      "1 from PayPal's figures, 1 estimated, 2 by bank",
     );
   });
 
-  it("counts a bank transfer as estimated", () => {
-    expect(describeRupees(register(35617, 0, 50000))).toBe(
-      "₹35,617 from PayPal, ₹50,000 estimated",
-    );
+  it("counts a payment with PayPal's fee and net but estimated rupees as PayPal's figures", () => {
+    expect(describeRupees(register([feeKnownRow], 4))).toBe("1 from PayPal's figures, 4 by bank");
   });
 
   it("says all estimated when PayPal reported nothing", () => {
-    expect(describeRupees(register(0, 87832, 0))).toBe("All estimated");
-    expect(describeRupees(register(0, 0, 50000))).toBe("All estimated");
+    expect(describeRupees(register([estimatedRow, estimatedRow]))).toBe("All estimated");
   });
 
-  it("says all from PayPal when nothing is estimated", () => {
-    expect(describeRupees(register(35617, 0, 0))).toBe("All from PayPal");
+  it("says all from PayPal's figures when nothing is estimated", () => {
+    expect(describeRupees(register([reportedRow, feeKnownRow]))).toBe("All from PayPal's figures");
+  });
+
+  it("says all by bank when every payment was a transfer", () => {
+    expect(describeRupees(register([], 3))).toBe("All by bank");
   });
 
   it("does not repeat the total in the note", () => {
-    const note = describeRupees(register(0, 87832, 0));
-    expect(note).not.toContain("87,832");
+    expect(describeRupees(register([estimatedRow]))).not.toContain("1,000");
   });
 
   it("reports nothing when there are no rupees", () => {
-    expect(describeRupees(register(0, 0, 0))).toBe("No rupees to report");
+    expect(describeRupees({ ...register([estimatedRow]), totalInr: 0 })).toBe(
+      "No rupees to report",
+    );
   });
 });
 

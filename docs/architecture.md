@@ -101,7 +101,8 @@ always validated by code. See [decision 0010](decisions/0010-ai-invoice-drafting
 **`money/`** is pure decimal arithmetic in integer minor units, plus the payout estimate, the
 rupees expected for an invoice, number formatting and totals. Built. `estimatePayout` takes the
 gross amount, the settings and a market rate, and works in integer minor units, basis points and
-ten-thousandths, rounding halves up.
+ten-thousandths, rounding halves up. It also splits the loss: `feeInr` is the fee at the market rate
+and `conversionLossInr` is what the markup took, and the two always add up to `lossInr`.
 
 **`rates/`** fetches the ECB's daily rates through Frankfurter (`ecb.ts`) and decides which rates are
 in use (`rates.ts`). With the source "ecb" it uses the rates fetched today, otherwise fetches once
@@ -174,7 +175,10 @@ export register calls as well, so one payment has one rupee figure. `payoutFor` 
 PayPal's net (or the estimate when PayPal gave no figures) converted at the ECB rate of the payment
 date less the markup; an invoice marked as paid outside PayPal is its amount at the ECB rate of the
 payment date with no fee and no markup; an unpaid invoice is the estimate for the amount still due
-at today's rate. Rates for past dates come from `getRatesOn`, one request per distinct date. The
+at today's rate. The sandbox never reports rupees, so a paid invoice usually has PayPal's fee and net
+with rupees worked out at the ECB rate: the screens call that "PayPal fee · est. rate"
+(`components/shared/payout-source.ts`), and keep "est." for a payment with no PayPal figures at all.
+Rates for past dates come from `getRatesOn`, one request per distinct date. The
 route sorts newest first and totals the rupees, keeping what was paid outside PayPal apart from
 what PayPal paid. PayPal is the source of truth; the store only caches payout figures. See
 [decision 0013](decisions/0013-export-register.md).
@@ -267,7 +271,8 @@ missing`). The invoices come from `loadVisibleInvoices`, so what the demo hides 
 PayPal payment becomes a row: the foreign amount, PayPal's fee, net and transaction ID when
 PayPal's figures were found, and the rupees, which come from `resolvePayouts` like the receivables
 screen's (PayPal's `netInr` rounded to whole rupees, else the rate of the paid date less the
-markup; the row carries the rate and its date). Rows are sorted by
+markup; the row carries the rate and its date). The register's rupee note counts payments on PayPal's
+figures (reported rupees, or its fee and net), estimates and bank transfers. Rows are sorted by
 paid date then invoice number, and the totals (rupees, PayPal's share, the estimated share, foreign
 totals per currency, rows without a purpose code) are summed in integer units. `underLut` is true
 when `mentionsLut` from `invoice-body.ts` finds the LUT declaration (or the shorter line older
