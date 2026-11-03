@@ -31,5 +31,6 @@ export interface ClientDetail {
   risk: ClientRisk;
   notes: string;
   language: ReminderLanguage;
+  languageSuggestion: ReminderLanguage | null; // set while no language is chosen and the client's country suggests one
   merged: MergedClient[]; // the clients merged into this one, oldest merge first
 }

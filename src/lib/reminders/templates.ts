@@ -19,6 +19,7 @@ export function templateReminder(
     due: formatDateIn(language, facts.dueOn),
     daysLate: facts.daysLate,
     name: withoutContacts(facts.clientName),
+    contact: facts.contactName,
     remindersSent: facts.remindersSent,
   });
   return { subject: text.subject, message: normaliseMessage(text.message) };

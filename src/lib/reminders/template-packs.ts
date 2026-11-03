@@ -12,16 +12,24 @@ interface TemplateParts {
 }
 
 interface Pack {
-  hello: (name: string | null) => string;
+  // A person's first name greets them; without one the client's name does.
+  hello: (name: string | null, contact: string | null) => string;
   days: (count: number) => string;
+  // The facts of a late invoice in one sentence, for a draft that left them out.
+  stated: (parts: Pick<TemplateParts, "number" | "owed" | "due">, days: string) => string;
   gentle: (parts: TemplateParts, days: string) => ReminderText;
   firm: (parts: TemplateParts, days: string) => ReminderText;
   final: (parts: TemplateParts, days: string) => ReminderText;
 }
 
 const english: Pack = {
-  hello: (name) => (name ? `Hi ${name} team,` : "Hi there,"),
+  hello: (name, contact) => {
+    if (contact) return `Hi ${contact},`;
+    return name ? `Hi ${name} team,` : "Hi there,";
+  },
   days: (count) => `${count} ${count === 1 ? "day" : "days"}`,
+  stated: (p, days) =>
+    `Invoice ${p.number} for ${p.owed} was due on ${p.due} and is now ${days} overdue.`,
   gentle: (p, days) => ({
     subject: `A quick reminder about invoice ${p.number}`,
     message: `${p.greeting}
@@ -49,8 +57,13 @@ Please pay it within the next 3 days using the Pay now button in the PayPal emai
 };
 
 const german: Pack = {
-  hello: (name) => (name ? `Hallo ${name},` : "Guten Tag,"),
+  hello: (name, contact) => {
+    const who = contact ?? name;
+    return who ? `Hallo ${who},` : "Guten Tag,";
+  },
   days: (count) => `${count} ${count === 1 ? "Tag" : "Tage"}`,
+  stated: (p, days) =>
+    `Rechnung ${p.number} über ${p.owed} war am ${p.due} fällig und ist seit ${days} überfällig.`,
   gentle: (p, days) => ({
     subject: `Kurze Erinnerung zu Rechnung ${p.number}`,
     message: `${p.greeting}\n\nzur Erinnerung: Rechnung ${p.number} über ${p.owed}${p.work} war am ${p.due} fällig und ist nun seit ${days} überfällig. Falls Sie bereits bezahlt haben, ignorieren Sie diese Nachricht bitte.\n\nIn der PayPal-E-Mail finden Sie die Schaltfläche „Pay now“, die Sie direkt zur Zahlung führt. Melden Sie sich gern, falls etwas unklar ist.`,
@@ -66,8 +79,13 @@ const german: Pack = {
 };
 
 const french: Pack = {
-  hello: (name) => (name ? `Bonjour ${name},` : "Bonjour,"),
+  hello: (name, contact) => {
+    const who = contact ?? name;
+    return who ? `Bonjour ${who},` : "Bonjour,";
+  },
   days: (count) => `${count} ${count === 1 ? "jour" : "jours"}`,
+  stated: (p, days) =>
+    `La facture ${p.number} d'un montant de ${p.owed} était due le ${p.due} et a ${days} de retard.`,
   gentle: (p, days) => ({
     subject: `Petit rappel concernant la facture ${p.number}`,
     message: `${p.greeting}\n\nPetit rappel : la facture ${p.number} d'un montant de ${p.owed}${p.work} était due le ${p.due} et accuse désormais ${days} de retard. Si vous avez déjà payé, veuillez ignorer ce message.\n\nL'e-mail PayPal contient un bouton « Pay now » qui vous mène directement au paiement. N'hésitez pas à me dire si quelque chose n'est pas clair.`,
@@ -83,8 +101,13 @@ const french: Pack = {
 };
 
 const spanish: Pack = {
-  hello: (name) => (name ? `Hola ${name},` : "Hola,"),
+  hello: (name, contact) => {
+    const who = contact ?? name;
+    return who ? `Hola ${who},` : "Hola,";
+  },
   days: (count) => `${count} ${count === 1 ? "día" : "días"}`,
+  stated: (p, days) =>
+    `La factura ${p.number} por ${p.owed} vencía el ${p.due} y lleva ${days} de retraso.`,
   gentle: (p, days) => ({
     subject: `Un breve recordatorio sobre la factura ${p.number}`,
     message: `${p.greeting}\n\nUn breve recordatorio: la factura ${p.number} por ${p.owed}${p.work} vencía el ${p.due} y lleva ${days} de retraso. Si ya la ha pagado, ignore este mensaje.\n\nEl correo de PayPal incluye un botón «Pay now» que lleva directamente al pago. Avíseme si algo no queda claro.`,
@@ -100,8 +123,13 @@ const spanish: Pack = {
 };
 
 const dutch: Pack = {
-  hello: (name) => (name ? `Beste ${name},` : "Beste,"),
+  hello: (name, contact) => {
+    const who = contact ?? name;
+    return who ? `Beste ${who},` : "Beste,";
+  },
   days: (count) => `${count} ${count === 1 ? "dag" : "dagen"}`,
+  stated: (p, days) =>
+    `Factuur ${p.number} van ${p.owed} moest op ${p.due} betaald zijn en is nu ${days} te laat.`,
   gentle: (p, days) => ({
     subject: `Een korte herinnering over factuur ${p.number}`,
     message: `${p.greeting}\n\nEen korte herinnering: factuur ${p.number} van ${p.owed}${p.work} moest op ${p.due} betaald zijn en is nu ${days} te laat. Als u al betaald hebt, kunt u dit bericht negeren.\n\nIn de PayPal-e-mail staat een knop "Pay now" die u rechtstreeks naar de betaling brengt. Laat het me weten als iets onduidelijk is.`,
@@ -117,8 +145,13 @@ const dutch: Pack = {
 };
 
 const portuguese: Pack = {
-  hello: (name) => (name ? `Olá ${name},` : "Olá,"),
+  hello: (name, contact) => {
+    const who = contact ?? name;
+    return who ? `Olá ${who},` : "Olá,";
+  },
   days: (count) => `${count} ${count === 1 ? "dia" : "dias"}`,
+  stated: (p, days) =>
+    `A fatura ${p.number} no valor de ${p.owed} venceu em ${p.due} e está com ${days} de atraso.`,
   gentle: (p, days) => ({
     subject: `Um breve lembrete sobre a fatura ${p.number}`,
     message: `${p.greeting}\n\nUm breve lembrete: a fatura ${p.number} no valor de ${p.owed}${p.work} venceu em ${p.due} e está com ${days} de atraso. Se já efetuou o pagamento, desconsidere esta mensagem.\n\nO e-mail do PayPal tem um botão "Pay now" que leva direto ao pagamento. Avise-me se algo não estiver claro.`,
@@ -134,8 +167,13 @@ const portuguese: Pack = {
 };
 
 const hindi: Pack = {
-  hello: (name) => (name ? `नमस्ते ${name},` : "नमस्ते,"),
+  hello: (name, contact) => {
+    const who = contact ?? name;
+    return who ? `नमस्ते ${who},` : "नमस्ते,";
+  },
   days: (count) => `${count} दिन`,
+  stated: (p, days) =>
+    `${p.owed} का इनवॉइस ${p.number} ${p.due} को देय था और अब ${days} से बकाया है।`,
   gentle: (p, days) => ({
     subject: `इनवॉइस ${p.number} के बारे में एक छोटा अनुस्मारक`,
     message: `${p.greeting}\n\nएक छोटा अनुस्मारक: ${p.owed}${p.work} का इनवॉइस ${p.number} ${p.due} को देय था और अब ${days} से बकाया है। यदि आप पहले ही भुगतान कर चुके हैं, तो कृपया इस संदेश को अनदेखा करें।\n\nPayPal के ईमेल में "Pay now" बटन है, जो सीधे भुगतान पर ले जाता है। कुछ स्पष्ट न हो तो मुझे बताइए।`,
@@ -207,6 +245,8 @@ interface PackFacts {
   due: string;
   daysLate: number;
   name: string | null;
+  // The first name of the person at the client.
+  contact: string | null;
   // Reminders already sent for the invoice.
   remindersSent: number;
 }
@@ -222,11 +262,29 @@ export function packTemplate(
     owed: facts.owed,
     work: facts.work ? ` (${facts.work})` : "",
     due: facts.due,
-    greeting: pack.hello(facts.name),
+    greeting: pack.hello(facts.name, facts.contact),
   };
   const days = pack.days(facts.daysLate);
   if (tone === "final" && facts.remindersSent < FINAL_AFTER_REMINDERS) {
     return NOTICES[language](parts, days);
   }
   return pack[tone](parts, days);
+}
+
+interface StatedFacts {
+  number: string;
+  owed: string;
+  due: string;
+  daysLate: number;
+}
+
+// "Invoice INV-0028 for EUR 720.00 was due on 27 Oct 2026 and is now 7 days overdue." in the language.
+export function statedFactsSentence(language: ReminderLanguage, facts: StatedFacts): string {
+  const pack = PACKS[language];
+  return pack.stated(facts, pack.days(facts.daysLate));
+}
+
+// The word for "days" in the language, as the pack writes it after a count: "days", "Tage", "jours".
+export function dayWord(language: ReminderLanguage): string {
+  return PACKS[language].days(2).replace(/^\d+\s*/, "");
 }

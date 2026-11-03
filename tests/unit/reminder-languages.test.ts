@@ -17,6 +17,7 @@ const facts: ReminderFacts = {
   invoiceId: "INV2-TEST",
   invoiceNumber: "INV-0046",
   clientName: "Halden Coffee Co.",
+  contactName: null,
   work: "Menu redesign",
   amount: { currency: "USD", value: "12500.50" },
   issuedOn: "2026-10-01",

@@ -210,8 +210,20 @@ export function createPostgresStore(sql: Sql): Store {
 
     async saveClientLanguage(clientKey, language): Promise<void> {
       await sql`
-        insert into client_notes (client_key, notes, language) values (${clientKey}, '', ${language})
-        on conflict (client_key) do update set language = excluded.language, updated_at = now()`;
+        insert into client_notes (client_key, notes, language, language_chosen)
+        values (${clientKey}, '', ${language}, true)
+        on conflict (client_key) do update
+          set language = excluded.language, language_chosen = true, updated_at = now()`;
+    },
+
+    async hasClientLanguage(clientKey): Promise<boolean> {
+      const [row] = await sql<{ language_chosen: boolean }[]>`
+        select language_chosen from client_notes where client_key = ${clientKey}`;
+      return row?.language_chosen ?? false;
+    },
+
+    async clearClientLanguages(): Promise<void> {
+      await sql`update client_notes set language = 'en', language_chosen = false`;
     },
 
     addQueueItem: (item) => insertQueueItem(sql, item),

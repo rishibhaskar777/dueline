@@ -9,12 +9,13 @@ import type { ReminderLanguage, Tone } from "@/types";
 import { checkReminderText, type ReminderText } from "./check-reminder";
 import { contradictingPhrase } from "./check-tone";
 import { normaliseMessage } from "./normalise-message";
+import { withStatedFacts } from "./state-facts";
 import { withoutContacts, type ReminderFacts } from "./facts";
 import { amountText, formatDateIn, languageInfo } from "./languages";
 import { templateReminder } from "./templates";
 
 // Part of the cache key, so a draft written under older rules is not reused.
-const PROMPT_VERSION = "v5";
+const PROMPT_VERSION = "v6";
 const CACHE_TTL_SECONDS = 24 * 60 * 60;
 
 const modelReminderSchema = z.object({
@@ -64,7 +65,7 @@ function systemPrompt(tone: Tone, language: ReminderLanguage, remindersSent: num
     "No threats, no legal language, and never invent fees, interest or deadlines other than the ones in the tone.",
     'Never include links or email addresses. Say that the PayPal email has a "Pay now" button.',
     "Do not write a sign-off or a name. They are added afterwards.",
-    "Greet the client by name when one is given, on a line of its own.",
+    'Greet the contact by first name when one is given, like "Hi Lena," or "Dear Lena,", on a line of its own. With no contact, greet the client\'s team by the client name, like "Hi Acme team,". Never greet with an email address.',
     "Write two or three short paragraphs of one or two sentences each, separated by a blank line. Do not thank the client in the body, because the sign-off added afterwards does; end with the request or, in a gentle reminder, the line about ignoring the note if it is already paid.",
   ].join("\n");
 }
@@ -79,6 +80,7 @@ function factsPrompt(facts: ReminderFacts, language: ReminderLanguage): string {
   const work = withoutContacts(facts.work);
   const lines = [
     name && `Client: ${plain(name)}`,
+    facts.contactName && `Contact first name: ${plain(facts.contactName)}`,
     `Invoice number: ${facts.invoiceNumber}`,
     `Amount: ${amountText(language, facts.amount)}`,
     `Issued: ${formatDateIn(language, facts.issuedOn)}`,
@@ -105,12 +107,25 @@ function accept(
 ): ReminderText | null {
   const checked = checkReminderText(facts, candidate, language);
   if (!checked) return null;
-  const phrase = contradictingPhrase(tone, checked, language, facts.remindersSent);
+
+  // The sentence that states the due date and the days overdue is added to what already passed, so
+  // it can never stand in for the invoice number the draft was missing. The whole is checked again.
+  const stated = checkReminderText(
+    facts,
+    withStatedFacts(facts, tone, language, {
+      subject: checked.subject,
+      message: normaliseMessage(checked.message),
+    }),
+    language,
+  );
+  if (!stated) return null;
+
+  const phrase = contradictingPhrase(tone, stated, language, facts.remindersSent);
   if (phrase) {
     console.warn("Reminder draft rejected", { reason: "tone_mismatch", tone, language, phrase });
     return null;
   }
-  return { subject: checked.subject, message: normaliseMessage(checked.message) };
+  return { subject: stated.subject, message: normaliseMessage(stated.message) };
 }
 
 // The cache is an optimisation, so a store failure never fails a draft.

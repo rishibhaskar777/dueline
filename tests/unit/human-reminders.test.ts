@@ -25,6 +25,7 @@ const facts: ReminderFacts = {
   invoiceId: "INV2-BRIGHT",
   invoiceNumber: "INV-0014",
   clientName: "Brightwell Labs",
+  contactName: null,
   work: "Landing page UI",
   amount: { currency: "GBP", value: "600.00" },
   issuedOn: "2026-10-15",
@@ -210,7 +211,7 @@ describe("a draft that contradicts its tone", () => {
     modelAnswers(firmAnswer);
     await draftReminderText(facts, "firm");
 
-    await store.putCached(`reminder:${facts.invoiceId}:final:en:4:0:v5`, friendly, 3600);
+    await store.putCached(`reminder:${facts.invoiceId}:final:en:4:0:v6`, friendly, 3600);
     expect(await cachedReminderText(facts, "final")).toBeNull();
     expect(await cachedReminderText(facts, "firm")).toMatchObject({ source: "ai" });
   });
@@ -226,7 +227,7 @@ describe("a draft that contradicts its tone", () => {
 
     expect(draft.source).toBe("ai");
     expect(draft.message).toBe(
-      "Hi Brightwell Labs team,\n\ninvoice INV-0014 for GBP 600.00 is overdue. I have not seen a payment.\n\nPlease pay it this week. Tell me if something is in the way.",
+      "Hi Brightwell Labs team,\n\nInvoice INV-0014 for GBP 600.00 was due on 28 Oct 2026 and is now 4 days overdue.\n\ninvoice INV-0014 for GBP 600.00 is overdue. I have not seen a payment.\n\nPlease pay it this week. Tell me if something is in the way.",
     );
   });
 });

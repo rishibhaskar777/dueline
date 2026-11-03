@@ -27,6 +27,8 @@ interface NudgeDraft {
   draft: ReminderDraft;
   // The language saved for the client, which the card can go back to after English.
   clientLanguage: ReminderLanguage;
+  // Offered until the freelancer chooses a language for the client.
+  languageSuggestion: ReminderLanguage | null;
   subject: string;
   message: string;
   history: ReminderDraft["history"];
@@ -48,6 +50,8 @@ interface NudgeDraft {
   setMessage: (message: string) => void;
   switchTone: (tone: Tone) => void;
   switchLanguage: (language: ReminderLanguage) => void;
+  // The freelancer chose this language for the client, and it has been saved.
+  adoptClientLanguage: (language: ReminderLanguage) => void;
   replaceEdits: () => void;
   keepEditing: () => void;
   send: (channel: ReminderChannel) => void;
@@ -238,7 +242,8 @@ export function useNudgeDraft(
   improve: ImproveDraft,
   onSent: () => void,
 ): NudgeDraft {
-  const [clientLanguage] = useState(initial.language);
+  const [clientLanguage, setClientLanguage] = useState(initial.language);
+  const [languageSuggestion, setLanguageSuggestion] = useState(initial.languageSuggestion);
   const { text, typed, setText } = useTypedText(initial);
   const sender = useSendReminder(initial.history, onSent);
   const shown = useShownDraft(initial, setText, sender.clearError);
@@ -256,6 +261,12 @@ export function useNudgeDraft(
     email: sentTodayVia(sender.history, "email"),
   };
 
+  function adoptClientLanguage(language: ReminderLanguage): void {
+    setLanguageSuggestion(null);
+    setClientLanguage(language);
+    flow.switchLanguage(language);
+  }
+
   function send(channel: ReminderChannel): void {
     if (flow.drafting) return;
     flow.keepEditing();
@@ -265,6 +276,8 @@ export function useNudgeDraft(
   return {
     draft: shown.draft,
     clientLanguage,
+    languageSuggestion,
+    adoptClientLanguage,
     ...text,
     ...improvement,
     ...flow,

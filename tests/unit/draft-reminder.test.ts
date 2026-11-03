@@ -27,6 +27,7 @@ const facts: ReminderFacts = {
   invoiceId: "INV2-OKRZ",
   invoiceNumber: "INV-0044",
   clientName: "Okafor & Reyes",
+  contactName: null,
   work: "Brand guidelines",
   amount: { currency: "EUR", value: "720.00" },
   issuedOn: "2026-10-01",
@@ -38,7 +39,7 @@ const facts: ReminderFacts = {
 const goodAnswer = {
   subject: "Invoice INV-0044 is now 21 days overdue",
   message:
-    "Hi Okafor & Reyes team,\n\nInvoice INV-0044 for EUR 720.00 is now 21 days overdue. Could you please pay it using the Pay now button in the PayPal email?\n\nThank you",
+    "Hi Okafor & Reyes team,\n\nInvoice INV-0044 for EUR 720.00 was due on 10 Oct 2026 and is now 21 days overdue. Could you please pay it using the Pay now button in the PayPal email?\n\nThank you",
 };
 
 function modelAnswers(output: { subject: string; message: string }): void {

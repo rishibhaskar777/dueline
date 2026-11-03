@@ -5,6 +5,8 @@ export interface ReminderFacts {
   invoiceId: string;
   invoiceNumber: string;
   clientName: string;
+  // The first name of the person at the client, for the greeting; null when there is none.
+  contactName: string | null;
   work: string;
   amount: Money;
   issuedOn: string;
@@ -12,6 +14,12 @@ export interface ReminderFacts {
   daysLate: number;
   // Reminders Dueline has already sent for this invoice.
   remindersSent: number;
+}
+
+// Only a first name is used to greet someone, and an email address is never a name.
+export function firstNameOf(contactName: string | undefined): string | null {
+  const name = withoutContacts(contactName ?? "");
+  return name ? (name.split(/\s+/)[0] ?? null) : null;
 }
 
 // The amount is what is still owed, which is less than the invoice total for a part-paid invoice.
@@ -24,6 +32,7 @@ export function factsOf(
     invoiceId: summary.id,
     invoiceNumber: summary.number,
     clientName: summary.client.name,
+    contactName: firstNameOf(summary.client.contactName),
     work: summary.work,
     amount: amountDue,
     issuedOn: summary.issuedOn,

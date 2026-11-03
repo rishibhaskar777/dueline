@@ -13,6 +13,7 @@ const facts: ReminderFacts = {
   invoiceId: "INV2-OKRZ",
   invoiceNumber: "INV-0044",
   clientName: "Okafor & Reyes",
+  contactName: null,
   work: "Brand guidelines",
   amount: { currency: "EUR", value: "720.00" },
   issuedOn: "2026-10-01",

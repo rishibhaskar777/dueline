@@ -149,4 +149,26 @@ test.describe("Nudges", () => {
     await expect(cards.first()).toContainText("have both gone out for this invoice today");
     await expect(cards.first().getByRole("button", { name: "Copy message" })).toBeDisabled();
   });
+
+  test("a client in Portugal is offered Portuguese, and Keep English ends the question", async ({
+    page,
+  }) => {
+    await page.goto("/nudges");
+    const card = page
+      .getByRole("listitem")
+      .filter({ has: page.getByLabel("Subject") })
+      .first();
+    const question = card.getByText(
+      "Okafor & Reyes is in Portugal. Write reminders in Portuguese?",
+    );
+    await expect(question).toBeVisible();
+    await expect(card.getByRole("button", { name: "Use Portuguese" })).toBeVisible();
+
+    await card.getByRole("button", { name: "Keep English" }).click();
+    await expect(question).toBeHidden();
+    await page.reload();
+    await expect(
+      page.getByText("Okafor & Reyes is in Portugal. Write reminders in Portuguese?"),
+    ).toHaveCount(0);
+  });
 });

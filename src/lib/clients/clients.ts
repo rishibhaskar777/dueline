@@ -1,6 +1,7 @@
 import "server-only";
 import { today } from "@/lib/clock";
 import { loadSummaries } from "@/lib/payouts/load-summaries";
+import { languageSuggestionFor } from "@/lib/reminders/country-language";
 import { emailIdentifiesClient } from "@/lib/risk/client-risk";
 import { getStore } from "@/lib/store";
 import type { ClientDetail, ClientSummary, ReminderLanguage } from "@/types";
@@ -28,12 +29,17 @@ async function findGroup(key: string): Promise<ClientGroup> {
 export async function getClientDetail(key: string): Promise<ClientDetail> {
   const group = await findGroup(key);
   const aliases = await getStore().listClientAliases();
+  const client = summariseClient(group, today());
   return {
-    client: summariseClient(group, today()),
+    client,
     invoices: group.invoices,
     risk: riskOf(group),
     notes: await getStore().getClientNotes(key),
     language: await getStore().getClientLanguage(key),
+    languageSuggestion: languageSuggestionFor(
+      client.country,
+      await getStore().hasClientLanguage(key),
+    ),
     merged: aliases
       .filter(({ intoKey }) => intoKey === key)
       .map(({ fromKey, fromName, fromEmail }) => ({

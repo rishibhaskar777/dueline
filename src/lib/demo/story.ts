@@ -5,6 +5,8 @@ import type { Money, Profile, Tone } from "@/types";
 export interface DemoInvoice {
   key: string;
   clientName: string;
+  // The person at the client, who reminders greet by first name.
+  contactName: string;
   country: string;
   work: string;
   amount: Money;
@@ -28,6 +30,7 @@ interface Offsets {
 
 interface Engagement {
   clientName: string;
+  contactName: string;
   country: string;
   work: string;
   amount: Money;
@@ -47,6 +50,7 @@ interface Template extends Engagement {
 export const engagements = {
   brightwellLanding: {
     clientName: "Brightwell Labs",
+    contactName: "Jo Marsh",
     country: "GB",
     work: "Landing page UI",
     amount: { currency: "GBP", value: "600.00" },
@@ -54,6 +58,7 @@ export const engagements = {
   },
   okaforGuidelines: {
     clientName: "Okafor & Reyes",
+    contactName: "Ana Okafor",
     country: "PT",
     work: "Brand guidelines",
     amount: { currency: "EUR", value: "720.00" },
@@ -61,6 +66,7 @@ export const engagements = {
   },
   northpineKit: {
     clientName: "Northpine Studio",
+    contactName: "Dan Keane",
     country: "CA",
     work: "Social media kit",
     amount: { currency: "CAD", value: "380.00" },
@@ -68,6 +74,7 @@ export const engagements = {
   },
   tandemDeck: {
     clientName: "Tandem Health",
+    contactName: "Tom Hale",
     country: "US",
     work: "Pitch deck design",
     amount: { currency: "USD", value: "900.00" },
@@ -75,6 +82,7 @@ export const engagements = {
   },
   haldenMenu: {
     clientName: "Halden Coffee Co.",
+    contactName: "Mike Halden",
     country: "US",
     work: "Menu redesign",
     amount: { currency: "USD", value: "280.00" },
