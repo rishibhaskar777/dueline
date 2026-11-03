@@ -32,6 +32,22 @@ test.describe("public website", () => {
     });
   }
 
+  test("the features page groups its cards under four headings, drafting first", async ({
+    page,
+  }) => {
+    await page.goto("/features");
+    const groups = (await page.getByRole("heading", { level: 2 }).allTextContents()).slice(0, 4);
+    expect(groups).toEqual([
+      "Draft in seconds",
+      "Know your rupees",
+      "Spot late payers",
+      "Stay export-ready",
+    ]);
+    for (const card of ["Chat to invoice", "Seven languages", "Your item library"]) {
+      await expect(page.getByRole("heading", { level: 3, name: card })).toBeVisible();
+    }
+  });
+
   test("the footer has its navigation, the project links and the trademark line", async ({
     page,
   }) => {

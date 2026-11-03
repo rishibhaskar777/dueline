@@ -336,12 +336,15 @@ AI only fills it; nothing is created or sent.
    then 400 a day for the app under a key that includes today's date. Over the first is 429
    `rate_limited`, over the second 503 `ai_unavailable`.
 4. `runWithFallback` asks `GEMINI_MODEL` for a structured answer from the masked chat, in `<chat>`
-   tags, with a 20 second timeout. A 429, a 5xx, a timeout or a network failure moves to
+   tags (WhatsApp date prefixes are stripped from each line first, by `stripChatPrefixes`; a line only
+   ever gets shorter, so every quote is still found in the chat as pasted), with a 20 second timeout. A 429, a 5xx, a timeout or a network failure moves to
    `GEMINI_FALLBACK_MODEL` once; both failing is 503 `ai_unavailable`.
 5. `checkModelDraft` checks every field against the original chat and today's date, restores the
    placeholders, and collects warnings. An item whose price does not appear as a number in its own
    quote is kept with a warning, and a chat with phrases such as "ignore previous instructions" gets
-   one warning to check every item. No usable item is 422 `extraction_failed`.
+   one warning to check every item. No usable item is 422 `extraction_failed`. The same step keeps the
+   model's `paymentTerms` only when its quote is in the chat and its share is from 1 to 99, and keeps
+   `clientContactName` only when the name is in the chat; both are notices or details, never prices.
 6. The model's answer is stored for 24 hours. The draft is returned with the count of masked emails
    and phone numbers and `risk`, the late-payer radar's reading for the draft's client (name and
    email) from the cached invoice list. It is `null` when the draft has no email or the invoices
@@ -525,7 +528,7 @@ reason sentence is built by code from the numbers.
 
 On the review screen `RiskRadar` shows the reading above the discount section: for a client on watch
 or a late payer, the reason and a button "Offer N% if paid within D days" that ticks the discount and
-fills its fields; for a reliable client, a short line. It uses the reading that came with the
+fills its fields; for a reliable or new client, a short line ("New client. Paid on time once."). It uses the reading that came with the
 extraction, and asks again (400 ms after typing stops) when the client name or email is edited. The
 receivables table tags a client on watch or a late payer next to the name, and the invoice panel
 shows the reason.
@@ -580,7 +583,13 @@ sequenceDiagram
    days late, the reminders already sent and the prompt version). Otherwise it reserves a call (the app's 400 a day; for
    `POST /api/reminders/draft` also 20 an hour per address) and asks `runWithFallback` for a
    structured `{ subject, message }`. The model sees the client's business name, invoice number,
-   amount, dates, days late and the work, never an email address or phone number.
+   amount, dates, days late and the work, never an email address or phone number. It also sees the
+   first name of the invoice recipient's name, for the greeting. A firm or final draft that leaves out
+   the due date or the days overdue gets one sentence with both after its greeting
+   (`reminders/state-facts.ts`). A client's country can suggest a reminder language
+   (`reminders/country-language.ts`): the draft carries it as `languageSuggestion` until saving any
+   language sets `client_notes.language_chosen`, which the client page and the Nudges card do through
+   `LanguageSuggestion`.
 3. `checkReminderText` accepts the draft only if the subject is 5 to 120 characters and the message
    20 to 900, the message names the invoice, every amount equals the invoice's (and is in its
    currency), and nothing is a link or an email address (not counting the client's business name or
