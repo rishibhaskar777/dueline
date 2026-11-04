@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LiveDot } from "@/components/shared/LiveDot";
 import { getHealth } from "@/lib/api-client";
 import type { HealthResponse } from "@/types";
 
@@ -32,10 +33,20 @@ export function StatusLine() {
   }, []);
 
   if (state.kind === "loading") {
-    return <p className="text-sm text-muted-foreground">Checking connection…</p>;
+    return (
+      <p className="flex items-center gap-2 text-sm text-muted-foreground">
+        <LiveDot tone="idle" />
+        Checking connection…
+      </p>
+    );
   }
   if (state.kind === "error") {
-    return <p className="text-sm text-late">Cannot reach the Dueline server</p>;
+    return (
+      <p className="flex items-center gap-2 text-sm text-late">
+        <LiveDot tone="error" />
+        Cannot reach the Dueline server
+      </p>
+    );
   }
 
   const { health } = state;
@@ -50,10 +61,7 @@ export function StatusLine() {
         </p>
       )}
       <p className="flex items-center gap-2 text-muted-foreground">
-        <span
-          aria-hidden="true"
-          className={connected ? "size-2 rounded-full bg-paid" : "size-2 rounded-full bg-late"}
-        />
+        <LiveDot tone={connected ? "live" : "error"} />
         {health.offline
           ? "Simulated PayPal sandbox"
           : connected

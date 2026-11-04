@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { DemoSignIn } from "@/components/demo/DemoSignIn";
 import { SignInPanel } from "@/components/demo/SignInPanel";
+import { LiveDot } from "@/components/shared/LiveDot";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -23,7 +24,7 @@ export default function DemoPage() {
         </div>
         <div className="dl-up mx-auto flex w-full max-w-[420px] flex-1 flex-col justify-center gap-[22px] py-8">
           <p className="btn-secondary inline-flex items-center gap-2 self-start rounded-full px-[13px] py-[7px] text-[13px] font-bold text-muted-foreground">
-            <span aria-hidden="true" className="size-2 rounded-full bg-mark-green" />
+            <LiveDot />
             PayPal sandbox
           </p>
           <div className="flex flex-col gap-2">
