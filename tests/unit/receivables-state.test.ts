@@ -11,7 +11,13 @@ import { activity, health, invoices, totals } from "@/mocks/fixtures";
 import type { InvoicesResponse } from "@/types";
 
 const NOW = Date.parse("2026-10-17T10:00:00Z");
-const data: InvoicesResponse = { invoices, totals, today: "2026-10-17", loadedAt: null };
+const data: InvoicesResponse = {
+  invoices,
+  totals,
+  today: "2026-10-17",
+  loadedAt: null,
+  readyToSend: [],
+};
 
 describe("receivables state", () => {
   it("draws the invoices before the activity and the status have answered", () => {

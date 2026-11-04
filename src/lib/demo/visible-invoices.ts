@@ -1,6 +1,6 @@
 import "server-only";
 import { getEnv } from "@/lib/env";
-import { loadInvoices, type LoadedInvoice } from "@/lib/paypal/summaries";
+import { loadInvoices, loadReadyInvoices, type LoadedInvoice } from "@/lib/paypal/summaries";
 import { getStore } from "@/lib/store";
 import { isShownInDemo } from "./visibility";
 
@@ -12,8 +12,7 @@ async function currentGenerationId(): Promise<number> {
 
 // Every list that feeds a screen or an export reads its invoices here, so what is hidden in the demo
 // is hidden everywhere. Outside demo mode nothing is hidden.
-export async function loadVisibleInvoices(): Promise<LoadedInvoice[]> {
-  const all = await loadInvoices();
+async function onlyShown(all: LoadedInvoice[]): Promise<LoadedInvoice[]> {
   if (!getEnv().DEMO_MODE) return all;
 
   const store = getStore();
@@ -25,4 +24,13 @@ export async function loadVisibleInvoices(): Promise<LoadedInvoice[]> {
   return all.filter(({ summary, marker }) =>
     isShownInDemo({ id: summary.id, marker, status: summary.paypalStatus }, generation, hiddenIds),
   );
+}
+
+export async function loadVisibleInvoices(): Promise<LoadedInvoice[]> {
+  return onlyShown(await loadInvoices());
+}
+
+// Balance drafts follow the same rule, so a hidden or older-generation draft is not offered.
+export async function loadVisibleReadyInvoices(): Promise<LoadedInvoice[]> {
+  return onlyShown(await loadReadyInvoices());
 }

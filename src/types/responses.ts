@@ -11,6 +11,7 @@ export interface InvoicesResponse {
   totals: Totals;
   today: string; // the date the server is using, so the screen needs no second call for it
   loadedAt: string | null; // when Dueline last read the invoices from PayPal, ISO timestamp
+  readyToSend: InvoiceSummary[]; // balance invoices saved as drafts, to send on delivery
 }
 
 export interface ExtractResponse {
@@ -24,6 +25,13 @@ export interface ExtractResponse {
 export interface CreateInvoiceResponse {
   invoice: InvoiceSummary;
   sent: boolean;
+}
+
+// The deposit is created and sent; the balance is saved as a draft. `balance` is null when the
+// deposit could not be sent or the balance could not be saved, and the same request retries it.
+export interface CreateSplitResponse {
+  deposit: CreateInvoiceResponse;
+  balance: InvoiceSummary | null;
 }
 
 export interface SendInvoiceResponse {

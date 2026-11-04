@@ -4,12 +4,15 @@ import { assertSandboxBuyers } from "@/lib/demo-guard";
 import { ConfigError } from "@/lib/env";
 import { PayPalApiError, PayPalTimeoutError } from "@/lib/paypal/errors";
 import { requestMemo, toPayPalInvoice } from "@/lib/paypal/invoice-body";
+import type { SplitTag } from "@/lib/paypal/memo";
 import {
   createDraftInvoice,
   getInvoice,
   nextInvoiceNumber,
   sendInvoice,
+  updateDraftInvoice,
 } from "@/lib/paypal/invoices";
+import { needsRedating, redatedForSending } from "@/lib/paypal/redate";
 import {
   refreshSnapshotNow,
   findInvoiceByMemo,
@@ -25,7 +28,7 @@ import type { Json } from "@/lib/store/store";
 import type { CreateInvoiceRequest, CreateInvoiceResponse, SendInvoiceResponse } from "@/types";
 import { CreateOutcomeUnknownError, InvoiceNotFoundError } from "./errors";
 
-type NewInvoice = Omit<CreateInvoiceRequest, "requestId">;
+type NewInvoice = Omit<CreateInvoiceRequest, "requestId"> & { split?: SplitTag };
 
 const INVOICE_CONFLICT =
   "This request ID was already used for different details. Check Receivables before creating the invoice again.";
@@ -55,6 +58,7 @@ async function createDraft(input: NewInvoice, requestId: string): Promise<PayPal
     requestId,
     profile: await getProfile(),
     discount: input.discount,
+    split: input.split,
   });
   return createDraftInvoice(body, requestId);
 }
@@ -128,6 +132,37 @@ export async function createAndSendInvoice(
   return result;
 }
 
+// Saves an invoice as a draft and leaves it unsent, for a balance invoice that goes out on delivery.
+// A repeated request returns the stored result and never makes a second draft.
+export async function createDraftOnly(
+  input: NewInvoice,
+  requestId: string,
+): Promise<CreateInvoiceResponse> {
+  assertSandboxBuyers([input.draft.client.email]);
+
+  const store = getStore();
+  const claim = await claimRequest(
+    store,
+    requestId,
+    hashRequestBody(input),
+    {
+      conflict: INVOICE_CONFLICT,
+      inProgress: "This invoice is still being saved. Check Receivables before trying again.",
+    },
+    fromStored,
+  );
+  if (claim.kind === "replay") return claim.result;
+
+  const draft = await createOrFind(input, requestId, claim.recovered);
+  await refreshSnapshotNow([draft.id]);
+  const result: CreateInvoiceResponse = {
+    invoice: summarise(draft),
+    sent: draft.status !== "DRAFT",
+  };
+  await store.complete(requestId, toStored(result));
+  return result;
+}
+
 // Sending is safe to repeat: an invoice PayPal already shows as sent is returned as it is.
 export async function sendExistingDraft(
   invoiceId: string,
@@ -150,6 +185,10 @@ export async function sendExistingDraft(
     const invoice = await getInvoice(invoiceId);
     if (invoice.status === "DRAFT") {
       assertSandboxBuyers(recipientsOf(invoice));
+      // If this fails nothing is sent, and the same request can try again.
+      if (needsRedating(invoice)) {
+        await updateDraftInvoice(invoiceId, redatedForSending(invoice, today()));
+      }
       try {
         await sendInvoice(invoiceId, requestId);
       } finally {

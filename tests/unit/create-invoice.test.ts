@@ -4,7 +4,8 @@ import { RecipientNotAllowedError } from "@/lib/demo-guard";
 import { CreateOutcomeUnknownError, InvoiceNotFoundError } from "@/lib/invoices/errors";
 import { PayPalApiError, PayPalTimeoutError } from "@/lib/paypal/errors";
 import { requestMemo } from "@/lib/paypal/invoice-body";
-import type { PayPalInvoice, PayPalInvoiceInput } from "@/lib/paypal/types";
+import type { SplitTag } from "@/lib/paypal/memo";
+import type { PayPalInvoice, PayPalInvoiceInput, PayPalInvoiceUpdate } from "@/lib/paypal/types";
 import { DuplicateRequestError } from "@/lib/requests/errors";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
@@ -16,6 +17,7 @@ const paypal = vi.hoisted(() => ({
   nextInvoiceNumber: vi.fn(),
   createDraftInvoice: vi.fn(),
   sendInvoice: vi.fn(),
+  updateDraftInvoice: vi.fn(),
   getInvoice: vi.fn(),
   findInvoiceByMemo: vi.fn(),
   refreshSnapshotNow: vi.fn(),
@@ -25,6 +27,7 @@ vi.mock("@/lib/paypal/invoices", () => ({
   nextInvoiceNumber: paypal.nextInvoiceNumber,
   createDraftInvoice: paypal.createDraftInvoice,
   sendInvoice: paypal.sendInvoice,
+  updateDraftInvoice: paypal.updateDraftInvoice,
   getInvoice: paypal.getInvoice,
 }));
 vi.mock("@/lib/paypal/summaries", async (importOriginal) => ({
@@ -79,6 +82,7 @@ beforeEach(() => {
   paypal.nextInvoiceNumber.mockResolvedValue("INV-0101");
   paypal.createDraftInvoice.mockResolvedValue(draftInvoice);
   paypal.sendInvoice.mockResolvedValue(undefined);
+  paypal.updateDraftInvoice.mockResolvedValue(undefined);
   paypal.getInvoice.mockResolvedValue(sentInvoice);
   paypal.findInvoiceByMemo.mockResolvedValue(undefined);
 });
@@ -381,5 +385,75 @@ describe("sendExistingDraft", () => {
     await expect(sendExistingDraft("INV2-OTHER", otherRequestId)).rejects.toBeInstanceOf(
       DuplicateRequestError,
     );
+  });
+});
+
+describe("sending a balance draft", () => {
+  const tag: SplitTag = { role: "balance", id: requestId };
+  const balanceDraft: PayPalInvoice = {
+    ...draftInvoice,
+    detail: {
+      ...draftInvoice.detail,
+      invoice_date: "2026-10-01",
+      memo: requestMemo(otherRequestId, null, null, tag),
+      payment_term: { term_type: "DUE_ON_DATE_SPECIFIED", due_date: "2026-10-15" },
+    },
+  };
+
+  beforeEach(() => {
+    paypal.getInvoice.mockResolvedValueOnce(balanceDraft).mockResolvedValueOnce(sentInvoice);
+  });
+
+  it("dates it with the sending day before it goes out", async () => {
+    await sendExistingDraft("INV2-NEW", otherRequestId);
+
+    expect(paypal.updateDraftInvoice).toHaveBeenCalledWith(
+      "INV2-NEW",
+      expect.objectContaining({
+        detail: expect.objectContaining({
+          invoice_date: "2026-10-30",
+          payment_term: { term_type: "DUE_ON_DATE_SPECIFIED", due_date: "2026-11-13" },
+        }),
+      }),
+    );
+    expect(paypal.updateDraftInvoice.mock.invocationCallOrder[0]).toBeLessThan(
+      paypal.sendInvoice.mock.invocationCallOrder[0],
+    );
+  });
+
+  it("does not send when the update fails, and lets the same request try again", async () => {
+    paypal.updateDraftInvoice.mockRejectedValueOnce(rejection(422));
+    await expect(sendExistingDraft("INV2-NEW", otherRequestId)).rejects.toBeInstanceOf(
+      PayPalApiError,
+    );
+    expect(paypal.sendInvoice).not.toHaveBeenCalled();
+
+    paypal.getInvoice.mockResolvedValueOnce(balanceDraft).mockResolvedValueOnce(sentInvoice);
+    await expect(sendExistingDraft("INV2-NEW", otherRequestId)).resolves.toMatchObject({
+      sent: true,
+    });
+  });
+
+  it("leaves an ordinary draft as it was saved", async () => {
+    paypal.getInvoice.mockReset();
+    paypal.getInvoice.mockResolvedValueOnce(draftInvoice).mockResolvedValueOnce(sentInvoice);
+    await sendExistingDraft("INV2-NEW", otherRequestId);
+    expect(paypal.updateDraftInvoice).not.toHaveBeenCalled();
+  });
+
+  it("dates it by India time across midnight", async () => {
+    vi.useFakeTimers();
+    stubEnv();
+    const updatedDates = async (instant: string): Promise<string[]> => {
+      vi.setSystemTime(new Date(instant));
+      paypal.updateDraftInvoice.mockClear();
+      paypal.getInvoice.mockResolvedValueOnce(balanceDraft).mockResolvedValueOnce(sentInvoice);
+      await sendExistingDraft("INV2-NEW", crypto.randomUUID());
+      const body = paypal.updateDraftInvoice.mock.calls[0][1] as PayPalInvoiceUpdate;
+      return [body.detail.invoice_date, body.detail.payment_term.due_date ?? ""];
+    };
+    // 23:59 in India on 4 November is 18:29 UTC; two minutes later it is 5 November there.
+    expect(await updatedDates("2026-11-04T18:29:00Z")).toEqual(["2026-11-04", "2026-11-18"]);
+    expect(await updatedDates("2026-11-04T18:31:00Z")).toEqual(["2026-11-05", "2026-11-19"]);
   });
 });

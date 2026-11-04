@@ -3,7 +3,7 @@ import { today } from "@/lib/clock";
 import { createAndSendInvoice } from "@/lib/invoices/create-invoice";
 import { computeTotals } from "@/lib/money/totals";
 import { invoicesLoadedAt } from "@/lib/paypal/summaries";
-import { loadSummaries } from "@/lib/payouts/load-summaries";
+import { loadReadySummaries, loadSummaries } from "@/lib/payouts/load-summaries";
 import {
   createInvoiceRequestSchema,
   type CreateInvoiceResponse,
@@ -16,9 +16,10 @@ import { parseBody } from "@/app/api/_lib/validate";
 export async function GET(): Promise<Response> {
   await connection();
   try {
-    const invoices = await loadSummaries();
+    const [invoices, readyToSend] = await Promise.all([loadSummaries(), loadReadySummaries()]);
     return ok<InvoicesResponse>({
       invoices,
+      readyToSend,
       totals: computeTotals(invoices, today()),
       today: today(),
       loadedAt: invoicesLoadedAt(),

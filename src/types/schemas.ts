@@ -80,6 +80,21 @@ export const createInvoiceRequestSchema = z.object({
 
 export type CreateInvoiceRequest = z.infer<typeof createInvoiceRequestSchema>;
 
+// A deposit and a balance invoice made from one draft. The deposit is created and sent under
+// `requestId`, the balance is saved as a draft under `balanceRequestId`.
+export const createSplitRequestSchema = z.object({
+  draft: invoiceDraftForCreateSchema,
+  requestId: requestIdSchema,
+  balanceRequestId: requestIdSchema,
+  split: z.object({
+    percent: z.number().int().min(1).max(99),
+    depositDueOn: dateString,
+    balanceDueOn: dateString,
+  }),
+});
+
+export type CreateSplitRequest = z.infer<typeof createSplitRequestSchema>;
+
 export const invoiceIdSchema = z.string().min(1).max(100);
 
 export const sendInvoiceRequestSchema = z.object({ requestId: requestIdSchema });
@@ -197,6 +212,7 @@ export const profileSchema = z.object({
   lutValidUntil: dateString.nullable(),
   defaultSac: sacSchema.nullable(),
   website: websiteSchema.nullable(),
+  address: plainText(200, 1).nullable(),
   signOff: plainText(40, 1),
 });
 

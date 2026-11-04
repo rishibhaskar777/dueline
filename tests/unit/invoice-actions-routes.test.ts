@@ -324,7 +324,12 @@ describe("GET /api/invoices/{id}", () => {
       await detail(new Request(`${origin}/api/invoices/${id}`), context() as never)
     ).json();
 
-    expect(body.details.actions).toEqual({ remind: false, recordPayment: false, cancel: false });
+    expect(body.details.actions).toEqual({
+      remind: false,
+      recordPayment: false,
+      cancel: false,
+      send: false,
+    });
     expect(body.timeline[0].kind).toBe("cancelled");
   });
 
