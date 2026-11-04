@@ -12,6 +12,6 @@
   "due": {
     "rule": "none"
   },
-  "warnings": ["no_payment_terms"],
+  "warnings": ["no_due_date"],
   "contacts": ["ravi@kestrel-example.com", "books@kestrelaccounts-example.com"]
 }

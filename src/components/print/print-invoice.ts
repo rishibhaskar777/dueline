@@ -1,6 +1,7 @@
 import { countryName } from "@/lib/countries";
 import { findPurposeCode } from "@/lib/export/purpose-codes";
 import { formatDate } from "@/lib/format-date";
+import { LUT_ENDORSEMENT } from "@/lib/invoices/lut-wording";
 import { fromMinorUnits, toMinorUnits } from "@/lib/money/decimal";
 import { formatMoney } from "@/lib/money/format";
 import type { InvoiceDetailResponse, Profile } from "@/types";
@@ -43,7 +44,7 @@ function endorsementOf({ details }: InvoiceDetailResponse, profile: Profile): st
   const arn = LUT_ARN_LINE.exec(details.note)?.[1] ?? null;
   const validUntil = arn && profile.lutArn === arn ? profile.lutValidUntil : null;
   return [
-    "Supply meant for export under bond or Letter of Undertaking without payment of integrated tax.",
+    LUT_ENDORSEMENT,
     arn && `LUT ARN ${arn}${validUntil ? `, valid until ${formatDate(validUntil)}` : ""}.`,
   ]
     .filter(Boolean)

@@ -13,6 +13,6 @@
   "due": {
     "rule": "none"
   },
-  "warnings": ["no_payment_terms"],
+  "warnings": ["no_due_date"],
   "contacts": ["sofia@casaverde-example.com"]
 }

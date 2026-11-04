@@ -1,7 +1,10 @@
-import { formatDate, formatTimestamp } from "@/lib/format-date";
+import { formatDate, formatDayMonth, formatTimestamp } from "@/lib/format-date";
 import type { TimelineEvent } from "@/types";
 
 function reminderText({ tone, channel }: TimelineEvent): string {
+  if (tone === "heads_up") {
+    return channel === "email" ? "Heads-up sent from your email" : "Heads-up sent through PayPal";
+  }
   const how = channel === "email" ? "Message sent from your email" : "Reminder sent through PayPal";
   return tone ? `${how} (${tone} tone)` : how;
 }
@@ -16,6 +19,10 @@ export function describeTimelineEvent(event: TimelineEvent): string {
       return "Your client viewed the invoice";
     case "reminder":
       return reminderText(event);
+    case "promised":
+      return event.promisedOn
+        ? `Client promised to pay by ${formatDayMonth(event.promisedOn)}`
+        : "Client promised a date";
     case "due":
       return "Payment due date";
     case "overdue":

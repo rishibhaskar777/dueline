@@ -143,7 +143,8 @@ export function ReviewStep({ initial, profile, onCreateAnother }: ReviewStepProp
           </section>
         </div>
 
-        <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:sticky lg:top-24">
+        {/* Never taller than the window, so on a short screen the column scrolls on its own and the create button stays in reach. The padding keeps the cards' shadows from being clipped. */}
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:sticky lg:top-20 lg:-m-4 lg:max-h-[calc(100dvh-5.5rem)] lg:overflow-y-auto lg:p-4">
           <InvoiceSummaryCard
             totals={calculateTotals(form)}
             pending={pending}

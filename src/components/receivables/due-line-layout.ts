@@ -1,5 +1,5 @@
 import { addDays, daysBetween } from "@/lib/date-math";
-import { formatDate } from "@/lib/format-date";
+import { formatDate, formatDayMonth } from "@/lib/format-date";
 import { formatMoney } from "@/lib/money/format";
 import type { InvoiceSummary } from "@/types";
 
@@ -25,6 +25,8 @@ export interface DueLineRow {
   tone: LineTone;
   from: number;
   due: number;
+  // Where the client's promised date falls on the axis, or null with no promise or one past the axis.
+  promised: number | null;
   end: number;
   // The line began before the chart's first date, so it is drawn from the left edge with an arrow.
   startsBeforeChart: boolean;
@@ -79,7 +81,10 @@ function accessibleName(invoice: InvoiceSummary, status: string): string {
     invoice.dueState === "paid" && invoice.paidOn
       ? formatDate(invoice.paidOn)
       : `due ${formatDate(invoice.dueOn)}`;
-  return `${invoice.client.name} ${invoice.number} · ${formatMoney(invoice.amount)} ${status}, ${when}`;
+  const promised = invoice.promise
+    ? `, promised ${formatDayMonth(invoice.promise.promisedOn)}`
+    : "";
+  return `${invoice.client.name} ${invoice.number} · ${formatMoney(invoice.amount)} ${status}, ${when}${promised}`;
 }
 
 function toneOf(invoice: InvoiceSummary): LineTone {
@@ -98,9 +103,10 @@ function toneOf(invoice: InvoiceSummary): LineTone {
 function buildRow(
   invoice: InvoiceSummary,
   today: string,
-  scale: { at: (date: string) => number; axisPx: number; origin: string },
+  scale: { at: (date: string) => number; axisPx: number; origin: string; lastDay: string },
 ): DueLineRow {
-  const { at, axisPx, origin } = scale;
+  const { at, axisPx, origin, lastDay } = scale;
+  const promisedOn = invoice.dueState === "paid" ? undefined : invoice.promise?.promisedOn;
   const from = at(invoice.issuedOn);
   const paid = invoice.dueState === "paid";
   // An unpaid line never shrinks to a dot: it is at least MIN_LINE_PX long on screen.
@@ -114,6 +120,7 @@ function buildRow(
     tone: toneOf(invoice),
     from,
     due: at(invoice.dueOn),
+    promised: promisedOn && promisedOn >= origin && promisedOn <= lastDay ? at(promisedOn) : null,
     end,
     startsBeforeChart: invoice.issuedOn < origin,
     endMark: paid ? "filled" : "open",
@@ -162,6 +169,7 @@ export function layoutDueLine(
       invoice.issuedOn,
       invoice.dueOn,
       ...(invoice.paidOn ? [invoice.paidOn] : []),
+      ...(invoice.promise && invoice.dueState !== "paid" ? [invoice.promise.promisedOn] : []),
     ]),
   ];
   const first = earliest(dates);
@@ -186,7 +194,7 @@ export function layoutDueLine(
   return {
     today: todayAt,
     ticks,
-    rows: shown.map((invoice) => buildRow(invoice, today, { at, axisPx, origin })),
+    rows: shown.map((invoice) => buildRow(invoice, today, { at, axisPx, origin, lastDay })),
     olderCount: older.length,
   };
 }

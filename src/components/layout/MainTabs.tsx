@@ -34,11 +34,11 @@ export function MainTabs() {
   }, [active]);
 
   return (
-    <nav aria-label="Main" className="min-h-[52px]">
+    <nav aria-label="Main" className="min-h-[52px] min-w-0">
       <div
         ref={containerRef}
         {...slider.containerProps}
-        className="relative flex snap-x snap-mandatory gap-1 rounded-full bg-hover p-1 [scrollbar-width:none] max-md:overflow-x-auto max-md:overscroll-x-contain [&::-webkit-scrollbar]:hidden"
+        className="relative flex snap-x snap-mandatory gap-1 rounded-full bg-hover p-1 [scrollbar-width:none] overflow-x-auto overscroll-x-contain [&::-webkit-scrollbar]:hidden"
       >
         <span
           aria-hidden="true"

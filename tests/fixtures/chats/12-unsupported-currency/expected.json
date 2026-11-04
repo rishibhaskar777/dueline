@@ -12,6 +12,6 @@
   "due": {
     "rule": "none"
   },
-  "warnings": ["currency_not_found", "no_payment_terms"],
+  "warnings": ["currency_not_found", "no_due_date"],
   "contacts": ["reto@alpenblick-example.com"]
 }

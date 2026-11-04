@@ -22,13 +22,13 @@ which catches a typo but does not prove the number exists.
 
 **What is printed where.**
 
-| Where                       | What                                                                                                                                                                                   |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Invoice header (`invoicer`) | business name, your name split into given name and surname, GSTIN as `tax_id`, website; each only when set. PayPal's create call takes these, so "Test Store" is replaced.             |
-| Item description            | `SAC 998314` when the item has a SAC                                                                                                                                                   |
-| Invoice note                | with the LUT box ticked: the declaration "SUPPLY MEANT FOR EXPORT UNDER LETTER OF UNDERTAKING WITHOUT PAYMENT OF INTEGRATED TAX", `LUT ARN: <ARN>` when saved, and the place of supply |
-| Private memo                | the request marker, the purpose code and `sac:<code>` of the first item, through the one memo helper, so the export register can read it                                               |
-| Reminders                   | the sign-off, then your name on the next line; no name is ever invented                                                                                                                |
+| Where                       | What                                                                                                                                                                                           |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Invoice header (`invoicer`) | business name, your name split into given name and surname, GSTIN as `tax_id`, website; each only when set. PayPal's create call takes these, so "Test Store" is replaced.                     |
+| Item description            | `SAC 998314` when the item has a SAC                                                                                                                                                           |
+| Invoice note                | with the LUT box ticked: the declaration "SUPPLY MEANT FOR EXPORT UNDER BOND OR LETTER OF UNDERTAKING WITHOUT PAYMENT OF INTEGRATED TAX", `LUT ARN: <ARN>` when saved, and the place of supply |
+| Private memo                | the request marker, the purpose code and `sac:<code>` of the first item, through the one memo helper, so the export register can read it                                                       |
+| Reminders                   | the sign-off, then your name on the next line; no name is ever invented                                                                                                                        |
 
 Invoices made before this change carry the shorter line "Export of services under LUT, without
 payment of IGST". It still counts as under LUT, so older rows keep their LUT flag.

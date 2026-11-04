@@ -9,8 +9,9 @@ import { runClaimed } from "@/lib/requests/run-claimed";
 import { getStore } from "@/lib/store";
 import type { Json, Store } from "@/lib/store/store";
 import type { InvoiceSummary, SendReminderRequest, SendReminderResponse } from "@/types";
-import { ReminderLimitError } from "./errors";
+import { InvalidReminderError, ReminderLimitError } from "./errors";
 import { recordPayPalLimit, remindersLeftToday } from "./daily-limit";
+import { paypalRefusedError, paypalRefusedHeadsUp, recordPayPalRefusal } from "./heads-up-refusal";
 import { assertRemindable } from "./overdue";
 
 const PAYPAL_LIMIT_MESSAGE =
@@ -31,17 +32,28 @@ function fromStored(value: Json): SendReminderResponse {
 // check; a PayPal reminder is emailed by PayPal and the guard applies.
 async function readRemindable(
   invoiceId: string,
-  channel: SendReminderRequest["channel"],
+  { tone, channel }: Pick<SendReminderRequest, "tone" | "channel">,
 ): Promise<InvoiceSummary> {
   try {
     const invoice = await getInvoice(invoiceId);
     const summary = summarise(invoice);
-    assertRemindable(summary);
+    assertRemindable(summary, tone);
     if (channel === "paypal") assertSandboxBuyers(recipientsOf(invoice));
     return summary;
   } catch (error) {
     if (error instanceof PayPalApiError && error.status === 404) throw new InvoiceNotFoundError();
     throw error;
+  }
+}
+
+// A heads-up is sent once per invoice, by whichever channel the freelancer chooses.
+async function assertNoHeadsUpYet(
+  store: Store,
+  { invoiceId, tone }: Pick<SendReminderRequest, "invoiceId" | "tone">,
+): Promise<void> {
+  if (tone !== "heads_up") return;
+  if ((await store.reminderHistory(invoiceId)).some((entry) => entry.tone === "heads_up")) {
+    throw new InvalidReminderError("A heads-up was already sent for this invoice.");
   }
 }
 
@@ -68,7 +80,10 @@ async function assertUnderDailyLimit(store: Store): Promise<void> {
   if ((await remindersLeftToday(store)) === 0) throw new ReminderLimitError(PAYPAL_LIMIT_MESSAGE);
 }
 
-async function remind(store: Store, invoiceId: string): Promise<void> {
+async function remind(
+  store: Store,
+  { invoiceId, tone }: Pick<SendReminderRequest, "invoiceId" | "tone">,
+): Promise<void> {
   try {
     await remindInvoice(invoiceId);
   } catch (error) {
@@ -76,8 +91,28 @@ async function remind(store: Store, invoiceId: string): Promise<void> {
       await recordPayPalLimit(store);
       throw new ReminderLimitError(PAYPAL_LIMIT_MESSAGE);
     }
+    // PayPal's documentation sets no limit on reminding before the due date, but if it refuses one,
+    // nothing is logged or counted and the invoice offers only the freelancer's own message today.
+    if (
+      tone === "heads_up" &&
+      error instanceof PayPalApiError &&
+      error.status >= 400 &&
+      error.status < 500
+    ) {
+      console.warn("PayPal refused a heads-up reminder", { debugId: error.debugId });
+      await recordPayPalRefusal(store, invoiceId);
+      throw paypalRefusedError();
+    }
     throw error;
   }
+}
+
+function activityKind(
+  tone: SendReminderRequest["tone"],
+  channel: SendReminderRequest["channel"],
+): "heads_up_sent" | "reminder_sent" | "email_sent" {
+  if (tone === "heads_up") return "heads_up_sent";
+  return channel === "paypal" ? "reminder_sent" : "email_sent";
 }
 
 async function recordSent(
@@ -89,7 +124,7 @@ async function recordSent(
   await store.logReminder({ invoiceId: invoice.id, tone, sentAt, channel });
   await store.addActivity({
     id: `reminder:${requestId}`,
-    kind: channel === "paypal" ? "reminder_sent" : "email_sent",
+    kind: activityKind(tone, channel),
     invoiceId: invoice.id,
     invoiceNumber: invoice.number,
     clientName: invoice.client.name,
@@ -115,11 +150,15 @@ export function sendReminder(request: SendReminderRequest): Promise<SendReminder
     },
     readStored: fromStored,
     run: async () => {
-      invoice = await readRemindable(request.invoiceId, request.channel);
+      invoice = await readRemindable(request.invoiceId, request);
+      await assertNoHeadsUpYet(store, request);
       await assertNotSentToday(store, request.invoiceId, request.channel);
       if (request.channel === "paypal") {
+        if (request.tone === "heads_up" && (await paypalRefusedHeadsUp(store, request.invoiceId))) {
+          throw paypalRefusedError();
+        }
         await assertUnderDailyLimit(store);
-        await remind(store, request.invoiceId);
+        await remind(store, request);
       }
       return { sentAt: new Date().toISOString() };
     },

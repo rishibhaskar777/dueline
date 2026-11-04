@@ -251,9 +251,7 @@ export const extraction: ExtractResponse = {
     purposeReason: "Logo design has no closer match on the list, so it falls under other services.",
     includeLutNote: true,
   },
-  warnings: [
-    "No payment terms in the chat; due date set to 14 days from today. Change it if needed.",
-  ],
+  warnings: ["No due date in the chat; set to 14 days from today. Change it if needed."],
   risk: haldenRisk,
   paymentTerms: null,
   masked: { emails: 1, phones: 0 },

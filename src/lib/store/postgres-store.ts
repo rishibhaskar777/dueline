@@ -18,6 +18,7 @@ import {
 import type {
   ClaimResult,
   ClientAlias,
+  StoredPromise,
   DemoGeneration,
   Json,
   ReminderLogEntry,
@@ -35,6 +36,7 @@ interface ActivityRow {
   client_name: string;
   at: Date;
   amount: Money | null;
+  detail: string | null;
 }
 
 interface RateRow {
@@ -65,6 +67,7 @@ function toActivityEvent(row: ActivityRow): ActivityEvent {
     clientName: row.client_name,
     at: row.at.toISOString(),
     ...(row.amount ? { amount: row.amount } : {}),
+    ...(row.detail ? { detail: row.detail } : {}),
   };
 }
 
@@ -128,17 +131,18 @@ export function createPostgresStore(sql: Sql): Store {
 
     async addActivity(event): Promise<void> {
       await sql`
-        insert into activity_events (id, kind, invoice_id, invoice_number, client_name, at, amount)
+        insert into activity_events (id, kind, invoice_id, invoice_number, client_name, at, amount, detail)
         values (
           ${event.id}, ${event.kind}, ${event.invoiceId}, ${event.invoiceNumber},
-          ${event.clientName}, ${event.at}, ${event.amount ? toJson(sql, event.amount) : null}
+          ${event.clientName}, ${event.at}, ${event.amount ? toJson(sql, event.amount) : null},
+          ${event.detail ?? null}
         )
         on conflict (id) do nothing`;
     },
 
     async latestActivity(limit): Promise<ActivityEvent[]> {
       const rows = await sql<ActivityRow[]>`
-        select id, kind, invoice_id, invoice_number, client_name, at, amount
+        select id, kind, invoice_id, invoice_number, client_name, at, amount, detail
         from activity_events order by at desc limit ${limit}`;
       return rows.map(toActivityEvent);
     },
@@ -348,6 +352,36 @@ export function createPostgresStore(sql: Sql): Store {
     async deleteClientAlias(fromKey): Promise<boolean> {
       const rows = await sql`delete from client_aliases where from_key = ${fromKey} returning 1`;
       return rows.length > 0;
+    },
+
+    async listPromises(): Promise<StoredPromise[]> {
+      const rows = await sql<
+        { invoice_id: string; promised_on: string; note: string; created_at: Date }[]
+      >`select invoice_id, promised_on::text as promised_on, note, created_at from payment_promises`;
+      return rows.map((row) => ({
+        invoiceId: row.invoice_id,
+        promisedOn: row.promised_on,
+        note: row.note,
+        createdAt: row.created_at.toISOString(),
+      }));
+    },
+
+    async savePromise(promise): Promise<void> {
+      await sql`
+        insert into payment_promises (invoice_id, promised_on, note, created_at)
+        values (${promise.invoiceId}, ${promise.promisedOn}, ${promise.note}, ${promise.createdAt})
+        on conflict (invoice_id) do update set
+          promised_on = excluded.promised_on, note = excluded.note, created_at = excluded.created_at`;
+    },
+
+    async deletePromise(invoiceId): Promise<boolean> {
+      const rows =
+        await sql`delete from payment_promises where invoice_id = ${invoiceId} returning 1`;
+      return rows.length > 0;
+    },
+
+    async clearPromises(): Promise<void> {
+      await sql`delete from payment_promises`;
     },
 
     async hasFlag(name): Promise<boolean> {

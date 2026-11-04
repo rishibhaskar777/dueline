@@ -2,9 +2,16 @@ import { expect, test, type Page } from "@playwright/test";
 import { KRAFTWERK_CHAT } from "../support/kraftwerk-chat";
 import { expectNoSeriousViolations, openInTheme } from "./support";
 
+interface ListedInvoice {
+  id: string;
+  number: string;
+  paypalStatus: string;
+  client: { name: string };
+}
+
 interface InvoiceList {
-  invoices: { id: string; number: string; paypalStatus: string }[];
-  readyToSend: { id: string; number: string; paypalStatus: string }[];
+  invoices: ListedInvoice[];
+  readyToSend: ListedInvoice[];
 }
 
 async function invoiceList(page: Page): Promise<InvoiceList> {
@@ -46,8 +53,9 @@ test.describe("Deposit and balance", () => {
     await expect(page.getByText(/The balance, invoice INV-\d+ for €615\.00/)).toBeVisible();
 
     const list = await invoiceList(page);
-    expect(list.readyToSend).toHaveLength(1);
-    const balance = list.readyToSend[0];
+    const waiting = list.readyToSend.filter(({ client }) => client.name === "Kraftwerk Studio");
+    expect(waiting).toHaveLength(1);
+    const balance = waiting[0];
     expect(list.invoices.map(({ id }) => id)).not.toContain(balance.id);
 
     await page.getByRole("link", { name: "View receivables" }).click();
@@ -55,8 +63,9 @@ test.describe("Deposit and balance", () => {
     await expect(ready).toBeVisible();
     await expect(ready.getByText("Kraftwerk Studio")).toBeVisible();
     await expectNoSeriousViolations(page, "Home with Ready to send");
-    await ready.getByRole("button", { name: `Send balance for invoice ${balance.number}` }).click();
-    await expect(ready).toHaveCount(0);
+    const send = ready.getByRole("button", { name: `Send balance for invoice ${balance.number}` });
+    await send.click();
+    await expect(send).toHaveCount(0);
 
     await expect
       .poll(
@@ -94,7 +103,9 @@ test.describe("Deposit and balance", () => {
     await draftKraftwerk(page);
     await page.getByRole("button", { name: "Create deposit and save balance" }).click();
     await expect(page.getByRole("heading", { name: /^Deposit INV-\d+ sent$/ })).toBeVisible();
-    const balance = (await invoiceList(page)).readyToSend.at(-1);
+    const balance = (await invoiceList(page)).readyToSend
+      .filter(({ client }) => client.name === "Kraftwerk Studio")
+      .at(-1);
     if (!balance) throw new Error("No balance draft");
 
     await page.goto(`/invoices/${encodeURIComponent(balance.id)}`);

@@ -1,3 +1,4 @@
+import { ADDED_LINES_ROOM, NOTE_LIMIT } from "@/lib/paypal/invoice-body";
 import { formatMoney } from "@/lib/money/format";
 import { fromMinorUnits, toMinorUnits } from "@/lib/money/decimal";
 import { splitTotal } from "@/lib/money/split";
@@ -11,9 +12,9 @@ export interface SplitPlan {
   balance: Money;
 }
 
-// PayPal's limits: an item name is up to 200 characters and a note up to 4,000.
+// PayPal's limit for an item name is 200 characters.
 const NAME_LIMIT = 200;
-const NOTE_LIMIT = 3000;
+const SENTENCE_LIMIT = 3000;
 
 export function itemsTotalMinor(draft: DraftToCreate): number {
   return draft.items.reduce((sum, item) => sum + item.quantity * toMinorUnits(item.unitAmount), 0);
@@ -87,9 +88,11 @@ export function balanceDraft(
 ): DraftToCreate {
   const money = (item: DraftToCreate["items"][number]): string =>
     `${item.name} (${item.quantity} × ${formatMoney({ currency: draft.currency, value: item.unitAmount })})`;
+  // The freelancer's own note and the lines added after it (LUT, early payment) share PayPal's 4,000.
+  const room = NOTE_LIMIT - ADDED_LINES_ROOM - (draft.note ? draft.note.length + 1 : 0);
   const sentence = clip(
     `Deposit of ${formatMoney(plan.deposit)} invoiced on ${depositNumber}. Full work: ${draft.items.map(money).join(", ")}.`,
-    NOTE_LIMIT,
+    Math.min(SENTENCE_LIMIT, room),
   );
   const note = [draft.note, sentence].filter(Boolean).join("\n");
   return singleLine(

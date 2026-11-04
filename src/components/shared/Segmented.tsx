@@ -21,8 +21,8 @@ interface SegmentedProps<T extends string> {
 }
 
 const SIZES = {
-  md: { item: "h-[42px] px-[19px] text-[15px]", pill: "h-[42px]" },
-  sm: { item: "h-9 px-[15px] text-sm", pill: "h-9" },
+  md: { item: "h-[42px] px-[19px] text-[15px] max-sm:px-2.5", pill: "h-[42px]" },
+  sm: { item: "h-9 px-[15px] text-sm max-sm:px-2.5", pill: "h-9" },
 } as const;
 
 export function Segmented<T extends string>({
@@ -49,7 +49,7 @@ export function Segmented<T extends string>({
       role="group"
       aria-label={label}
       {...slider.containerProps}
-      className="glass-track relative inline-flex gap-0.5 rounded-full p-1"
+      className="glass-track relative inline-flex max-w-full gap-0.5 overflow-x-auto overscroll-x-contain rounded-full p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       <span
         aria-hidden="true"

@@ -4,6 +4,7 @@ import { today } from "@/lib/clock";
 import { storyMarkerOf } from "@/lib/demo/story";
 import { storyActivityId, storyEventAt } from "@/lib/demo/story-events";
 import { markerOf } from "./memo";
+import { clearPaymentPromise } from "@/lib/promises/promises";
 import { getStore } from "@/lib/store";
 
 import { getInvoice } from "./invoices";
@@ -40,6 +41,7 @@ export function parseWebhookEvent(rawBody: string): WebhookEvent | null {
   }
 }
 
+const SETTLED_STATUSES = ["PAID", "MARKED_AS_PAID", "CANCELLED", "REFUNDED", "MARKED_AS_REFUNDED"];
 const INVOICE_EVENT_PREFIX = "INVOICING.INVOICE.";
 const ACTIVITY_KINDS: Record<string, "paid" | "sent"> = {
   "INVOICING.INVOICE.PAID": "paid",
@@ -55,6 +57,7 @@ function happenedAt(event: WebhookEvent): string {
 async function refreshInvoice(event: WebhookEvent, invoiceId: string): Promise<void> {
   const store = getStore();
   const invoice = await getInvoice(invoiceId);
+  if (SETTLED_STATUSES.includes(invoice.status)) await clearPaymentPromise(invoiceId);
   await refreshSnapshotNow([invoiceId]);
 
   const kind = ACTIVITY_KINDS[event.event_type];

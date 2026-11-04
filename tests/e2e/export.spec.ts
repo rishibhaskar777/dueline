@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectNoSidewaysScroll } from "./support";
 
 const REGISTER_HEADER =
   "Invoice number,Client,Client country,Paid on (IST),Currency,Invoice amount,PayPal fee," +
@@ -54,9 +55,6 @@ test.describe("Export register", () => {
       .locator(".ag-cell")
       .evaluateAll((cells) => cells.filter((cell) => cell.scrollWidth > cell.clientWidth).length);
     expect(clipped).toBe(0);
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    );
-    expect(overflow).toBeLessThanOrEqual(0);
+    await expectNoSidewaysScroll(page);
   });
 });

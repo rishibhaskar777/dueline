@@ -5,14 +5,16 @@ import { useClientRisk } from "@/components/shared/use-client-risk";
 import { formatDate } from "@/lib/format-date";
 import { formatMoney } from "@/lib/money/format";
 import type { InvoiceSummary, ReminderDraft } from "@/types";
-import { daysLateLabel, historyLabel } from "./nudge-model";
+import { daysLateLabel, dueSoonLabel, historyLabel } from "./nudge-model";
 
 interface NudgeHeaderProps {
   invoice: InvoiceSummary;
   history: ReminderDraft["history"];
+  // Set on a card for an invoice that is not late yet.
+  dueSoon: { today: string } | null;
 }
 
-export function NudgeHeader({ invoice, history }: NudgeHeaderProps) {
+export function NudgeHeader({ invoice, history, dueSoon }: NudgeHeaderProps) {
   const risk = useClientRisk(invoice.client.email, invoice.client.name, undefined, 0);
   const judged = risk && risk.invoicesConsidered > 0 ? risk : null;
 
@@ -27,7 +29,9 @@ export function NudgeHeader({ invoice, history }: NudgeHeaderProps) {
         </div>
         <p className="mt-1 text-[15px] text-muted-foreground">
           Invoice {invoice.number} · due {formatDate(invoice.dueOn)}
-          {judged && ` · late on ${judged.lateCount} of ${judged.invoicesConsidered} invoices`}
+          {judged &&
+            !dueSoon &&
+            ` · late on ${judged.lateCount} of ${judged.invoicesConsidered} invoices`}
         </p>
         {history.length > 0 && (
           <ul className="mt-1.5 text-sm text-muted-foreground">
@@ -41,9 +45,15 @@ export function NudgeHeader({ invoice, history }: NudgeHeaderProps) {
         <span className="block font-heading text-[30px] font-extrabold tabular-nums">
           {formatMoney(invoice.amount)}
         </span>
-        <span className="text-[15px] font-semibold text-late tabular-nums">
-          {daysLateLabel(invoice.daysLate)}
-        </span>
+        {dueSoon ? (
+          <span className="text-[15px] font-semibold text-due-soon tabular-nums">
+            {dueSoonLabel(invoice.dueOn, dueSoon.today)}
+          </span>
+        ) : (
+          <span className="text-[15px] font-semibold text-late tabular-nums">
+            {daysLateLabel(invoice.daysLate)}
+          </span>
+        )}
       </p>
     </header>
   );

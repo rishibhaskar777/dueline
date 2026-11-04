@@ -8,6 +8,8 @@ export interface Profile {
   website: string | null;
   address: string | null; // printed on the tax invoice; not sent to PayPal
   signOff: string;
+  sendHeadsUp: boolean; // Nudges offers a friendly note before an invoice is due
+  headsUpDays: number; // 1 to 7: how many days before the due date
 }
 
 export const EMPTY_PROFILE: Profile = {
@@ -20,4 +22,6 @@ export const EMPTY_PROFILE: Profile = {
   website: null,
   address: null,
   signOff: "Thank you",
+  sendHeadsUp: true,
+  headsUpDays: 3,
 };

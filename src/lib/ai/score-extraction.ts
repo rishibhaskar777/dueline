@@ -5,7 +5,7 @@ import { currencySchema, type InvoiceDraft, type PaymentTerms } from "@/types";
 
 // The warnings a chat is expected to raise, and the words of the warning that raises each.
 const WARNING_PATTERNS = {
-  no_payment_terms: /^No payment terms in the chat/,
+  no_due_date: /^No due date in the chat/,
   currency_not_found: /^Currency not found/,
   no_client_email: /^No client email found/,
   no_client_name: /^No client name found/,

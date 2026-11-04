@@ -7,6 +7,7 @@ const TONES: Record<TimelineKind, DotTone> = {
   sent: "foreground",
   viewed: "blue",
   reminder: "blue",
+  promised: "blue",
   due: "amber",
   overdue: "red",
   paid: "green",

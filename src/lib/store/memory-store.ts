@@ -12,6 +12,7 @@ import type {
   AppFlag,
   ClaimResult,
   ClientAlias,
+  StoredPromise,
   DemoGeneration,
   Json,
   ReminderLogEntry,
@@ -45,6 +46,7 @@ export function createMemoryStore(): Store {
   const hidden = new Set<string>();
   const bankReferences = new Map<string, string>();
   const aliases = new Map<string, ClientAlias>();
+  const promises = new Map<string, StoredPromise>();
   const flags = new Set<AppFlag>();
 
   return {
@@ -224,6 +226,22 @@ export function createMemoryStore(): Store {
 
     async deleteClientAlias(fromKey): Promise<boolean> {
       return aliases.delete(fromKey);
+    },
+
+    async listPromises(): Promise<StoredPromise[]> {
+      return [...promises.values()];
+    },
+
+    async savePromise(promise): Promise<void> {
+      promises.set(promise.invoiceId, promise);
+    },
+
+    async deletePromise(invoiceId): Promise<boolean> {
+      return promises.delete(invoiceId);
+    },
+
+    async clearPromises(): Promise<void> {
+      promises.clear();
     },
 
     async hasFlag(name): Promise<boolean> {

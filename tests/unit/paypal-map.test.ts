@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LUT_DECLARATION } from "@/lib/paypal/invoice-body";
+import { LUT_DECLARATION } from "@/lib/invoices/lut-wording";
 import { amountDueOf, isUnderLut, toInvoiceSummary } from "@/lib/paypal/map";
 import type { PayPalInvoice } from "@/lib/paypal/types";
 import type { ActualPayout } from "@/types";

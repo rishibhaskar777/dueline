@@ -18,6 +18,8 @@ import type {
 export interface Nudge {
   draft: ReminderDraft;
   invoice: InvoiceSummary;
+  // The date the app is using, from the same reading of the invoices.
+  today: string;
   // How long this client takes to pay, when anything of theirs was paid in the last 12 months.
   paySpeed: PaySpeed | null;
 }
@@ -25,7 +27,7 @@ export interface Nudge {
 type NudgesState =
   | { kind: "loading" }
   | { kind: "error"; error: LoadError }
-  | { kind: "ready"; nudges: Nudge[]; remindersLeftToday: number };
+  | { kind: "ready"; nudges: Nudge[]; headsUps: Nudge[]; remindersLeftToday: number };
 
 export interface NudgesData {
   state: NudgesState;
@@ -54,14 +56,16 @@ const RECHECKS = 5;
 
 function pair(
   drafts: ReminderDraft[],
-  invoices: InvoiceSummary[],
+  { invoices, today }: InvoicesResponse,
   clients: ClientSummary[],
 ): Nudge[] {
   return drafts.flatMap((draft) => {
     const invoice = invoices.find(({ id }) => id === draft.invoiceId);
     if (!invoice) return [];
     const key = clientKey(invoice.client.name);
-    return [{ draft, invoice, paySpeed: clients.find((c) => c.key === key)?.paySpeed ?? null }];
+    return [
+      { draft, invoice, today, paySpeed: clients.find((c) => c.key === key)?.paySpeed ?? null },
+    ];
   });
 }
 
@@ -120,7 +124,8 @@ export function useNudges(): NudgesData {
     if (parts.reminders && parts.invoices) {
       return {
         kind: "ready",
-        nudges: pair(parts.reminders.drafts, parts.invoices.invoices, parts.clients ?? []),
+        nudges: pair(parts.reminders.drafts, parts.invoices, parts.clients ?? []),
+        headsUps: pair(parts.reminders.headsUps ?? [], parts.invoices, parts.clients ?? []),
         remindersLeftToday: parts.reminders.remindersLeftToday,
       };
     }

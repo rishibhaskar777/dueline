@@ -1,5 +1,6 @@
 import { addDays } from "@/lib/clock";
 import { formatDate } from "@/lib/format-date";
+import { LUT_DECLARATION } from "@/lib/invoices/lut-wording";
 import type { CreateInvoiceRequest, Profile } from "@/types";
 import { memoOf, type SplitTag } from "./memo";
 import type { PayPalInvoiceInput } from "./types";
@@ -21,10 +22,17 @@ interface EarlyPayment {
 }
 
 const MEMO_PREFIX = "dueline-request:";
-export const LUT_DECLARATION =
-  "SUPPLY MEANT FOR EXPORT UNDER LETTER OF UNDERTAKING WITHOUT PAYMENT OF INTEGRATED TAX";
-// Written on invoices made before the declaration above, which still count as under LUT.
-const EARLIER_LUT_NOTE = "Export of services under LUT, without payment of IGST";
+// Written on invoices made before the declaration in lut-wording.ts, which still count as under LUT.
+const EARLIER_LUT_NOTES = [
+  "SUPPLY MEANT FOR EXPORT UNDER LETTER OF UNDERTAKING WITHOUT PAYMENT OF INTEGRATED TAX",
+  "Export of services under LUT, without payment of IGST",
+];
+
+// PayPal's limit for an invoice note, and the room kept free in it for the lines Dueline adds after
+// the freelancer's own words: the LUT declaration, ARN and place of supply (about 150 characters) and
+// the early-payment line (about 70).
+export const NOTE_LIMIT = 4000;
+export const ADDED_LINES_ROOM = 300;
 
 export function requestMemo(
   requestId: string,
@@ -36,7 +44,8 @@ export function requestMemo(
 }
 
 export function mentionsLut(note: string | undefined): boolean {
-  return note?.includes(LUT_DECLARATION) === true || note?.includes(EARLIER_LUT_NOTE) === true;
+  if (note === undefined) return false;
+  return [LUT_DECLARATION, ...EARLIER_LUT_NOTES].some((text) => note.includes(text));
 }
 
 function lutLines({ lutArn }: Profile): string[] {

@@ -228,6 +228,67 @@ Please pay it within the next 3 days using the Pay now button in the PayPal emai
   }),
 };
 
+// A heads-up before the due date: friendly, with nothing about lateness. The sign-off the profile
+// adds carries the one thank you.
+const HEADS_UPS: Record<ReminderLanguage, (p: TemplateParts) => ReminderText> = {
+  en: (p) => ({
+    subject: `A quick note about invoice ${p.number}`,
+    message: `${p.greeting}
+
+A quick note that invoice ${p.number} for ${p.owed}${p.work} is due on ${p.due}.
+
+The PayPal email has a Pay now button that takes you straight to the payment. Please let me know if anything is unclear.`,
+  }),
+  de: (p) => ({
+    subject: `Kurzer Hinweis zu Rechnung ${p.number}`,
+    message: `${p.greeting}
+
+ein kurzer Hinweis: Rechnung ${p.number} über ${p.owed}${p.work} ist am ${p.due} fällig.
+
+In der PayPal-E-Mail finden Sie die Schaltfläche „Pay now“, die Sie direkt zur Zahlung führt. Melden Sie sich gern, falls etwas unklar ist.`,
+  }),
+  fr: (p) => ({
+    subject: `Un mot au sujet de la facture ${p.number}`,
+    message: `${p.greeting}
+
+Un petit mot : la facture ${p.number} d'un montant de ${p.owed}${p.work} arrive à échéance le ${p.due}.
+
+L'e-mail PayPal contient un bouton « Pay now » qui vous mène directement au paiement. N'hésitez pas à me dire si quelque chose n'est pas clair.`,
+  }),
+  es: (p) => ({
+    subject: `Un aviso sobre la factura ${p.number}`,
+    message: `${p.greeting}
+
+Un aviso: la factura ${p.number} por ${p.owed}${p.work} vence el ${p.due}.
+
+El correo de PayPal incluye un botón «Pay now» que lleva directamente al pago. Avíseme si algo no queda claro.`,
+  }),
+  nl: (p) => ({
+    subject: `Een korte mededeling over factuur ${p.number}`,
+    message: `${p.greeting}
+
+Een korte mededeling: factuur ${p.number} van ${p.owed}${p.work} moet op ${p.due} betaald zijn.
+
+In de PayPal-e-mail staat een knop "Pay now" die u rechtstreeks naar de betaling brengt. Laat het me weten als iets onduidelijk is.`,
+  }),
+  pt: (p) => ({
+    subject: `Um aviso sobre a fatura ${p.number}`,
+    message: `${p.greeting}
+
+Um aviso: a fatura ${p.number} no valor de ${p.owed}${p.work} vence em ${p.due}.
+
+O e-mail do PayPal tem um botão "Pay now" que leva direto ao pagamento. Avise-me se algo não estiver claro.`,
+  }),
+  hi: (p) => ({
+    subject: `इनवॉइस ${p.number} के बारे में एक सूचना`,
+    message: `${p.greeting}
+
+एक सूचना: ${p.owed}${p.work} का इनवॉइस ${p.number} ${p.due} को देय है।
+
+PayPal के ईमेल में "Pay now" बटन है, जो सीधे भुगतान पर ले जाता है। कुछ स्पष्ट न हो तो मुझे बताइए।`,
+  }),
+};
+
 const PACKS: Record<ReminderLanguage, Pack> = {
   en: english,
   de: german,
@@ -264,6 +325,7 @@ export function packTemplate(
     due: facts.due,
     greeting: pack.hello(facts.name, facts.contact),
   };
+  if (tone === "heads_up") return HEADS_UPS[language](parts);
   const days = pack.days(facts.daysLate);
   if (tone === "final" && facts.remindersSent < FINAL_AFTER_REMINDERS) {
     return NOTICES[language](parts, days);

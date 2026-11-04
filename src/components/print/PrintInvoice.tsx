@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, type CSSProperties } from "react";
 import { InvoiceDocument } from "@/components/print/InvoiceDocument";
 import { NOT_UNDER_LUT_WARNING, buildPrintDocument } from "@/components/print/print-invoice";
 import { useProfile } from "@/components/profile/use-profile";
@@ -16,6 +16,15 @@ const PRINT_STYLES = `@media print {
   .dl-backdrop, .print-hide { display: none !important; }
   html, body { background: #fff !important; }
 }`;
+
+// The page is a light document in either theme, so its button keeps the light theme's dark fill.
+const TOOLBAR_TOKENS = {
+  "--btn-primary-bg": "#0d1b2e",
+  "--btn-primary-edge": "#0d1b2e",
+  "--btn-primary-shadow": "rgba(10, 20, 50, 0.22)",
+  "--ring": "#1f47c7",
+  "--background": "#ffffff",
+} as CSSProperties;
 
 export function PrintInvoice({ invoiceId }: { invoiceId: string }) {
   const load = useCallback(() => getInvoiceDetail(invoiceId), [invoiceId]);
@@ -38,7 +47,10 @@ export function PrintInvoice({ invoiceId }: { invoiceId: string }) {
   return (
     <div className="relative z-10 min-h-screen bg-white text-[#111]">
       <style>{PRINT_STYLES}</style>
-      <div className="print-hide mx-auto flex w-full max-w-[210mm] flex-wrap items-center justify-between gap-3 px-4 py-3">
+      <div
+        style={TOOLBAR_TOKENS}
+        className="print-hide mx-auto flex w-full max-w-[210mm] flex-wrap items-center justify-between gap-3 px-4 py-3"
+      >
         <Link
           href={`/invoices/${encodeURIComponent(invoiceId)}`}
           className="font-semibold text-[#1b3fa8] underline underline-offset-2"

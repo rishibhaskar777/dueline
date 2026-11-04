@@ -27,18 +27,18 @@ export function SiteNav() {
 
   return (
     <header className="app-bar sticky top-0 z-40 text-foreground">
-      <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 md:flex-nowrap md:px-6">
+      <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 lg:flex-nowrap lg:px-6">
         <Link
           href="/"
           className="flex min-h-11 flex-none items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
           <Wordmark />
         </Link>
-        <nav aria-label="Site" className="max-md:order-3 max-md:w-full md:flex-none">
+        <nav aria-label="Site" className="max-lg:order-3 max-lg:w-full lg:flex-none">
           <div
             ref={containerRef}
             {...slider.containerProps}
-            className="relative flex gap-1 rounded-full bg-hover p-1 [scrollbar-width:none] max-md:overflow-x-auto max-md:overscroll-x-contain [&::-webkit-scrollbar]:hidden"
+            className="relative flex gap-1 rounded-full bg-hover p-1 [scrollbar-width:none] max-lg:overflow-x-auto max-lg:overscroll-x-contain [&::-webkit-scrollbar]:hidden"
           >
             <span
               aria-hidden="true"
@@ -65,7 +65,7 @@ export function SiteNav() {
             ))}
           </div>
         </nav>
-        <div className="ml-auto flex flex-none items-center gap-2 max-md:order-2">
+        <div className="ml-auto flex flex-none items-center gap-2 max-lg:order-2">
           <ThemeToggle />
           <SitePill href={DEMO_HREF} variant="primary" small className="h-11 py-0">
             Open the demo

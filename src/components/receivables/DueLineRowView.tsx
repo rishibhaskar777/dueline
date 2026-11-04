@@ -126,6 +126,13 @@ export function DueLineRowView({
           className="absolute top-[3px] -ml-px h-5 w-0.5 rounded-sm bg-foreground opacity-70"
           style={{ left: percent(row.due) }}
         />
+        {row.promised !== null && (
+          <span
+            data-promised=""
+            className="absolute top-[18px] -ml-[5px] size-2.5 rotate-45 rounded-[2px] border-2 border-blue-line bg-dot-ground"
+            style={{ left: percent(row.promised) }}
+          />
+        )}
         <span
           className={cn(
             "absolute top-1.5 -ml-[7px] box-border size-3.5 rounded-full border-[2.5px] shadow-[0_0_0_4px_var(--dot-halo)]",

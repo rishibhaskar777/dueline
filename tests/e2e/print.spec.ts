@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { expectNoSeriousViolations, openInTheme } from "./support";
+import { expectNoSeriousViolations, expectNoSidewaysScroll, openInTheme } from "./support";
 
 interface InvoiceList {
   invoices: { id: string; number: string; paypalStatus: string }[];
@@ -47,6 +47,33 @@ test.describe("Printable tax invoice", () => {
     ).toBe(2);
   });
 
+  test("keeps its button readable on the white page in either theme", async ({ page }) => {
+    const invoice = await openInvoiceId(page.request);
+    const path = `/invoices/${encodeURIComponent(invoice.id)}/print`;
+    for (const theme of ["light", "dark"] as const) {
+      await openInTheme(page, theme, path);
+      const button = page.getByRole("button", { name: "Print or save as PDF" });
+      await expect(button).toBeEnabled();
+      const [text, fill] = await button.evaluate((element) => {
+        const { color, backgroundColor } = getComputedStyle(element);
+        const channels = (value: string): number[] =>
+          (value.match(/[\d.]+/g) ?? []).slice(0, 4).map(Number);
+        return [channels(color), channels(backgroundColor)];
+      });
+      const luminance = ([red, green, blue]: number[]): number => {
+        const linear = [red, green, blue].map((channel) => {
+          const unit = channel / 255;
+          return unit <= 0.03928 ? unit / 12.92 : ((unit + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+      };
+      const [light, dark] = [luminance(text), luminance(fill)].sort((a, b) => b - a);
+      expect((light + 0.05) / (dark + 0.05), theme).toBeGreaterThanOrEqual(4.5);
+      // An opaque fill: a see-through one would turn white on the white page.
+      expect(fill[3] ?? 1, theme).toBe(1);
+    }
+  });
+
   test("fits one A4 page and has no serious accessibility problems in either theme", async ({
     page,
   }) => {
@@ -74,9 +101,7 @@ test.describe("Printable tax invoice", () => {
         ),
     );
     expect(wide, "elements wider than a 360 px screen").toEqual([]);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-      360,
-    );
+    await expectNoSidewaysScroll(page, "Print page");
 
     await page.emulateMedia({ media: "print" });
     const pdf = await page.pdf({ format: "A4", preferCSSPageSize: true });

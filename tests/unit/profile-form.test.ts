@@ -12,6 +12,8 @@ const profile: Profile = {
   website: "https://riya.example.com",
   address: null,
   signOff: "Thank you",
+  sendHeadsUp: true,
+  headsUpDays: 3,
 };
 
 describe("profile form", () => {

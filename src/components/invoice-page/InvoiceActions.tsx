@@ -13,7 +13,8 @@ import { RepeatPanel } from "./RepeatPanel";
 
 type Panel = "record" | "cancel" | "repeat" | null;
 
-const PILL = "h-11 px-5 font-bold";
+// A long label wraps inside the pill instead of pushing the page wider.
+const PILL = "h-auto min-h-11 max-w-full px-5 py-2 font-bold whitespace-normal";
 
 interface InvoiceActionsProps extends Pick<InvoiceDetailResponse, "invoice" | "details"> {
   today: string;

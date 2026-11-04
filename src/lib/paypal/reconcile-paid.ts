@@ -1,6 +1,7 @@
 import "server-only";
 import { daysBetween } from "@/lib/date-math";
 import { loadVisibleInvoices } from "@/lib/demo/visible-invoices";
+import { clearSettledPromises } from "@/lib/promises/promises";
 import { getStore } from "@/lib/store";
 import type { Store } from "@/lib/store/store";
 
@@ -25,6 +26,7 @@ export async function reconcilePaidInvoices(day: string): Promise<number> {
     invoicesWithPaidRow(store),
   ]);
 
+  await clearSettledPromises(invoices);
   const missed = invoices
     .map(({ summary }) => summary)
     .filter(

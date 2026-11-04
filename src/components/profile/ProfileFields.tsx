@@ -1,4 +1,5 @@
 import { ProfileField } from "@/components/profile/ProfileField";
+import { ToggleSwitch } from "@/components/shared/ToggleSwitch";
 import type {
   ProfileField as FieldName,
   ProfileFormValues,
@@ -15,9 +16,16 @@ interface ProfileFieldsProps {
   errorOf: (field: FieldName) => string | undefined;
   onChange: (field: FieldName, value: string) => void;
   onBlur: (field: FieldName) => void;
+  onToggleHeadsUp: (on: boolean) => void;
 }
 
-export function ProfileFields({ form, errorOf, onChange, onBlur }: ProfileFieldsProps) {
+export function ProfileFields({
+  form,
+  errorOf,
+  onChange,
+  onBlur,
+  onToggleHeadsUp,
+}: ProfileFieldsProps) {
   const bind = (field: FieldName, upper = false) => ({
     id: `profile-${field}`,
     value: form[field],
@@ -83,6 +91,29 @@ export function ProfileFields({ form, errorOf, onChange, onBlur }: ProfileFields
         maxLength={40}
         help="The closing line of every reminder, followed by your name."
       />
+      <div className="flex items-center justify-between gap-3 sm:col-span-2">
+        <div className="grid gap-0.5">
+          <span className="font-bold">Send a heads-up before the due date</span>
+          <span className="text-sm text-muted-foreground">
+            Nudges lists a friendly note for an invoice that is about to fall due. Turn it off to
+            hide that list.
+          </span>
+        </div>
+        <ToggleSwitch
+          label="Send a heads-up before the due date"
+          checked={form.sendHeadsUp}
+          onChange={onToggleHeadsUp}
+        />
+      </div>
+      {form.sendHeadsUp && (
+        <ProfileField
+          {...bind("headsUpDays")}
+          label="Days before"
+          inputMode="numeric"
+          maxLength={1}
+          help="1 to 7 days before the due date. The due date itself counts."
+        />
+      )}
       <ProfileField
         {...bind("website")}
         label="Website"

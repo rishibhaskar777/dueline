@@ -67,6 +67,10 @@ export function ProfileForm({ initial }: { initial: Profile }) {
             setSaveError(null);
           }}
           onBlur={(field) => setVisited(new Set(visited).add(field))}
+          onToggleHeadsUp={(sendHeadsUp) => {
+            setForm({ ...form, sendHeadsUp });
+            setSaveError(null);
+          }}
         />
 
         <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 sm:col-span-2">

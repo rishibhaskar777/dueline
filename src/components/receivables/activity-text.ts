@@ -24,6 +24,12 @@ export function describeEvent(event: ActivityEvent): string {
       return `Invoice ${invoiceNumber} to ${clientName} is overdue`;
     case "reminder_sent":
       return `Reminder sent through PayPal for invoice ${invoiceNumber} to ${clientName}`;
+    case "heads_up_sent":
+      return `Heads-up sent to ${clientName} for invoice ${invoiceNumber}`;
+    case "promised":
+      return event.detail
+        ? `${clientName} promised to pay invoice ${invoiceNumber} by ${formatDayMonth(event.detail)}`
+        : `${clientName} promised to pay invoice ${invoiceNumber}`;
     case "email_sent":
       return `Message sent from your email for invoice ${invoiceNumber} to ${clientName}`;
   }

@@ -37,3 +37,28 @@ export async function turnUpfrontOff(page: Page): Promise<void> {
     .getByRole("button", { name: "Off" })
     .click();
 }
+
+// Linux runners draw text wider than Windows does. Forcing a wide face on everything lets a layout
+// that only just fits here fail here too.
+const WIDE_FONT_STYLE = '* { font-family: Verdana, "DejaVu Sans", sans-serif !important; }';
+
+async function pageOverflow(page: Page): Promise<number> {
+  return page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+}
+
+// The page must not scroll sideways with its own font, nor with a much wider one.
+export async function expectNoSidewaysScroll(page: Page, name = "The page"): Promise<void> {
+  expect(await pageOverflow(page), `${name} scrolls sideways`).toBeLessThanOrEqual(0);
+  const style = await page.addStyleTag({ content: WIDE_FONT_STYLE });
+  try {
+    await page.evaluate(() => document.fonts.ready);
+    expect(
+      await pageOverflow(page),
+      `${name} scrolls sideways with a wider font`,
+    ).toBeLessThanOrEqual(0);
+  } finally {
+    await style.evaluate((element) => (element as Element).remove());
+  }
+}

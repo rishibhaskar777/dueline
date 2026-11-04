@@ -5,7 +5,7 @@ import { formatDate } from "@/lib/format-date";
 import { formatMoney, formatRupees } from "@/lib/money/format";
 import type { InvoiceSummary } from "@/types";
 import { payoutSourceHint, payoutSourceWord } from "@/components/shared/payout-source";
-import { tableStatusLabel } from "./invoice-status";
+import { promisedLine, tableStatusLabel } from "./invoice-status";
 import { StatusBadge } from "./StatusBadge";
 
 type Params = ICellRendererParams<InvoiceSummary>;
@@ -15,9 +15,14 @@ export interface GridContext {
 }
 
 function StatusCell({ data, context }: Params) {
-  return data ? (
-    <StatusBadge invoice={data} today={(context as GridContext).today} detailed />
-  ) : null;
+  if (!data) return null;
+  const promised = promisedLine(data);
+  return (
+    <span className="flex h-full flex-col items-start justify-center gap-0.5 leading-tight">
+      <StatusBadge invoice={data} today={(context as GridContext).today} detailed />
+      {promised && <span className="text-xs text-muted-foreground">{promised}</span>}
+    </span>
+  );
 }
 
 // The risk badge sits under the name, so a long name keeps its whole width and every column fits.

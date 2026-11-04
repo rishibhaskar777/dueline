@@ -1,5 +1,5 @@
 import { addDays, addMonths } from "@/lib/date-math";
-import { LUT_DECLARATION } from "@/lib/paypal/invoice-body";
+import { LUT_DECLARATION } from "@/lib/invoices/lut-wording";
 import { memoOf } from "@/lib/paypal/memo";
 import { estimatePayout } from "@/lib/money/payout";
 import type { PayPalInvoice } from "@/lib/paypal/types";

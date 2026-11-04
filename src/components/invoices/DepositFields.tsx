@@ -28,8 +28,8 @@ export function DepositFields({ form, update, errors, today, quote }: DepositFie
   const percent = upfrontPercent(form);
 
   return (
-    <div className="grid gap-3">
-      <div className="grid gap-1.5">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-1.5">
         <span id="upfront-label" className="text-sm font-bold">
           Ask for part upfront
         </span>
@@ -62,18 +62,20 @@ export function DepositFields({ form, update, errors, today, quote }: DepositFie
             </div>
           )}
         </div>
-        {quote && <p className="text-sm text-muted-foreground">Client wrote: “{quote}”</p>}
+        {quote && (
+          <p className="text-sm break-words text-muted-foreground">Client wrote: “{quote}”</p>
+        )}
       </div>
 
       {on && (
         <>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm break-words text-muted-foreground">
             PayPal cannot split one invoice in India, so Dueline sends a deposit invoice now and
             saves the balance as a draft that you send on delivery.
             {percent === null && " Enter a whole percent from 1 to 99."}
           </p>
           <div className="flex flex-wrap gap-4">
-            <div className="grid gap-1.5">
+            <div className="grid min-w-0 flex-1 basis-36 gap-1.5">
               <Label htmlFor="deposit-due-on" className="font-bold">
                 Deposit due
               </Label>
@@ -85,11 +87,11 @@ export function DepositFields({ form, update, errors, today, quote }: DepositFie
                 onChange={(event) => update({ depositDueOn: event.target.value })}
                 aria-invalid={Boolean(errors.depositDueOn)}
                 aria-describedby={errors.depositDueOn ? "deposit-due-on-error" : undefined}
-                className="tabular-nums"
+                className="w-full min-w-0 tabular-nums"
               />
               <FieldError id="deposit-due-on-error" message={errors.depositDueOn} />
             </div>
-            <div className="grid gap-1.5">
+            <div className="grid min-w-0 flex-1 basis-36 gap-1.5">
               <Label htmlFor="balance-due-on" className="font-bold">
                 Balance due
               </Label>
@@ -101,7 +103,7 @@ export function DepositFields({ form, update, errors, today, quote }: DepositFie
                 onChange={(event) => update({ balanceDueOn: event.target.value })}
                 aria-invalid={Boolean(errors.balanceDueOn)}
                 aria-describedby={errors.balanceDueOn ? "balance-due-on-error" : undefined}
-                className="tabular-nums"
+                className="w-full min-w-0 tabular-nums"
               />
               <FieldError id="balance-due-on-error" message={errors.balanceDueOn} />
             </div>

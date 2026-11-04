@@ -171,7 +171,7 @@ function checkDueOn(raw: string | null, today: string, warnings: string[]): stri
   const parsed = z.iso.date().safeParse((raw ?? "").trim());
   if (!parsed.success) {
     warnings.push(
-      `No payment terms in the chat; due date set to ${DEFAULT_TERMS_DAYS} days from today. Change it if needed.`,
+      `No due date in the chat; set to ${DEFAULT_TERMS_DAYS} days from today. Change it if needed.`,
     );
     return addDays(today, DEFAULT_TERMS_DAYS);
   }

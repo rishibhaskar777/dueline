@@ -14,7 +14,7 @@ export function TotalCard({ label, value, note, tone }: TotalCardProps) {
   return (
     <div
       className={cn(
-        "flex flex-col gap-1.5 rounded-[24px] p-[26px] transition-transform duration-[350ms] ease-spring hover:-translate-y-[3px] motion-reduce:transition-none motion-reduce:hover:transform-none",
+        "flex min-w-0 flex-col gap-1.5 rounded-[24px] p-[26px] transition-transform duration-[350ms] ease-spring hover:-translate-y-[3px] motion-reduce:transition-none motion-reduce:hover:transform-none",
         navy ? "bg-navy-card text-white" : "surface",
       )}
     >
@@ -28,7 +28,7 @@ export function TotalCard({ label, value, note, tone }: TotalCardProps) {
       </dt>
       <dd
         className={cn(
-          "font-heading text-[46px] leading-[1.15] font-extrabold tracking-[-1px] tabular-nums",
+          "font-heading text-[46px] leading-[1.15] font-extrabold tracking-[-1px] tabular-nums [overflow-wrap:anywhere]",
           tone === "late" && "text-late",
         )}
       >

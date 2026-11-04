@@ -248,7 +248,7 @@ describe("scoreExtraction", () => {
       TODAY,
     );
     expect(score.unexpectedWarnings).toEqual([
-      "No payment terms in the chat; due date set to 14 days from today. Change it if needed.",
+      "No due date in the chat; set to 14 days from today. Change it if needed.",
     ]);
   });
 });
