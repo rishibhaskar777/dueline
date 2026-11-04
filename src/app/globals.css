@@ -650,17 +650,34 @@
   }
 }
 
+/* One third of the cycle is the dot's own trip along its rail; it is invisible for the rest. The
+   rails start one third apart (see flow-timing.ts), so the dots hand over like a relay. */
 @keyframes dl-flow {
   0% {
     left: 0%;
     opacity: 0;
+    animation-timing-function: cubic-bezier(0.5, 0, 0.5, 1);
   }
-  12%,
-  88% {
+  3% {
     opacity: 1;
   }
+  30.333% {
+    opacity: 1;
+  }
+  33.333%,
   100% {
     left: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes dl-live {
+  from {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  to {
+    transform: scale(2.4);
     opacity: 0;
   }
 }
@@ -721,6 +738,22 @@
   animation: dl-fade 0.2s ease-out both;
 }
 
+.dl-live {
+  position: relative;
+  background: var(--mark-green);
+  box-shadow: 0 0 8px 2px color-mix(in srgb, var(--mark-green) 40%, transparent);
+}
+
+.dl-live::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--mark-green);
+  opacity: 0;
+  animation: dl-live 2s ease-out infinite;
+}
+
 .dl-flow {
   position: absolute;
   top: 50%;
@@ -728,7 +761,14 @@
   height: 10px;
   margin: -5px 0 0 -5px;
   border-radius: 50%;
-  animation: dl-flow 3.6s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  opacity: 0;
+  animation: dl-flow var(--flow-cycle) linear infinite backwards;
+}
+
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .dl-flow-card {
+    animation: dl-flow-card var(--flow-cycle) linear infinite;
+  }
 }
 
 .dl-float-a {
@@ -749,6 +789,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .dl-flow {
+    display: none;
+  }
+
+  .dl-live::before {
     display: none;
   }
 

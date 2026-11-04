@@ -39,6 +39,10 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Footer: the "Built for the PayPal AI Hackathon 2026" chip is gone from the website.
+- Every green "live" dot (landing badge, sign-in chip, Home and the account menu) is one shared dot with a soft glow and a slow pulse; the pulse stops under reduced motion. On Home, "PayPal sandbox connected" is a light green pill, and a failed or pending check shows a still dot.
+- Built on PayPal: "How a payment reaches Dueline" is one payment travelling card to card, with each card lit as it arrives, instead of three dots running at once.
+- Demo story: a sixth client, Southbank Creative (Australia, A$ invoices paid early by bank transfer), so the Clients page fills two rows of three.
 - New invoice: the empty chat box asks for a chat in one line, and the greyed Draft invoice button says "Paste a chat or use the sample to start".
 - New invoice: a client who asks for "50% now" or other payment terms gets an amber notice with their own words. The terms are a notice only; nothing on the invoice changes.
 - New invoice: Export under LUT starts ticked when the profile has a LUT ARN that has not run out, and the demo's offline paid invoices are all under LUT.
