@@ -1,4 +1,6 @@
-import { Diagram, K, poly } from "./lib.mjs";
+import { Diagram, K, poly, type Rect, type Step } from "./lib";
+
+type Lane = "u" | "r" | "s" | "p";
 
 export function createSendOnce() {
   const d = new Diagram({
@@ -10,7 +12,7 @@ export function createSendOnce() {
     heading: "CREATING AND SENDING, EXACTLY ONCE",
     sub: "A repeated request ID returns the stored result and never calls PayPal.",
   });
-  const L = { u: 170, r: 490, s: 810, p: 1120 };
+  const L: Record<Lane, number> = { u: 170, r: 490, s: 810, p: 1120 };
   d.node("hu", L.u - 100, 140, 200, 52, { kind: "plain", title: "User", size: 17, pad: 0, rx: 16 });
   d.node("hr", L.r - 100, 140, 200, 52, {
     kind: "dueline",
@@ -36,7 +38,7 @@ export function createSendOnce() {
   // centre the header titles
   d.top = d.top.map((t) =>
     /data-card="h[urps]"/.test(t)
-      ? t.replace(/ x="(\d+)"/, (m, x) => ` x="${+x + 100}" text-anchor="middle"`)
+      ? t.replace(/ x="(\d+)"/, (_m, x: string) => ` x="${+x + 100}" text-anchor="middle"`)
       : t,
   );
   for (const x of Object.values(L))
@@ -44,7 +46,19 @@ export function createSendOnce() {
       `<path d="M${x} 192 V960" stroke="#9aa6c4" stroke-width="2" stroke-dasharray="3 7" fill="none"/>`,
     );
 
-  const row = (n, from, to, y, label, { color = K.blue, reply, lx, badgeX } = {}) => {
+  const row = (
+    n: number,
+    from: Lane,
+    to: Lane,
+    y: number,
+    label: string,
+    {
+      color = K.blue,
+      reply,
+      lx,
+      badgeX,
+    }: { color?: string; reply?: string; lx?: number; badgeX?: number } = {},
+  ): void => {
     const x1 = L[from],
       x2 = L[to];
     const dir = x2 > x1 ? 1 : -1;
@@ -62,7 +76,7 @@ export function createSendOnce() {
       });
     }
   };
-  const hl = (from, to, y, h) => {
+  const hl = (from: Lane, to: Lane, y: number, h: number): Rect => {
     const l = Math.min(L[from], L[to]) - 20;
     return [l, y - 24, Math.abs(L[to] - L[from]) + 40, h];
   };
@@ -113,9 +127,10 @@ export function createSendOnce() {
   );
   d.note(1120, 963, "PayPal: no call", { anchor: "middle", fill: K.red, weight: 800 });
 
-  const out = (from, to, y) => `M${L[from]} ${y} H${L[to]}`;
-  const loop = (from, to, y) => `M${L[from]} ${y} H${L[to]} V${y + 26} H${L[from]}`;
-  const S = (o) => d.step(o);
+  const out = (from: Lane, to: Lane, y: number): string => `M${L[from]} ${y} H${L[to]}`;
+  const loop = (from: Lane, to: Lane, y: number): string =>
+    `M${L[from]} ${y} H${L[to]} V${y + 26} H${L[from]}`;
+  const S = (o: Step): void => d.step(o);
   S({
     n: 1,
     color: K.blue,

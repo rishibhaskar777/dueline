@@ -1,4 +1,4 @@
-import { Diagram, K, poly } from "./lib.mjs";
+import { Diagram, K, poly, type Step } from "./lib";
 
 export function systemContext() {
   const d = new Diagram({
@@ -142,7 +142,7 @@ export function systemContext() {
   });
 
   // story
-  const S = (o) => d.step(o);
+  const S = (o: Step): void => d.step(o);
   S({
     n: 1,
     color: K.blue,

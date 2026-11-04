@@ -1,4 +1,4 @@
-import { Diagram, K } from "./lib.mjs";
+import { Diagram, K } from "./lib";
 
 export function draftFromChat() {
   const d = new Diagram({
@@ -136,7 +136,17 @@ export function draftFromChat() {
   d.extras.push((dd) => {
     const [a4, b4] = dd.window(3),
       [a5, b5] = dd.window(4);
-    const flag = (a, b, x, y, w, text, fill, stroke, color) =>
+    const flag = (
+      a: number,
+      b: number,
+      x: number,
+      y: number,
+      w: number,
+      text: string,
+      fill: string,
+      stroke: string,
+      color: string,
+    ): string =>
       `<g class="anim" opacity="0">${dd.show(a, b)}<rect x="${x}" y="${y}" width="${w}" height="28" rx="14" fill="${fill}" stroke="${stroke}" stroke-width="2"/><text x="${x + w / 2}" y="${y + 19}" text-anchor="middle" font-size="13" font-weight="800" fill="${color}">${text}</text></g>`;
     return (
       flag(a4, b4, 318, 372, 150, "Rejected: $9,000", K.redBg, K.red, K.red) +

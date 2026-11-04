@@ -1,4 +1,4 @@
-import { Diagram, K } from "./lib.mjs";
+import { Diagram, K, type Rect } from "./lib";
 
 export function dataAndSnapshot() {
   const d = new Diagram({
@@ -10,7 +10,7 @@ export function dataAndSnapshot() {
     heading: "DATA AND THE INVOICE SNAPSHOT",
     sub: "PayPal holds the invoices. Dueline keeps small records and one snapshot.",
   });
-  const cols = [
+  const cols: [number, string, string, [string, string][]][] = [
     [
       40,
       "Safe to repeat and verify",
@@ -112,7 +112,7 @@ export function dataAndSnapshot() {
     pad: 20,
     lines: ["One list call, then a full", "read of changed invoices"],
   });
-  const lane = (x1, x2, label, colorA, colorB) => {
+  const lane = (x1: number, x2: number, label: string, colorA: string, colorB: string): void => {
     d.arrow(`M${x1} ${Y + 36} H${x2}`, { color: colorA, label, lx: x1 + 6, ly: Y + 26 });
     d.arrow(`M${x2} ${Y + 76} H${x1}`, { color: colorB });
   };
@@ -132,7 +132,7 @@ export function dataAndSnapshot() {
     d.words(`f${i}`, x + 145, 821, f, { size: 13.5, weight: 700, fill: K.navy, anchor: "middle" });
   });
 
-  const hlr = (x, w) => [x, Y, w, H];
+  const hlr = (x: number, w: number): Rect => [x, Y, w, H];
   d.step({
     n: 1,
     color: K.blue,

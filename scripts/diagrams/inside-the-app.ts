@@ -1,4 +1,4 @@
-import { Diagram, K } from "./lib.mjs";
+import { Diagram, K } from "./lib";
 
 export function insideTheApp() {
   const d = new Diagram({
@@ -12,7 +12,7 @@ export function insideTheApp() {
   });
   const X = 40,
     W = 800;
-  const layers = [
+  const layers: [string, number, string, string][] = [
     [
       "l1",
       150,
@@ -122,7 +122,7 @@ export function insideTheApp() {
   d.words("off", 922, 458, "The checks and the routes do not change.", { fill: K.mute });
 
   // arrows between layers: request goes down at x=770, answer comes up at x=808
-  const gaps = [
+  const gaps: [number, string][] = [
     [212, "calls a typed function"],
     [298, "JSON over HTTPS"],
     [384, "cookie checked"],
@@ -140,7 +140,7 @@ export function insideTheApp() {
   d.arrow("M900 665 H840", { color: K.blue });
   d.arrow("M840 759 H900", { color: K.navy });
 
-  const down = (y, y2) => `M770 ${y} V${y2}`;
+  const down = (y: number, y2: number): string => `M770 ${y} V${y2}`;
   d.step({
     n: 1,
     color: K.blue,

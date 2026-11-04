@@ -1,18 +1,18 @@
-// Draws the animated diagrams in docs/media/architecture/. Plain Node, no packages.
+// Draws the animated diagrams in docs/media/architecture/. Run with tsx, no extra packages.
 // Run it from the repository root with `npm run diagrams`. It is a documentation tool: CI does
 // not run it, and its output is committed, so a diagram changes only when this folder does.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { systemContext } from "./system-context.mjs";
-import { insideTheApp } from "./inside-the-app.mjs";
-import { draftFromChat } from "./draft-from-chat.mjs";
-import { createSendOnce } from "./create-send-once.mjs";
-import { paymentReaches } from "./payment-reaches.mjs";
-import { depositBalance } from "./deposit-balance.mjs";
-import { remindersFlow } from "./reminders.mjs";
-import { morningRun } from "./morning-run.mjs";
-import { dataAndSnapshot } from "./data-and-snapshot.mjs";
-import { manyFreelancers } from "./many-freelancers.mjs";
+import { systemContext } from "./system-context";
+import { insideTheApp } from "./inside-the-app";
+import { draftFromChat } from "./draft-from-chat";
+import { createSendOnce } from "./create-send-once";
+import { paymentReaches } from "./payment-reaches";
+import { depositBalance } from "./deposit-balance";
+import { remindersFlow } from "./reminders";
+import { morningRun } from "./morning-run";
+import { dataAndSnapshot } from "./data-and-snapshot";
+import { manyFreelancers } from "./many-freelancers";
 
 const out = fileURLToPath(new URL("../../docs/media/architecture/", import.meta.url));
 mkdirSync(out, { recursive: true });
