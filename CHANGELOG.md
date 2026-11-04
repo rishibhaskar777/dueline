@@ -9,6 +9,11 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Nudges: a "Due soon" section above the late invoices with a friendly heads-up for each invoice due within the profile's days (1 to 7, default 3), in a new Heads-up tone written in the client's language. It never mentions lateness, goes by PayPal's reminder or your own email, and shows "Heads-up sent, 4 Nov" afterwards. The Profile has "Send a heads-up before the due date" and "Days before".
+- A client promised a date: note the date and an optional remark on a late invoice's Nudges card or its invoice page. The card shrinks to "Promised for 10 Nov" with "Remind anyway" and the morning run drafts nothing until the day after; Home shows "Promised 10 Nov" and a marker on the due line, and a broken promise makes the next reminder firm and adds "Missed a promised date once" to the client's reason.
+- If PayPal refuses a heads-up reminder before the due date, the card says "PayPal only sends its reminder once an invoice is due. Use Send my message.", counts and logs nothing, and offers only your own message for the rest of the day.
+- Features: Heads-up before the due date and Promised dates.
+- Database: migration 011 (heads-up tone in the reminder log, `payment_promises`, a detail column for activity rows). Run `npm run db:migrate` before deploying.
 - New invoice: "Ask for part upfront" (Off, 30%, 50% or a custom percent, preselected from the chat) sends a deposit invoice now and saves the balance as a draft; Home shows balance drafts in "Ready to send" and each invoice links to the other half.
 - Invoice page: "Download PDF" opens an A4 tax invoice with the GST details, the export endorsement and the LUT line (an invoice not under LUT prints a warning to add IGST with a CA instead of an endorsement); Profile has an optional business address for it.
 - New invoice: a notice when the chat names a different currency from the form ("The chat mentions € but this invoice is in USD") with a button to switch, and one when the prices in the chat are in rupees (a chat that names euros or dollars and also says "about ₹80k" gets none).
@@ -18,6 +23,16 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- New invoice: "No payment terms in the chat" was about the due date, so it now says "No due date in the chat; set to 14 days from today", and the "Client's payment terms" notice is left out when it only repeats a half upfront ("the rest when you deliver"). The upfront notice no longer quotes the chat a second time beside the control.
+- The note PayPal shows for an invoice under LUT now says "under bond or Letter of Undertaking", as Rule 46 and the printed invoice do, and a balance note is kept inside PayPal's 4,000 characters with the LUT lines. Invoices made before still count as under LUT.
+- Invoice page: "Print or save as PDF" is dark on white in the dark theme, where it was an invisible white pill.
+- New invoice: on a short laptop screen (1366 × 650) the Summary scrolls on its own and "Create and send invoice" stays in reach.
+- The public pages no longer scroll sideways at 768 px: the site bar keeps its tabs on their own row until 1024 px.
+- Built on PayPal: the four payment cards are the same height, and the dot crosses three rails in turn and rests for the last quarter of its cycle.
+- Sign-in: the sample invoice on the picture is sent 15 days ago and due in 2 days, worked out from today instead of two fixed dates.
+- A balance saved days ago is dated with the sending day when it is sent, keeping its days to pay: tested end to end, across midnight in India.
+- The first screens after a server start share one read of the stored invoice snapshot, where each screen request read it separately.
+- A reset or a morning run fetches the exchange rates behind the demo story's payment dates, so the first screen opened afterwards does not wait for the rate service.
 - Demo: a demo profile saved before the business address existed is recognised and upgraded after a reset, so the printed invoice shows the address; a profile you edited is still never replaced, and an address you typed is kept.
 - New invoice: the sample chat now has Mike asking to pay half now, so "Use a sample chat" shows the upfront option (50%, $225.00 deposit and balance) the README describes.
 - New invoice: the summary now shows PayPal's fee, the currency conversion and the total lost as three lines that add up, instead of counting the fee twice. The landing page and How it works use the same figures.

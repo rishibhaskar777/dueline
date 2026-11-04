@@ -85,6 +85,8 @@ month.
 | **The due line**     | Every invoice as a line from sent to paid, so late payments stand out at a glance                                      | Home                            |
 | **Late-payer radar** | Scores each client from their history, in plain words: "Late on 3 of 3 invoices, 12 days on average"                   | Home, Clients, New invoice      |
 | **Nudges**           | Drafts the reminder in the right tone and language; send PayPal's reminder, your own email, or both                    | Nudges                          |
+| **Heads-up**         | A friendly note a few days before an invoice is due, never mentioning lateness                                         | Nudges, Profile                 |
+| **Promised dates**   | Note the date a client promised to pay: reminders wait for it, and a broken promise makes the next one firm            | Nudges, Home, invoice page      |
 | **Morning run**      | A daily job prepares reminder drafts, monthly repeats and rate alerts; you approve each one                            | Nudges, Home                    |
 | **Export register**  | Monthly CSV with purpose codes, LUT, transaction IDs and FIRC numbers, matched to PayPal's FIRA                        | Export register                 |
 | **GST and tax**      | GSTIN, LUT ARN and SAC on every invoice, GSTR-1 rows, and a year summary for presumptive tax (44ADA)                   | Profile, Export register        |

@@ -716,6 +716,39 @@ days to pay, and `updateDraftInvoice` sends it as a full `PUT /v2/invoicing/invo
 stops the send. Home's "Ready to send" is a dashboard widget, so Customise can hide it; it shows nothing
 when there is no balance to send.
 
+## Heads-up before the due date
+
+A heads-up is a reminder in a fifth place of the same pipeline, not a second pipeline. `Tone` has a
+`heads_up` member; `suggestTone` returns it for an invoice with no days late and never for a late one.
+`isHeadsUpDue` (`src/lib/reminders/heads-up.ts`) picks the invoices: sent and unpaid, due today or within
+the profile's `headsUpDays`, no `heads_up` row in `reminder_log`, and `sendHeadsUp` on.
+`listHeadsUpDrafts` in `reminder-drafts.ts` writes their quick drafts for `GET /api/reminders` (the
+`headsUps` list) and `prepareReminderDrafts` caches them each morning. The model prompt, the template of each
+language (`HEADS_UPS` in `template-packs.ts`) and the tone check (`LATE_WORDS` in `check-tone.ts`, which
+rejects a draft that speaks of lateness, in any language) are the only parts written for it;
+`withStatedFacts` adds nothing to it. `sendReminder` accepts the `heads_up` tone for an invoice not yet due,
+refuses a second heads-up and records a `heads_up_sent` activity row; reminders sent before it are not
+counted by `suggestTone`. If PayPal refuses a heads-up reminder with a 4xx, `heads-up-refusal.ts` records the
+refusal for the India day (a day-keyed cached value), `sendReminder` answers `409 invalid_state` without logging,
+counting or recording anything, and `ReminderDraft.paypalRefused` hides the PayPal button on the card. On Nudges, `NudgeList` draws a "Due soon" section above the late cards from the
+same `NudgeCard`, which hides the tone control and, once either channel has been used, shows "Heads-up
+sent" and closes.
+
+## Promised dates
+
+`payment_promises` holds at most one row per invoice (`StoredPromise` in `store.ts`, memory and Postgres
+implementations). `loadWithDrafts` in `summaries.ts` reads them with the invoices and
+`withPromises` (`src/lib/promises/attach-promises.ts`) puts each on its unpaid invoice's summary, so every
+list that feeds a screen carries `InvoiceSummary.promise` and the stored snapshot is untouched.
+`savePaymentPromise` and `removePaymentPromise` (`src/lib/promises/promises.ts`) are the two routes' work:
+they check the invoice is late and unpaid and the date against `isPromiseDateAllowed`
+(`promise-range.ts`, shared with the form), write an activity row and refresh the snapshot. The webhook,
+`recordPayment`, `cancelInvoice` and the morning run's reconciliation clear the promise of a settled invoice,
+and a demo reset clears them all. `prepareReminderDrafts` skips an invoice while `isPromiseActive` holds;
+`suggestTone` and `toneReason` take a missed promise into account, and `scoreClient` adds its sentence to the
+radar's reason. `PromiseControl` is the one inline form, used by the Nudges card and the invoice page; the
+card shrinks to a line while the promise is active and only an open card asks for a draft.
+
 ## Printable invoice
 
 `src/components/print` builds a `PrintDocument` from the invoice detail and the profile
