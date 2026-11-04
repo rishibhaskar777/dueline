@@ -11,7 +11,9 @@ import {
   recordExternalPayment,
   remindInvoice,
   sendInvoice,
+  updateDraftInvoice,
 } from "@/lib/paypal/invoices";
+import { redatedForSending } from "@/lib/paypal/redate";
 import { getActualPayout } from "@/lib/paypal/payments";
 import { paypalFetch } from "@/lib/paypal/rest";
 import { OFFLINE_WEBHOOK_SIGNATURE } from "@/lib/paypal/offline/transport";
@@ -117,6 +119,19 @@ describe("offline PayPal", () => {
     const draft = await createDraftInvoice(draftBody("req-3"), "req-3");
     await deleteDraftInvoice(draft.id);
     await expectPayPalError(getInvoice(draft.id), 404);
+  });
+
+  it("replaces a draft with an update, and refuses to update a sent invoice", async () => {
+    const draft = await createDraftInvoice(draftBody("req-5"), "req-5");
+    const body = redatedForSending(draft, "2026-12-01");
+    await updateDraftInvoice(draft.id, body);
+    const updated = await getInvoice(draft.id);
+    expect(updated.detail.invoice_date).toBe("2026-12-01");
+    expect(updated.detail.invoice_number).toBe(draft.detail.invoice_number);
+    expect((await offlinePayPal()).calls.updated).toContain(draft.id);
+
+    await sendInvoice(draft.id, "req-5");
+    await expectPayPalError(updateDraftInvoice(draft.id, body), 422);
   });
 
   it("marks an invoice as paid when a payment is recorded outside PayPal", async () => {

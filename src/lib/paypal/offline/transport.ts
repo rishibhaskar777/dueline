@@ -1,12 +1,16 @@
 import "server-only";
 import { PayPalApiError } from "@/lib/paypal/errors";
-import type { PayPalInvoiceInput, PayPalInvoiceList } from "@/lib/paypal/types";
+import type {
+  PayPalInvoiceInput,
+  PayPalInvoiceList,
+  PayPalInvoiceUpdate,
+} from "@/lib/paypal/types";
 import type { ActualPayout } from "@/types";
 import type { FakePayPal } from "./fake-paypal";
 import { offlinePayPal } from "./world";
 
 interface OfflineRequest {
-  method?: "GET" | "POST" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: unknown;
   rawBody?: string;
 }
@@ -63,6 +67,9 @@ async function route(fake: FakePayPal, path: string, request: OfflineRequest): P
     const id = decodeURIComponent(match[1]);
     const action = match[2];
     if (!action && method === "GET") return fake.getInvoice(id);
+    if (!action && method === "PUT") {
+      return fake.updateDraftInvoice(id, request.body as PayPalInvoiceUpdate);
+    }
     if (!action && method === "DELETE") return fake.deleteDraftInvoice(id);
     if (method === "POST" && action === "send") return fake.sendInvoice(id);
     if (method === "POST" && action === "remind") return fake.remindInvoice(id);
