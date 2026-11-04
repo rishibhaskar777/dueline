@@ -18,6 +18,8 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Demo: a demo profile saved before the business address existed is recognised and upgraded after a reset, so the printed invoice shows the address; a profile you edited is still never replaced, and an address you typed is kept.
+- New invoice: the sample chat now has Mike asking to pay half now, so "Use a sample chat" shows the upfront option (50%, $225.00 deposit and balance) the README describes.
 - New invoice: the summary now shows PayPal's fee, the currency conversion and the total lost as three lines that add up, instead of counting the fee twice. The landing page and How it works use the same figures.
 - How it works: step 2 is the same €610.00 invoice that step 1 drafts, with its fee, conversion and rupees worked out from it.
 - Nudges: a reminder no longer says thank you twice (once in the text, once in the sign-off), "it is likely just slipped your mind" reads "it may have slipped your mind", and the French templates no longer open their request with "Merci". Stored drafts are written again.

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { KRAFTWERK_CHAT } from "../support/kraftwerk-chat";
+import { turnUpfrontOff } from "./support";
 
 interface InvoiceList {
   invoices: { id: string; number: string }[];
@@ -19,6 +20,7 @@ async function draftFromSampleChat(page: Page): Promise<void> {
   await expect(page.getByLabel("Client name")).toHaveValue("Halden Coffee Co.");
   await page.getByRole("button", { name: "Send to the demo buyer" }).click();
   await expect(page.getByLabel("Client email")).toHaveValue(/@personal\.example\.com$/);
+  await turnUpfrontOff(page);
 }
 
 test.describe("New invoice", () => {
