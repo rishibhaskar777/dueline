@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { expectNoSeriousViolations, openInTheme } from "./support";
+import { expectNoSeriousViolations, openInTheme, turnUpfrontOff } from "./support";
 
 interface Screen {
   name: string;
@@ -71,6 +71,7 @@ const SCREENS: Screen[] = [
         await page.getByRole("button", { name: "Use a sample chat" }).click();
         await page.getByRole("button", { name: "Draft invoice" }).click();
         await expect(page.getByRole("heading", { name: "Items", exact: true })).toBeVisible();
+        await turnUpfrontOff(page);
         await expect(page.getByText("About this reaches your bank")).toBeVisible();
       },
     },

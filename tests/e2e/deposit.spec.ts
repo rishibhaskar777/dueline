@@ -66,6 +66,28 @@ test.describe("Deposit and balance", () => {
       .toBe("SENT");
   });
 
+  test("the sample chat preselects 50% with Mike's quote and a $225.00 deposit and balance", async ({
+    page,
+  }) => {
+    await page.goto("/invoices/new");
+    await page.getByRole("button", { name: "Use a sample chat" }).click();
+    await page.getByRole("button", { name: "Draft invoice" }).click();
+    await expect(page.getByLabel("Client name")).toHaveValue("Halden Coffee Co.");
+
+    await expect(page.getByText("We hid 1 email before the AI read the chat")).toBeVisible();
+    await expect(page.getByRole("button", { name: "50%", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await expect(
+      page.getByText("Client wrote: “Can we pay half now and the rest when you deliver?”"),
+    ).toBeVisible();
+    const summary = page.getByRole("region", { name: "Summary" });
+    await expect(summary.getByText("Deposit, sent now")).toBeVisible();
+    await expect(summary.getByText("Balance, sent on delivery")).toBeVisible();
+    await expect(summary.getByText("$225.00")).toHaveCount(2);
+  });
+
   test("each invoice of the pair links to the other, and the balance draft can be sent from its page", async ({
     page,
   }) => {

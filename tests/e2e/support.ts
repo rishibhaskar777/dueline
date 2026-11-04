@@ -28,3 +28,12 @@ export async function expectNoSeriousViolations(page: Page, name: string): Promi
   }
   expect(blocking.map(describe), name).toEqual([]);
 }
+
+// The sample chat asks for half upfront, which the form preselects. A test that needs one plain
+// invoice turns it off first.
+export async function turnUpfrontOff(page: Page): Promise<void> {
+  await page
+    .getByRole("group", { name: "Ask for part upfront" })
+    .getByRole("button", { name: "Off" })
+    .click();
+}

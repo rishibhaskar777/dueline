@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { expectNoSeriousViolations } from "./support";
+import { expectNoSeriousViolations, turnUpfrontOff } from "./support";
 
 async function overdueCountFromFilter(page: Page): Promise<number> {
   const button = page.getByRole("group", { name: "Filter by status" }).getByRole("button", {
@@ -378,6 +378,7 @@ test.describe("New invoice", () => {
     await page.getByRole("button", { name: "Use a sample chat" }).click();
     await page.getByRole("button", { name: "Draft invoice" }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Check the draft" })).toBeVisible();
+    await turnUpfrontOff(page);
     await expect(page.getByText("About this reaches your bank")).toBeVisible();
     await expect(
       page.getByRole("listitem").filter({ hasText: "2 · Review and send" }),
@@ -391,6 +392,7 @@ test.describe("New invoice", () => {
     await page.getByRole("button", { name: "Use a sample chat" }).click();
     await page.getByRole("button", { name: "Draft invoice" }).click();
     await expect(page.getByRole("heading", { name: "Items", exact: true })).toBeVisible();
+    await turnUpfrontOff(page);
 
     const clientTop = await page
       .getByRole("heading", { name: "Client", exact: true })
@@ -468,7 +470,9 @@ test.describe("Phone layout, new invoice review step", () => {
     await page.goto("/invoices/new");
     await page.getByRole("button", { name: "Use a sample chat" }).click();
     await page.getByRole("button", { name: "Draft invoice" }).click();
-    await expect(page.getByRole("button", { name: "Create and send invoice" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Create deposit and save balance" }),
+    ).toBeVisible();
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );

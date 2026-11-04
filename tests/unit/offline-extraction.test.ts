@@ -23,17 +23,21 @@ describe("offlineModelDraft", () => {
         { name: "Revisions", quantity: 2, unitAmount: "45", sourceQuote: "revisions $45 a round" },
       ],
       purposeCode: "P1099",
+      paymentTerms: {
+        upfrontPercent: 50,
+        note: null,
+        quote: "Can we pay half now and the rest when you deliver?",
+      },
     });
   });
 
   it("gives items that pass every check in code", () => {
     const chat = SAMPLE_CHAT;
     const contacts = maskContacts(chat);
-    const { draft, warnings } = checkModelDraft(offlineModelDraft(contacts.masked, TODAY), {
-      chat,
-      contacts,
-      today: TODAY,
-    });
+    const { draft, warnings, paymentTerms } = checkModelDraft(
+      offlineModelDraft(contacts.masked, TODAY),
+      { chat, contacts, today: TODAY },
+    );
     expect(draft.client).toEqual({
       name: "Halden Coffee Co.",
       email: "mike@haldencoffee.example",
@@ -46,6 +50,11 @@ describe("offlineModelDraft", () => {
     expect(warnings).toEqual([
       "No payment terms in the chat; due date set to 14 days from today. Change it if needed.",
     ]);
+    expect(paymentTerms).toEqual({
+      upfrontPercent: 50,
+      note: null,
+      quote: "Can we pay half now and the rest when you deliver?",
+    });
   });
 
   it("reads a quantity written before the item and the price after it", () => {

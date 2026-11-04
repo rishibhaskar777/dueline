@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Reset the demo", () => {
-  test("seeds the story on its own dates: Activity shows old dates and no test invoice", async ({
+  test("seeds the story on its own dates: Activity shows old dates, no test invoice, and the print page has the address", async ({
     page,
   }) => {
     await page.goto("/demo-tools");
@@ -21,5 +21,12 @@ test.describe("Reset the demo", () => {
     expect(times.some((text) => /hour|minute|just now/.test(text))).toBe(false);
 
     await expect(page.getByText("Sandbox check")).toHaveCount(0);
+
+    // A demo profile saved before the address existed is upgraded by the reset.
+    const list = (await (await page.request.get("/api/invoices")).json()) as {
+      invoices: { id: string }[];
+    };
+    await page.goto(`/invoices/${encodeURIComponent(list.invoices[0].id)}/print`);
+    await expect(page.getByText("12 Brigade Road, Bengaluru 560001, Karnataka")).toBeVisible();
   });
 });

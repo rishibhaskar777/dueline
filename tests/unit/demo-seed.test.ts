@@ -287,4 +287,24 @@ describe("ensureDemoProfile", () => {
     await holder.store?.saveProfile(typed);
     expect(await ensureDemoProfile(TODAY)).toEqual(typed);
   });
+
+  it("upgrades a demo profile saved before it had an address", async () => {
+    await holder.store?.saveProfile({ ...buildDemoProfile("2025-06-01"), address: null });
+
+    expect(await ensureDemoProfile(TODAY)).toEqual(buildDemoProfile(TODAY));
+  });
+
+  it("leaves a profile with another business name alone", async () => {
+    const typed = { ...buildDemoProfile(TODAY), businessName: "Asha Rao Studio", address: null };
+    await holder.store?.saveProfile(typed);
+
+    expect(await ensureDemoProfile(TODAY)).toEqual(typed);
+  });
+
+  it("keeps an address the freelancer typed on a profile with the demo identity", async () => {
+    const address = "7 Park Street, Kolkata 700016, West Bengal";
+    await holder.store?.saveProfile({ ...buildDemoProfile("2025-06-01"), address });
+
+    expect(await ensureDemoProfile(TODAY)).toEqual({ ...buildDemoProfile(TODAY), address });
+  });
 });
