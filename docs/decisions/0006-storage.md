@@ -1,5 +1,7 @@
 # 0006. Storage
 
+Amended 5 Nov 2026: full invoices are now kept in the invoice snapshot, so they are stored after all. See [0024](0024-invoice-snapshot.md).
+
 ## Status
 
 Accepted.

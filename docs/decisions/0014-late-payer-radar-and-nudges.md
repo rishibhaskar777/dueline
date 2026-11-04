@@ -1,5 +1,7 @@
 # 0014. The late-payer radar and nudges
 
+Amended 5 Nov 2026: the final tone starts after 30 days late or two reminders sent, not after 20 days. See `src/lib/reminders/tone.ts`.
+
 ## Status
 
 Accepted.

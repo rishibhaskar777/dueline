@@ -1,5 +1,7 @@
 # 0012. A hand-built due line
 
+Amended 5 Nov 2026: the due line is drawn as positioned HTML, not SVG. See `src/components/receivables/DueLineChart.tsx`.
+
 ## Status
 
 Accepted.
