@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" width="1280" height="760" role="img" aria-labelledby="t d">
+<title id="t">The morning run</title>
+<desc id="d">Every day at 06:00 India time the scheduler calls the daily route with a secret bearer token. Dueline checks the token in constant time and claims the India day in the store. It rebuilds the invoice snapshot from PayPal, drafts reminders for overdue and due-soon invoices within the daily model allowance, replaces the reminder items in the queue, turns due monthly repeats into drafts, reconciles payments from the last 14 days, rebuilds the snapshot again and returns a digest. The run never creates, sends or reminds anything. A second call on the same day finds the day already claimed and returns the stored result without calling PayPal or the model.</desc>
+<style>
+  text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+  .s{font-size:13.5px;fill:#4c5260}
+  .lab{font-size:12.5px;font-weight:700;paint-order:stroke;stroke:#f1f5fc;stroke-width:5px;stroke-linejoin:round}
+  .note{paint-order:stroke;stroke:#f1f5fc;stroke-width:4px;stroke-linejoin:round}
+  .flow{fill:none;stroke-width:3;stroke-linecap:round;stroke-dasharray:2 12;animation:flow 1.4s linear infinite}
+  .rev{animation-direction:reverse}
+  .slow{animation-duration:2.4s}
+  .rail{fill:none;stroke-width:3;stroke-opacity:.18}
+  .pulse{animation:pulse 2.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+  @keyframes flow{to{stroke-dashoffset:-28}}
+  @keyframes pulse{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:.9;transform:scale(1.35)}}
+  @media (prefers-reduced-motion:reduce){.flow,.pulse{animation:none}.mover,.hl,.prog,.cap,.anim{display:none}}
+</style>
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef3fd"/><stop offset="1" stop-color="#f7f9fd"/></linearGradient>
+  <linearGradient id="navy" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0a2a7a"/><stop offset="1" stop-color="#071c57"/></linearGradient>
+  <filter id="sh" x="-10%" y="-10%" width="120%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0a1e50" flood-opacity=".10"/></filter>
+  <marker id="ahe08a00" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M1 1 L13 7 L1 13 z" fill="#e08a00"/></marker>
+  <marker id="ah1d63f0" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M1 1 L13 7 L1 13 z" fill="#1d63f0"/></marker>
+  <marker id="ah7c3aed" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M1 1 L13 7 L1 13 z" fill="#7c3aed"/></marker>
+  <marker id="ah0e8a4f" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M1 1 L13 7 L1 13 z" fill="#0e8a4f"/></marker>
+</defs>
+<rect width="1280" height="760" rx="28" fill="url(#bg)"/>
+<text x="48" y="58" font-size="15" font-weight="800" fill="#0a2a7a" letter-spacing="1">THE MORNING RUN</text>
+<text x="1232" y="58" class="s" text-anchor="end">Once per India day, however many times it is asked for. It only prepares.</text>
+<path class="rail" stroke="#e08a00" d="M311 225 H357" marker-end="url(#ahe08a00)"/>
+<path class="flow" stroke="#e08a00" d="M311 225 H357"/>
+<path class="rail" stroke="#1d63f0" d="M617 225 H663" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M617 225 H663"/>
+<path class="rail" stroke="#1d63f0" d="M923 225 H969" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M923 225 H969"/>
+<path class="rail" stroke="#7c3aed" d="M1099 300 V340" marker-end="url(#ah7c3aed)"/>
+<path class="flow" stroke="#7c3aed" d="M1099 300 V340"/>
+<path class="rail" stroke="#1d63f0" d="M969 415 H923" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M969 415 H923"/>
+<path class="rail" stroke="#1d63f0" d="M663 415 H617" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M663 415 H617"/>
+<g filter="url(#sh)"><rect data-id="n1" x="51" y="150" width="260" height="150" rx="22" fill="#fff6e6"/></g>
+<g filter="url(#sh)"><rect data-id="n2" x="357" y="150" width="260" height="150" rx="22" fill="url(#navy)"/></g>
+<g filter="url(#sh)"><rect data-id="n3" x="663" y="150" width="260" height="150" rx="22" fill="url(#navy)"/></g>
+<g filter="url(#sh)"><rect data-id="n4" x="969" y="150" width="260" height="150" rx="22" fill="#ffffff" stroke="#1d63f0" stroke-width="2"/></g>
+<g filter="url(#sh)"><rect data-id="n5" x="969" y="340" width="260" height="150" rx="22" fill="#f3efff"/></g>
+<g filter="url(#sh)"><rect data-id="n6" x="663" y="340" width="260" height="150" rx="22" fill="url(#navy)"/></g>
+<g filter="url(#sh)"><rect data-id="n7" x="357" y="340" width="260" height="150" rx="22" fill="#ffffff"/></g>
+<g filter="url(#sh)"><rect data-id="n8" x="51" y="340" width="260" height="150" rx="22" fill="#ecf8f1"/></g>
+<g filter="url(#sh)"><rect data-id="lane" x="40" y="540" width="1200" height="180" rx="22" fill="#ffffff" stroke="#7d89aa" stroke-width="2.5" stroke-dasharray="9 6"/></g>
+<rect data-id="r1" x="64" y="592" width="330" height="100" rx="14" fill="#fff6e6"/>
+<rect data-id="r2" x="475" y="592" width="330" height="100" rx="14" fill="#eef3fd"/>
+<rect data-id="r3" x="886" y="592" width="330" height="100" rx="14" fill="#ecf8f1"/>
+<text data-card="n1" x="71" y="182" font-size="18" font-weight="800" fill="#0b0b0f">Scheduler fires</text>
+<text data-card="n1" x="71" y="206" font-size="13.5" font-weight="400" fill="#4c5260">Every day at 06:00 India</text>
+<text data-card="n1" x="71" y="225" font-size="13.5" font-weight="400" fill="#4c5260">time. Vercel cron may start</text>
+<text data-card="n1" x="71" y="244" font-size="13.5" font-weight="400" fill="#4c5260">at any minute of the hour.</text>
+<text data-card="n2" x="377" y="182" font-size="18" font-weight="800" fill="#ffffff">Check the secret</text>
+<text data-card="n2" x="377" y="206" font-size="13.5" font-weight="400" fill="#cfdcff">A secret bearer token, hashed</text>
+<text data-card="n2" x="377" y="225" font-size="13.5" font-weight="400" fill="#cfdcff">and compared in constant time.</text>
+<text data-card="n2" x="377" y="244" font-size="13.5" font-weight="400" fill="#cfdcff">Anything else is 401.</text>
+<text data-card="n3" x="683" y="182" font-size="18" font-weight="800" fill="#ffffff">Claim the day</text>
+<text data-card="n3" x="683" y="206" font-size="13.5" font-weight="400" fill="#cfdcff">The India day is the request</text>
+<text data-card="n3" x="683" y="225" font-size="13.5" font-weight="400" fill="#cfdcff">ID, the same claim that guards</text>
+<text data-card="n3" x="683" y="244" font-size="13.5" font-weight="400" fill="#cfdcff">invoice creation.</text>
+<text data-card="n4" x="989" y="182" font-size="18" font-weight="800" fill="#0a2a7a">Reload invoices</text>
+<text data-card="n4" x="989" y="206" font-size="13.5" font-weight="400" fill="#4c5260">The invoice snapshot is</text>
+<text data-card="n4" x="989" y="225" font-size="13.5" font-weight="400" fill="#4c5260">rebuilt from PayPal, so the</text>
+<text data-card="n4" x="989" y="244" font-size="13.5" font-weight="400" fill="#4c5260">rest works on fresh data.</text>
+<text data-card="n5" x="989" y="372" font-size="18" font-weight="800" fill="#0b0b0f">Draft reminders</text>
+<text data-card="n5" x="989" y="396" font-size="13.5" font-weight="400" fill="#4c5260">Late and due-soon invoices, up</text>
+<text data-card="n5" x="989" y="415" font-size="13.5" font-weight="400" fill="#4c5260">to 10 of each, within the model</text>
+<text data-card="n5" x="989" y="434" font-size="13.5" font-weight="400" fill="#4c5260">allowance. Promised ones wait.</text>
+<text data-card="n6" x="683" y="372" font-size="18" font-weight="800" fill="#ffffff">Queue and reconcile</text>
+<text data-card="n6" x="683" y="396" font-size="13.5" font-weight="400" fill="#cfdcff">Reminder items replaced as a</text>
+<text data-card="n6" x="683" y="415" font-size="13.5" font-weight="400" fill="#cfdcff">set. Due repeats become drafts.</text>
+<text data-card="n6" x="683" y="434" font-size="13.5" font-weight="400" fill="#cfdcff">Paid rows from 14 days added.</text>
+<text data-card="n7" x="377" y="372" font-size="18" font-weight="800" fill="#0b0b0f">Digest</text>
+<text data-card="n7" x="377" y="396" font-size="13.5" font-weight="400" fill="#4c5260">The snapshot is rebuilt again.</text>
+<text data-card="n7" x="377" y="415" font-size="13.5" font-weight="400" fill="#4c5260">The digest says what needs</text>
+<text data-card="n7" x="377" y="434" font-size="13.5" font-weight="400" fill="#4c5260">attention today.</text>
+<text data-card="n8" x="71" y="372" font-size="18" font-weight="800" fill="#0b0b0f">It only prepares</text>
+<text data-card="n8" x="71" y="396" font-size="13.5" font-weight="400" fill="#4c5260">Nothing is created, sent or</text>
+<text data-card="n8" x="71" y="415" font-size="13.5" font-weight="400" fill="#4c5260">reminded. Every item opens a</text>
+<text data-card="n8" x="71" y="434" font-size="13.5" font-weight="400" fill="#4c5260">screen where a click decides.</text>
+<text data-card="lane" x="64" y="572" font-size="17" font-weight="800" fill="#0b0b0f">A second call the same day: a retry, or the Demo tools button</text>
+<text data-card="lane" x="80" y="617" font-size="15" font-weight="700" fill="#0b0b0f">Same request again</text>
+<text data-card="lane" x="80" y="638" font-size="13.5" font-weight="400" fill="#4c5260">The scheduler retries, or the</text>
+<text data-card="lane" x="80" y="656" font-size="13.5" font-weight="400" fill="#4c5260">demo button runs the same code.</text>
+<text data-card="lane" x="491" y="617" font-size="15" font-weight="700" fill="#0b0b0f">The day is already claimed</text>
+<text data-card="lane" x="491" y="638" font-size="13.5" font-weight="400" fill="#4c5260">The claim finds the stored result.</text>
+<text data-card="lane" x="491" y="656" font-size="13.5" font-weight="400" fill="#4c5260">No PayPal call, no model call.</text>
+<text data-card="lane" x="902" y="617" font-size="15" font-weight="700" fill="#0b0b0f">Answer: ran false</text>
+<text data-card="lane" x="902" y="638" font-size="13.5" font-weight="400" fill="#4c5260">The stored result and a digest</text>
+<text data-card="lane" x="902" y="656" font-size="13.5" font-weight="400" fill="#4c5260">built from the shown invoices.</text>
+<path class="rail" stroke="#e08a00" d="M394 642 H475" marker-end="url(#ahe08a00)"/>
+<path class="flow" stroke="#e08a00" d="M394 642 H475"/>
+<path class="rail" stroke="#0e8a4f" d="M805 642 H886" marker-end="url(#ah0e8a4f)"/>
+<path class="flow" stroke="#0e8a4f" d="M805 642 H886"/>
+<g class="badge" data-n="1"><circle cx="285" cy="174" r="12" fill="#e08a00" stroke="#fff" stroke-width="2"/><text x="285" y="178.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">1</text></g>
+<g class="badge" data-n="2"><circle cx="591" cy="174" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="591" y="178.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">2</text></g>
+<g class="badge" data-n="3"><circle cx="897" cy="174" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="897" y="178.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">3</text></g>
+<g class="badge" data-n="4"><circle cx="1203" cy="174" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="1203" y="178.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">4</text></g>
+<g class="badge" data-n="5"><circle cx="1203" cy="364" r="12" fill="#7c3aed" stroke="#fff" stroke-width="2"/><text x="1203" y="368.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">5</text></g>
+<g class="badge" data-n="6"><circle cx="897" cy="364" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="897" y="368.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">6</text></g>
+<g class="badge" data-n="7"><circle cx="591" cy="364" r="12" fill="#0e8a4f" stroke="#fff" stroke-width="2"/><text x="591" y="368.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">7</text></g>
+<g class="badge" data-n="8"><circle cx="1190" cy="556" r="12" fill="#e08a00" stroke="#fff" stroke-width="2"/><text x="1190" y="560.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">8</text></g>
+<g id="steps">
+<rect class="hl" x="47" y="146" width="268" height="158" rx="24" fill="none" stroke="#e08a00" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.0300;0.1387"/></rect>
+<circle class="hl" cx="285" cy="174" r="18" fill="none" stroke="#e08a00" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.0300;0.1387"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.0300;0.1387"/><circle r="16" fill="#e08a00" opacity=".18"/><circle r="8" fill="#e08a00" stroke="#ffffff" stroke-width="3"/><animateMotion dur="22s" repeatCount="indefinite" path="M311 225 H357" keyPoints="0;0;1;1" keyTimes="0;0.0409;0.1170;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.0300;0.1387"/><circle cx="64" cy="96" r="15" fill="#e08a00"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">1</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">At 06:00 India time the scheduler calls the daily route</text></g>
+<rect class="hl" x="353" y="146" width="268" height="158" rx="24" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1387;0.2475"/></rect>
+<circle class="hl" cx="591" cy="174" r="18" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1387;0.2475"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1387;0.2475"/><circle r="16" fill="#1d63f0" opacity=".18"/><circle r="8" fill="#1d63f0" stroke="#ffffff" stroke-width="3"/><animateMotion dur="22s" repeatCount="indefinite" path="M617 225 H663" keyPoints="0;0;1;1" keyTimes="0;0.1496;0.2258;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1387;0.2475"/><circle cx="64" cy="96" r="15" fill="#1d63f0"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">2</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">The route checks the secret bearer token</text></g>
+<rect class="hl" x="659" y="146" width="268" height="158" rx="24" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.2475;0.3563"/></rect>
+<circle class="hl" cx="897" cy="174" r="18" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.2475;0.3563"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.2475;0.3563"/><circle r="16" fill="#1d63f0" opacity=".18"/><circle r="8" fill="#1d63f0" stroke="#ffffff" stroke-width="3"/><animateMotion dur="22s" repeatCount="indefinite" path="M923 225 H969" keyPoints="0;0;1;1" keyTimes="0;0.2584;0.3345;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.2475;0.3563"/><circle cx="64" cy="96" r="15" fill="#1d63f0"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">3</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">It claims today's India date in the store</text></g>
+<rect class="hl" x="965" y="146" width="268" height="158" rx="24" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.3563;0.4650"/></rect>
+<circle class="hl" cx="1203" cy="174" r="18" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.3563;0.4650"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.3563;0.4650"/><circle r="16" fill="#1d63f0" opacity=".18"/><circle r="8" fill="#1d63f0" stroke="#ffffff" stroke-width="3"/><animateMotion dur="22s" repeatCount="indefinite" path="M1099 300 V340" keyPoints="0;0;1;1" keyTimes="0;0.3671;0.4433;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.3563;0.4650"/><circle cx="64" cy="96" r="15" fill="#1d63f0"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">4</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">It reloads the invoices from PayPal</text></g>
+<rect class="hl" x="965" y="336" width="268" height="158" rx="24" fill="none" stroke="#7c3aed" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.4650;0.5738"/></rect>
+<circle class="hl" cx="1203" cy="364" r="18" fill="none" stroke="#7c3aed" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.4650;0.5738"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.4650;0.5738"/><circle r="16" fill="#7c3aed" opacity=".18"/><circle r="8" fill="#7c3aed" stroke="#ffffff" stroke-width="3"/><animateMotion dur="22s" repeatCount="indefinite" path="M969 415 H923" keyPoints="0;0;1;1" keyTimes="0;0.4759;0.5520;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.4650;0.5738"/><circle cx="64" cy="96" r="15" fill="#7c3aed"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">5</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">It drafts reminders, within the daily allowance</text></g>
+<rect class="hl" x="659" y="336" width="268" height="158" rx="24" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5738;0.6825"/></rect>
+<circle class="hl" cx="897" cy="364" r="18" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5738;0.6825"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5738;0.6825"/><circle r="16" fill="#1d63f0" opacity=".18"/><circle r="8" fill="#1d63f0" stroke="#ffffff" stroke-width="3"/><animateMotion dur="22s" repeatCount="indefinite" path="M663 415 H617" keyPoints="0;0;1;1" keyTimes="0;0.5846;0.6607;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5738;0.6825"/><circle cx="64" cy="96" r="15" fill="#1d63f0"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">6</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">It fills the queue, moves repeats on and reconciles payments</text></g>
+<rect class="hl" x="353" y="336" width="268" height="158" rx="24" fill="none" stroke="#0e8a4f" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.6825;0.7913"/></rect>
+<rect class="hl" x="47" y="336" width="268" height="158" rx="24" fill="none" stroke="#0e8a4f" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.6825;0.7913"/></rect>
+<circle class="hl" cx="591" cy="364" r="18" fill="none" stroke="#0e8a4f" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.6825;0.7913"/></circle>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.6825;0.7913"/><circle cx="64" cy="96" r="15" fill="#0e8a4f"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">7</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">It rebuilds the snapshot and returns the digest. Nothing is sent</text></g>
+<rect class="hl" x="60" y="588" width="338" height="108" rx="24" fill="none" stroke="#e08a00" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.7913;0.9000"/></rect>
+<rect class="hl" x="471" y="588" width="338" height="108" rx="24" fill="none" stroke="#e08a00" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.7913;0.9000"/></rect>
+<rect class="hl" x="882" y="588" width="338" height="108" rx="24" fill="none" stroke="#e08a00" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.7913;0.9000"/></rect>
+<circle class="hl" cx="1190" cy="556" r="18" fill="none" stroke="#e08a00" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.7913;0.9000"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.7913;0.9000"/><circle r="16" fill="#e08a00" opacity=".18"/><circle r="8" fill="#e08a00" stroke="#ffffff" stroke-width="3"/><animateMotion dur="22s" repeatCount="indefinite" path="M394 642 H805" keyPoints="0;0;1;1" keyTimes="0;0.8021;0.8783;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.7913;0.9000"/><circle cx="64" cy="96" r="15" fill="#e08a00"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">8</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">A second call that day gets the stored result. PayPal is not called</text></g>
+</g>
+<rect class="prog" x="48" y="114" width="600" height="4" rx="2" fill="#0a2a7a" opacity=".1"/><rect class="prog" x="48" y="114" width="600" height="4" rx="2" fill="#0a2a7a"><animate attributeName="width" dur="22s" repeatCount="indefinite" values="0;600;600" keyTimes="0;0.9;1"/></rect>
+</svg>
