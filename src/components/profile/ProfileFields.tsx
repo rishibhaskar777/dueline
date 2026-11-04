@@ -91,6 +91,13 @@ export function ProfileFields({ form, errorOf, onChange, onBlur }: ProfileFields
         placeholder="https://"
         help="Optional. Printed under your business name on invoices."
       />
+      <ProfileField
+        {...bind("address")}
+        label="Business address"
+        wide
+        maxLength={200}
+        help="Optional. Printed on the downloadable tax invoice, where GST Rule 46 asks for the supplier's address."
+      />
     </>
   );
 }

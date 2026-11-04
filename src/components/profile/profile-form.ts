@@ -9,6 +9,7 @@ export interface ProfileFormValues {
   lutValidUntil: string;
   defaultSac: string;
   website: string;
+  address: string;
   signOff: string;
 }
 
@@ -26,6 +27,7 @@ export function toForm(profile: Profile): ProfileFormValues {
     lutValidUntil: profile.lutValidUntil ?? "",
     defaultSac: profile.defaultSac ?? "",
     website: profile.website ?? "",
+    address: profile.address ?? "",
     signOff: profile.signOff,
   };
 }
@@ -49,6 +51,7 @@ export function validateProfile(form: ProfileFormValues): ProfileResult {
     lutValidUntil: orNull(form.lutValidUntil),
     defaultSac: orNull(form.defaultSac),
     website: orNull(form.website),
+    address: orNull(form.address),
     signOff: form.signOff,
   });
   if (parsed.success) return { ok: true, profile: parsed.data };

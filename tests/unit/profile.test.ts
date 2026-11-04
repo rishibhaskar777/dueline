@@ -17,6 +17,7 @@ const profile: Profile = {
   lutValidUntil: "2027-03-31",
   defaultSac: "998391",
   website: "https://riya.example.com",
+  address: null,
   signOff: "Thank you",
 };
 
@@ -181,5 +182,19 @@ describe("/api/profile", () => {
 
   it("refuses a body that is not a profile", async () => {
     expect((await put({ yourName: "Riya" })).status).toBe(400);
+  });
+});
+
+describe("business address", () => {
+  it("is optional, and refuses a link or an email address", () => {
+    expect(profileSchema.safeParse({ ...profile, address: null }).success).toBe(true);
+    expect(
+      profileSchema.safeParse({ ...profile, address: "12 Brigade Road, Bengaluru" }).success,
+    ).toBe(true);
+    expect(profileSchema.safeParse({ ...profile, address: "https://example.com" }).success).toBe(
+      false,
+    );
+    expect(profileSchema.safeParse({ ...profile, address: "a@example.com" }).success).toBe(false);
+    expect(profileSchema.safeParse({ ...profile, address: "x".repeat(201) }).success).toBe(false);
   });
 });
