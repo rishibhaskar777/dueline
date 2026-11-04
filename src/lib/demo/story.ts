@@ -88,6 +88,14 @@ export const engagements = {
     amount: { currency: "USD", value: "280.00" },
     purposeCode: "P1099",
   },
+  southbankBranding: {
+    clientName: "Southbank Creative",
+    contactName: "Priya Nair",
+    country: "AU",
+    work: "Event branding",
+    amount: { currency: "AUD", value: "650.00" },
+    purposeCode: "P1099",
+  },
 } satisfies Record<string, Engagement>;
 
 export const DEMO_SAC = "998391";
@@ -171,7 +179,9 @@ export const RESEED_AFTER_DAYS = 7;
 // a late payer; their "Website copy" invoice was chased once, gently, three days after it fell due.
 // Brightwell Labs paid six days late and is three days late now, which is a watch. Halden Coffee Co.
 // paid both of its invoices early, so it is reliable, and the second one lands inside any 30-day
-// window. Northpine Studio and Tandem Health have one open invoice each.
+// window. Southbank Creative paid both of its invoices two days before they fell due, by bank
+// transfer, so it is reliable and adds nothing to what is due soon or overdue. Northpine Studio and
+// Tandem Health have one open invoice each.
 const TEMPLATES: Template[] = [
   earlier("okafor-logo-refresh", engagements.okaforGuidelines, "Logo refresh", "540.00", {
     issued: -75,
@@ -204,6 +214,19 @@ const TEMPLATES: Template[] = [
   template("brightwell-landing-page", engagements.brightwellLanding, { issued: -17, due: -3 }),
   template("northpine-social-media-kit", engagements.northpineKit, { issued: -11, due: 3 }),
   template("tandem-pitch-deck", engagements.tandemDeck, { issued: -8, due: 7 }),
+  {
+    ...template("southbank-event-branding", engagements.southbankBranding, {
+      issued: -55,
+      due: -41,
+      paid: -43,
+    }),
+    bankReference: "FIRC/2026/002",
+  },
+  earlier("southbank-event-signage", engagements.southbankBranding, "Event signage", "420.00", {
+    issued: -24,
+    due: -10,
+    paid: -12,
+  }),
 ];
 
 export function buildDemoStory(today: string): DemoInvoice[] {

@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts"],
-    setupFiles: ["tests/support/next-server.ts"],
+    setupFiles: ["tests/support/next-server.ts", "tests/support/no-network.ts"],
   },
   resolve: {
     alias: {

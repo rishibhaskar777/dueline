@@ -978,10 +978,10 @@ appear overdue in the demo without faking PayPal data.
 
 ## Demo story
 
-In demo mode the sandbox holds a fixed story of nine invoices to five clients, defined in
+In demo mode the sandbox holds a fixed story of eleven invoices to six clients, defined in
 `src/lib/demo/story.ts` with every date as an offset from `today()`, and every client in a country
-(Okafor & Reyes PT, Brightwell Labs GB, Northpine Studio CA, Tandem Health US, Halden Coffee Co. US).
-Each client has a contact name (Okafor & Reyes: Ana Okafor, Brightwell Labs: Jo Marsh, Northpine Studio: Dan Keane, Tandem Health: Tom Hale, Halden Coffee Co.: Mike Halden), sent as the recipient's name so reminders greet a person.
+(Okafor & Reyes PT, Brightwell Labs GB, Northpine Studio CA, Tandem Health US, Halden Coffee Co. US, Southbank Creative AU).
+Each client has a contact name (Okafor & Reyes: Ana Okafor, Brightwell Labs: Jo Marsh, Northpine Studio: Dan Keane, Tandem Health: Tom Hale, Halden Coffee Co.: Mike Halden, Southbank Creative: Priya Nair), sent as the recipient's name so reminders greet a person.
 Each carries the memo `dueline-demo:<generation>:<key>`; an invoice made before generations existed
 has `dueline-demo:<key>` and counts as generation 0. Older invoices are recorded as paid outside
 PayPal (`BANK_TRANSFER`, type `EXTERNAL`) so the late-payer radar has history. Story invoices are made

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/demo/reset/route";
 import { reseedStaleDemo } from "@/lib/demo/reset";
-import { demoMemo } from "@/lib/demo/story";
+import { buildDemoStory, demoMemo } from "@/lib/demo/story";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
 import { createFakePayPal, type FakePayPal } from "@/lib/paypal/offline/fake-paypal";
@@ -34,8 +34,9 @@ vi.mock("@/lib/paypal/summaries", () => ({
 let store: Store;
 vi.mock("@/lib/store", () => ({ getStore: () => store }));
 
-const STORY_SIZE = 9;
-const HISTORY_SIZE = 5;
+const STORY = buildDemoStory("2026-10-31");
+const STORY_SIZE = STORY.length;
+const HISTORY_SIZE = STORY.filter((invoice) => invoice.paidOn).length;
 const OPEN_STORY_SIZE = STORY_SIZE - HISTORY_SIZE;
 
 let fake: FakePayPal;

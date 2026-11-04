@@ -74,9 +74,6 @@ export function SiteFooter() {
             <p className="text-[15px] text-balance text-muted-foreground">
               Get paid from abroad. Without chasing.
             </p>
-            <p className="btn-secondary rounded-full px-[13px] py-[7px] text-[13px] font-bold text-muted-foreground">
-              Built for the PayPal AI Hackathon 2026
-            </p>
           </div>
           <nav aria-label="Footer" className="contents">
             {COLUMNS.map(({ id, title, links }) => (

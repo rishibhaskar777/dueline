@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { CtaBand } from "@/components/site/CtaBand";
+import {
+  cardDelay,
+  cardHighlightKeyframes,
+  flowCycle,
+  railDelay,
+} from "@/components/site/flow-timing";
 import { PageIntro } from "@/components/site/PageIntro";
 
 export const metadata: Metadata = {
@@ -9,18 +16,10 @@ export const metadata: Metadata = {
 };
 
 const FLOW = [
-  { title: "Dueline", body: "Creates and sends the invoice through PayPal.", delay: "0s" },
-  {
-    title: "Your client",
-    body: "Pays on PayPal’s page, by card or PayPal balance.",
-    delay: "0.9s",
-  },
-  {
-    title: "PayPal",
-    body: "Sends a signed webhook. Dueline checks the signature.",
-    delay: "1.8s",
-  },
-  { title: "Your rupees", body: "Real fee and net amount, from PayPal’s own records.", delay: "" },
+  { title: "Dueline", body: "Creates and sends the invoice through PayPal." },
+  { title: "Your client", body: "Pays on PayPal’s page, by card or PayPal balance." },
+  { title: "PayPal", body: "Sends a signed webhook. Dueline checks the signature." },
+  { title: "Your rupees", body: "Real fee and net amount, from PayPal’s own records." },
 ];
 
 const APIS = [
@@ -60,22 +59,29 @@ export default function BuiltOnPayPalPage() {
           className="surface flex flex-col gap-6 p-6 md:p-10 [--h2-size:30px] [--surface-radius:30px]"
         >
           <h2 id="flow-title">How a payment reaches Dueline</h2>
-          <ol className="flex flex-col gap-3 md:flex-row md:items-center md:gap-0">
+          <style>{cardHighlightKeyframes()}</style>
+          <ol
+            className="flex flex-col gap-3 [--rail-gap:36px] md:grid md:grid-cols-4 md:items-center md:gap-x-(--rail-gap) lg:[--rail-gap:72px]"
+            style={{ "--flow-cycle": flowCycle() } as CSSProperties}
+          >
             {FLOW.map((step, index) => (
-              <li
-                key={step.title}
-                className={`flex items-center ${index < FLOW.length - 1 ? "md:flex-1" : ""}`}
-              >
-                <div className="flex w-full flex-col gap-1.5 rounded-[22px] bg-inner p-[18px] shadow-[inset_0_0_0_1px_var(--glass-edge)] md:w-[190px] md:flex-none">
+              <li key={step.title} className="relative">
+                <div
+                  className="dl-flow-card flex w-full flex-col gap-1.5 rounded-[22px] bg-inner p-[18px] shadow-[inset_0_0_0_1px_var(--glass-edge)]"
+                  style={{ animationDelay: cardDelay(index, FLOW.length) }}
+                >
                   <p className="font-heading text-lg font-extrabold">{step.title}</p>
                   <p className="text-sm leading-snug text-muted-foreground">{step.body}</p>
                 </div>
                 {index < FLOW.length - 1 && (
                   <div
                     aria-hidden="true"
-                    className="relative mx-2.5 hidden h-0.5 flex-1 bg-rail md:block"
+                    className="absolute top-1/2 left-full ml-2 hidden h-0.5 w-[calc(var(--rail-gap)-16px)] -translate-y-1/2 bg-rail md:block"
                   >
-                    <span className="dl-flow bg-blue-line" style={{ animationDelay: step.delay }} />
+                    <span
+                      className="dl-flow bg-blue-line"
+                      style={{ animationDelay: railDelay(index, FLOW.length - 1) }}
+                    />
                   </div>
                 )}
               </li>

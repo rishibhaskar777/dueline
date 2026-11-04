@@ -11,7 +11,7 @@ test.describe("Reset the demo", () => {
 
     await page.goto("/receivables");
     const activity = page.getByRole("region", { name: "Activity" });
-    await expect(activity).toContainText("sent to Okafor & Reyes");
+    await expect(activity).toContainText("sent to Tandem Health");
 
     // Activity shows the newest six until asked for all; the story's first invoices were sent more
     // than 7 days ago, so they read as dates.

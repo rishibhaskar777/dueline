@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
+import { LiveDot } from "@/components/shared/LiveDot";
 import { SkeletonBlock } from "@/components/shared/SkeletonBlock";
 import { useProfile } from "@/components/profile/use-profile";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -42,8 +43,15 @@ function DateLine({ health }: { health: HealthResponse | null }) {
   return (
     <p className="text-base text-muted-foreground">
       {dateLine(health.today, health.demoClock)} ·{" "}
-      <span className={cn("font-semibold", connected ? "text-paid" : "text-late")}>
-        <span aria-hidden="true">● </span>
+      <span
+        className={cn(
+          "inline-flex items-center gap-2 align-middle font-semibold",
+          connected
+            ? "rounded-full bg-[color-mix(in_srgb,var(--paid)_9%,transparent)] px-2.5 py-1 text-paid shadow-[0_0_14px_color-mix(in_srgb,var(--paid)_16%,transparent)]"
+            : "text-late",
+        )}
+      >
+        <LiveDot tone={connected ? "live" : "error"} />
         {text}
       </span>
     </p>

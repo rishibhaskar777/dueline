@@ -733,7 +733,7 @@ currency. New invoice shows them with a button; `checkModelDraft` adds the same 
 `src/lib/demo/story.ts` is pure data and a builder, and owns the story's client names, countries,
 work, amounts and purpose codes (`engagements`), which the sample data in `src/mocks` imports so
 nothing under `src/lib` or `src/app` depends on it; `buildDemoStory(today)` turns day offsets into
-the dates of nine invoices, each with a key, a country, an optional past reminder and the memo
+the dates of eleven invoices, each with a key, a country, an optional past reminder and the memo
 `dueline-demo:<generation>:<key>`. `seed.ts` (`seedDemo(generation)`) reads every invoice in full,
 creates and sends the keys PayPal lacks through `invoice-body.ts` (with the LUT line, the default SAC
 and the client's billing country), records the history ones as paid with `recordExternalPayment`, and

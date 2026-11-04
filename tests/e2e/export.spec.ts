@@ -35,9 +35,9 @@ test.describe("Export register", () => {
     expect(lines).toContain(REGISTER_HEADER);
     const rows = lines.filter((line) => line.startsWith("INV-"));
     expect(rows.filter((line) => line.endsWith(",PayPal FIRA"))).toHaveLength(3);
-    expect(rows.filter((line) => line.endsWith(',"Bank, reference missing"'))).toHaveLength(3);
+    expect(rows.filter((line) => line.endsWith(',"Bank, reference missing"'))).toHaveLength(4);
     expect(rows.filter((line) => line.endsWith(",Bank FIRC/e-BRC FIRC/2026/001"))).toHaveLength(1);
-    expect(rows).toHaveLength(7);
+    expect(rows).toHaveLength(8);
   });
 
   test("the PayPal table shows full invoice numbers, dates and clients at 1024 px", async ({

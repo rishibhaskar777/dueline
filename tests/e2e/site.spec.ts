@@ -67,6 +67,7 @@ test.describe("public website", () => {
     await expect(footer.getByText("PayPal is a trademark of PayPal, Inc.")).toBeVisible();
     await expect(footer.getByText("© 2026 Dueline")).toBeVisible();
     await expect(page.getByText("Not affiliated with PayPal")).toHaveCount(0);
+    await expect(page.getByText(/hackathon/i)).toHaveCount(0);
   });
 
   test("the landing page marks no link current", async ({ page }) => {

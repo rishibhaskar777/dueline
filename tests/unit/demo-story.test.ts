@@ -112,7 +112,31 @@ describe("buildDemoStory", () => {
       "Brightwell Labs": "GB",
       "Northpine Studio": "CA",
       "Tandem Health": "US",
+      "Southbank Creative": "AU",
     });
+  });
+
+  it("gives Southbank Creative two invoices paid two days early and nothing open", () => {
+    const southbank = story.filter((invoice) => invoice.clientName === "Southbank Creative");
+    expect(southbank.map((invoice) => invoice.amount)).toEqual([
+      { currency: "AUD", value: "650.00" },
+      { currency: "AUD", value: "420.00" },
+    ]);
+    expect(southbank.map((invoice) => daysBetween(invoice.paidOn ?? "", invoice.dueOn))).toEqual([
+      2, 2,
+    ]);
+    expect(southbank.map((invoice) => invoice.bankReference)).toEqual(["FIRC/2026/002", null]);
+    expect(levelOf("Southbank Creative")).toBe("reliable");
+  });
+
+  it("keeps the open and late invoices the story had, with nothing new due soon or late", () => {
+    const open = story.filter((invoice) => !invoice.paidOn).map((invoice) => invoice.clientName);
+    expect(open).toEqual([
+      "Okafor & Reyes",
+      "Brightwell Labs",
+      "Northpine Studio",
+      "Tandem Health",
+    ]);
   });
 
   it("chases the Okafor & Reyes website copy once, gently, three days after it fell due", () => {

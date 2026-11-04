@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { IconTile, type TileTone } from "@/components/shared/IconTile";
+import { LiveDot } from "@/components/shared/LiveDot";
 import { ChoiceSection } from "@/components/site/ChoiceSection";
 import { DEMO_HREF } from "@/components/site/site-nav";
 import { SitePill } from "@/components/site/SitePill";
@@ -119,7 +120,7 @@ export default function LandingPage() {
     <>
       <section className="dl-up mx-auto flex max-w-[1200px] flex-col items-center gap-[22px] px-4 pt-14 pb-10 text-center md:px-6 md:pt-[72px]">
         <p className="btn-secondary inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-bold">
-          <span aria-hidden="true" className="size-2 rounded-full bg-mark-green" />
+          <LiveDot />
           For freelancers in India paid through PayPal
         </p>
         <h1 className="intro-title mt-1 max-w-[1000px] font-heading text-5xl leading-none font-extrabold tracking-[-1.5px] md:text-[72px] md:tracking-[-2.2px] lg:text-[92px] lg:tracking-[-2.8px]">
