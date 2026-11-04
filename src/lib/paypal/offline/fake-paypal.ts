@@ -1,7 +1,7 @@
 import { fromMinorUnits, toMinorUnits } from "@/lib/money/decimal";
 import { PayPalApiError } from "@/lib/paypal/errors";
 import type { ActualPayout } from "@/types";
-import type { PayPalInvoice, PayPalInvoiceInput } from "@/lib/paypal/types";
+import type { PayPalInvoice, PayPalInvoiceInput, PayPalInvoiceUpdate } from "@/lib/paypal/types";
 
 type Status = PayPalInvoice["status"];
 
@@ -16,7 +16,7 @@ function notFound(id: string): PayPalApiError {
 }
 
 // What the client owes: the items, less PayPal's invoice discount when the draft asks for one.
-function amountOf(body: PayPalInvoiceInput): PayPalInvoice["amount"] {
+function amountOf(body: PayPalInvoiceInput | PayPalInvoiceUpdate): PayPalInvoice["amount"] {
   const subtotal = body.items.reduce(
     (sum, item) => sum + Number(item.quantity) * toMinorUnits(item.unit_amount.value),
     0,
@@ -39,6 +39,7 @@ export function createFakePayPal() {
     reminded: [] as string[],
     cancelled: [] as string[],
     deleted: [] as string[],
+    updated: [] as string[],
     payments: [] as { id: string; paymentDate: string }[],
   };
   let counter = 0;
@@ -141,6 +142,25 @@ export function createFakePayPal() {
     cancelInvoice: async (id: string): Promise<void> => {
       calls.cancelled.push(id);
       change(id, "CANCELLED");
+    },
+    updateDraftInvoice: async (id: string, body: PayPalInvoiceUpdate): Promise<void> => {
+      const draft = read(id);
+      if (draft.status !== "DRAFT") {
+        throw new PayPalApiError({
+          status: 422,
+          paypalName: "UNPROCESSABLE_ENTITY",
+          message: "Only a draft invoice can be updated.",
+        });
+      }
+      calls.updated.push(id);
+      invoices.set(id, {
+        ...draft,
+        detail: { ...draft.detail, ...body.detail },
+        invoicer: body.invoicer,
+        primary_recipients: body.primary_recipients,
+        items: body.items,
+        amount: amountOf(body),
+      });
     },
     deleteDraftInvoice: async (id: string): Promise<void> => {
       read(id);

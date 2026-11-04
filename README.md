@@ -46,16 +46,17 @@ who are paid by clients abroad.
 1. **Home.** Each invoice is a line from the day it was sent to the day it was paid. Late ones turn red.
 2. **Clients behind.** Open a late client to see how often they paid late and the tone Dueline suggests.
 3. **New invoice → Use a sample chat → Draft invoice.** Every line quotes the chat, and the summary shows the rupees that reach the bank.
-4. **Nudges.** Switch Gentle, Firm and Final, then Preview. Nothing is sent until you press a button.
-5. **Export register.** Go to the previous month and download the CSV for a CA.
-6. **Account menu → Fees and rates.** What a $1,000 invoice really pays after PayPal's fee and conversion.
-7. **Account menu → Demo tools → Reset the demo.** Rebuilds the story with dates counted back from today.
+4. **Deposit and balance.** The sample chat asks for 50% upfront, so the form offers it: "Create deposit and save balance" sends the deposit and keeps the balance in Ready to send on Home, where "Send balance" sends it.
+5. **Nudges.** Switch Gentle, Firm and Final, then Preview. Nothing is sent until you press a button.
+6. **Export register.** Go to the previous month and download the CSV for a CA.
+7. **Account menu → Fees and rates.** What a $1,000 invoice really pays after PayPal's fee and conversion.
+8. **Account menu → Demo tools → Reset the demo.** Rebuilds the story with dates counted back from today.
 
 **Where to find each judging criterion**
 
 | Criterion                    | Where it shows                                                                                                                                                  |
 | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Technological implementation | [PayPal](#paypal) (thirteen API calls and verified webhooks), [AI](#ai) (masked input, checks in code, a measured evaluation), [quality](#quality-and-security) |
+| Technological implementation | [PayPal](#paypal) (fourteen API calls and verified webhooks), [AI](#ai) (masked input, checks in code, a measured evaluation), [quality](#quality-and-security) |
 | Design                       | [Screens](#what-dueline-does), [design and accessibility](#design-and-accessibility)                                                                            |
 | Potential impact             | [The problem](#the-problem) and what reaches the bank on a real $1,000 invoice                                                                                  |
 | Innovation                   | The due line, rupees before sending, quote-checked AI drafts, a two-channel reminder                                                                            |
@@ -88,6 +89,9 @@ month.
 | **Export register**  | Monthly CSV with purpose codes, LUT, transaction IDs and FIRC numbers, matched to PayPal's FIRA                        | Export register                 |
 | **GST and tax**      | GSTIN, LUT ARN and SAC on every invoice, GSTR-1 rows, and a year summary for presumptive tax (44ADA)                   | Profile, Export register        |
 | **Cash forecast**    | Rupees expected in 30, 60 and 90 days, weighted by each client's history                                               | Home                            |
+| **Deposits**         | Ask for part upfront: a deposit invoice goes out now and the balance waits as a draft you send on delivery             | New invoice, Home               |
+| **Tax invoice PDF**  | An A4 invoice with your GSTIN, SAC, place of supply and the export endorsement, saved as a PDF from the browser        | Invoice page                    |
+| **Currency guard**   | Warns when the chat says euros but the invoice says dollars, and never changes it for you                              | New invoice                     |
 
 <table>
   <tr>
@@ -112,6 +116,7 @@ page, and Dueline never sees a card or bank number.
 | OAuth 2.0          | `POST /v1/oauth2/token`                           | Client-credentials token, cached until it expires                                             |
 | Invoicing v2       | `POST /v2/invoicing/generate-next-invoice-number` | Numbers each invoice                                                                          |
 | Invoicing v2       | `POST /v2/invoicing/invoices`                     | Creates the invoice with GSTIN, LUT, SAC, purpose code and an optional early-payment discount |
+| Invoicing v2       | `PUT /v2/invoicing/invoices/{id}`                 | Dates a balance draft with the sending day before it is sent                                  |
 | Invoicing v2       | `POST /v2/invoicing/invoices/{id}/send`           | Sends it to the client                                                                        |
 | Invoicing v2       | `POST /v2/invoicing/invoices/{id}/remind`         | Sends PayPal's reminder from Nudges                                                           |
 | Invoicing v2       | `POST /v2/invoicing/invoices/{id}/cancel`         | Cancels it, after an in-page confirmation                                                     |

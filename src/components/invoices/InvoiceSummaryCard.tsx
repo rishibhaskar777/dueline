@@ -1,16 +1,21 @@
 "use client";
 
+import { splitPayoutNote, type DepositPlan } from "@/components/invoices/deposit-plan";
 import type { InvoiceTotals } from "@/components/invoices/invoice-form";
 import { usePayoutEstimate } from "@/components/shared/use-payout-estimate";
 import { costLines } from "@/components/settings/payout-lines";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/lib/format-date";
 import { formatMoney, formatRupees } from "@/lib/money/format";
+import type { Money } from "@/types";
 import { cn } from "@/lib/utils";
 
 interface InvoiceSummaryCardProps {
   totals: InvoiceTotals | null;
   // Creating and sending is under way.
   pending: boolean;
+  // Set while part of the invoice is asked for upfront: two invoices are made instead of one.
+  plan: DepositPlan | null;
 }
 
 function Line({ label, value, total }: { label: string; value: string; total?: boolean }) {
@@ -27,8 +32,36 @@ function Line({ label, value, total }: { label: string; value: string; total?: b
   );
 }
 
-export function InvoiceSummaryCard({ totals, pending }: InvoiceSummaryCardProps) {
+function PlanBlock({
+  title,
+  amount,
+  dueOn,
+  outcome: { estimate, failure },
+}: {
+  title: string;
+  amount: Money;
+  dueOn: string;
+  outcome: ReturnType<typeof usePayoutEstimate>;
+}) {
+  return (
+    <div className="grid gap-1 rounded-[18px] border border-line px-[18px] py-3.5">
+      <h3 className="text-sm font-bold">{title}</h3>
+      <p className="font-heading text-[26px] font-extrabold tabular-nums">{formatMoney(amount)}</p>
+      <p className="text-sm text-muted-foreground">Due {formatDate(dueOn)}</p>
+      <p aria-live="polite" className="text-sm text-blue">
+        {estimate
+          ? `About ${formatRupees(estimate.netInr)} reaches your bank`
+          : (failure ?? "Working out what reaches your bank…")}
+      </p>
+    </div>
+  );
+}
+
+export function InvoiceSummaryCard({ totals, pending, plan }: InvoiceSummaryCardProps) {
   const { estimate, failure } = usePayoutEstimate(totals?.total ?? null);
+  const deposit = usePayoutEstimate(plan?.deposit ?? null);
+  const balance = usePayoutEstimate(plan?.balance ?? null);
+  const note = plan ? splitPayoutNote(deposit.estimate, balance.estimate, estimate) : null;
 
   return (
     <section
@@ -58,12 +91,36 @@ export function InvoiceSummaryCard({ totals, pending }: InvoiceSummaryCardProps)
         </dl>
       )}
 
+      {plan && (
+        <div className="grid gap-2.5">
+          <PlanBlock
+            title="Deposit, sent now"
+            amount={plan.deposit}
+            dueOn={plan.depositDueOn}
+            outcome={deposit}
+          />
+          <PlanBlock
+            title="Balance, sent on delivery"
+            amount={plan.balance}
+            dueOn={plan.balanceDueOn}
+            outcome={balance}
+          />
+          {note && (
+            <p role="status" className="text-[13px] text-subtle">
+              Together about {formatRupees(note.combinedInr)} reaches your bank.
+              {note.extraFeeInr > 0 &&
+                ` Two invoices pay PayPal's fixed fee twice, which costs about ${formatRupees(note.extraFeeInr)} more than one invoice.`}
+            </p>
+          )}
+        </div>
+      )}
+
       <div aria-live="polite" className="grid gap-2.5 text-[15px]">
         {failure && <p className="text-late">{failure}</p>}
-        {totals && !failure && !estimate && (
+        {!plan && totals && !failure && !estimate && (
           <p className="text-muted-foreground">Working out what reaches your bank…</p>
         )}
-        {totals && estimate && (
+        {!plan && totals && estimate && (
           <>
             <dl className="grid gap-2.5 text-muted-foreground">
               {costLines(estimate).map((line, index, lines) => (
@@ -92,7 +149,11 @@ export function InvoiceSummaryCard({ totals, pending }: InvoiceSummaryCardProps)
         disabled={pending}
         className="mt-1.5 h-14 text-[17px] font-bold"
       >
-        {pending ? "Creating and sending…" : "Create and send invoice"}
+        {pending
+          ? "Creating and sending…"
+          : plan
+            ? "Create deposit and save balance"
+            : "Create and send invoice"}
       </Button>
     </section>
   );

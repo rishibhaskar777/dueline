@@ -1,7 +1,12 @@
 import "server-only";
 import type { PaymentMethod } from "@/types";
 import { paypalFetch } from "./rest";
-import type { PayPalInvoice, PayPalInvoiceInput, PayPalInvoiceList } from "./types";
+import type {
+  PayPalInvoice,
+  PayPalInvoiceInput,
+  PayPalInvoiceList,
+  PayPalInvoiceUpdate,
+} from "./types";
 
 const PAGE_SIZE = 100;
 const MAX_PAGES = 10;
@@ -23,6 +28,14 @@ export function createDraftInvoice(
     body,
     requestId,
     headers: { Prefer: "return=representation" },
+  });
+}
+
+// Replaces a draft with the given invoice (a full update). PayPal refuses it once the invoice is sent.
+export async function updateDraftInvoice(id: string, body: PayPalInvoiceUpdate): Promise<void> {
+  await paypalFetch<void>(`/v2/invoicing/invoices/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body,
   });
 }
 

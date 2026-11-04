@@ -4,7 +4,8 @@ import { InvoiceNotFoundError } from "@/lib/invoices/errors";
 import { PayPalApiError } from "@/lib/paypal/errors";
 import { getInvoice } from "@/lib/paypal/invoices";
 import { isUnderLut, toMoney } from "@/lib/paypal/map";
-import { summarise } from "@/lib/paypal/summaries";
+import { splitOf } from "@/lib/paypal/memo";
+import { findSplitPartner, summarise } from "@/lib/paypal/summaries";
 import type { PayPalInvoice } from "@/lib/paypal/types";
 import { loadSummaries } from "@/lib/payouts/load-summaries";
 import { listClients } from "@/lib/clients/clients";
@@ -64,6 +65,7 @@ export async function getInvoiceDetail(id: string): Promise<InvoiceDetailRespons
     .map(({ tone, sentAt, channel }) => ({ tone, sentAt, channel }))
     .sort((a, b) => a.sentAt.localeCompare(b.sentAt));
   const activity = events.filter(({ invoiceId }) => invoiceId === id);
+  const tag = splitOf(invoice.detail.memo);
 
   return {
     invoice: summary,
@@ -76,6 +78,7 @@ export async function getInvoiceDetail(id: string): Promise<InvoiceDetailRespons
       note: invoice.detail.note ?? "",
       underLut: isUnderLut(invoice),
       hiddenFromDemo: hiddenIds.includes(id),
+      split: tag ? { role: tag.role, other: await findSplitPartner(tag) } : null,
       actions: availableActions(summary),
     },
   };

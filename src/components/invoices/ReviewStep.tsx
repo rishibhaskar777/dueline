@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { ClientFields } from "@/components/invoices/ClientFields";
+import { depositPlan } from "@/components/invoices/deposit-plan";
 import { DetailsFields } from "@/components/invoices/DetailsFields";
 import { HeldPanel } from "@/components/invoices/HeldPanel";
 import { InvoiceSummaryCard } from "@/components/invoices/InvoiceSummaryCard";
@@ -13,9 +14,11 @@ import {
 } from "@/components/invoices/invoice-form";
 import { ItemsList } from "@/components/invoices/ItemsList";
 import { useKnownClientCountry } from "@/components/invoices/known-client-country";
+import { CurrencyNotices } from "@/components/invoices/CurrencyNotices";
 import { NoticePills } from "@/components/invoices/NoticePills";
 import { RiskRadar } from "@/components/invoices/RiskRadar";
 import { SendResult } from "@/components/invoices/SendResult";
+import { SplitResult } from "@/components/invoices/SplitResult";
 import { StepHeader } from "@/components/invoices/StepHeader";
 import { useFormReferences } from "@/components/invoices/use-form-references";
 import { useSubmitInvoice } from "@/components/invoices/use-submit-invoice";
@@ -30,6 +33,7 @@ interface ReviewStepProps {
     notice: string | null;
     risk: ClientRisk | null;
     paymentTerms: PaymentTerms | null;
+    chat: string | null;
   };
   profile: Profile | null;
   onCreateAnother: () => void;
@@ -39,7 +43,11 @@ export function ReviewStep({ initial, profile, onCreateAnother }: ReviewStepProp
   const [form, setForm] = useState(initial.form);
   const [errors, setErrors] = useState<FieldErrors>({});
   const { codes, demoEmail, today } = useFormReferences();
-  const { pending, formError, held, result, submit } = useSubmitInvoice(form, today, setErrors);
+  const { pending, formError, held, result, split, submit } = useSubmitInvoice(
+    form,
+    today,
+    setErrors,
+  );
   const known = useMemo(
     () => ({
       name: initial.form.clientName,
@@ -56,6 +64,15 @@ export function ReviewStep({ initial, profile, onCreateAnother }: ReviewStepProp
   useKnownClientCountry(form, update);
 
   if (result) return <SendResult result={result} onCreateAnother={onCreateAnother} />;
+  if (split) {
+    return (
+      <SplitResult
+        request={split.request}
+        first={split.response}
+        onCreateAnother={onCreateAnother}
+      />
+    );
+  }
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-5">
@@ -65,6 +82,7 @@ export function ReviewStep({ initial, profile, onCreateAnother }: ReviewStepProp
         warnings={initial.warnings}
         paymentTerms={initial.paymentTerms}
       />
+      <CurrencyNotices chat={initial.chat} form={form} update={update} />
       <form
         onSubmit={submit}
         noValidate
@@ -117,13 +135,20 @@ export function ReviewStep({ initial, profile, onCreateAnother }: ReviewStepProp
                 codes={codes}
                 profile={profile}
                 today={today}
+                upfrontQuote={
+                  initial.paymentTerms?.upfrontPercent ? initial.paymentTerms.quote : null
+                }
               />
             </div>
           </section>
         </div>
 
         <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:sticky lg:top-24">
-          <InvoiceSummaryCard totals={calculateTotals(form)} pending={pending} />
+          <InvoiceSummaryCard
+            totals={calculateTotals(form)}
+            pending={pending}
+            plan={today ? depositPlan(form, today) : null}
+          />
 
           {held && <HeldPanel notice={held} onCreateAnother={onCreateAnother} />}
           {formError && (

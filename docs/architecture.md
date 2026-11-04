@@ -702,6 +702,32 @@ navigation of three columns (Product, Try it, Project) built from `SITE_LINKS`, 
 site bar: it is a split page, a navy panel (`SignInPanel`) and the form. `src/app/sitemap.ts` lists the five
 public pages (`SITEMAP_PATHS`) and `robots.ts` points to it.
 
+## Deposit and balance invoices
+
+`POST /api/invoices/split` runs `createDepositAndBalance` (`src/lib/invoices/create-split.ts`). It
+splits the item total with `splitTotal` (`src/lib/money/split.ts`), builds a one-line deposit and a
+one-line balance draft (`split-drafts.ts`), sends the deposit through `createAndSendInvoice`, then
+saves the balance as an unsent draft through `createDraftOnly` under its own request ID. Both memos
+carry `split:<role>.<id>` (`src/lib/paypal/memo.ts`). The invoice snapshot keeps balance drafts only:
+`loadInvoices` drops every draft, `loadReadyInvoices` returns the balance drafts, and
+`GET /api/invoices` lists them as `readyToSend`. Sending one uses `sendExistingDraft`, which first dates a balance draft with the sending day:
+`redatedForSending` (`src/lib/paypal/redate.ts`) moves `invoice_date` to today in India time and keeps the
+days to pay, and `updateDraftInvoice` sends it as a full `PUT /v2/invoicing/invoices/{id}`. A failed update
+stops the send. Home's "Ready to send" is a dashboard widget, so Customise can hide it; it shows nothing
+when there is no balance to send.
+
+## Printable invoice
+
+`src/components/print` builds a `PrintDocument` from the invoice detail and the profile
+(`buildPrintDocument`) and draws it with print rules in the `(print)` route group, which has no app
+bar. The browser makes the PDF. An invoice not under LUT prints a warning where the LUT endorsement
+would be, and the screen shows the same warning above the print button. The sources for the wording are in [export-invoice.md](export-invoice.md).
+
+## Currency check
+
+`src/lib/invoices/chat-currency.ts` reads the money words in a chat and returns notices for a form's
+currency. New invoice shows them with a button; `checkModelDraft` adds the same text to `warnings`.
+
 ## Demo story and reset
 
 `src/lib/demo/story.ts` is pure data and a builder, and owns the story's client names, countries,

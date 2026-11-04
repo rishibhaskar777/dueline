@@ -11,6 +11,7 @@ import type { InvoiceSummary } from "@/types";
 import { ActivityFeed } from "./ActivityFeed";
 import { DueLineChart } from "./DueLineChart";
 import { InvoiceTable } from "./InvoiceTable";
+import { ReadyToSendCard } from "./ReadyToSendCard";
 import type { Receivables } from "./use-receivables";
 import { TotalsStrip } from "./TotalsStrip";
 
@@ -21,6 +22,7 @@ interface ReceivablesWidgetProps {
   freshEvents: Receivables["freshEvents"];
   dashboard: ReturnType<typeof useDashboard>;
   onOpen: (invoice: InvoiceSummary) => void;
+  onSent: () => void;
 }
 
 export function ReceivablesWidget({
@@ -30,11 +32,14 @@ export function ReceivablesWidget({
   freshEvents,
   dashboard,
   onOpen,
+  onSent,
 }: ReceivablesWidgetProps) {
   const { invoices, totals, today } = data;
   const { state, retry } = dashboard;
 
   switch (id) {
+    case "readyToSend":
+      return <ReadyToSendCard invoices={data.readyToSend} onSent={onSent} />;
     case "checklist":
       return <ChecklistWidget />;
     case "morning":

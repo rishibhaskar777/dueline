@@ -1,5 +1,5 @@
 import "server-only";
-import { loadVisibleInvoices } from "@/lib/demo/visible-invoices";
+import { loadVisibleInvoices, loadVisibleReadyInvoices } from "@/lib/demo/visible-invoices";
 import { loadInvoices } from "@/lib/paypal/summaries";
 import { riskLevelsById } from "@/lib/risk/client-risk";
 import { getSettingsAndRates } from "@/lib/settings";
@@ -23,4 +23,9 @@ export async function loadSummaries(includeHidden = false): Promise<InvoiceSumma
     rateDate: payout.rateDate,
     riskLevel: levels.get(summary.id) ?? null,
   }));
+}
+
+// Balance invoices saved as drafts. They have no payout yet and are not part of any total.
+export async function loadReadySummaries(): Promise<InvoiceSummary[]> {
+  return (await loadVisibleReadyInvoices()).map(({ summary }) => summary);
 }

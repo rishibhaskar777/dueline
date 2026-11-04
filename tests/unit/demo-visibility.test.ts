@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadActivityFeed } from "@/lib/demo/activity-feed";
-import { loadVisibleInvoices } from "@/lib/demo/visible-invoices";
+import { loadVisibleInvoices, loadVisibleReadyInvoices } from "@/lib/demo/visible-invoices";
 import { isShownInDemo, type VisibilityInput } from "@/lib/demo/visibility";
 import type { LoadedInvoice } from "@/lib/paypal/summaries";
 import { createMemoryStore } from "@/lib/store/memory-store";
@@ -9,8 +9,11 @@ import { activity } from "@/mocks/fixtures";
 import { paidInvoice } from "../support/summaries";
 import { stubEnv } from "../support/env";
 
-const paypal = vi.hoisted(() => ({ loadInvoices: vi.fn() }));
-vi.mock("@/lib/paypal/summaries", () => ({ loadInvoices: paypal.loadInvoices }));
+const paypal = vi.hoisted(() => ({ loadInvoices: vi.fn(), loadReadyInvoices: vi.fn() }));
+vi.mock("@/lib/paypal/summaries", () => ({
+  loadInvoices: paypal.loadInvoices,
+  loadReadyInvoices: paypal.loadReadyInvoices,
+}));
 let store: Store;
 vi.mock("@/lib/store", () => ({ getStore: () => store }));
 
@@ -134,6 +137,21 @@ describe("loadVisibleInvoices", () => {
     await store.setInvoiceHidden("mine", true);
 
     expect(await loadVisibleInvoices()).toHaveLength(all.length);
+  });
+});
+
+describe("loadVisibleReadyInvoices", () => {
+  it("shows a balance draft made through Dueline, and hides one the owner hid or an older story's", async () => {
+    paypal.loadReadyInvoices.mockResolvedValue([
+      loaded("balance", "dueline-request:abc", "DRAFT"),
+      loaded("hidden", "dueline-request:def", "DRAFT"),
+      loaded("stray", "", "DRAFT"),
+    ]);
+    await store.setInvoiceHidden("hidden", true);
+
+    expect((await loadVisibleReadyInvoices()).map(({ summary }) => summary.id)).toEqual([
+      "balance",
+    ]);
   });
 });
 

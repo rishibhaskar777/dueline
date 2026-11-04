@@ -10,13 +10,14 @@ const profile: Profile = {
   lutValidUntil: "2027-03-31",
   defaultSac: "998391",
   website: "https://riya.example.com",
+  address: null,
   signOff: "Thank you",
 };
 
 describe("profile form", () => {
   it("shows an empty optional field as empty text and saves it back as null", () => {
     const form = toForm(EMPTY_PROFILE);
-    expect(form).toMatchObject({ gstin: "", lutArn: "", defaultSac: "", website: "" });
+    expect(form).toMatchObject({ gstin: "", lutArn: "", defaultSac: "", website: "", address: "" });
     expect(validateProfile(form)).toEqual({ ok: true, profile: EMPTY_PROFILE });
   });
 

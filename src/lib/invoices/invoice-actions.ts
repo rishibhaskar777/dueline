@@ -13,6 +13,7 @@ export function availableActions(invoice: InvoiceSummary): InvoiceDetails["actio
     remind: isRemindable(invoice),
     recordPayment: RECORDABLE.includes(invoice.paypalStatus),
     cancel: CANCELLABLE.includes(invoice.paypalStatus),
+    send: invoice.paypalStatus === "DRAFT",
   };
 }
 

@@ -79,6 +79,7 @@ export function Receivables() {
                 freshEvents={freshEvents}
                 dashboard={dashboard}
                 onOpen={(invoice) => setOpenId(invoice.id)}
+                onSent={retry}
               />
             </div>
           );

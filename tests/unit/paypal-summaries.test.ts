@@ -2,8 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearInvoiceCaches,
   findInvoiceByMemo,
+  findSplitPartner,
   invoicesLoadedAt,
   loadInvoices,
+  loadReadyInvoices,
   refreshSnapshotNow,
   warmInvoiceSnapshot,
 } from "@/lib/paypal/summaries";
@@ -87,6 +89,49 @@ describe("loadInvoices", () => {
       { ...withId(unpaid, "cancelled"), status: "CANCELLED" },
     );
     expect((await summaries()).map((summary) => summary.id)).toEqual(["newer", "older"]);
+  });
+
+  describe("balance drafts", () => {
+    const balance: PayPalInvoice = {
+      ...withId(unpaid, "balance"),
+      status: "DRAFT",
+      detail: { ...unpaid.detail, memo: "dueline-request:b purpose:P1007 split:balance.pair-1" },
+    };
+    const deposit: PayPalInvoice = {
+      ...withId(unpaid, "deposit"),
+      detail: { ...unpaid.detail, memo: "dueline-request:a split:deposit.pair-1" },
+    };
+    const plainDraft: PayPalInvoice = { ...withId(unpaid, "plain"), status: "DRAFT" };
+
+    it("lists only balance drafts as ready to send, and no other draft", async () => {
+      serve(deposit, balance, plainDraft);
+      expect((await loadReadyInvoices()).map(({ summary }) => summary.id)).toEqual(["balance"]);
+    });
+
+    it("keeps a draft out of every invoice list until it is sent", async () => {
+      serve(deposit, balance, plainDraft);
+      expect((await loadInvoices()).map(({ summary }) => summary.id)).toEqual(["deposit"]);
+
+      serve(deposit, { ...balance, status: "SENT" });
+      await refreshSnapshotNow(["balance"]);
+      expect((await loadInvoices()).map(({ summary }) => summary.id).sort()).toEqual([
+        "balance",
+        "deposit",
+      ]);
+      expect(await loadReadyInvoices()).toEqual([]);
+    });
+
+    it("finds the other half of a pair, draft or sent", async () => {
+      serve(deposit, balance);
+      expect(await findSplitPartner({ role: "deposit", id: "pair-1" })).toEqual({
+        id: "balance",
+        number: balance.detail.invoice_number,
+      });
+      expect(await findSplitPartner({ role: "balance", id: "pair-1" })).toMatchObject({
+        id: "deposit",
+      });
+      expect(await findSplitPartner({ role: "balance", id: "other" })).toBeNull();
+    });
   });
 
   it("takes the work and pay link from the full invoice", async () => {

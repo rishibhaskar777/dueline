@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { KRAFTWERK_CHAT } from "../support/kraftwerk-chat";
 
 interface InvoiceList {
   invoices: { id: string; number: string }[];
@@ -9,13 +10,6 @@ async function invoiceCount(page: Page): Promise<number> {
   expect(response.ok()).toBe(true);
   return ((await response.json()) as InvoiceList).invoices.length;
 }
-
-const KRAFTWERK_CHAT = [
-  "[28/10/26, 9:14 PM] Lena Fischer (Kraftwerk Studio): Hi! Loved the moodboard. Can you do the full brand kit?",
-  "[28/10/26, 9:16 PM] Lena Fischer (Kraftwerk Studio): So: logo final files, 2 business card designs, and a 10 page brand guideline PDF",
-  "[28/10/26, 9:20 PM] Riya: Sure. Logo files €400, business cards €90 each, guideline €650. Total €1,230",
-  "[28/10/26, 9:22 PM] Lena Fischer (Kraftwerk Studio): Perfect. Can we do 50% now and rest on delivery? Payment in 15 days is fine for us",
-].join("\n");
 
 async function draftFromSampleChat(page: Page): Promise<void> {
   await page.goto("/invoices/new");

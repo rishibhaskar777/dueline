@@ -90,7 +90,7 @@ describe("price in the chat", () => {
     ["120.00", "Logos for USD 120.00 each"],
     ["120.00", "Logos for 120/- each"],
     ["1200.00", "one-off fee of $1,200"],
-    ["120000.00", "budget is 1,20,000 rupees"],
+    ["120000.00", "budget is 1,20,000 all in"],
     ["120.50", "Logos for 120.5 each"],
   ])("accepts %s in %j", (unitAmount, sourceQuote) => {
     const result = check(itemWith({ unitAmount, sourceQuote }), sourceQuote);

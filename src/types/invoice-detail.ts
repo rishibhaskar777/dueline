@@ -22,6 +22,12 @@ export interface InvoiceItem {
   sac: string | null;
 }
 
+// The other half of a deposit and balance pair; `other` is null when that invoice cannot be found.
+export interface InvoiceSplit {
+  role: "deposit" | "balance";
+  other: { id: string; number: string } | null;
+}
+
 export interface InvoiceDetails {
   clientKey: string;
   clientPaySpeed: PaySpeed | null;
@@ -29,7 +35,8 @@ export interface InvoiceDetails {
   note: string;
   underLut: boolean;
   hiddenFromDemo: boolean;
-  actions: { remind: boolean; recordPayment: boolean; cancel: boolean };
+  split: InvoiceSplit | null;
+  actions: { remind: boolean; recordPayment: boolean; cancel: boolean; send: boolean };
 }
 
 export type PaymentMethod = "BANK_TRANSFER" | "WIRE_TRANSFER" | "OTHER";

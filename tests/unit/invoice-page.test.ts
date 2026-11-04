@@ -18,7 +18,8 @@ function view(
       note: "",
       underLut: false,
       hiddenFromDemo: false,
-      actions: { remind, recordPayment: false, cancel: false },
+      split: null,
+      actions: { remind, recordPayment: false, cancel: false, send: false },
     },
   };
 }

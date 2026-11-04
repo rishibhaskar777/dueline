@@ -103,6 +103,7 @@ export function buildDemoProfile(today: string): Profile {
     lutValidUntil: financialYearRange(financialYearOf(today.slice(0, 7))).to,
     defaultSac: DEMO_SAC,
     website: null,
+    address: "12 Brigade Road, Bengaluru 560001, Karnataka",
     signOff: "Thank you",
   };
 }

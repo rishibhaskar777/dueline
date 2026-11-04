@@ -10,6 +10,7 @@ const FORM: ProfileFormValues = {
   lutValidUntil: "",
   defaultSac: "",
   website: "",
+  address: "",
   signOff: "Thank you",
 };
 

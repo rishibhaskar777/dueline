@@ -117,6 +117,16 @@ const SCREENS: Screen[] = [
     ready: async (page) => {
       await page.getByRole("button", { name: "Previous month" }).click();
       await expect(page.getByText("INV-0041").first()).toBeVisible();
+      // AG Grid builds its header and row ARIA after the text shows; axe must wait for the grid.
+      await expect(page.getByRole("columnheader").first()).toBeVisible();
+      await page.waitForFunction(
+        () =>
+          document.querySelectorAll(".ag-row").length > 0 &&
+          !document.querySelector(".ag-overlay-loading-center"),
+      );
+      await page.evaluate(
+        () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+      );
     },
   },
   {

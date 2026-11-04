@@ -35,6 +35,11 @@ const GROUPS: Group[] = [
         title: "Your item library",
         body: "Save lines you bill often and add them in one click.",
       },
+      {
+        mark: "½",
+        title: "Deposit and balance",
+        body: "Ask for part upfront. A deposit invoice goes out now and the balance waits as a draft that you send on delivery.",
+      },
     ],
   },
   {
@@ -55,6 +60,11 @@ const GROUPS: Group[] = [
         mark: "%",
         title: "Fees lost this year",
         body: "Fees and conversion loss in rupees for the financial year, and per ₹100 received.",
+      },
+      {
+        mark: "€",
+        title: "Currency check",
+        body: "Warns when the chat says euros and the invoice says dollars. It only asks; you decide whether to switch.",
       },
     ],
   },
@@ -97,6 +107,11 @@ const GROUPS: Group[] = [
         mark: "✓",
         title: "FIRA and FIRC matching",
         body: "A monthly register for PayPal’s FIRA, plus bank transfers with their FIRC number.",
+      },
+      {
+        mark: "PDF",
+        title: "Printable GST invoice",
+        body: "An A4 tax invoice with your GSTIN, SAC, place of supply and the export endorsement, saved as a PDF from your browser.",
       },
     ],
   },

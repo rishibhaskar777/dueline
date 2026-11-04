@@ -6,7 +6,7 @@ import { offlinePayPalFetch } from "./offline/transport";
 import { clearAccessToken, getAccessToken } from "./token";
 
 interface PayPalRequest {
-  method?: "GET" | "POST" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: unknown;
   // Sent as is, for a body that embeds text which must reach PayPal byte for byte.
   rawBody?: string;

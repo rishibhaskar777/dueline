@@ -102,6 +102,11 @@ export interface PayPalInvoiceInput {
   amount?: { breakdown: { discount: { invoice_discount: { percent: string } } } };
 }
 
+// A full update replaces the invoice, so it carries everything that was saved, as PayPal returned it.
+export type PayPalInvoiceUpdate = Omit<PayPalInvoiceInput, "invoicer"> & {
+  invoicer?: PayPalInvoice["invoicer"];
+};
+
 export interface PayPalInvoiceList {
   items?: PayPalInvoice[];
   total_items?: number;

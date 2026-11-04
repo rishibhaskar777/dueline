@@ -1,7 +1,7 @@
 import { addDays } from "@/lib/clock";
 import { formatDate } from "@/lib/format-date";
 import type { CreateInvoiceRequest, Profile } from "@/types";
-import { memoOf } from "./memo";
+import { memoOf, type SplitTag } from "./memo";
 import type { PayPalInvoiceInput } from "./types";
 
 type InvoiceToCreate = CreateInvoiceRequest["draft"];
@@ -12,6 +12,7 @@ interface InvoiceBodyOptions {
   requestId: string;
   profile: Profile;
   discount?: CreateInvoiceRequest["discount"];
+  split?: SplitTag;
 }
 
 interface EarlyPayment {
@@ -29,8 +30,9 @@ export function requestMemo(
   requestId: string,
   purposeCode: string | null = null,
   sac: string | null = null,
+  split: SplitTag | null = null,
 ): string {
-  return memoOf(`${MEMO_PREFIX}${requestId}`, purposeCode, sac);
+  return memoOf(`${MEMO_PREFIX}${requestId}`, purposeCode, sac, split);
 }
 
 export function mentionsLut(note: string | undefined): boolean {
@@ -87,7 +89,7 @@ export function toPayPalInvoice(
   draft: InvoiceToCreate,
   options: InvoiceBodyOptions,
 ): PayPalInvoiceInput {
-  const { invoiceNumber, invoiceDate, requestId, profile, discount } = options;
+  const { invoiceNumber, invoiceDate, requestId, profile, discount, split } = options;
   // The note must never promise a discount date after the due date, so both use the earlier one.
   const early = discount
     ? {
@@ -106,7 +108,7 @@ export function toPayPalInvoice(
       invoice_date: invoiceDate,
       currency_code: draft.currency,
       ...(note ? { note } : {}),
-      memo: requestMemo(requestId, draft.purposeCode, draft.items[0]?.sac ?? null),
+      memo: requestMemo(requestId, draft.purposeCode, draft.items[0]?.sac ?? null, split),
       payment_term: { term_type: "DUE_ON_DATE_SPECIFIED", due_date: dueDate },
     },
     ...(invoicer ? { invoicer } : {}),

@@ -204,7 +204,8 @@ describe("formFromInvoice", () => {
     note: "SUPPLY MEANT FOR EXPORT",
     underLut: true,
     hiddenFromDemo: false,
-    actions: { remind: false, recordPayment: false, cancel: false },
+    split: null,
+    actions: { remind: false, recordPayment: false, cancel: false, send: false },
   };
 
   it("keeps the client and items and starts the rest afresh", () => {

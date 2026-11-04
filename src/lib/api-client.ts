@@ -17,6 +17,8 @@ import type {
   DashboardResponse,
   CreateInvoiceRequest,
   CreateInvoiceResponse,
+  CreateSplitRequest,
+  CreateSplitResponse,
   DemoRecipientResponse,
   DemoResetResponse,
   ExportRegister,
@@ -196,6 +198,10 @@ export function estimatePayout(amount: Money): Promise<PayoutEstimate> {
 
 export function createInvoice(input: CreateInvoiceRequest): Promise<CreateInvoiceResponse> {
   return requestJson("/api/invoices", jsonInit("POST", input));
+}
+
+export function createDepositAndBalance(input: CreateSplitRequest): Promise<CreateSplitResponse> {
+  return requestJson("/api/invoices/split", jsonInit("POST", input));
 }
 
 export function sendInvoiceDraft(id: string, requestId: string): Promise<SendInvoiceResponse> {

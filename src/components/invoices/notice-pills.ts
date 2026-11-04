@@ -1,3 +1,4 @@
+import { isCurrencyNoticeText } from "@/lib/invoices/chat-currency";
 import type { ExtractResponse, PaymentTerms } from "@/types";
 
 export type NoticeTone = "green" | "amber";
@@ -48,7 +49,10 @@ export function noticePills(
   return [
     ...(notice ? [{ text: notice, tone: "green" as const }] : []),
     ...paymentTermPills(paymentTerms),
-    ...warnings.map((text) => ({ text, tone: "amber" as const })),
+    // The currency warnings are drawn live above the form, where they offer a fix.
+    ...warnings
+      .filter((text) => !isCurrencyNoticeText(text))
+      .map((text) => ({ text, tone: "amber" as const })),
   ];
 }
 

@@ -19,7 +19,7 @@ import {
   type StoredInvoice,
 } from "./invoice-cache";
 import { getInvoice, listInvoices } from "./invoices";
-import { markerOf, sacOf } from "./memo";
+import { markerOf, sacOf, splitOf, type SplitTag } from "./memo";
 import { amountDueOf, isUnderLut, latestPayment, PAYOUT_STATUSES, toInvoiceSummary } from "./map";
 import { getActualPayout } from "./payments";
 import type { PayPalInvoice } from "./types";
@@ -34,9 +34,12 @@ export interface LoadedInvoice {
   sac: string | null;
   // The invoice's own latest payment, for a payout PayPal has not reported figures for.
   paymentId: string | null;
+  // Set on a deposit or balance invoice: which half it is and the id it shares with the other.
+  split?: SplitTag;
 }
 
-const HIDDEN_STATUSES = ["DRAFT", "CANCELLED"];
+// A draft stays out of every list, except a balance invoice waiting to be sent on delivery.
+const HIDDEN_STATUSES = ["CANCELLED"];
 const READS_AT_A_TIME = 4;
 const STORE_READS_AT_A_TIME = 10;
 const RETRY_AFTER_MS = 5 * 60 * 1000;
@@ -151,12 +154,15 @@ async function forgetUnlisted(listed: PayPalInvoice[]): Promise<void> {
   await Promise.all(gone.map(dropStoredInvoice));
 }
 
+function isBalanceDraft(invoice: PayPalInvoice): boolean {
+  return splitOf(invoice.detail.memo)?.role === "balance";
+}
+
 async function buildSnapshot(): Promise<InvoiceSnapshot> {
   const all = await listInvoices();
   await forgetUnlisted(all);
-  const invoices = await readInFull(
-    all.filter((invoice) => !HIDDEN_STATUSES.includes(invoice.status)),
-  );
+  const read = await readInFull(all.filter((invoice) => !HIDDEN_STATUSES.includes(invoice.status)));
+  const invoices = read.filter((invoice) => invoice.status !== "DRAFT" || isBalanceDraft(invoice));
   const payouts = await findPayouts(invoices);
   return {
     builtAt: Date.now(),
@@ -179,6 +185,7 @@ function toLoadedInvoices(entries: SnapshotEntry[], date: string): LoadedInvoice
               underLut: isUnderLut(invoice),
               sac: sacOf(invoice.detail.memo),
               paymentId: latestPayment(invoice)?.payment_id ?? null,
+              split: splitOf(invoice.detail.memo) ?? undefined,
             },
           ]
         : [];
@@ -300,10 +307,30 @@ export function invoicesLoadedAt(): string | null {
 
 // Rupee figures are filled in later, so a settings change shows up without waiting for PayPal.
 // Merged clients are applied after the snapshot, so a merge shows at once.
-export async function loadInvoices(): Promise<LoadedInvoice[]> {
+async function loadWithDrafts(): Promise<LoadedInvoice[]> {
   const [snapshot, aliases] = await Promise.all([
     currentSnapshot(),
     getStore().listClientAliases(),
   ]);
   return applyAliases(toLoadedInvoices(snapshot.entries, today()), aliases);
+}
+
+// Drafts never count in totals, risk, forecast or the register until they are sent.
+export async function loadInvoices(): Promise<LoadedInvoice[]> {
+  return (await loadWithDrafts()).filter(({ summary }) => summary.paypalStatus !== "DRAFT");
+}
+
+// Balance invoices saved as drafts, waiting to be sent on delivery.
+export async function loadReadyInvoices(): Promise<LoadedInvoice[]> {
+  return (await loadWithDrafts()).filter(({ summary }) => summary.paypalStatus === "DRAFT");
+}
+
+// The other half of a deposit and balance pair, found among the invoices and the waiting drafts.
+export async function findSplitPartner(
+  tag: SplitTag,
+): Promise<{ id: string; number: string } | null> {
+  const partner = (await loadWithDrafts()).find(
+    ({ split }) => split?.id === tag.id && split.role !== tag.role,
+  );
+  return partner ? { id: partner.summary.id, number: partner.summary.number } : null;
 }

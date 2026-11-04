@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { addDays } from "@/lib/clock";
 import { isCountryCode } from "@/lib/countries";
+import { currencyNotices } from "@/lib/invoices/chat-currency";
 import { isPurposeCode } from "@/lib/export/purpose-codes";
 import { fromMinorUnits, toMinorUnits } from "@/lib/money/decimal";
 import { unmask, type ContactMap } from "@/lib/privacy/mask";
@@ -274,6 +275,10 @@ export function checkModelDraft(raw: ModelDraft, input: CheckInput): CheckedDraf
   const dueOn = checkDueOn(raw.dueOn, input.today, warnings);
   const email = checkEmail(raw.clientEmail, contacts, warnings);
   const country = checkCountry(raw, input.chat);
+  // Run here as well as on the form, so a model that read the wrong currency is always flagged.
+  for (const notice of currencyNotices(input.chat, currency, country ?? "")) {
+    warnings.push(notice.text);
+  }
   const contactName = checkContactName(raw, input);
 
   const { purposeCode, purposeReason } = checkPurpose(raw, contacts, items);

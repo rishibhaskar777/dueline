@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import { DepositFields } from "@/components/invoices/DepositFields";
 import { DiscountFields } from "@/components/invoices/DiscountFields";
 import { FieldError } from "@/components/invoices/FieldError";
 import { lutIssue, type FieldErrors, type InvoiceForm } from "@/components/invoices/invoice-form";
@@ -29,9 +30,18 @@ interface DetailsFieldsProps {
   codes: PurposeCode[];
   profile: Profile | null;
   today: string | undefined;
+  upfrontQuote: string | null;
 }
 
-export function DetailsFields({ form, update, errors, codes, profile, today }: DetailsFieldsProps) {
+export function DetailsFields({
+  form,
+  update,
+  errors,
+  codes,
+  profile,
+  today,
+  upfrontQuote,
+}: DetailsFieldsProps) {
   // The Select reads its items on every render, so a new array each time keeps it updating.
   const codeItems = useMemo(() => purposeCodeItems(codes), [codes]);
   const issue = profile ? lutIssue(profile, form.includeLutNote, today) : null;
@@ -137,7 +147,15 @@ export function DetailsFields({ form, update, errors, codes, profile, today }: D
         )}
       </div>
 
-      <DiscountFields form={form} update={update} errors={errors} />
+      <DepositFields
+        form={form}
+        update={update}
+        errors={errors}
+        today={today}
+        quote={upfrontQuote}
+      />
+
+      {form.upfront === "off" && <DiscountFields form={form} update={update} errors={errors} />}
 
       <div className="grid gap-1.5">
         <Label htmlFor="note" className="font-bold">
