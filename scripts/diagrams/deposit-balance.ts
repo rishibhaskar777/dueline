@@ -1,4 +1,4 @@
-import { Diagram, K, poly } from "./lib.mjs";
+import { Diagram, K, poly } from "./lib";
 
 export function depositBalance() {
   const d = new Diagram({
@@ -118,7 +118,7 @@ export function depositBalance() {
   d.arrow(`M${xs[2] + w} ${B + 65} H${xs[3]}`, { color: K.amber });
   d.arrow(`M${xs[3] + w} ${B + 65} H${xs[4]}`, { color: K.blue });
 
-  const bx = (i) => xs[i] + w - 26;
+  const bx = (i: number): number => xs[i] + w - 26;
   d.step({
     n: 1,
     color: K.blue,

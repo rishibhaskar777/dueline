@@ -23,12 +23,14 @@ export const K = {
   greyLine: "#cfd5e2",
 };
 
-export const esc = (s) =>
+export const esc = (s: unknown): string =>
   String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-const f = (n) => Math.round(n * 100) / 100;
-const f4 = (n) => (Math.round(n * 10000) / 10000).toFixed(4);
+const f = (n: number): number => Math.round(n * 100) / 100;
+const f4 = (n: number): string => (Math.round(n * 10000) / 10000).toFixed(4);
 
-export function poly(pts, r = 14) {
+export type Point = [number, number];
+
+export function poly(pts: Point[], r = 14): string {
   let d = `M${pts[0][0]} ${pts[0][1]}`;
   for (let i = 1; i < pts.length - 1; i++) {
     const [x0, y0] = pts[i - 1],
@@ -47,7 +49,19 @@ export function poly(pts, r = 14) {
   return d + ` L${l[0]} ${l[1]}`;
 }
 
-const KINDS = {
+export type Kind = "dueline" | "paypal" | "outside" | "violet" | "green" | "amber" | "plain";
+
+interface Palette {
+  fill: string;
+  stroke: string;
+  title: string;
+  sub: string;
+  chip?: string;
+  chipTitle?: string;
+  chipSub?: string;
+}
+
+const KINDS: Record<Kind, Palette> = {
   dueline: {
     fill: "url(#navy)",
     stroke: "none",
@@ -81,27 +95,122 @@ const KINDS = {
   plain: { fill: "#ffffff", stroke: "none", title: K.ink, sub: K.mute },
 };
 
+export interface DiagramMeta {
+  slug: string;
+  title: string;
+  desc: string;
+  height: number;
+  period: number;
+  heading: string;
+  sub: string;
+}
+
+export type Rect = [number, number, number, number];
+type Anchor = "start" | "middle" | "end";
+
+export interface Step {
+  n: number;
+  color: string;
+  caption: string;
+  hl?: Rect[];
+  token?: string;
+  badge?: Point;
+  w?: number;
+}
+
+interface CardOptions {
+  kind?: Kind;
+  rx?: number;
+  shadow?: boolean;
+  dash?: boolean;
+}
+
+interface TextOptions {
+  size?: number;
+  weight?: number;
+  fill?: string;
+  anchor?: Anchor;
+}
+
+interface NodeOptions {
+  kind?: Kind;
+  title: string;
+  lines?: string[];
+  size?: number;
+  pad?: number;
+  tint?: string;
+  rx?: number;
+  dash?: boolean;
+}
+
+interface ChipOptions {
+  kind?: Kind;
+  title: string;
+  lines?: string[];
+  fill?: string;
+  titleFill?: string;
+}
+
+interface ArrowOptions {
+  color?: string;
+  rev?: boolean;
+  slow?: boolean;
+  label?: string;
+  lx?: number;
+  ly?: number;
+  anchor?: Anchor;
+  labelFill?: string;
+  over?: boolean;
+}
+
+interface LabelOptions {
+  fill?: string;
+  anchor?: Anchor;
+}
+
+type ResolvedStep = Step & Required<Pick<Step, "hl" | "w">>;
+
 export class Diagram {
-  constructor({ slug, title, desc, height, period, heading, sub }) {
-    Object.assign(this, { slug, title, desc, height, period, heading, sub });
-    this.under = [];
-    this.cards = [];
-    this.top = [];
-    this.steps = [];
-    this.markers = new Map();
-    this.extras = [];
-    this.ids = new Map();
-    this.checks = [];
+  slug: string;
+  title: string;
+  desc: string;
+  height: number;
+  period: number;
+  heading: string;
+  sub: string;
+  under: string[] = [];
+  cards: string[] = [];
+  top: string[] = [];
+  steps: ResolvedStep[] = [];
+  markers = new Map<string, string>();
+  extras: ((d: Diagram) => string)[] = [];
+  ids = new Map<string, { x: number; y: number; w: number; h: number }>();
+
+  constructor({ slug, title, desc, height, period, heading, sub }: DiagramMeta) {
+    this.slug = slug;
+    this.title = title;
+    this.desc = desc;
+    this.height = height;
+    this.period = period;
+    this.heading = heading;
+    this.sub = sub;
   }
 
-  marker(color) {
+  marker(color: string): string {
     const id = "ah" + color.replace("#", "");
     this.markers.set(id, color);
     return id;
   }
 
   // A card. kind picks the palette; id lets text be checked against its box.
-  card(id, x, y, w, h, { kind = "plain", rx = 20, shadow = true, dash = false } = {}) {
+  card(
+    id: string,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    { kind = "plain", rx = 20, shadow = true, dash = false }: CardOptions = {},
+  ): void {
     const k = KINDS[kind];
     this.ids.set(id, { x, y, w, h });
     let stroke = k.stroke !== "none" ? ` stroke="${k.stroke}" stroke-width="2"` : "";
@@ -112,20 +221,35 @@ export class Diagram {
   }
 
   // Text inside a card: bold title then lines. Pass `at` to place the first baseline.
-  words(card, x, y, str, { size = 13.5, weight = 400, fill = K.mute, anchor = "start" } = {}) {
+  words(
+    card: string,
+    x: number,
+    y: number,
+    str: string,
+    { size = 13.5, weight = 400, fill = K.mute, anchor = "start" }: TextOptions = {},
+  ): void {
     this.top.push(
       `<text data-card="${card}" x="${x}" y="${y}" font-size="${size}" font-weight="${weight}" fill="${fill}"${anchor !== "start" ? ` text-anchor="${anchor}"` : ""}>${esc(str)}</text>`,
     );
   }
 
   node(
-    id,
-    x,
-    y,
-    w,
-    h,
-    { kind = "plain", title, lines = [], size = 19, pad = 22, tint, rx = 22, dash = false },
-  ) {
+    id: string,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    {
+      kind = "plain",
+      title,
+      lines = [],
+      size = 19,
+      pad = 22,
+      tint,
+      rx = 22,
+      dash = false,
+    }: NodeOptions,
+  ): void {
     this.card(id, x, y, w, h, { kind, rx, dash });
     const k = KINDS[kind];
     this.words(id, x + pad, y + 8 + size + 6, title, { size, weight: 800, fill: tint || k.title });
@@ -135,7 +259,15 @@ export class Diagram {
   }
 
   // A smaller row inside a card.
-  chip(parent, id, x, y, w, h, { kind = "outside", title, lines = [], fill, titleFill }) {
+  chip(
+    parent: string,
+    id: string,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    { kind = "outside", title, lines = [], fill, titleFill }: ChipOptions,
+  ): void {
     const k = KINDS[kind];
     this.ids.set(id, { x, y, w, h });
     this.cards.push(
@@ -151,7 +283,7 @@ export class Diagram {
 
   // Arrow with a faint rail, an animated dashed flow on top and an arrow head at the end.
   arrow(
-    path,
+    path: string,
     {
       color = K.blue,
       rev = false,
@@ -162,42 +294,53 @@ export class Diagram {
       anchor = "start",
       labelFill,
       over = false,
-    } = {},
-  ) {
+    }: ArrowOptions = {},
+  ): void {
     const m = this.marker(color);
     const layer = over ? this.top : this.under;
     layer.push(`<path class="rail" stroke="${color}" d="${path}" marker-end="url(#${m})"/>`);
     layer.push(
       `<path class="flow${rev ? " rev" : ""}${slow ? " slow" : ""}" stroke="${color}" d="${path}"/>`,
     );
-    if (label) this.label(lx, ly, label, { fill: labelFill || color, anchor });
+    if (label && lx !== undefined && ly !== undefined)
+      this.label(lx, ly, label, { fill: labelFill || color, anchor });
   }
 
-  label(x, y, str, { fill = K.navy, anchor = "start" } = {}) {
+  label(
+    x: number,
+    y: number,
+    str: string,
+    { fill = K.navy, anchor = "start" }: LabelOptions = {},
+  ): void {
     this.top.push(
       `<text class="lab" x="${x}" y="${y}" fill="${fill}"${anchor !== "start" ? ` text-anchor="${anchor}"` : ""}>${esc(str)}</text>`,
     );
   }
 
-  note(x, y, str, { fill = K.mute, anchor = "start", size = 13.5, weight = 400 } = {}) {
+  note(
+    x: number,
+    y: number,
+    str: string,
+    { fill = K.mute, anchor = "start", size = 13.5, weight = 400 }: TextOptions = {},
+  ): void {
     this.top.push(
       `<text class="note" x="${x}" y="${y}" font-size="${size}" font-weight="${weight}" fill="${fill}"${anchor !== "start" ? ` text-anchor="${anchor}"` : ""}>${esc(str)}</text>`,
     );
   }
 
-  badge(n, x, y, color) {
+  badge(n: number, x: number, y: number, color: string): void {
     this.top.push(
       `<g class="badge" data-n="${n}"><circle cx="${x}" cy="${y}" r="12" fill="${color}" stroke="#fff" stroke-width="2"/><text x="${x}" y="${y + 4.5}" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">${n}</text></g>`,
     );
   }
 
   // One step of the story: highlight boxes, a token along a path, a caption, a badge ring.
-  step({ n, color, caption, hl = [], token, badge, w = 1 }) {
+  step({ n, color, caption, hl = [], token, badge, w = 1 }: Step): void {
     this.steps.push({ n, color, caption, hl, token, badge, w });
     if (badge) this.badge(n, badge[0], badge[1], color);
   }
 
-  window(i) {
+  window(i: number): [number, number] {
     const total = this.steps.reduce((s, x) => s + x.w, 0);
     const start = 0.03,
       span = 0.87;
@@ -207,11 +350,11 @@ export class Diagram {
   }
 
   // SMIL: show for [a, b] of the loop, hidden otherwise.
-  show(a, b) {
+  show(a: number, b: number): string {
     return `<animate attributeName="opacity" dur="${this.period}s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;${f4(a)};${f4(b)}"/>`;
   }
 
-  overlay() {
+  overlay(): string {
     const out = [];
     this.steps.forEach((s, i) => {
       const [a, b] = this.window(i);
@@ -242,7 +385,7 @@ export class Diagram {
     return out.join("\n");
   }
 
-  render() {
+  render(): string {
     const H = this.height;
     const marks = [...this.markers]
       .map(

@@ -1,4 +1,4 @@
-import { Diagram, K } from "./lib.mjs";
+import { Diagram, K } from "./lib";
 
 export function morningRun() {
   const d = new Diagram({
@@ -92,7 +92,7 @@ export function morningRun() {
     ],
   });
 
-  const mid = (y) => y + h / 2;
+  const mid = (y: number): number => y + h / 2;
   d.arrow(`M${xs[0] + W} ${mid(Y1)} H${xs[1]}`, { color: K.amber });
   d.arrow(`M${xs[1] + W} ${mid(Y1)} H${xs[2]}`, { color: K.blue });
   d.arrow(`M${xs[2] + W} ${mid(Y1)} H${xs[3]}`, { color: K.blue });
@@ -128,7 +128,7 @@ export function morningRun() {
   d.arrow("M394 642 H475", { color: K.amber, over: true });
   d.arrow("M805 642 H886", { color: K.green, over: true });
 
-  const bx = (i) => xs[i] + W - 26;
+  const bx = (i: number): number => xs[i] + W - 26;
   d.step({
     n: 1,
     color: K.amber,

@@ -1,4 +1,4 @@
-import { Diagram, K, poly } from "./lib.mjs";
+import { Diagram, K, poly } from "./lib";
 
 export function remindersFlow() {
   const d = new Diagram({

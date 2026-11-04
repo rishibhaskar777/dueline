@@ -1,4 +1,4 @@
-import { Diagram, K } from "./lib.mjs";
+import { Diagram, K, type Kind } from "./lib";
 
 export function paymentReaches() {
   const d = new Diagram({
@@ -15,7 +15,7 @@ export function paymentReaches() {
     Y2 = 340,
     h = 150;
   const xs = [51, 357, 663, 969];
-  const nodes = [
+  const nodes: [string, number, number, Kind, string, string[]][] = [
     [
       "n1",
       xs[0],
@@ -87,7 +87,7 @@ export function paymentReaches() {
     ],
   });
 
-  const mid = (n) => n + h / 2;
+  const mid = (n: number): number => n + h / 2;
   d.arrow(`M${xs[0] + W} ${mid(Y1)} H${xs[1]}`, { color: K.green });
   d.arrow(`M${xs[1] + W} ${mid(Y1)} H${xs[2]}`, { color: K.blue });
   d.arrow(`M${xs[2] + W} ${mid(Y1)} H${xs[3]}`, { color: K.blue });
@@ -96,7 +96,7 @@ export function paymentReaches() {
   d.arrow(`M${xs[2]} ${mid(Y2)} H${xs[1] + W}`, { color: K.green });
 
   // failure and fallback notes
-  const notes = [
+  const notes: [string, number, string, string, string[]][] = [
     [
       "not",
       51,
