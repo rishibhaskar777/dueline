@@ -106,13 +106,16 @@ describe("seedDemo", () => {
     );
   });
 
-  it("gives the October bank transfer its FIRC number and no other payment one", async () => {
+  it("gives the October bank transfer and the Southbank Creative one their FIRC numbers and no other payment one", async () => {
     await seedDemo(GENERATION);
 
     const withReference = story.filter((invoice) => invoice.bankReference);
-    expect(withReference.map((invoice) => invoice.key)).toEqual(["brightwell-icon-set"]);
+    expect(withReference.map((invoice) => invoice.key)).toEqual([
+      "brightwell-icon-set",
+      "southbank-event-branding",
+    ]);
     const saved = Object.values((await holder.store?.listBankReferences()) ?? {});
-    expect(saved).toEqual(["FIRC/2026/001"]);
+    expect(saved.sort()).toEqual(["FIRC/2026/001", "FIRC/2026/002"]);
   });
 
   it("skips what PayPal already has, so a second run changes nothing", async () => {
