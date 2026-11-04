@@ -22,6 +22,7 @@ import {
   buildDemoStory,
   demoMemo,
   isDemoProfile,
+  upgradedDemoProfile,
   type DemoInvoice,
 } from "./story";
 
@@ -50,14 +51,17 @@ function buyerEmail(): string {
 }
 
 // A profile the freelancer typed is never replaced. The demo fills in when there is none or when the
-// saved one has no name at all, and keeps its own LUT date current.
+// saved one has no name at all. A saved demo profile from an older version is brought up to date, and
+// keeps any value in it that is already filled in.
 export async function ensureDemoProfile(date: string): Promise<Profile> {
   const store = getStore();
   const saved = await getProfile();
   const stored = await store.getProfile();
   const unnamed = saved.yourName === "" && saved.businessName === "";
-  if (!stored || unnamed || isDemoProfile(saved, date)) {
+  if (!stored || unnamed) {
     await store.saveProfile(buildDemoProfile(date));
+  } else if (isDemoProfile(saved, date)) {
+    await store.saveProfile(upgradedDemoProfile(saved, date));
   }
   return getProfile();
 }

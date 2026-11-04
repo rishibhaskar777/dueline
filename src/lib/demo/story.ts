@@ -222,10 +222,36 @@ export function buildDemoStory(today: string): DemoInvoice[] {
   });
 }
 
-// The stored profile is the demo profile apart from the LUT date, which moves with the demo date.
+// The fields that say whose profile this is. Only these decide whether a stored profile is the demo
+// one, so a field added to the profile later (like the address was) never makes an older demo
+// profile look like one a person typed.
+const DEMO_IDENTITY_FIELDS = [
+  "yourName",
+  "businessName",
+  "gstin",
+  "lutArn",
+  "defaultSac",
+  "signOff",
+] as const satisfies readonly (keyof Profile)[];
+
+function isFilled(value: string | null): boolean {
+  return value !== null && value !== "";
+}
+
+// A stored profile is the demo profile when every identity field it has filled in matches the demo's.
 export function isDemoProfile(profile: Profile, today: string): boolean {
   const demo = buildDemoProfile(today);
-  return (Object.keys(demo) as (keyof Profile)[]).every(
-    (field) => field === "lutValidUntil" || profile[field] === demo[field],
+  return DEMO_IDENTITY_FIELDS.every(
+    (field) => !isFilled(profile[field]) || profile[field] === demo[field],
   );
+}
+
+// The current demo profile, keeping any other value the stored one already has. The LUT date always
+// moves with the demo date.
+export function upgradedDemoProfile(profile: Profile, today: string): Profile {
+  const demo = buildDemoProfile(today);
+  const kept = (Object.keys(demo) as (keyof Profile)[]).filter(
+    (field) => field !== "lutValidUntil" && isFilled(profile[field]),
+  );
+  return { ...demo, ...Object.fromEntries(kept.map((field) => [field, profile[field]])) };
 }

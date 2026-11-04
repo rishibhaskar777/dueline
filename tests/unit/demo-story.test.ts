@@ -152,4 +152,11 @@ describe("isDemoProfile", () => {
     expect(isDemoProfile(old, TODAY)).toBe(true);
     expect(isDemoProfile({ ...old, yourName: "Asha Rao" }, TODAY)).toBe(false);
   });
+
+  it("ignores fields that are empty and fields that are not identity", () => {
+    const old = { ...buildDemoProfile(TODAY), address: null, website: "https://asha.example" };
+    expect(isDemoProfile(old, TODAY)).toBe(true);
+    expect(isDemoProfile({ ...old, gstin: null, signOff: "" }, TODAY)).toBe(true);
+    expect(isDemoProfile({ ...old, businessName: "Other Studio" }, TODAY)).toBe(false);
+  });
 });
