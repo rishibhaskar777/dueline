@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 740" width="1280" height="740" role="img" aria-labelledby="t d">
+<title id="t">Reminders, heads-ups and promises</title>
+<desc id="d">An invoice that is not yet due gets a heads-up. A late invoice gets a gentle, firm or final reminder chosen from the days late, the reminders already sent and the client's history. A promised date pauses drafting until that date, and a broken promise makes the next reminder firm. Gemini writes a draft from facts only, with no contact details. Code checks the draft and falls back to a template in the client's language when the draft fails. The freelancer reviews it and sends either PayPal's own reminder or their own message. The reminder is logged once and the card closes for the day.</desc>
+<style>
+  text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+  .s{font-size:13.5px;fill:#4c5260}
+  .lab{font-size:12.5px;font-weight:700;paint-order:stroke;stroke:#f1f5fc;stroke-width:5px;stroke-linejoin:round}
+  .note{paint-order:stroke;stroke:#f1f5fc;stroke-width:4px;stroke-linejoin:round}
+  .flow{fill:none;stroke-width:3;stroke-linecap:round;stroke-dasharray:2 12;animation:flow 1.4s linear infinite}
+  .rev{animation-direction:reverse}
+  .slow{animation-duration:2.4s}
+  .rail{fill:none;stroke-width:3;stroke-opacity:.18}
+  .pulse{animation:pulse 2.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+  @keyframes flow{to{stroke-dashoffset:-28}}
+  @keyframes pulse{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:.9;transform:scale(1.35)}}
+  @media (prefers-reduced-motion:reduce){.flow,.pulse{animation:none}.mover,.hl,.prog,.cap,.anim{display:none}}
+</style>
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef3fd"/><stop offset="1" stop-color="#f7f9fd"/></linearGradient>
+  <linearGradient id="navy" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0a2a7a"/><stop offset="1" stop-color="#071c57"/></linearGradient>
+  <filter id="sh" x="-10%" y="-10%" width="120%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0a1e50" flood-opacity=".10"/></filter>
+  <marker id="ah1d63f0" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M1 1 L13 7 L1 13 z" fill="#1d63f0"/></marker>
+  <marker id="ahe08a00" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M1 1 L13 7 L1 13 z" fill="#e08a00"/></marker>
+  <marker id="ah7c3aed" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M1 1 L13 7 L1 13 z" fill="#7c3aed"/></marker>
+  <marker id="ahc42b22" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M1 1 L13 7 L1 13 z" fill="#c42b22"/></marker>
+  <marker id="ah0e8a4f" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M1 1 L13 7 L1 13 z" fill="#0e8a4f"/></marker>
+</defs>
+<rect width="1280" height="740" rx="28" fill="url(#bg)"/>
+<text x="48" y="58" font-size="15" font-weight="800" fill="#0a2a7a" letter-spacing="1">REMINDERS, HEADS-UPS AND PROMISES</text>
+<text x="1232" y="58" class="s" text-anchor="end">The tone comes from facts. The freelancer sends. Nothing goes out by itself.</text>
+<path class="rail" stroke="#1d63f0" d="M356 460 L356 202 Q356 190 368 190 L400 190" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M356 460 L356 202 Q356 190 368 190 L400 190"/>
+<path class="rail" stroke="#1d63f0" d="M340 190 H356"/>
+<path class="rail" stroke="#1d63f0" d="M340 280 H356"/>
+<path class="rail" stroke="#1d63f0" d="M340 370 H356"/>
+<path class="rail" stroke="#1d63f0" d="M340 460 H356"/>
+<path class="rail" stroke="#e08a00" d="M340 595 L360 595 Q372 595 372 583 L372 257 Q372 245 384 245 L400 245" marker-end="url(#ahe08a00)"/>
+<path class="flow" stroke="#e08a00" d="M340 595 L360 595 Q372 595 372 583 L372 257 Q372 245 384 245 L400 245"/>
+<path class="rail" stroke="#7c3aed" d="M555 262 V300" marker-end="url(#ah7c3aed)"/>
+<path class="flow" stroke="#7c3aed" d="M555 262 V300"/>
+<path class="rail" stroke="#c42b22" d="M555 470 V520" marker-end="url(#ahc42b22)"/>
+<path class="flow" stroke="#c42b22" d="M555 470 V520"/>
+<path class="rail" stroke="#0e8a4f" d="M710 385 H770" marker-end="url(#ah0e8a4f)"/>
+<path class="flow" stroke="#0e8a4f" d="M710 385 H770"/>
+<path class="rail" stroke="#1d63f0" d="M710 595 L728 595 Q740 595 740 583 L740 437 Q740 425 752 425 L770 425" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M710 595 L728 595 Q740 595 740 583 L740 437 Q740 425 752 425 L770 425"/>
+<path class="rail" stroke="#1d63f0" d="M980 385 H1030" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M980 385 H1030"/>
+<path class="rail" stroke="#0e8a4f" d="M1135 450 V500" marker-end="url(#ah0e8a4f)"/>
+<path class="flow" stroke="#0e8a4f" d="M1135 450 V500"/>
+<g filter="url(#sh)"><rect data-id="t0" x="40" y="150" width="300" height="80" rx="18" fill="#ffffff"/></g>
+<g filter="url(#sh)"><rect data-id="t1" x="40" y="240" width="300" height="80" rx="18" fill="#ffffff"/></g>
+<g filter="url(#sh)"><rect data-id="t2" x="40" y="330" width="300" height="80" rx="18" fill="#ffffff"/></g>
+<g filter="url(#sh)"><rect data-id="t3" x="40" y="420" width="300" height="80" rx="18" fill="#ffffff"/></g>
+<g filter="url(#sh)"><rect data-id="pr" x="40" y="520" width="300" height="130" rx="22" fill="#fff6e6"/></g>
+<g filter="url(#sh)"><rect data-id="dm" x="400" y="150" width="310" height="112" rx="22" fill="#f3efff"/></g>
+<g filter="url(#sh)"><rect data-id="ck" x="400" y="300" width="310" height="170" rx="22" fill="url(#navy)"/></g>
+<g filter="url(#sh)"><rect data-id="tp" x="400" y="520" width="310" height="150" rx="22" fill="#ffffff"/></g>
+<g filter="url(#sh)"><rect data-id="rv" x="770" y="300" width="210" height="170" rx="22" fill="#ffffff"/></g>
+<g filter="url(#sh)"><rect data-id="sd" x="1030" y="150" width="210" height="300" rx="22" fill="#ffffff" stroke="#1d63f0" stroke-width="2"/></g>
+<rect data-id="sd1" x="1042" y="204" width="186" height="108" rx="14" fill="#eef3fd"/>
+<rect data-id="sd2" x="1042" y="326" width="186" height="108" rx="14" fill="#eef3fd"/>
+<g filter="url(#sh)"><rect data-id="lg" x="1030" y="500" width="210" height="170" rx="22" fill="#ecf8f1"/></g>
+<text data-card="t0" x="62" y="178" font-size="17" font-weight="800" fill="#0e8a4f">Heads-up</text>
+<text data-card="t0" x="62" y="200" font-size="13.5" font-weight="400" fill="#4c5260">Not yet due: due today or soon.</text>
+<text data-card="t0" x="62" y="218" font-size="13.5" font-weight="400" fill="#4c5260">Never mentions lateness.</text>
+<text data-card="t1" x="62" y="268" font-size="17" font-weight="800" fill="#1d63f0">Gentle</text>
+<text data-card="t1" x="62" y="290" font-size="13.5" font-weight="400" fill="#4c5260">Late, under 8 days, no reminder yet.</text>
+<text data-card="t2" x="62" y="358" font-size="17" font-weight="800" fill="#8a4f00">Firm</text>
+<text data-card="t2" x="62" y="380" font-size="13.5" font-weight="400" fill="#4c5260">8 days late, one reminder sent, a</text>
+<text data-card="t2" x="62" y="398" font-size="13.5" font-weight="400" fill="#4c5260">late payer or a broken promise.</text>
+<text data-card="t3" x="62" y="448" font-size="17" font-weight="800" fill="#c42b22">Final</text>
+<text data-card="t3" x="62" y="470" font-size="13.5" font-weight="400" fill="#4c5260">Over 30 days late, or two</text>
+<text data-card="t3" x="62" y="488" font-size="13.5" font-weight="400" fill="#4c5260">reminders already sent.</text>
+<text data-card="pr" x="62" y="551" font-size="17" font-weight="800" fill="#0b0b0f">Promised date</text>
+<text data-card="pr" x="62" y="575" font-size="13.5" font-weight="400" fill="#4c5260">The client said when they</text>
+<text data-card="pr" x="62" y="594" font-size="13.5" font-weight="400" fill="#4c5260">will pay. Drafting pauses</text>
+<text data-card="pr" x="62" y="613" font-size="13.5" font-weight="400" fill="#4c5260">until then. A missed date</text>
+<text data-card="pr" x="62" y="632" font-size="13.5" font-weight="400" fill="#4c5260">makes the next one firm.</text>
+<text data-card="dm" x="422" y="181" font-size="17" font-weight="800" fill="#0b0b0f">Gemini drafts</text>
+<text data-card="dm" x="422" y="205" font-size="13.5" font-weight="400" fill="#4c5260">From facts only: client name,</text>
+<text data-card="dm" x="422" y="224" font-size="13.5" font-weight="400" fill="#4c5260">amounts, dates, days late.</text>
+<text data-card="dm" x="422" y="243" font-size="13.5" font-weight="400" fill="#4c5260">No email or phone.</text>
+<text data-card="ck" x="422" y="334" font-size="17" font-weight="800" fill="#fff">Checks in code</text>
+<text data-card="ck" x="422" y="362" font-size="13.5" font-weight="400" fill="#cfdcff">Length, invoice number, every amount</text>
+<text data-card="ck" x="422" y="386" font-size="13.5" font-weight="400" fill="#cfdcff">No links or email addresses</text>
+<text data-card="ck" x="422" y="410" font-size="13.5" font-weight="400" fill="#cfdcff">Words match the tone</text>
+<text data-card="ck" x="422" y="434" font-size="13.5" font-weight="400" fill="#cfdcff">Sign-off added by code, not the model</text>
+<text data-card="tp" x="422" y="551" font-size="17" font-weight="800" fill="#0b0b0f">Template fallback</text>
+<text data-card="tp" x="422" y="575" font-size="13.5" font-weight="400" fill="#4c5260">In the client's language.</text>
+<text data-card="tp" x="422" y="594" font-size="13.5" font-weight="400" fill="#4c5260">Used when the draft fails a</text>
+<text data-card="tp" x="422" y="613" font-size="13.5" font-weight="400" fill="#4c5260">check, the model is down or</text>
+<text data-card="tp" x="422" y="632" font-size="13.5" font-weight="400" fill="#4c5260">the daily allowance is spent.</text>
+<text data-card="rv" x="790" y="331" font-size="17" font-weight="800" fill="#0b0b0f">Review</text>
+<text data-card="rv" x="790" y="355" font-size="13.5" font-weight="400" fill="#4c5260">Editable subject and</text>
+<text data-card="rv" x="790" y="374" font-size="13.5" font-weight="400" fill="#4c5260">message. Saved for 24</text>
+<text data-card="rv" x="790" y="393" font-size="13.5" font-weight="400" fill="#4c5260">hours. Nothing is sent</text>
+<text data-card="rv" x="790" y="412" font-size="13.5" font-weight="400" fill="#4c5260">yet.</text>
+<text data-card="sd" x="1050" y="184" font-size="17" font-weight="800" fill="#0a2a7a">One click sends</text>
+<text data-card="sd" x="1058" y="229" font-size="15" font-weight="700" fill="#0b0b0f">PayPal reminder</text>
+<text data-card="sd" x="1058" y="250" font-size="13.5" font-weight="400" fill="#4c5260">PayPal's own wording.</text>
+<text data-card="sd" x="1058" y="268" font-size="13.5" font-weight="400" fill="#4c5260">Two a day for the</text>
+<text data-card="sd" x="1058" y="286" font-size="13.5" font-weight="400" fill="#4c5260">account.</text>
+<text data-card="sd" x="1058" y="351" font-size="15" font-weight="700" fill="#0b0b0f">My own message</text>
+<text data-card="sd" x="1058" y="372" font-size="13.5" font-weight="400" fill="#4c5260">Email with the pay</text>
+<text data-card="sd" x="1058" y="390" font-size="13.5" font-weight="400" fill="#4c5260">link. “I sent it”</text>
+<text data-card="sd" x="1058" y="408" font-size="13.5" font-weight="400" fill="#4c5260">records it.</text>
+<text data-card="lg" x="1050" y="531" font-size="17" font-weight="800" fill="#0b0b0f">Logged once</text>
+<text data-card="lg" x="1050" y="555" font-size="13.5" font-weight="400" fill="#4c5260">Reminder log and an</text>
+<text data-card="lg" x="1050" y="574" font-size="13.5" font-weight="400" fill="#4c5260">activity row. The card</text>
+<text data-card="lg" x="1050" y="593" font-size="13.5" font-weight="400" fill="#4c5260">closes for the day.</text>
+<text class="lab" x="566" y="500" fill="#c42b22">fails</text>
+<text class="lab" x="714" y="375" fill="#0e8a4f">passes</text>
+<g class="badge" data-n="1"><circle cx="316" cy="174" r="12" fill="#0e8a4f" stroke="#fff" stroke-width="2"/><text x="316" y="178.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">1</text></g>
+<g class="badge" data-n="2"><circle cx="316" cy="264" r="12" fill="#8a4f00" stroke="#fff" stroke-width="2"/><text x="316" y="268.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">2</text></g>
+<g class="badge" data-n="3"><circle cx="316" cy="546" r="12" fill="#e08a00" stroke="#fff" stroke-width="2"/><text x="316" y="550.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">3</text></g>
+<g class="badge" data-n="4"><circle cx="686" cy="176" r="12" fill="#7c3aed" stroke="#fff" stroke-width="2"/><text x="686" y="180.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">4</text></g>
+<g class="badge" data-n="5"><circle cx="686" cy="326" r="12" fill="#c42b22" stroke="#fff" stroke-width="2"/><text x="686" y="330.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">5</text></g>
+<g class="badge" data-n="6"><circle cx="956" cy="326" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="956" y="330.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">6</text></g>
+<g class="badge" data-n="7"><circle cx="1214" cy="176" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="1214" y="180.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">7</text></g>
+<g class="badge" data-n="8"><circle cx="1216" cy="526" r="12" fill="#0e8a4f" stroke="#fff" stroke-width="2"/><text x="1216" y="530.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">8</text></g>
+<g id="steps">
+<rect class="hl" x="36" y="146" width="308" height="88" rx="24" fill="none" stroke="#0e8a4f" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.0300;0.1387"/></rect>
+<circle class="hl" cx="316" cy="174" r="18" fill="none" stroke="#0e8a4f" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.0300;0.1387"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.0300;0.1387"/><circle r="16" fill="#0e8a4f" opacity=".18"/><circle r="8" fill="#0e8a4f" stroke="#ffffff" stroke-width="3"/><animateMotion dur="22s" repeatCount="indefinite" path="M340 190 H400" keyPoints="0;0;1;1" keyTimes="0;0.0409;0.1170;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.0300;0.1387"/><circle cx="64" cy="96" r="15" fill="#0e8a4f"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">1</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">An invoice nearing its due date gets a heads-up, never a late notice</text></g>
+<rect class="hl" x="36" y="236" width="308" height="268" rx="24" fill="none" stroke="#8a4f00" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1387;0.2475"/></rect>
+<circle class="hl" cx="316" cy="264" r="18" fill="none" stroke="#8a4f00" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1387;0.2475"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1387;0.2475"/><circle r="16" fill="#8a4f00" opacity=".18"/><circle r="8" fill="#8a4f00" stroke="#ffffff" stroke-width="3"/><animateMotion dur="22s" repeatCount="indefinite" path="M340 370 L348 370 Q356 370 356 362 L356 202 Q356 190 368 190 L400 190" keyPoints="0;0;1;1" keyTimes="0;0.1496;0.2258;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1387;0.2475"/><circle cx="64" cy="96" r="15" fill="#8a4f00"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">2</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">A late invoice gets gentle, firm or final from its facts and history</text></g>
+<rect class="hl" x="36" y="516" width="308" height="138" rx="24" fill="none" stroke="#e08a00" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.2475;0.3563"/></rect>
+<circle class="hl" cx="316" cy="546" r="18" fill="none" stroke="#e08a00" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.2475;0.3563"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.2475;0.3563"/><circle r="16" fill="#e08a00" opacity=".18"/><circle r="8" fill="#e08a00" stroke="#ffffff" stroke-width="3"/><animateMotion dur="22s" repeatCount="indefinite" path="M340 595 L360 595 Q372 595 372 583 L372 257 Q372 245 384 245 L400 245" keyPoints="0;0;1;1" keyTimes="0;0.2584;0.3345;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.2475;0.3563"/><circle cx="64" cy="96" r="15" fill="#e08a00"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">3</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">A promised date pauses drafting until that date</text></g>
+<rect class="hl" x="396" y="146" width="318" height="120" rx="24" fill="none" stroke="#7c3aed" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.3563;0.4650"/></rect>
+<circle class="hl" cx="686" cy="176" r="18" fill="none" stroke="#7c3aed" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.3563;0.4650"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.3563;0.4650"/><circle r="16" fill="#7c3aed" opacity=".18"/><circle r="8" fill="#7c3aed" stroke="#ffffff" stroke-width="3"/><animateMotion dur="22s" repeatCount="indefinite" path="M555 262 V300" keyPoints="0;0;1;1" keyTimes="0;0.3671;0.4433;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.3563;0.4650"/><circle cx="64" cy="96" r="15" fill="#7c3aed"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">4</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">Gemini writes a draft from facts only. No contact details reach it</text></g>
+<rect class="hl" x="396" y="296" width="318" height="178" rx="24" fill="none" stroke="#c42b22" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.4650;0.5738"/></rect>
+<rect class="hl" x="396" y="516" width="318" height="158" rx="24" fill="none" stroke="#c42b22" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.4650;0.5738"/></rect>
+<circle class="hl" cx="686" cy="326" r="18" fill="none" stroke="#c42b22" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.4650;0.5738"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.4650;0.5738"/><circle r="16" fill="#c42b22" opacity=".18"/><circle r="8" fill="#c42b22" stroke="#ffffff" stroke-width="3"/><animateMotion dur="22s" repeatCount="indefinite" path="M555 470 V520" keyPoints="0;0;1;1" keyTimes="0;0.4759;0.5520;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.4650;0.5738"/><circle cx="64" cy="96" r="15" fill="#c42b22"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">5</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">Code checks it. A draft that fails becomes a template</text></g>
+<rect class="hl" x="766" y="296" width="218" height="178" rx="24" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5738;0.6825"/></rect>
+<circle class="hl" cx="956" cy="326" r="18" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5738;0.6825"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5738;0.6825"/><circle r="16" fill="#1d63f0" opacity=".18"/><circle r="8" fill="#1d63f0" stroke="#ffffff" stroke-width="3"/><animateMotion dur="22s" repeatCount="indefinite" path="M710 385 H770" keyPoints="0;0;1;1" keyTimes="0;0.5846;0.6607;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5738;0.6825"/><circle cx="64" cy="96" r="15" fill="#1d63f0"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">6</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">The draft opens for review. The freelancer may edit it</text></g>
+<rect class="hl" x="1038" y="200" width="194" height="116" rx="24" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.6825;0.7913"/></rect>
+<rect class="hl" x="1038" y="322" width="194" height="116" rx="24" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.6825;0.7913"/></rect>
+<circle class="hl" cx="1214" cy="176" r="18" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.6825;0.7913"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.6825;0.7913"/><circle r="16" fill="#1d63f0" opacity=".18"/><circle r="8" fill="#1d63f0" stroke="#ffffff" stroke-width="3"/><animateMotion dur="22s" repeatCount="indefinite" path="M980 385 H1030" keyPoints="0;0;1;1" keyTimes="0;0.6934;0.7695;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.6825;0.7913"/><circle cx="64" cy="96" r="15" fill="#1d63f0"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">7</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">The freelancer sends PayPal's reminder or their own message</text></g>
+<rect class="hl" x="1026" y="496" width="218" height="178" rx="24" fill="none" stroke="#0e8a4f" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.7913;0.9000"/></rect>
+<circle class="hl" cx="1216" cy="526" r="18" fill="none" stroke="#0e8a4f" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.7913;0.9000"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.7913;0.9000"/><circle r="16" fill="#0e8a4f" opacity=".18"/><circle r="8" fill="#0e8a4f" stroke="#ffffff" stroke-width="3"/><animateMotion dur="22s" repeatCount="indefinite" path="M1135 450 V500" keyPoints="0;0;1;1" keyTimes="0;0.8021;0.8783;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="22s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.7913;0.9000"/><circle cx="64" cy="96" r="15" fill="#0e8a4f"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">8</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">The send is logged once and the card closes for the day</text></g>
+</g>
+<rect class="prog" x="48" y="114" width="600" height="4" rx="2" fill="#0a2a7a" opacity=".1"/><rect class="prog" x="48" y="114" width="600" height="4" rx="2" fill="#0a2a7a"><animate attributeName="width" dur="22s" repeatCount="indefinite" values="0;600;600" keyTimes="0;0.9;1"/></rect>
+</svg>

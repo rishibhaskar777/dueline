@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 840" width="1280" height="840" role="img" aria-labelledby="t d">
+<title id="t">Inside the Dueline app</title>
+<desc id="d">The layers of the app from top to bottom: screens, the typed api-client, the proxy that checks the signed demo cookie, route handlers that validate every request, the modules in src/lib grouped by job, and the store, which is Postgres or memory. Outside systems sit on the right: PayPal, Gemini, ECB rates and Postgres. In offline mode a fake PayPal, a small parser and templates, saved rates and the in-memory store replace them. The animation walks one request down the layers to PayPal and the store, then back up to the screen.</desc>
+<style>
+  text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+  .s{font-size:13.5px;fill:#4c5260}
+  .lab{font-size:12.5px;font-weight:700;paint-order:stroke;stroke:#f1f5fc;stroke-width:5px;stroke-linejoin:round}
+  .note{paint-order:stroke;stroke:#f1f5fc;stroke-width:4px;stroke-linejoin:round}
+  .flow{fill:none;stroke-width:3;stroke-linecap:round;stroke-dasharray:2 12;animation:flow 1.4s linear infinite}
+  .rev{animation-direction:reverse}
+  .slow{animation-duration:2.4s}
+  .rail{fill:none;stroke-width:3;stroke-opacity:.18}
+  .pulse{animation:pulse 2.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+  @keyframes flow{to{stroke-dashoffset:-28}}
+  @keyframes pulse{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:.9;transform:scale(1.35)}}
+  @media (prefers-reduced-motion:reduce){.flow,.pulse{animation:none}.mover,.hl,.prog,.cap,.anim{display:none}}
+</style>
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef3fd"/><stop offset="1" stop-color="#f7f9fd"/></linearGradient>
+  <linearGradient id="navy" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0a2a7a"/><stop offset="1" stop-color="#071c57"/></linearGradient>
+  <filter id="sh" x="-10%" y="-10%" width="120%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0a1e50" flood-opacity=".10"/></filter>
+  <marker id="ah1d63f0" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M1 1 L13 7 L1 13 z" fill="#1d63f0"/></marker>
+  <marker id="ah0e8a4f" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M1 1 L13 7 L1 13 z" fill="#0e8a4f"/></marker>
+  <marker id="ah7c3aed" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M1 1 L13 7 L1 13 z" fill="#7c3aed"/></marker>
+  <marker id="ah0a2a7a" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M1 1 L13 7 L1 13 z" fill="#0a2a7a"/></marker>
+</defs>
+<rect width="1280" height="840" rx="28" fill="url(#bg)"/>
+<text x="48" y="58" font-size="15" font-weight="800" fill="#0a2a7a" letter-spacing="1">INSIDE THE APP</text>
+<text x="1232" y="58" class="s" text-anchor="end">One request, from a screen down to PayPal and the store, and back.</text>
+<path class="rail" stroke="#1d63f0" d="M770 212 V236" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M770 212 V236"/>
+<path class="rail" stroke="#0e8a4f" d="M808 236 V212" marker-end="url(#ah0e8a4f)"/>
+<path class="flow" stroke="#0e8a4f" d="M808 236 V212"/>
+<path class="rail" stroke="#1d63f0" d="M770 298 V322" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M770 298 V322"/>
+<path class="rail" stroke="#0e8a4f" d="M808 322 V298" marker-end="url(#ah0e8a4f)"/>
+<path class="flow" stroke="#0e8a4f" d="M808 322 V298"/>
+<path class="rail" stroke="#1d63f0" d="M770 384 V408" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M770 384 V408"/>
+<path class="rail" stroke="#0e8a4f" d="M808 408 V384" marker-end="url(#ah0e8a4f)"/>
+<path class="flow" stroke="#0e8a4f" d="M808 408 V384"/>
+<path class="rail" stroke="#1d63f0" d="M770 470 V494" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M770 470 V494"/>
+<path class="rail" stroke="#0e8a4f" d="M808 494 V470" marker-end="url(#ah0e8a4f)"/>
+<path class="flow" stroke="#0e8a4f" d="M808 494 V470"/>
+<path class="rail" stroke="#1d63f0" d="M770 704 V728" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M770 704 V728"/>
+<path class="rail" stroke="#0e8a4f" d="M808 728 V704" marker-end="url(#ah0e8a4f)"/>
+<path class="flow" stroke="#0e8a4f" d="M808 728 V704"/>
+<path class="rail" stroke="#1d63f0" d="M840 525 H900" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M840 525 H900"/>
+<path class="rail" stroke="#7c3aed" d="M840 595 H900" marker-end="url(#ah7c3aed)"/>
+<path class="flow" stroke="#7c3aed" d="M840 595 H900"/>
+<path class="rail" stroke="#1d63f0" d="M900 665 H840" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M900 665 H840"/>
+<path class="rail" stroke="#0a2a7a" d="M840 759 H900" marker-end="url(#ah0a2a7a)"/>
+<path class="flow" stroke="#0a2a7a" d="M840 759 H900"/>
+<g filter="url(#sh)"><rect data-id="l1" x="40" y="150" width="800" height="62" rx="18" fill="#ffffff"/></g>
+<g filter="url(#sh)"><rect data-id="l2" x="40" y="236" width="800" height="62" rx="18" fill="url(#navy)"/></g>
+<g filter="url(#sh)"><rect data-id="l3" x="40" y="322" width="800" height="62" rx="18" fill="url(#navy)"/></g>
+<g filter="url(#sh)"><rect data-id="l4" x="40" y="408" width="800" height="62" rx="18" fill="url(#navy)"/></g>
+<g filter="url(#sh)"><rect data-id="l5" x="40" y="494" width="800" height="210" rx="18" fill="#ffffff"/></g>
+<rect data-id="m0" x="60" y="542" width="242" height="68" rx="14" fill="#eef3fd"/>
+<rect data-id="m1" x="314" y="542" width="242" height="68" rx="14" fill="#eef3fd"/>
+<rect data-id="m2" x="568" y="542" width="242" height="68" rx="14" fill="#eef3fd"/>
+<rect data-id="m3" x="60" y="622" width="242" height="68" rx="14" fill="#eef3fd"/>
+<rect data-id="m4" x="314" y="622" width="242" height="68" rx="14" fill="#eef3fd"/>
+<rect data-id="m5" x="568" y="622" width="242" height="68" rx="14" fill="#eef3fd"/>
+<g filter="url(#sh)"><rect data-id="l6" x="40" y="728" width="800" height="62" rx="18" fill="url(#navy)"/></g>
+<g filter="url(#sh)"><rect data-id="pp" x="900" y="494" width="340" height="62" rx="22" fill="#ffffff" stroke="#1d63f0" stroke-width="2"/></g>
+<g filter="url(#sh)"><rect data-id="ge" x="900" y="564" width="340" height="62" rx="22" fill="#f3efff"/></g>
+<g filter="url(#sh)"><rect data-id="ec" x="900" y="634" width="340" height="62" rx="22" fill="#ffffff"/></g>
+<g filter="url(#sh)"><rect data-id="pg" x="900" y="728" width="340" height="62" rx="22" fill="#ffffff"/></g>
+<g filter="url(#sh)"><rect data-id="off" x="900" y="150" width="340" height="320" rx="22" fill="#ffffff" stroke="#7d89aa" stroke-width="2.5" stroke-dasharray="9 6"/></g>
+<rect data-id="o0" x="922" y="246" width="296" height="42" rx="14" fill="#f4f5f8"/>
+<rect data-id="o1" x="922" y="296" width="296" height="42" rx="14" fill="#f4f5f8"/>
+<rect data-id="o2" x="922" y="346" width="296" height="42" rx="14" fill="#f4f5f8"/>
+<rect data-id="o3" x="922" y="396" width="296" height="42" rx="14" fill="#f4f5f8"/>
+<text data-card="l1" x="62" y="176" font-size="17" font-weight="800" fill="#0b0b0f">Screens</text>
+<text data-card="l1" x="62" y="198" font-size="13.5" font-weight="400" fill="#4c5260">Client components: Home, Clients, New invoice, Nudges, Export, Fees and rates, Profile</text>
+<text data-card="l2" x="62" y="262" font-size="17" font-weight="800" fill="#fff">api-client</text>
+<text data-card="l2" x="62" y="284" font-size="13.5" font-weight="400" fill="#cfdcff">src/lib/api-client.ts: one typed function per endpoint, the only way to the server</text>
+<text data-card="l3" x="62" y="348" font-size="17" font-weight="800" fill="#fff">Proxy</text>
+<text data-card="l3" x="62" y="370" font-size="13.5" font-weight="400" fill="#cfdcff">src/proxy.ts: checks the signed demo cookie, no database or PayPal call</text>
+<text data-card="l4" x="62" y="434" font-size="17" font-weight="800" fill="#fff">Route handlers</text>
+<text data-card="l4" x="62" y="456" font-size="13.5" font-weight="400" fill="#cfdcff">src/app/api: zod on every body, one { error: { code, message } } shape</text>
+<text data-card="l5" x="62" y="522" font-size="17" font-weight="800" fill="#0b0b0f">Modules in src/lib, grouped by job</text>
+<text data-card="l5" x="76" y="567" font-size="15" font-weight="700" fill="#0b0b0f">Money and rates</text>
+<text data-card="l5" x="76" y="588" font-size="13.5" font-weight="400" fill="#4c5260">money, rates, payouts</text>
+<text data-card="l5" x="330" y="567" font-size="15" font-weight="700" fill="#0b0b0f">PayPal</text>
+<text data-card="l5" x="330" y="588" font-size="13.5" font-weight="400" fill="#4c5260">paypal, invoices, requests</text>
+<text data-card="l5" x="584" y="567" font-size="15" font-weight="700" fill="#0b0b0f">AI and privacy</text>
+<text data-card="l5" x="584" y="588" font-size="13.5" font-weight="400" fill="#4c5260">ai, privacy, reminders</text>
+<text data-card="l5" x="76" y="647" font-size="15" font-weight="700" fill="#0b0b0f">Risk and export</text>
+<text data-card="l5" x="76" y="668" font-size="13.5" font-weight="400" fill="#4c5260">risk, export, insights, clients</text>
+<text data-card="l5" x="330" y="647" font-size="15" font-weight="700" fill="#0b0b0f">Automation</text>
+<text data-card="l5" x="330" y="668" font-size="13.5" font-weight="400" fill="#4c5260">automation, promises, demo</text>
+<text data-card="l5" x="584" y="647" font-size="15" font-weight="700" fill="#0b0b0f">Foundations</text>
+<text data-card="l5" x="584" y="668" font-size="13.5" font-weight="400" fill="#4c5260">env, clock, settings, profile</text>
+<text data-card="l6" x="62" y="754" font-size="17" font-weight="800" fill="#fff">Store</text>
+<text data-card="l6" x="62" y="776" font-size="13.5" font-weight="400" fill="#cfdcff">One interface: Postgres, or memory when no database is set</text>
+<text data-card="pp" x="920" y="525" font-size="17" font-weight="800" fill="#0a2a7a">PayPal</text>
+<text data-card="pp" x="920" y="549" font-size="13.5" font-weight="400" fill="#4c5260">Invoicing v2, Payments, Transactions</text>
+<text data-card="ge" x="920" y="595" font-size="17" font-weight="800" fill="#0b0b0f">Gemini</text>
+<text data-card="ge" x="920" y="619" font-size="13.5" font-weight="400" fill="#4c5260">Masked chat in, draft out</text>
+<text data-card="ec" x="920" y="665" font-size="17" font-weight="800" fill="#0b0b0f">ECB rates</text>
+<text data-card="ec" x="920" y="689" font-size="13.5" font-weight="400" fill="#4c5260">Daily reference rates via Frankfurter</text>
+<text data-card="pg" x="920" y="759" font-size="17" font-weight="800" fill="#0b0b0f">Postgres</text>
+<text data-card="pg" x="920" y="783" font-size="13.5" font-weight="400" fill="#4c5260">Neon, one pooled connection string</text>
+<text data-card="off" x="922" y="184" font-size="19" font-weight="800" fill="#0b0b0f">Offline mode</text>
+<text data-card="off" x="922" y="208" font-size="13.5" font-weight="400" fill="#4c5260">One switch swaps the four systems</text>
+<text data-card="off" x="922" y="227" font-size="13.5" font-weight="400" fill="#4c5260">below for code inside the app:</text>
+<text data-card="off" x="938" y="271" font-size="15" font-weight="700" fill="#0b0b0f">PayPal</text>
+<text data-card="off" x="1010" y="272" font-size="13.5" font-weight="400" fill="#4c5260">an in-memory fake</text>
+<text data-card="off" x="938" y="321" font-size="15" font-weight="700" fill="#0b0b0f">Gemini</text>
+<text data-card="off" x="1010" y="322" font-size="13.5" font-weight="400" fill="#4c5260">a small parser and templates</text>
+<text data-card="off" x="938" y="371" font-size="15" font-weight="700" fill="#0b0b0f">ECB rates</text>
+<text data-card="off" x="1010" y="372" font-size="13.5" font-weight="400" fill="#4c5260">the rates saved in settings</text>
+<text data-card="off" x="938" y="421" font-size="15" font-weight="700" fill="#0b0b0f">Postgres</text>
+<text data-card="off" x="1010" y="422" font-size="13.5" font-weight="400" fill="#4c5260">the in-memory store</text>
+<text data-card="off" x="922" y="458" font-size="13.5" font-weight="400" fill="#4c5260">The checks and the routes do not change.</text>
+<text class="lab" x="64" y="229" fill="#0a2a7a">calls a typed function</text>
+<text class="lab" x="64" y="315" fill="#0a2a7a">JSON over HTTPS</text>
+<text class="lab" x="64" y="401" fill="#0a2a7a">cookie checked</text>
+<text class="lab" x="64" y="487" fill="#0a2a7a">body validated, work handed on</text>
+<text class="lab" x="64" y="721" fill="#0a2a7a">reads and writes</text>
+<g class="badge" data-n="1"><circle cx="748" cy="224" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="748" y="228.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">1</text></g>
+<g class="badge" data-n="2"><circle cx="748" cy="310" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="748" y="314.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">2</text></g>
+<g class="badge" data-n="3"><circle cx="748" cy="396" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="748" y="400.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">3</text></g>
+<g class="badge" data-n="4"><circle cx="748" cy="482" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="748" y="486.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">4</text></g>
+<g class="badge" data-n="5"><circle cx="862" cy="505" r="12" fill="#7c3aed" stroke="#fff" stroke-width="2"/><text x="862" y="509.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">5</text></g>
+<g class="badge" data-n="6"><circle cx="748" cy="716" r="12" fill="#0a2a7a" stroke="#fff" stroke-width="2"/><text x="748" y="720.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">6</text></g>
+<g class="badge" data-n="7"><circle cx="830" cy="482" r="12" fill="#0e8a4f" stroke="#fff" stroke-width="2"/><text x="830" y="486.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">7</text></g>
+<g class="badge" data-n="8"><circle cx="830" cy="224" r="12" fill="#0e8a4f" stroke="#fff" stroke-width="2"/><text x="830" y="228.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">8</text></g>
+<g id="steps">
+<rect class="hl" x="36" y="146" width="808" height="70" rx="24" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.0300;0.1387"/></rect>
+<circle class="hl" cx="748" cy="224" r="18" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.0300;0.1387"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.0300;0.1387"/><circle r="16" fill="#1d63f0" opacity=".18"/><circle r="8" fill="#1d63f0" stroke="#ffffff" stroke-width="3"/><animateMotion dur="20s" repeatCount="indefinite" path="M770 212 V236" keyPoints="0;0;1;1" keyTimes="0;0.0409;0.1170;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.0300;0.1387"/><circle cx="64" cy="96" r="15" fill="#1d63f0"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">1</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">A screen calls a typed function in api-client</text></g>
+<rect class="hl" x="36" y="232" width="808" height="70" rx="24" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1387;0.2475"/></rect>
+<circle class="hl" cx="748" cy="310" r="18" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1387;0.2475"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1387;0.2475"/><circle r="16" fill="#1d63f0" opacity=".18"/><circle r="8" fill="#1d63f0" stroke="#ffffff" stroke-width="3"/><animateMotion dur="20s" repeatCount="indefinite" path="M770 298 V322" keyPoints="0;0;1;1" keyTimes="0;0.1496;0.2258;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1387;0.2475"/><circle cx="64" cy="96" r="15" fill="#1d63f0"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">2</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">The call goes to the server as JSON over HTTPS</text></g>
+<rect class="hl" x="36" y="318" width="808" height="70" rx="24" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.2475;0.3563"/></rect>
+<circle class="hl" cx="748" cy="396" r="18" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.2475;0.3563"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.2475;0.3563"/><circle r="16" fill="#1d63f0" opacity=".18"/><circle r="8" fill="#1d63f0" stroke="#ffffff" stroke-width="3"/><animateMotion dur="20s" repeatCount="indefinite" path="M770 384 V408" keyPoints="0;0;1;1" keyTimes="0;0.2584;0.3345;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.2475;0.3563"/><circle cx="64" cy="96" r="15" fill="#1d63f0"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">3</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">The proxy checks the signed cookie and lets the request through</text></g>
+<rect class="hl" x="36" y="404" width="808" height="70" rx="24" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.3563;0.4650"/></rect>
+<circle class="hl" cx="748" cy="482" r="18" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.3563;0.4650"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.3563;0.4650"/><circle r="16" fill="#1d63f0" opacity=".18"/><circle r="8" fill="#1d63f0" stroke="#ffffff" stroke-width="3"/><animateMotion dur="20s" repeatCount="indefinite" path="M770 470 V494" keyPoints="0;0;1;1" keyTimes="0;0.3671;0.4433;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.3563;0.4650"/><circle cx="64" cy="96" r="15" fill="#1d63f0"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">4</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">The route validates the body and hands the work to a module</text></g>
+<rect class="hl" x="310" y="538" width="250" height="76" rx="24" fill="none" stroke="#7c3aed" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.4650;0.5738"/></rect>
+<rect class="hl" x="896" y="490" width="348" height="70" rx="24" fill="none" stroke="#7c3aed" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.4650;0.5738"/></rect>
+<circle class="hl" cx="862" cy="505" r="18" fill="none" stroke="#7c3aed" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.4650;0.5738"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.4650;0.5738"/><circle r="16" fill="#7c3aed" opacity=".18"/><circle r="8" fill="#7c3aed" stroke="#ffffff" stroke-width="3"/><animateMotion dur="20s" repeatCount="indefinite" path="M840 525 H900" keyPoints="0;0;1;1" keyTimes="0;0.4759;0.5520;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.4650;0.5738"/><circle cx="64" cy="96" r="15" fill="#7c3aed"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">5</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">The module asks PayPal, Gemini or the rate service</text></g>
+<rect class="hl" x="36" y="724" width="808" height="70" rx="24" fill="none" stroke="#0a2a7a" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5738;0.6825"/></rect>
+<rect class="hl" x="896" y="724" width="348" height="70" rx="24" fill="none" stroke="#0a2a7a" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5738;0.6825"/></rect>
+<circle class="hl" cx="748" cy="716" r="18" fill="none" stroke="#0a2a7a" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5738;0.6825"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5738;0.6825"/><circle r="16" fill="#0a2a7a" opacity=".18"/><circle r="8" fill="#0a2a7a" stroke="#ffffff" stroke-width="3"/><animateMotion dur="20s" repeatCount="indefinite" path="M770 704 V759 H900" keyPoints="0;0;1;1" keyTimes="0;0.5846;0.6607;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5738;0.6825"/><circle cx="64" cy="96" r="15" fill="#0a2a7a"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">6</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">It reads or writes the store, which is Postgres or memory</text></g>
+<rect class="hl" x="36" y="404" width="808" height="70" rx="24" fill="none" stroke="#0e8a4f" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.6825;0.7913"/></rect>
+<circle class="hl" cx="830" cy="482" r="18" fill="none" stroke="#0e8a4f" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.6825;0.7913"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.6825;0.7913"/><circle r="16" fill="#0e8a4f" opacity=".18"/><circle r="8" fill="#0e8a4f" stroke="#ffffff" stroke-width="3"/><animateMotion dur="20s" repeatCount="indefinite" path="M808 494 V150" keyPoints="0;0;1;1" keyTimes="0;0.6934;0.7695;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.6825;0.7913"/><circle cx="64" cy="96" r="15" fill="#0e8a4f"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">7</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">The answer climbs back, checked in code, as { ok } or { error }</text></g>
+<rect class="hl" x="36" y="146" width="808" height="70" rx="24" fill="none" stroke="#0e8a4f" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.7913;0.9000"/></rect>
+<circle class="hl" cx="830" cy="224" r="18" fill="none" stroke="#0e8a4f" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.7913;0.9000"/></circle>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.7913;0.9000"/><circle r="16" fill="#0e8a4f" opacity=".18"/><circle r="8" fill="#0e8a4f" stroke="#ffffff" stroke-width="3"/><animateMotion dur="20s" repeatCount="indefinite" path="M808 236 V212" keyPoints="0;0;1;1" keyTimes="0;0.8021;0.8783;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="20s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.7913;0.9000"/><circle cx="64" cy="96" r="15" fill="#0e8a4f"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">8</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">api-client turns it into data or an error, and the screen draws it</text></g>
+</g>
+<rect class="prog" x="48" y="114" width="600" height="4" rx="2" fill="#0a2a7a" opacity=".1"/><rect class="prog" x="48" y="114" width="600" height="4" rx="2" fill="#0a2a7a"><animate attributeName="width" dur="20s" repeatCount="indefinite" values="0;600;600" keyTimes="0;0.9;1"/></rect>
+</svg>

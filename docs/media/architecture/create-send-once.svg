@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 990" width="1280" height="990" role="img" aria-labelledby="t d">
+<title id="t">Creating and sending an invoice exactly once</title>
+<desc id="d">A sequence diagram with four lifelines: the user, the route handler, the store and PayPal. The route claims the request ID in the store with a hash of the body, creates a draft invoice at PayPal with the request ID in its memo, sends it, reads the invoice back and stores the result before answering the user. The lower half replays the same request ID: the store already holds a completed result, so the route returns it to the user and PayPal is not called.</desc>
+<style>
+  text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+  .s{font-size:13.5px;fill:#4c5260}
+  .lab{font-size:12.5px;font-weight:700;paint-order:stroke;stroke:#f1f5fc;stroke-width:5px;stroke-linejoin:round}
+  .note{paint-order:stroke;stroke:#f1f5fc;stroke-width:4px;stroke-linejoin:round}
+  .flow{fill:none;stroke-width:3;stroke-linecap:round;stroke-dasharray:2 12;animation:flow 1.4s linear infinite}
+  .rev{animation-direction:reverse}
+  .slow{animation-duration:2.4s}
+  .rail{fill:none;stroke-width:3;stroke-opacity:.18}
+  .pulse{animation:pulse 2.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+  @keyframes flow{to{stroke-dashoffset:-28}}
+  @keyframes pulse{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:.9;transform:scale(1.35)}}
+  @media (prefers-reduced-motion:reduce){.flow,.pulse{animation:none}.mover,.hl,.prog,.cap,.anim{display:none}}
+</style>
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef3fd"/><stop offset="1" stop-color="#f7f9fd"/></linearGradient>
+  <linearGradient id="navy" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0a2a7a"/><stop offset="1" stop-color="#071c57"/></linearGradient>
+  <filter id="sh" x="-10%" y="-10%" width="120%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0a1e50" flood-opacity=".10"/></filter>
+  <marker id="ah1d63f0" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M1 1 L13 7 L1 13 z" fill="#1d63f0"/></marker>
+  <marker id="ah0a2a7a" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M1 1 L13 7 L1 13 z" fill="#0a2a7a"/></marker>
+  <marker id="ah0e8a4f" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto"><path d="M1 1 L13 7 L1 13 z" fill="#0e8a4f"/></marker>
+</defs>
+<rect width="1280" height="990" rx="28" fill="url(#bg)"/>
+<text x="48" y="58" font-size="15" font-weight="800" fill="#0a2a7a" letter-spacing="1">CREATING AND SENDING, EXACTLY ONCE</text>
+<text x="1232" y="58" class="s" text-anchor="end">A repeated request ID returns the stored result and never calls PayPal.</text>
+<path d="M1120 192 V960" stroke="#9aa6c4" stroke-width="2" stroke-dasharray="3 7" fill="none"/>
+<path d="M810 192 V960" stroke="#9aa6c4" stroke-width="2" stroke-dasharray="3 7" fill="none"/>
+<path d="M490 192 V960" stroke="#9aa6c4" stroke-width="2" stroke-dasharray="3 7" fill="none"/>
+<path d="M170 192 V960" stroke="#9aa6c4" stroke-width="2" stroke-dasharray="3 7" fill="none"/>
+<path class="rail" stroke="#1d63f0" d="M170 240 H490" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M170 240 H490"/>
+<path class="rail" stroke="#0a2a7a" d="M490 292 L538 292 Q546 292 546 300 L546 308 Q546 316 538 316 L498 316" marker-end="url(#ah0a2a7a)"/>
+<path class="flow" stroke="#0a2a7a" d="M490 292 L538 292 Q546 292 546 300 L546 308 Q546 316 538 316 L498 316"/>
+<path class="rail" stroke="#1d63f0" d="M490 372 H810" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M490 372 H810"/>
+<path class="rail" stroke="#0e8a4f" d="M810 398 H490" marker-end="url(#ah0e8a4f)"/>
+<path class="flow" stroke="#0e8a4f" d="M810 398 H490"/>
+<path class="rail" stroke="#1d63f0" d="M490 448 H1120" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M490 448 H1120"/>
+<path class="rail" stroke="#0e8a4f" d="M1120 474 H490" marker-end="url(#ah0e8a4f)"/>
+<path class="flow" stroke="#0e8a4f" d="M1120 474 H490"/>
+<path class="rail" stroke="#1d63f0" d="M490 524 H1120" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M490 524 H1120"/>
+<path class="rail" stroke="#0e8a4f" d="M1120 550 H490" marker-end="url(#ah0e8a4f)"/>
+<path class="flow" stroke="#0e8a4f" d="M1120 550 H490"/>
+<path class="rail" stroke="#1d63f0" d="M490 600 H1120" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M490 600 H1120"/>
+<path class="rail" stroke="#0e8a4f" d="M1120 626 H490" marker-end="url(#ah0e8a4f)"/>
+<path class="flow" stroke="#0e8a4f" d="M1120 626 H490"/>
+<path class="rail" stroke="#1d63f0" d="M490 676 H810" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M490 676 H810"/>
+<path class="rail" stroke="#0e8a4f" d="M490 724 H170" marker-end="url(#ah0e8a4f)"/>
+<path class="flow" stroke="#0e8a4f" d="M490 724 H170"/>
+<path d="M40 776 H1240" stroke="#9aa6c4" stroke-width="2" stroke-dasharray="8 8" fill="none"/>
+<path class="rail" stroke="#1d63f0" d="M170 836 H490" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M170 836 H490"/>
+<path class="rail" stroke="#1d63f0" d="M490 888 H810" marker-end="url(#ah1d63f0)"/>
+<path class="flow" stroke="#1d63f0" d="M490 888 H810"/>
+<path class="rail" stroke="#0e8a4f" d="M810 914 H490" marker-end="url(#ah0e8a4f)"/>
+<path class="flow" stroke="#0e8a4f" d="M810 914 H490"/>
+<path class="rail" stroke="#0e8a4f" d="M490 958 H170" marker-end="url(#ah0e8a4f)"/>
+<path class="flow" stroke="#0e8a4f" d="M490 958 H170"/>
+<g filter="url(#sh)"><rect data-id="hu" x="70" y="140" width="200" height="52" rx="16" fill="#ffffff"/></g>
+<g filter="url(#sh)"><rect data-id="hr" x="390" y="140" width="200" height="52" rx="16" fill="url(#navy)"/></g>
+<g filter="url(#sh)"><rect data-id="hs" x="710" y="140" width="200" height="52" rx="16" fill="#ffffff"/></g>
+<g filter="url(#sh)"><rect data-id="hp" x="1020" y="140" width="200" height="52" rx="16" fill="#ffffff" stroke="#1d63f0" stroke-width="2"/></g>
+<text data-card="hu" x="170" text-anchor="middle" y="171" font-size="17" font-weight="800" fill="#0b0b0f">User</text>
+<text data-card="hr" x="490" text-anchor="middle" y="171" font-size="17" font-weight="800" fill="#ffffff">Route handler</text>
+<text data-card="hs" x="810" text-anchor="middle" y="171" font-size="17" font-weight="800" fill="#0b0b0f">Store</text>
+<text data-card="hp" x="1120" text-anchor="middle" y="171" font-size="17" font-weight="800" fill="#0a2a7a">PayPal</text>
+<text class="lab" x="214" y="231" fill="#1d63f0">Create invoice: draft and request ID</text>
+<g class="badge" data-n="1"><circle cx="194" cy="228" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="194" y="232.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">1</text></g>
+<text class="lab" x="560" y="309" fill="#0a2a7a">Recipient must be a sandbox buyer</text>
+<g class="badge" data-n="2"><circle cx="466" cy="304" r="12" fill="#0a2a7a" stroke="#fff" stroke-width="2"/><text x="466" y="308.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">2</text></g>
+<text class="lab" x="534" y="363" fill="#1d63f0">Claim the request ID with the body hash</text>
+<g class="badge" data-n="3"><circle cx="514" cy="360" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="514" y="364.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">3</text></g>
+<text class="lab" x="534" y="415" fill="#0b6b3c">claimed</text>
+<text class="lab" x="832" y="439" fill="#1d63f0">Create a draft, memo holds the request ID</text>
+<g class="badge" data-n="4"><circle cx="514" cy="436" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="514" y="440.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">4</text></g>
+<text class="lab" x="832" y="491" fill="#0b6b3c">draft ID</text>
+<text class="lab" x="832" y="515" fill="#1d63f0">Send the invoice</text>
+<g class="badge" data-n="5"><circle cx="514" cy="512" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="514" y="516.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">5</text></g>
+<text class="lab" x="832" y="567" fill="#0b6b3c">sent</text>
+<text class="lab" x="832" y="591" fill="#1d63f0">Read the invoice again</text>
+<g class="badge" data-n="6"><circle cx="514" cy="588" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="514" y="592.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">6</text></g>
+<text class="lab" x="832" y="643" fill="#0b6b3c">current status</text>
+<text class="lab" x="534" y="667" fill="#1d63f0">Store the result</text>
+<g class="badge" data-n="7"><circle cx="514" cy="664" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="514" y="668.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">7</text></g>
+<text class="lab" x="214" y="715" fill="#0e8a4f">Invoice, sent: true</text>
+<g class="badge" data-n="8"><circle cx="194" cy="712" r="12" fill="#0e8a4f" stroke="#fff" stroke-width="2"/><text x="194" y="716.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">8</text></g>
+<rect x="394" y="760" width="492" height="32" rx="16" fill="#ffffff" stroke="#c7d0e6"/>
+<text class="note" x="640" y="782" font-size="13.5" font-weight="700" fill="#0a2a7a" text-anchor="middle">The same request ID again: a double click or a retry</text>
+<text class="lab" x="214" y="827" fill="#1d63f0">Same request ID, same body</text>
+<g class="badge" data-n="9"><circle cx="194" cy="824" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="194" y="828.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">9</text></g>
+<text class="lab" x="534" y="879" fill="#1d63f0">Claim the request ID</text>
+<g class="badge" data-n="10"><circle cx="514" cy="876" r="12" fill="#1d63f0" stroke="#fff" stroke-width="2"/><text x="514" y="880.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">10</text></g>
+<text class="lab" x="534" y="931" fill="#0b6b3c">already done: stored result</text>
+<text class="lab" x="214" y="949" fill="#0e8a4f">Same result. PayPal is not called.</text>
+<g class="badge" data-n="11"><circle cx="194" cy="946" r="12" fill="#0e8a4f" stroke="#fff" stroke-width="2"/><text x="194" y="950.5" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">11</text></g>
+<rect x="1030" y="942" width="180" height="32" rx="16" fill="#fdeceb" stroke="#c42b22" stroke-width="2"/>
+<text class="note" x="1120" y="963" font-size="13.5" font-weight="800" fill="#c42b22" text-anchor="middle">PayPal: no call</text>
+<g id="steps">
+<rect class="hl" x="146" y="212" width="368" height="52" rx="24" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.0300;0.1091"/></rect>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.0300;0.1091"/><circle r="16" fill="#1d63f0" opacity=".18"/><circle r="8" fill="#1d63f0" stroke="#ffffff" stroke-width="3"/><animateMotion dur="24s" repeatCount="indefinite" path="M170 240 H490" keyPoints="0;0;1;1" keyTimes="0;0.0379;0.0933;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.0300;0.1091"/><circle cx="64" cy="96" r="15" fill="#1d63f0"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">1</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">The user creates an invoice. The form sends one request ID</text></g>
+<rect class="hl" x="446" y="272" width="338" height="64" rx="24" fill="none" stroke="#0a2a7a" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1091;0.1882"/></rect>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1091;0.1882"/><circle r="16" fill="#0a2a7a" opacity=".18"/><circle r="8" fill="#0a2a7a" stroke="#ffffff" stroke-width="3"/><animateMotion dur="24s" repeatCount="indefinite" path="M490 292 H546 V316 H498" keyPoints="0;0;1;1" keyTimes="0;0.1170;0.1724;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1091;0.1882"/><circle cx="64" cy="96" r="15" fill="#0a2a7a"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">2</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">The route checks the recipient before anything is claimed</text></g>
+<rect class="hl" x="466" y="344" width="368" height="80" rx="24" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1882;0.2673"/></rect>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1882;0.2673"/><circle r="16" fill="#1d63f0" opacity=".18"/><circle r="8" fill="#1d63f0" stroke="#ffffff" stroke-width="3"/><animateMotion dur="24s" repeatCount="indefinite" path="M490 372 H810 V398 H490" keyPoints="0;0;1;1" keyTimes="0;0.1961;0.2515;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.1882;0.2673"/><circle cx="64" cy="96" r="15" fill="#1d63f0"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">3</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">The route claims the request ID in the store, before it calls PayPal</text></g>
+<rect class="hl" x="466" y="420" width="678" height="80" rx="24" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.2673;0.3464"/></rect>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.2673;0.3464"/><circle r="16" fill="#1d63f0" opacity=".18"/><circle r="8" fill="#1d63f0" stroke="#ffffff" stroke-width="3"/><animateMotion dur="24s" repeatCount="indefinite" path="M490 448 H1120 V474 H490" keyPoints="0;0;1;1" keyTimes="0;0.2752;0.3305;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.2673;0.3464"/><circle cx="64" cy="96" r="15" fill="#1d63f0"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">4</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">It creates a draft at PayPal. The draft ID is saved</text></g>
+<rect class="hl" x="466" y="496" width="678" height="80" rx="24" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.3464;0.4255"/></rect>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.3464;0.4255"/><circle r="16" fill="#1d63f0" opacity=".18"/><circle r="8" fill="#1d63f0" stroke="#ffffff" stroke-width="3"/><animateMotion dur="24s" repeatCount="indefinite" path="M490 524 H1120 V550 H490" keyPoints="0;0;1;1" keyTimes="0;0.3543;0.4096;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.3464;0.4255"/><circle cx="64" cy="96" r="15" fill="#1d63f0"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">5</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">Creating and sending are separate calls. Now it sends</text></g>
+<rect class="hl" x="466" y="572" width="678" height="80" rx="24" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.4255;0.5045"/></rect>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.4255;0.5045"/><circle r="16" fill="#1d63f0" opacity=".18"/><circle r="8" fill="#1d63f0" stroke="#ffffff" stroke-width="3"/><animateMotion dur="24s" repeatCount="indefinite" path="M490 600 H1120 V626 H490" keyPoints="0;0;1;1" keyTimes="0;0.4334;0.4887;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.4255;0.5045"/><circle cx="64" cy="96" r="15" fill="#1d63f0"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">6</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">It reads the invoice back, because PayPal's state is the truth</text></g>
+<rect class="hl" x="466" y="648" width="368" height="52" rx="24" fill="none" stroke="#1d63f0" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5045;0.5836"/></rect>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5045;0.5836"/><circle r="16" fill="#1d63f0" opacity=".18"/><circle r="8" fill="#1d63f0" stroke="#ffffff" stroke-width="3"/><animateMotion dur="24s" repeatCount="indefinite" path="M490 676 H810" keyPoints="0;0;1;1" keyTimes="0;0.5125;0.5678;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5045;0.5836"/><circle cx="64" cy="96" r="15" fill="#1d63f0"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">7</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">The result is stored with the request ID</text></g>
+<rect class="hl" x="146" y="696" width="368" height="52" rx="24" fill="none" stroke="#0e8a4f" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5836;0.6627"/></rect>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5836;0.6627"/><circle r="16" fill="#0e8a4f" opacity=".18"/><circle r="8" fill="#0e8a4f" stroke="#ffffff" stroke-width="3"/><animateMotion dur="24s" repeatCount="indefinite" path="M490 724 H170" keyPoints="0;0;1;1" keyTimes="0;0.5915;0.6469;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.5836;0.6627"/><circle cx="64" cy="96" r="15" fill="#0e8a4f"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">8</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">The user sees the invoice, sent</text></g>
+<rect class="hl" x="146" y="808" width="368" height="52" rx="24" fill="none" stroke="#e08a00" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.6627;0.7418"/></rect>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.6627;0.7418"/><circle r="16" fill="#e08a00" opacity=".18"/><circle r="8" fill="#e08a00" stroke="#ffffff" stroke-width="3"/><animateMotion dur="24s" repeatCount="indefinite" path="M170 836 H490" keyPoints="0;0;1;1" keyTimes="0;0.6706;0.7260;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.6627;0.7418"/><circle cx="64" cy="96" r="15" fill="#e08a00"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">9</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">A double click or a retry sends the same request ID again</text></g>
+<rect class="hl" x="466" y="860" width="368" height="80" rx="24" fill="none" stroke="#e08a00" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.7418;0.8209"/></rect>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.7418;0.8209"/><circle r="16" fill="#e08a00" opacity=".18"/><circle r="8" fill="#e08a00" stroke="#ffffff" stroke-width="3"/><animateMotion dur="24s" repeatCount="indefinite" path="M490 888 H810 V914 H490" keyPoints="0;0;1;1" keyTimes="0;0.7497;0.8051;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.7418;0.8209"/><circle cx="64" cy="96" r="15" fill="#e08a00"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">10</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">The store already holds the finished result for that ID</text></g>
+<rect class="hl" x="146" y="930" width="368" height="52" rx="24" fill="none" stroke="#0e8a4f" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.8209;0.9000"/></rect>
+<rect class="hl" x="1026" y="938" width="188" height="40" rx="24" fill="none" stroke="#0e8a4f" stroke-width="3" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.8209;0.9000"/></rect>
+<g class="mover" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.8209;0.9000"/><circle r="16" fill="#0e8a4f" opacity=".18"/><circle r="8" fill="#0e8a4f" stroke="#ffffff" stroke-width="3"/><animateMotion dur="24s" repeatCount="indefinite" path="M490 958 H170" keyPoints="0;0;1;1" keyTimes="0;0.8288;0.8842;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.2 1;0 0 1 1"/></g>
+<g class="cap" opacity="0"><animate attributeName="opacity" dur="24s" repeatCount="indefinite" calcMode="discrete" values="0;1;0" keyTimes="0;0.8209;0.9000"/><circle cx="64" cy="96" r="15" fill="#0e8a4f"/><text x="64" y="101" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">11</text><text x="90" y="102" font-size="17" font-weight="700" fill="#0b0b0f">The route returns that result. PayPal is not called a second time</text></g>
+</g>
+<rect class="prog" x="48" y="114" width="600" height="4" rx="2" fill="#0a2a7a" opacity=".1"/><rect class="prog" x="48" y="114" width="600" height="4" rx="2" fill="#0a2a7a"><animate attributeName="width" dur="24s" repeatCount="indefinite" values="0;600;600" keyTimes="0;0.9;1"/></rect>
+</svg>
