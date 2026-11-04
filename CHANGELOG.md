@@ -9,6 +9,11 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- New invoice: "Ask for part upfront" (Off, 30%, 50% or a custom percent, preselected from the chat) sends a deposit invoice now and saves the balance as a draft; Home shows balance drafts in "Ready to send" and each invoice links to the other half.
+- Invoice page: "Download PDF" opens an A4 tax invoice with the GST details, the export endorsement and the LUT line (an invoice not under LUT prints a warning to add IGST with a CA instead of an endorsement); Profile has an optional business address for it.
+- New invoice: a notice when the chat names a different currency from the form ("The chat mentions € but this invoice is in USD") with a button to switch, and one when the prices in the chat are in rupees (a chat that names euros or dollars and also says "about ₹80k" gets none).
+- Invoice page: a balance draft is dated with the day it is sent, keeping the days to pay, before PayPal sends it; if the update fails nothing is sent.
+- Features: Deposit and balance, Currency check and Printable GST invoice.
 - Docs: README rewritten for judges, with an animated story and an animated workflow diagram (docs/media).
 
 ### Fixed

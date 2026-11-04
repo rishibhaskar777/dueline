@@ -35,3 +35,4 @@ Copy [0000-template.md](0000-template.md) to start a new one.
 | [0022](0022-screens-that-answer.md)                  | Screens that answer their question                      |
 | [0023](0023-visual-redesign.md)                      | A visual redesign: glass surfaces and new fonts         |
 | [0024](0024-invoice-snapshot.md)                     | A stored snapshot of the PayPal invoices                |
+| [0025](0025-deposit-invoices-and-promises.md)        | Deposit invoices, a printable invoice, a currency guard |
