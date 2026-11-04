@@ -23,7 +23,8 @@
     "ai:eval": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/ai-eval.ts",
     "extract:check": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/extract-check.ts",
     "rates:check": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/rates-check.ts",
-    "seed": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/seed-sandbox.ts"
+    "seed": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/seed-sandbox.ts",
+    "diagrams": "node scripts/diagrams/index.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.107",
