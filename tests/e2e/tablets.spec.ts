@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectNoSidewaysScroll } from "./support";
 
 const APP_PAGES = [
   "/receivables",
@@ -21,10 +22,7 @@ for (const width of [768, 1024]) {
         await page.goto(path);
         await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
         await page.waitForLoadState("networkidle");
-        const overflow = await page.evaluate(
-          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-        );
-        expect(overflow).toBeLessThanOrEqual(0);
+        await expectNoSidewaysScroll(page);
       });
     }
   });

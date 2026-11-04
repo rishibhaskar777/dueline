@@ -6,8 +6,11 @@ export function StepHeader({ state }: { state: Exclude<NewInvoiceState, "sent"> 
   const model = stepHeader(state);
   if (!model) return null;
   return (
-    <header className="grid justify-items-start gap-4">
-      <ol aria-label="Steps" className="glass-track inline-flex gap-0.5 rounded-full p-1">
+    <header className="grid grid-cols-[minmax(0,1fr)] justify-items-start gap-4">
+      <ol
+        aria-label="Steps"
+        className="glass-track inline-flex max-w-full gap-0.5 rounded-full p-1"
+      >
         {STEP_LABELS.map((label, index) => {
           const current = index + 1 === model.current;
           return (
@@ -15,7 +18,7 @@ export function StepHeader({ state }: { state: Exclude<NewInvoiceState, "sent"> 
               key={label}
               aria-current={current ? "step" : undefined}
               className={cn(
-                "rounded-full px-3 py-2.5 text-sm whitespace-nowrap sm:px-[18px] sm:text-base",
+                "min-w-0 rounded-full px-3 py-2.5 text-sm sm:px-[18px] sm:text-base sm:whitespace-nowrap",
                 current
                   ? "glass-indicator font-bold text-white"
                   : "font-semibold text-muted-foreground",

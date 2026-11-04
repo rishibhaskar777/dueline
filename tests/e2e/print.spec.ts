@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { expectNoSeriousViolations, openInTheme } from "./support";
+import { expectNoSeriousViolations, expectNoSidewaysScroll, openInTheme } from "./support";
 
 interface InvoiceList {
   invoices: { id: string; number: string; paypalStatus: string }[];
@@ -101,9 +101,7 @@ test.describe("Printable tax invoice", () => {
         ),
     );
     expect(wide, "elements wider than a 360 px screen").toEqual([]);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-      360,
-    );
+    await expectNoSidewaysScroll(page, "Print page");
 
     await page.emulateMedia({ media: "print" });
     const pdf = await page.pdf({ format: "A4", preferCSSPageSize: true });

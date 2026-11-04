@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectNoSidewaysScroll } from "./support";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -120,10 +121,7 @@ test.describe("public website", () => {
         await page.setViewportSize({ width, height: 844 });
         await page.goto(path);
         await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-        const overflow = await page.evaluate(
-          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-        );
-        expect(overflow).toBeLessThanOrEqual(0);
+        await expectNoSidewaysScroll(page);
       });
     }
   }

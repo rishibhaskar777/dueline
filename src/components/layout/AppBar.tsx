@@ -7,7 +7,8 @@ import { ThemeToggle } from "./ThemeToggle";
 import { Wordmark } from "./Wordmark";
 
 // One row from 768 px up, where the word beside the mark gives way first on a narrow tablet. Below
-// 768 px the tabs drop to a second row of their own.
+// 768 px the tabs drop to a second row of their own. The tabs scroll inside their track when a wider
+// font leaves them too little room, so the bar never pushes the page wider.
 export function AppBar() {
   return (
     <header className="app-bar sticky top-0 z-40 text-foreground">
@@ -18,7 +19,7 @@ export function AppBar() {
         >
           <Wordmark textClassName="md:max-[839px]:hidden" />
         </Link>
-        <div className="max-md:order-3 max-md:w-full md:flex-none">
+        <div className="min-w-0 max-md:order-3 max-md:w-full">
           <Suspense>
             <MainTabs />
           </Suspense>

@@ -19,19 +19,19 @@ export function InvoiceCards({ invoices, today, onOpen }: InvoiceCardsProps) {
     return <p className="text-sm text-muted-foreground">No invoices match.</p>;
   }
   return (
-    <ul className="grid gap-3">
+    <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">
       {invoices.map((invoice) => (
         <li key={invoice.id} className="surface p-3.5 [--surface-radius:18px]">
           <button
             type="button"
             onClick={() => onOpen(invoice)}
-            className="grid min-h-11 w-full gap-1 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="grid min-h-11 w-full grid-cols-[minmax(0,1fr)] gap-1 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <span className="flex items-center justify-between gap-2">
+            <span className="flex flex-wrap items-center justify-between gap-x-2">
               <span className="font-semibold">{invoice.client.name}</span>
               <StatusBadge invoice={invoice} today={today} detailed />
             </span>
-            <span className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+            <span className="flex flex-wrap items-center justify-between gap-x-2 text-sm text-muted-foreground">
               <span>
                 {invoice.number} · due {formatDate(invoice.dueOn)}
                 {promisedLine(invoice) && ` · ${promisedLine(invoice)}`}
@@ -40,7 +40,7 @@ export function InvoiceCards({ invoices, today, onOpen }: InvoiceCardsProps) {
                 <RiskBadge level={invoice.riskLevel} />
               )}
             </span>
-            <span className="flex items-baseline justify-between gap-2 tabular-nums">
+            <span className="flex flex-wrap items-baseline justify-between gap-x-2 tabular-nums">
               <span className="font-medium">{formatMoney(invoice.amount)}</span>
               {invoice.payoutInr !== null && (
                 <span className="text-sm text-muted-foreground">

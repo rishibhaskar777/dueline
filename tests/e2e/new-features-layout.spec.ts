@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { KRAFTWERK_CHAT } from "../support/kraftwerk-chat";
-import { expectNoSeriousViolations, openInTheme } from "./support";
+import { expectNoSeriousViolations, expectNoSidewaysScroll, openInTheme } from "./support";
 
 interface Created {
   deposit: { invoice: { id: string } };
@@ -45,16 +45,12 @@ async function createOutsideLut(request: APIRequestContext): Promise<string> {
   return ((await response.json()) as Created["deposit"]).invoice.id;
 }
 
-async function expectNoSidewaysScroll(page: Page, name: string): Promise<void> {
+async function expectNoSidewaysScrollAt360(page: Page, name: string): Promise<void> {
   await page.setViewportSize({ width: 360, height: 800 });
   await page.reload();
   await page.waitForLoadState("networkidle");
   await page.evaluate(() => document.fonts.ready);
-  const widths = await page.evaluate(() => ({
-    scroll: document.documentElement.scrollWidth,
-    client: document.documentElement.clientWidth,
-  }));
-  expect(widths.scroll, `${name} at 360 px`).toBeLessThanOrEqual(widths.client);
+  await expectNoSidewaysScroll(page, `${name} at 360 px`);
   await page.setViewportSize({ width: 1280, height: 800 });
 }
 
@@ -86,11 +82,7 @@ test.describe("Deposit, balance, currency check and print page", () => {
     await expect(page.getByText("The chat mentions € but this invoice is in USD")).toBeVisible();
     await expect(page.getByText("Deposit, sent now")).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
-    const widths = await page.evaluate(() => ({
-      scroll: document.documentElement.scrollWidth,
-      client: document.documentElement.clientWidth,
-    }));
-    expect(widths.scroll).toBeLessThanOrEqual(widths.client);
+    await expectNoSidewaysScroll(page, "New invoice");
   });
 
   test("the deposit and balance pages, Home, Profile and the print pages", async ({ page }) => {
@@ -122,7 +114,7 @@ test.describe("Deposit, balance, currency check and print page", () => {
         await page.waitForLoadState("networkidle");
         await expectNoSeriousViolations(page, `${name} (${theme})`);
       }
-      await expectNoSidewaysScroll(page, name);
+      await expectNoSidewaysScrollAt360(page, name);
     }
   });
 

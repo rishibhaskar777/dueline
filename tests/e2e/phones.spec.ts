@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectNoSidewaysScroll } from "./support";
 
 test.describe("app pages on a phone", () => {
   for (const path of ["/export", "/profile", "/settings", "/demo-tools"]) {
@@ -7,10 +8,7 @@ test.describe("app pages on a phone", () => {
       await page.goto(path);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       await page.waitForLoadState("networkidle");
-      const overflow = await page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      );
-      expect(overflow).toBeLessThanOrEqual(0);
+      await expectNoSidewaysScroll(page);
     });
   }
 
@@ -22,10 +20,7 @@ test.describe("app pages on a phone", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByLabel("USD market rate")).toBeVisible();
     await page.waitForLoadState("networkidle");
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    );
-    expect(overflow).toBeLessThanOrEqual(0);
+    await expectNoSidewaysScroll(page);
 
     const card = await page.locator("form[aria-labelledby='fees-title']").boundingBox();
     const field = await page.getByLabel("AUD market rate").boundingBox();

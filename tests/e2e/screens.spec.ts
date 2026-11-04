@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { expectNoSeriousViolations, turnUpfrontOff } from "./support";
+import { expectNoSeriousViolations, expectNoSidewaysScroll, turnUpfrontOff } from "./support";
 
 async function overdueCountFromFilter(page: Page): Promise<number> {
   const button = page.getByRole("group", { name: "Filter by status" }).getByRole("button", {
@@ -33,10 +33,7 @@ test.describe("Receivables table", () => {
       }
       await expect(grid.locator(".ag-header-cell-text", { hasText: /^Details$/ })).toHaveCount(0);
 
-      const scrolls = await page.evaluate(
-        () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
-      );
-      expect(scrolls).toBe(false);
+      await expectNoSidewaysScroll(page);
       const gridScrolls = await grid.evaluate((element) => {
         const viewport = element.querySelector(".ag-body-horizontal-scroll-viewport");
         return viewport ? viewport.scrollWidth > viewport.clientWidth + 1 : false;
@@ -87,10 +84,7 @@ test.describe("Receivables table", () => {
     await page.setViewportSize({ width: 390, height: 800 });
     await page.goto("/receivables");
     await expect(page.getByRole("heading", { name: "The due line" })).toBeVisible();
-    const scrolls = await page.evaluate(
-      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
-    );
-    expect(scrolls).toBe(false);
+    await expectNoSidewaysScroll(page);
   });
 
   test("the PayPal column is a text link that names its invoice", async ({ page }) => {
@@ -455,10 +449,7 @@ test.describe("Phone layout", () => {
       await expect(page.getByRole("main")).toBeVisible();
       await page.waitForLoadState("networkidle");
 
-      const overflow = await page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      );
-      expect(overflow).toBeLessThanOrEqual(0);
+      await expectNoSidewaysScroll(page);
     });
   }
 });
@@ -473,10 +464,7 @@ test.describe("Phone layout, new invoice review step", () => {
     await expect(
       page.getByRole("button", { name: "Create deposit and save balance" }),
     ).toBeVisible();
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    );
-    expect(overflow).toBeLessThanOrEqual(0);
+    await expectNoSidewaysScroll(page);
   });
 });
 
@@ -485,10 +473,7 @@ test.describe("Phone layout, invoice and client pages", () => {
 
   async function expectNoSideways(page: Page): Promise<void> {
     await page.waitForLoadState("networkidle");
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    );
-    expect(overflow).toBeLessThanOrEqual(0);
+    await expectNoSidewaysScroll(page);
   }
 
   test("the invoice page has no sideways page scroll", async ({ page }) => {
@@ -529,10 +514,7 @@ test.describe("Phone layout, invoice and client pages", () => {
 
 test.describe("Top bar", () => {
   async function expectNoSideways(page: Page): Promise<void> {
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    );
-    expect(overflow).toBeLessThanOrEqual(0);
+    await expectNoSidewaysScroll(page);
   }
 
   for (const [width, height] of [

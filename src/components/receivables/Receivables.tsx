@@ -71,7 +71,14 @@ export function Receivables() {
         {shown.map(({ id }) => {
           const { columns, rows } = widgetSize(id);
           return (
-            <div key={id} className={cn("grid min-w-0 empty:hidden", COLUMNS[columns], ROWS[rows])}>
+            <div
+              key={id}
+              className={cn(
+                "grid min-w-0 grid-cols-[minmax(0,1fr)] empty:hidden",
+                COLUMNS[columns],
+                ROWS[rows],
+              )}
+            >
               <ReceivablesWidget
                 id={id}
                 data={data}

@@ -22,7 +22,7 @@ function Line({ label, value, total }: { label: string; value: string; total?: b
   return (
     <div
       className={cn(
-        "flex justify-between gap-4",
+        "flex flex-wrap justify-between gap-x-4",
         total && "border-t border-line pt-2.5 font-semibold",
       )}
     >
@@ -44,7 +44,7 @@ function PlanBlock({
   outcome: ReturnType<typeof usePayoutEstimate>;
 }) {
   return (
-    <div className="grid gap-1 rounded-[18px] border border-line px-[18px] py-3.5">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-1 rounded-[18px] border border-line px-[18px] py-3.5">
       <h3 className="text-sm font-bold">{title}</h3>
       <p className="font-heading text-[26px] font-extrabold tabular-nums">{formatMoney(amount)}</p>
       <p className="text-sm text-muted-foreground">Due {formatDate(dueOn)}</p>
@@ -66,7 +66,7 @@ export function InvoiceSummaryCard({ totals, pending, plan }: InvoiceSummaryCard
   return (
     <section
       aria-labelledby="summary-title"
-      className="grid gap-2.5 surface p-[26px] [--h2-size:24px] [--surface-radius:24px]"
+      className="grid grid-cols-[minmax(0,1fr)] gap-2.5 surface p-[26px] [--h2-size:24px] [--surface-radius:24px]"
     >
       <h2 id="summary-title" className="mb-1.5">
         Summary
@@ -82,9 +82,9 @@ export function InvoiceSummaryCard({ totals, pending, plan }: InvoiceSummaryCard
           {totals.discount && (
             <Line label="Early-payment discount" value={`− ${formatMoney(totals.discount)}`} />
           )}
-          <div className="flex items-baseline justify-between gap-4 border-y border-line py-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 border-y border-line py-3">
             <dt className="font-bold">Invoice total</dt>
-            <dd className="font-heading text-[34px] font-extrabold tabular-nums">
+            <dd className="font-heading text-[34px] font-extrabold tabular-nums break-all">
               {formatMoney(totals.total)}
             </dd>
           </div>
@@ -92,7 +92,7 @@ export function InvoiceSummaryCard({ totals, pending, plan }: InvoiceSummaryCard
       )}
 
       {plan && (
-        <div className="grid gap-2.5">
+        <div className="grid min-w-0 gap-2.5">
           <PlanBlock
             title="Deposit, sent now"
             amount={plan.deposit}
@@ -115,7 +115,7 @@ export function InvoiceSummaryCard({ totals, pending, plan }: InvoiceSummaryCard
         </div>
       )}
 
-      <div aria-live="polite" className="grid gap-2.5 text-[15px]">
+      <div aria-live="polite" className="grid min-w-0 gap-2.5 text-[15px]">
         {failure && <p className="text-late">{failure}</p>}
         {!plan && totals && !failure && !estimate && (
           <p className="text-muted-foreground">Working out what reaches your bank…</p>
@@ -148,7 +148,7 @@ export function InvoiceSummaryCard({ totals, pending, plan }: InvoiceSummaryCard
           type="submit"
           size="lg"
           disabled={pending}
-          className="h-14 w-full text-[17px] font-bold"
+          className="h-auto min-h-14 w-full py-2 text-[17px] font-bold whitespace-normal"
         >
           {pending
             ? "Creating and sending…"
