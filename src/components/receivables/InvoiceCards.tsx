@@ -4,6 +4,7 @@ import { formatDate } from "@/lib/format-date";
 import { formatMoney, formatRupees } from "@/lib/money/format";
 import type { InvoiceSummary } from "@/types";
 import { payoutSourceWord } from "@/components/shared/payout-source";
+import { promisedLine } from "./invoice-status";
 import { StatusBadge } from "./StatusBadge";
 
 interface InvoiceCardsProps {
@@ -33,6 +34,7 @@ export function InvoiceCards({ invoices, today, onOpen }: InvoiceCardsProps) {
             <span className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
               <span>
                 {invoice.number} · due {formatDate(invoice.dueOn)}
+                {promisedLine(invoice) && ` · ${promisedLine(invoice)}`}
               </span>
               {(invoice.riskLevel === "watch" || invoice.riskLevel === "late_payer") && (
                 <RiskBadge level={invoice.riskLevel} />

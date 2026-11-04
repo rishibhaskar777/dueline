@@ -1,4 +1,4 @@
-import { formatDate } from "@/lib/format-date";
+import { formatDate, formatDayMonth } from "@/lib/format-date";
 import type { DueState, InvoiceSummary, PayoutSource } from "@/types";
 
 const LABELS: Record<DueState, string> = {
@@ -35,6 +35,13 @@ export function statusLabel(invoice: InvoiceSummary, today: string): string {
   if (isPaidOutsidePayPal(invoice)) return "Paid outside PayPal";
   if (invoice.dueState !== "paid" && invoice.dueOn === today) return "Due today";
   return LABELS[invoice.dueState];
+}
+
+// "Promised 10 Nov", the second line of an unpaid invoice's status once the client has promised a date.
+export function promisedLine(invoice: InvoiceSummary): string | null {
+  return invoice.promise && invoice.dueState !== "paid"
+    ? `Promised ${formatDayMonth(invoice.promise.promisedOn)}`
+    : null;
 }
 
 // The table and its cards say how late an overdue invoice is, so they need no column for it.

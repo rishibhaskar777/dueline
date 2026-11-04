@@ -4,6 +4,7 @@ import { InvoiceNotFoundError } from "@/lib/invoices/errors";
 import { PayPalApiError } from "@/lib/paypal/errors";
 import { cancelInvoice as cancelAtPayPal, getInvoice } from "@/lib/paypal/invoices";
 import { recipientsOf, refreshSnapshotNow, summarise } from "@/lib/paypal/summaries";
+import { clearPaymentPromise } from "@/lib/promises/promises";
 import { runClaimed } from "@/lib/requests/run-claimed";
 import { getStore } from "@/lib/store";
 import type { Json } from "@/lib/store/store";
@@ -51,6 +52,7 @@ export function cancelInvoice(
       } finally {
         await refreshSnapshotNow([id]);
       }
+      await clearPaymentPromise(id);
       return { cancelled: true, notified: notifyClient };
     },
   });

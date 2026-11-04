@@ -59,7 +59,7 @@ export const invoiceDraftForCreateSchema = z.object({ ...draftFields, dueOn: dat
 
 export const requestIdSchema = z.uuid();
 
-export const toneSchema = z.enum(["gentle", "firm", "final"]);
+export const toneSchema = z.enum(["heads_up", "gentle", "firm", "final"]);
 
 export const reminderLanguageSchema = z.enum(["en", "de", "fr", "es", "nl", "pt", "hi"]);
 
@@ -118,6 +118,15 @@ export const draftReminderRequestSchema = z.object({
   tone: toneSchema,
   language: reminderLanguageSchema.optional(),
 });
+
+// The date the client said they would pay by. The range, today to 60 days ahead in India time, is
+// checked by the server against its own date.
+export const putPromiseRequestSchema = z.object({
+  promisedOn: dateString,
+  note: z.string().max(200).optional(),
+});
+
+export type PutPromiseRequest = z.infer<typeof putPromiseRequestSchema>;
 
 export const reminderChannelSchema = z.enum(["paypal", "email"]);
 
@@ -214,6 +223,8 @@ export const profileSchema = z.object({
   website: websiteSchema.nullable(),
   address: plainText(200, 1).nullable(),
   signOff: plainText(40, 1),
+  sendHeadsUp: z.boolean(),
+  headsUpDays: z.number().int().min(1).max(7),
 });
 
 export const gstr1QuerySchema = z.object({

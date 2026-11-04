@@ -8,6 +8,7 @@ import { InvoiceFacts } from "@/components/invoice-page/InvoiceFacts";
 import { InvoiceHeader } from "@/components/invoice-page/InvoiceHeader";
 import { ItemsCard } from "@/components/invoice-page/ItemsCard";
 import { Timeline } from "@/components/invoice-page/Timeline";
+import { PromiseControl } from "@/components/shared/PromiseControl";
 import { LoadFailure } from "@/components/shared/LoadFailure";
 import { SkeletonBlock } from "@/components/shared/SkeletonBlock";
 import { useLoad } from "@/components/shared/use-load";
@@ -49,6 +50,16 @@ export function InvoiceScreen({ invoiceId }: { invoiceId: string }) {
         <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
           <AmountCard invoice={invoice} />
           <InvoiceFacts invoice={invoice} details={details} today={today} />
+          {details.actions.remind && today && (
+            <section aria-label="Promised date" className="surface p-5 [--surface-radius:24px]">
+              <PromiseControl
+                invoiceId={invoice.id}
+                today={today}
+                promise={invoice.promise}
+                onChange={reload}
+              />
+            </section>
+          )}
           <ItemsCard details={details} />
           <InvoiceActions invoice={invoice} details={details} today={today} onChanged={reload} />
         </div>

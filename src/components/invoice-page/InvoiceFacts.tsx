@@ -8,6 +8,7 @@ import { formatDate } from "@/lib/format-date";
 import { formatDays } from "@/lib/format-days";
 import { getClients } from "@/lib/api-client";
 import { useLoad } from "@/components/shared/use-load";
+import { promiseStatus } from "@/components/shared/promise-model";
 import type { InvoiceDetailResponse } from "@/types";
 import { clientLine, dueSentence, lutSentence } from "./invoice-facts";
 
@@ -56,6 +57,16 @@ export function InvoiceFacts({ invoice, details, today }: InvoiceFactsProps) {
           {clientLine(invoice.client.email, country)}
         </span>
       </Fact>
+      {invoice.promise && invoice.dueState !== "paid" && (
+        <Fact label="Client promised">
+          {promiseStatus(invoice.promise, today)}
+          {invoice.promise.note && (
+            <span className="block text-sm font-normal text-muted-foreground">
+              {invoice.promise.note}
+            </span>
+          )}
+        </Fact>
+      )}
       <Fact label="Work">{invoice.work}</Fact>
       <Fact label="Purpose code">
         {invoice.purposeCode ? (

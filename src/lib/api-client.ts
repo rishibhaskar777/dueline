@@ -32,6 +32,7 @@ import type {
   MergeClientResponse,
   Money,
   PaymentMethod,
+  PaymentPromise,
   PayoutEstimate,
   Profile,
   PurposeCodesResponse,
@@ -220,6 +221,17 @@ export function cancelInvoice(
   input: { requestId: string; notifyClient: boolean },
 ): Promise<CancelInvoiceResponse> {
   return requestJson(`/api/invoices/${encodeURIComponent(id)}/cancel`, jsonInit("POST", input));
+}
+
+export function savePromise(
+  id: string,
+  input: { promisedOn: string; note: string },
+): Promise<PaymentPromise> {
+  return requestJson(`/api/invoices/${encodeURIComponent(id)}/promise`, jsonInit("PUT", input));
+}
+
+export async function removePromise(id: string): Promise<void> {
+  await request(`/api/invoices/${encodeURIComponent(id)}/promise`, { method: "DELETE" });
 }
 
 export function recordPayment(

@@ -36,6 +36,14 @@ function sentEvent(input: TimelineInput): TimelineEvent[] {
   return [{ id: "sent", kind: "sent", at }];
 }
 
+function promisedEvent({ summary }: TimelineInput): TimelineEvent[] {
+  const { promise } = summary;
+  if (!promise) return [];
+  return [
+    { id: "promised", kind: "promised", at: promise.createdAt, promisedOn: promise.promisedOn },
+  ];
+}
+
 function paidEvent({ summary }: TimelineInput): TimelineEvent[] {
   const at = summary.actualPayout?.paidAt ?? summary.paidOn;
   if (summary.dueState !== "paid" || !at) return [];
@@ -95,6 +103,7 @@ const LIFECYCLE: Record<TimelineEvent["kind"], number> = {
   sent: 1,
   viewed: 2,
   reminder: 2,
+  promised: 2,
   due: 3,
   overdue: 4,
   paid: 5,
@@ -118,6 +127,7 @@ export function buildTimeline(input: TimelineInput): TimelineEvent[] {
     ...activity
       .filter(({ kind }) => kind === "viewed")
       .map(({ id, at }) => ({ id, kind: "viewed" as const, at })),
+    ...promisedEvent(input),
     ...paidEvent(input),
     ...cancelledEvent(input),
   ];

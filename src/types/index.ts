@@ -11,6 +11,7 @@ export * from "./invoice-detail";
 export * from "./money";
 export * from "./payout";
 export * from "./profile";
+export * from "./promise";
 export * from "./reminder";
 export * from "./responses";
 export * from "./risk";

@@ -72,6 +72,19 @@ function reasonOf(name: string, readings: Reading[], late: Reading[], average: n
   return `${name} ${verb} ${late.length} of ${readings.length} ${noun}, ${formatDays(average)} on average.`;
 }
 
+// A promised date that went by with the invoice still unpaid. Only the words change; the level
+// rules do not look at it.
+function missedPromiseNote(invoices: InvoiceSummary[], today: string): string {
+  const missed = invoices.filter(
+    ({ promise, dueState }) =>
+      promise !== undefined && promise.promisedOn < today && dueState === "overdue",
+  ).length;
+  if (missed === 0) return "";
+  return missed === 1
+    ? " Missed a promised date once."
+    : ` Missed a promised date ${missed} times.`;
+}
+
 // The invoices are one client's, so the name in the reason is the first invoice's.
 export function scoreClient(invoices: InvoiceSummary[], today: string): ClientScore {
   const readings = invoices.flatMap((invoice) => {
@@ -93,6 +106,8 @@ export function scoreClient(invoices: InvoiceSummary[], today: string): ClientSc
       percent === null
         ? null
         : { kind: "early_payment_discount", percent, withinDays: DISCOUNT_WITHIN_DAYS },
-    reason: reasonOf(invoices[0]?.client.name ?? "", readings, late, averageDaysLate),
+    reason:
+      reasonOf(invoices[0]?.client.name ?? "", readings, late, averageDaysLate) +
+      missedPromiseNote(invoices, today),
   };
 }

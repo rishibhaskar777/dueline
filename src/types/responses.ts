@@ -58,6 +58,7 @@ export interface DemoResetResponse {
 
 export interface RemindersResponse {
   drafts: ReminderDraft[];
+  headsUps: ReminderDraft[];
   remindersLeftToday: number;
 }
 

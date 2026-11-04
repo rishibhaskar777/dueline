@@ -4,7 +4,15 @@ import type { Money } from "./money";
 import type { ReminderChannel, Tone } from "./reminder";
 
 export type TimelineKind =
-  "created" | "sent" | "reminder" | "viewed" | "due" | "overdue" | "paid" | "cancelled";
+  | "created"
+  | "sent"
+  | "reminder"
+  | "viewed"
+  | "promised"
+  | "due"
+  | "overdue"
+  | "paid"
+  | "cancelled";
 
 export interface TimelineEvent {
   id: string;
@@ -13,6 +21,7 @@ export interface TimelineEvent {
   tone?: Tone;
   channel?: ReminderChannel; // reminders
   via?: "paypal" | "outside_paypal";
+  promisedOn?: string; // promised events
 }
 
 export interface InvoiceItem {

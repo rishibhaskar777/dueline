@@ -5,6 +5,7 @@ import { PayPalApiError } from "@/lib/paypal/errors";
 import { getInvoice, recordExternalPayment } from "@/lib/paypal/invoices";
 import { refreshSnapshotNow, summarise } from "@/lib/paypal/summaries";
 import { runClaimed } from "@/lib/requests/run-claimed";
+import { clearPaymentPromise } from "@/lib/promises/promises";
 import { getStore } from "@/lib/store";
 import type { Json } from "@/lib/store/store";
 import type { RecordPaymentRequest, RecordPaymentResponse } from "@/types";
@@ -56,6 +57,7 @@ export function recordPayment(
       } finally {
         await refreshSnapshotNow([id]);
       }
+      await clearPaymentPromise(id);
       return { recorded: true, paidOn: request.paidOn };
     },
   });

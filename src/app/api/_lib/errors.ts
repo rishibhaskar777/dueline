@@ -15,6 +15,7 @@ import {
   InvoiceStateError,
 } from "@/lib/invoices/errors";
 import { PayPalApiError, PayPalTimeoutError } from "@/lib/paypal/errors";
+import { InvalidPromiseDateError } from "@/lib/promises/errors";
 import { InvalidReminderError, ReminderLimitError } from "@/lib/reminders/errors";
 import { DuplicateRequestError } from "@/lib/requests/errors";
 import { fail } from "@/app/api/_lib/respond";
@@ -26,6 +27,7 @@ export function failFromError(error: unknown): Response {
   }
   if (error instanceof DemoUnavailableError) return fail(404, "not_found", error.message);
   if (error instanceof DemoResetLimitError) return fail(429, "rate_limited", error.message);
+  if (error instanceof InvalidPromiseDateError) return fail(400, "invalid_request", error.message);
   if (error instanceof InvalidReminderError) return fail(400, "invalid_request", error.message);
   if (error instanceof ReminderLimitError) return fail(429, "rate_limited", error.message);
   if (error instanceof LibraryFullError) return fail(400, "invalid_request", error.message);

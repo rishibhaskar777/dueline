@@ -47,6 +47,14 @@ export interface ClientAlias {
   fromEmail: string;
 }
 
+// The date a client promised to pay an invoice by, kept until the invoice is paid or cancelled.
+export interface StoredPromise {
+  invoiceId: string;
+  promisedOn: string;
+  note: string;
+  createdAt: string;
+}
+
 export type AppFlag = "export_downloaded" | "checklist_dismissed";
 
 export interface Store {
@@ -119,6 +127,13 @@ export interface Store {
   listClientAliases(): Promise<ClientAlias[]>;
   saveClientAlias(alias: ClientAlias): Promise<void>;
   deleteClientAlias(fromKey: string): Promise<boolean>;
+
+  listPromises(): Promise<StoredPromise[]>;
+  // Replaces the invoice's promise.
+  savePromise(promise: StoredPromise): Promise<void>;
+  deletePromise(invoiceId: string): Promise<boolean>;
+  // Forgets every promise, so a demo reset starts without the ones made in the demo.
+  clearPromises(): Promise<void>;
 
   // One-off facts about the app, such as "export_downloaded". Setting one twice changes nothing.
   hasFlag(name: AppFlag): Promise<boolean>;

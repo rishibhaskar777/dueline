@@ -46,6 +46,12 @@ export function DueLineTooltip({ target }: { target: TooltipTarget }) {
         <dd>{formatDate(invoice.issuedOn)}</dd>
         <dt className="text-muted-foreground">Due</dt>
         <dd>{formatDate(invoice.dueOn)}</dd>
+        {invoice.promise && invoice.dueState !== "paid" && (
+          <>
+            <dt className="text-muted-foreground">Promised</dt>
+            <dd>{formatDate(invoice.promise.promisedOn)}</dd>
+          </>
+        )}
         {invoice.paidOn && (
           <>
             <dt className="text-muted-foreground">Paid</dt>

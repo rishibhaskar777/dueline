@@ -1,4 +1,5 @@
 import type { CurrencyCode, Money } from "./money";
+import type { PaymentPromise } from "./promise";
 import type { RiskLevel } from "./risk";
 
 export type DueState = "paid" | "on_time" | "due_soon" | "overdue";
@@ -43,6 +44,7 @@ export interface InvoiceSummary {
   purposeCode: string | null;
   payLink: string;
   riskLevel: RiskLevel | null;
+  promise?: PaymentPromise; // the date the client promised to pay by, while the invoice is unpaid
   mergedFrom?: string; // set when the client was merged into another: the name on the PayPal invoice
 }
 
