@@ -3,6 +3,7 @@ import { afterResponse } from "@/lib/after-response";
 import { applyAliases } from "@/lib/clients/aliases";
 import { today } from "@/lib/clock";
 import { inBatches } from "@/lib/in-batches";
+import { withPromises } from "@/lib/promises/attach-promises";
 import { getStore } from "@/lib/store";
 import type { ActualPayout, InvoiceSummary, Money } from "@/types";
 import {
@@ -61,6 +62,8 @@ const changed = new Set<string>();
 
 let local: { snapshot: InvoiceSnapshot; checkedAt: number } | undefined;
 let rebuilding: Promise<InvoiceSnapshot> | undefined;
+// The stored snapshot is one large value, so the reads a screen makes at the same moment share one.
+let reading: Promise<InvoiceSnapshot | undefined> | undefined;
 let refreshQueued = false;
 let lastRefreshFailedAt = 0;
 let generation = 0;
@@ -72,6 +75,7 @@ export async function clearInvoiceCaches(): Promise<void> {
   fullInvoices.clear();
   changed.clear();
   local = undefined;
+  reading = undefined;
   rebuilding = undefined;
   lastRefreshFailedAt = 0;
   generation += 1;
@@ -236,6 +240,13 @@ function startRebuild(): Promise<InvoiceSnapshot> {
 
 async function knownSnapshot(): Promise<InvoiceSnapshot | undefined> {
   if (local && Date.now() - local.checkedAt < LOCAL_TRUST_MS) return local.snapshot;
+  const read = (reading ??= readKnownSnapshot().finally(() => {
+    if (reading === read) reading = undefined;
+  }));
+  return read;
+}
+
+async function readKnownSnapshot(): Promise<InvoiceSnapshot | undefined> {
   const stored = await readSnapshot();
   if (!stored) {
     local = undefined;
@@ -306,13 +317,15 @@ export function invoicesLoadedAt(): string | null {
 }
 
 // Rupee figures are filled in later, so a settings change shows up without waiting for PayPal.
-// Merged clients are applied after the snapshot, so a merge shows at once.
+// Merged clients and promised dates are applied after the snapshot, so a merge or a promise shows at
+// once.
 async function loadWithDrafts(): Promise<LoadedInvoice[]> {
-  const [snapshot, aliases] = await Promise.all([
+  const [snapshot, aliases, promises] = await Promise.all([
     currentSnapshot(),
     getStore().listClientAliases(),
+    getStore().listPromises(),
   ]);
-  return applyAliases(toLoadedInvoices(snapshot.entries, today()), aliases);
+  return withPromises(applyAliases(toLoadedInvoices(snapshot.entries, today()), aliases), promises);
 }
 
 // Drafts never count in totals, risk, forecast or the register until they are sent.
