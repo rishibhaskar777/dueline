@@ -5,6 +5,7 @@ import {
   blankForm,
   formFromDraft,
   lutIsCurrent,
+  withUpfront,
   type InvoiceForm,
 } from "@/components/invoices/invoice-form";
 import { PasteStep, type Drafted } from "@/components/invoices/PasteStep";
@@ -23,6 +24,7 @@ interface Review {
   notice: string | null;
   risk: ClientRisk | null;
   paymentTerms: PaymentTerms | null;
+  chat: string | null;
 }
 
 export function NewInvoice({ prefill }: { prefill: Prefill }) {
@@ -39,15 +41,16 @@ export function NewInvoice({ prefill }: { prefill: Prefill }) {
 
   useStepFocus(review || prefilled.kind !== "ready" || prefilled.review ? "review" : "paste");
 
-  function onDrafted({ draft, warnings, notice, risk, paymentTerms }: Drafted) {
+  function onDrafted({ draft, warnings, notice, risk, paymentTerms, chat }: Drafted) {
     setReview({
       form: draft
-        ? formFromDraft(draft, includeLutNote)
+        ? withUpfront(formFromDraft(draft, includeLutNote), paymentTerms?.upfrontPercent ?? null)
         : blankForm(profile?.defaultSac ?? "", includeLutNote),
       warnings,
       notice,
       risk,
       paymentTerms,
+      chat,
     });
     setFormNumber((number) => number + 1);
   }

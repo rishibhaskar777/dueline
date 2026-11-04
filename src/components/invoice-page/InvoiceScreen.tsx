@@ -44,7 +44,7 @@ export function InvoiceScreen({ invoiceId }: { invoiceId: string }) {
   const { invoice, details, timeline } = state.data;
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-5">
-      <InvoiceHeader invoice={invoice} details={details} today={today} />
+      <InvoiceHeader invoice={invoice} details={details} today={today} onChanged={reload} />
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
           <AmountCard invoice={invoice} />

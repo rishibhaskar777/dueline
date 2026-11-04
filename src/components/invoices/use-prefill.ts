@@ -23,6 +23,7 @@ interface PrefilledReview {
   notice: string | null;
   risk: ClientRisk | null;
   paymentTerms: PaymentTerms | null;
+  chat: null;
 }
 
 type Prefilled =
@@ -38,7 +39,7 @@ const COULD_NOT_COPY =
   "We couldn't copy that invoice. Paste a chat or start without one to make a new invoice.";
 
 function review(form: InvoiceForm, warnings: string[] = []): PrefilledReview {
-  return { form, warnings, notice: null, risk: null, paymentTerms: null };
+  return { form, warnings, notice: null, risk: null, paymentTerms: null, chat: null };
 }
 
 // An invoice for a known client, or a copy of an earlier invoice, skips the chat and opens the

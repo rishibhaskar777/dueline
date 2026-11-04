@@ -1,0 +1,100 @@
+import { expect, test, type Page } from "@playwright/test";
+import { KRAFTWERK_CHAT } from "../support/kraftwerk-chat";
+import { expectNoSeriousViolations, openInTheme } from "./support";
+
+interface InvoiceList {
+  invoices: { id: string; number: string; paypalStatus: string }[];
+  readyToSend: { id: string; number: string; paypalStatus: string }[];
+}
+
+async function invoiceList(page: Page): Promise<InvoiceList> {
+  const response = await page.request.get("/api/invoices");
+  expect(response.ok()).toBe(true);
+  return (await response.json()) as InvoiceList;
+}
+
+async function draftKraftwerk(page: Page): Promise<void> {
+  await page.goto("/invoices/new");
+  await page.getByRole("textbox", { name: "Client chat" }).fill(KRAFTWERK_CHAT);
+  await page.getByRole("button", { name: "Draft invoice" }).click();
+  await expect(page.getByLabel("Client name")).toHaveValue("Kraftwerk Studio");
+  await page.getByRole("button", { name: "Send to the demo buyer" }).click();
+  await expect(page.getByLabel("Client email")).toHaveValue(/@personal\.example\.com$/);
+}
+
+test.describe("Deposit and balance", () => {
+  test("50% asked for in the chat is preselected, the deposit is sent and the balance waits on Home", async ({
+    page,
+  }) => {
+    await draftKraftwerk(page);
+
+    await expect(page.getByRole("button", { name: "50%", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await expect(
+      page.getByText("Client wrote: “Can we do 50% now and rest on delivery?”"),
+    ).toBeVisible();
+    const summary = page.getByRole("region", { name: "Summary" });
+    await expect(summary.getByText("Deposit, sent now")).toBeVisible();
+    await expect(summary.getByText("Balance, sent on delivery")).toBeVisible();
+    await expect(summary.getByText("€615.00")).toHaveCount(2);
+
+    await page.getByRole("button", { name: "Create deposit and save balance" }).click();
+    const sent = page.getByRole("heading", { name: /^Deposit INV-\d+ sent$/ });
+    await expect(sent).toBeVisible();
+    await expect(page.getByText(/The balance, invoice INV-\d+ for €615\.00/)).toBeVisible();
+
+    const list = await invoiceList(page);
+    expect(list.readyToSend).toHaveLength(1);
+    const balance = list.readyToSend[0];
+    expect(list.invoices.map(({ id }) => id)).not.toContain(balance.id);
+
+    await page.getByRole("link", { name: "View receivables" }).click();
+    const ready = page.getByRole("region", { name: "Ready to send" });
+    await expect(ready).toBeVisible();
+    await expect(ready.getByText("Kraftwerk Studio")).toBeVisible();
+    await expectNoSeriousViolations(page, "Home with Ready to send");
+    await ready.getByRole("button", { name: `Send balance for invoice ${balance.number}` }).click();
+    await expect(ready).toHaveCount(0);
+
+    await expect
+      .poll(
+        async () =>
+          (await invoiceList(page)).invoices.find(({ id }) => id === balance.id)?.paypalStatus,
+      )
+      .toBe("SENT");
+  });
+
+  test("each invoice of the pair links to the other, and the balance draft can be sent from its page", async ({
+    page,
+  }) => {
+    await draftKraftwerk(page);
+    await page.getByRole("button", { name: "Create deposit and save balance" }).click();
+    await expect(page.getByRole("heading", { name: /^Deposit INV-\d+ sent$/ })).toBeVisible();
+    const balance = (await invoiceList(page)).readyToSend.at(-1);
+    if (!balance) throw new Error("No balance draft");
+
+    await page.goto(`/invoices/${encodeURIComponent(balance.id)}`);
+    await expect(page.getByText("Draft, not sent")).toBeVisible();
+    await expect(page.getByText(/Balance of/)).toBeVisible();
+    await expectNoSeriousViolations(page, "Balance invoice page");
+    await page.getByRole("link", { name: /^invoice INV-\d+$/ }).click();
+    await expect(page.getByText(/Deposit for/)).toBeVisible();
+    await page.getByRole("link", { name: /^invoice INV-\d+$/ }).click();
+    await page.getByRole("button", { name: "Send now" }).click();
+    await expect(page.getByText("Draft, not sent")).toHaveCount(0);
+  });
+
+  test("the deposit fields have no serious accessibility problems in either theme", async ({
+    page,
+  }) => {
+    for (const theme of ["light", "dark"] as const) {
+      await openInTheme(page, theme, "/invoices/new");
+      await page.getByRole("textbox", { name: "Client chat" }).fill(KRAFTWERK_CHAT);
+      await page.getByRole("button", { name: "Draft invoice" }).click();
+      await expect(page.getByLabel("Client name")).toHaveValue("Kraftwerk Studio");
+      await expectNoSeriousViolations(page, `New invoice with a deposit, ${theme}`);
+    }
+  });
+});

@@ -63,14 +63,16 @@ describe("parseLayout", () => {
 
 describe("moveWidget, setWidgetVisible and resetLayout", () => {
   it("moves a widget up or down one place", () => {
-    expect(ids(moveWidget(DEFAULT_LAYOUT, "dueLine", -1)).slice(0, 4)).toEqual([
+    expect(ids(moveWidget(DEFAULT_LAYOUT, "dueLine", -1)).slice(0, 5)).toEqual([
       "morning",
+      "readyToSend",
       "checklist",
       "dueLine",
       "totals",
     ]);
-    expect(ids(moveWidget(DEFAULT_LAYOUT, "totals", 1)).slice(0, 4)).toEqual([
+    expect(ids(moveWidget(DEFAULT_LAYOUT, "totals", 1)).slice(0, 5)).toEqual([
       "morning",
+      "readyToSend",
       "checklist",
       "dueLine",
       "totals",
@@ -114,6 +116,25 @@ describe("the This morning card", () => {
   });
 });
 
+describe("the Ready to send card", () => {
+  it("is in the default layout, shown, and can be hidden and shown like the others", () => {
+    expect(DEFAULT_LAYOUT.find(({ id }) => id === "readyToSend")).toEqual({
+      id: "readyToSend",
+      visible: true,
+    });
+    const hidden = setWidgetVisible(DEFAULT_LAYOUT, "readyToSend", false);
+    expect(hidden.find(({ id }) => id === "readyToSend")?.visible).toBe(false);
+    expect(
+      parseLayout(JSON.stringify(hidden)).find(({ id }) => id === "readyToSend")?.visible,
+    ).toBe(false);
+  });
+
+  it("is added, shown, to a layout saved before it existed", () => {
+    const saved = JSON.stringify([{ id: "totals", visible: true }]);
+    expect(parseLayout(saved).find(({ id }) => id === "readyToSend")?.visible).toBe(true);
+  });
+});
+
 describe("the default layout", () => {
   it("shows every widget but upcoming due and rates", () => {
     expect(DEFAULT_LAYOUT.filter(({ visible }) => !visible).map(({ id }) => id)).toEqual([
@@ -123,8 +144,9 @@ describe("the default layout", () => {
   });
 
   it("orders the widgets as designed", () => {
-    expect(ids(DEFAULT_LAYOUT).slice(0, 9)).toEqual([
+    expect(ids(DEFAULT_LAYOUT).slice(0, 10)).toEqual([
       "morning",
+      "readyToSend",
       "checklist",
       "totals",
       "dueLine",

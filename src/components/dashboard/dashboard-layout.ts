@@ -2,6 +2,7 @@
 // whether the default layout includes it.
 export const WIDGETS = [
   { id: "morning", title: "This morning", columns: 6, rows: 1, shown: true },
+  { id: "readyToSend", title: "Ready to send", columns: 6, rows: 1, shown: true },
   { id: "checklist", title: "Getting started", columns: 6, rows: 1, shown: true },
   { id: "totals", title: "Totals", columns: 6, rows: 1, shown: true },
   { id: "dueLine", title: "Due line", columns: 4, rows: 2, shown: true },

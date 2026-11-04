@@ -39,7 +39,16 @@ export interface InvoiceForm {
   discountOn: boolean;
   discountPercent: string;
   discountDays: string;
+  upfront: UpfrontChoice;
+  // The whole percent typed for "Custom".
+  upfrontCustom: string;
+  // "" until the user picks a date; the deposit then falls due a week from today.
+  depositDueOn: string;
+  // "" until the user picks a date; the balance then falls due on the invoice's due date.
+  balanceDueOn: string;
 }
+
+export type UpfrontChoice = "off" | "30" | "50" | "custom";
 
 export interface InvoiceTotals {
   subtotal: Money;
@@ -88,7 +97,19 @@ export function blankForm(defaultSac = "", includeLutNote = false): InvoiceForm 
     discountOn: false,
     discountPercent: DEFAULT_DISCOUNT_PERCENT,
     discountDays: DEFAULT_DISCOUNT_DAYS,
+    upfront: "off",
+    upfrontCustom: "",
+    depositDueOn: "",
+    balanceDueOn: "",
   };
+}
+
+// Preselects what the client asked for: 30 and 50 have their own buttons, any other whole percent
+// opens Custom with the number filled in.
+export function withUpfront(form: InvoiceForm, percent: number | null): InvoiceForm {
+  if (percent === null) return form;
+  if (percent === 30 || percent === 50) return { ...form, upfront: String(percent) as "30" | "50" };
+  return { ...form, upfront: "custom", upfrontCustom: String(percent) };
 }
 
 export function formFromDraft(draft: InvoiceDraft, includeLutNote = false): InvoiceForm {
