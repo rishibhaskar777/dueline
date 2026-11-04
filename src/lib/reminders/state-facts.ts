@@ -29,14 +29,14 @@ function mentionsDaysOverdue(text: string, language: ReminderLanguage, days: num
 
 // A firm or final reminder has to say when the invoice was due and how late it is. When the model's
 // draft leaves either out, one sentence with both goes right after the greeting. Gentle drafts may
-// keep their softer wording.
+// keep their softer wording, and a heads-up comes before the due date, so it has nothing to state.
 export function withStatedFacts(
   facts: ReminderFacts,
   tone: Tone,
   language: ReminderLanguage,
   draft: ReminderText,
 ): ReminderText {
-  if (tone === "gentle") return draft;
+  if (tone === "gentle" || tone === "heads_up") return draft;
   const { message } = draft;
   if (
     mentionsDate(message, language, facts.dueOn) &&

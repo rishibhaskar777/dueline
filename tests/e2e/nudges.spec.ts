@@ -16,7 +16,7 @@ test.describe("Nudges", () => {
     await page.goto("/nudges");
     const card = page
       .getByRole("listitem")
-      .filter({ has: page.getByLabel("Subject") })
+      .filter({ has: page.getByRole("group", { name: "Tone" }) })
       .first();
 
     await expect(card).toContainText("Suggested firm: 7 days late, and late on 3 of 3 invoices.");
@@ -33,7 +33,7 @@ test.describe("Nudges", () => {
     await page.goto("/nudges");
     const card = page
       .getByRole("listitem")
-      .filter({ has: page.getByLabel("Subject") })
+      .filter({ has: page.getByRole("group", { name: "Tone" }) })
       .first();
     const message = card.getByLabel("Message", { exact: true });
     const final = card.getByRole("group", { name: "Tone" }).getByRole("button", { name: /^Final/ });
@@ -61,7 +61,7 @@ test.describe("Nudges", () => {
     await page.goto("/nudges");
     const card = page
       .getByRole("listitem")
-      .filter({ has: page.getByLabel("Subject") })
+      .filter({ has: page.getByRole("group", { name: "Tone" }) })
       .first();
 
     await expect(card.getByRole("button", { name: "Send PayPal reminder" })).toBeEnabled();
@@ -94,7 +94,7 @@ test.describe("Nudges", () => {
     await page.goto("/nudges");
     const card = page
       .getByRole("listitem")
-      .filter({ has: page.getByLabel("Subject") })
+      .filter({ has: page.getByRole("group", { name: "Tone" }) })
       .nth(1);
 
     await card.getByRole("button", { name: "Copy message" }).click();
@@ -127,7 +127,9 @@ test.describe("Nudges", () => {
   }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await page.goto("/nudges");
-    const cards = page.getByRole("listitem").filter({ has: page.getByLabel("Subject") });
+    const cards = page
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("group", { name: "Tone" }) });
     const card = cards.first();
     let sends = 0;
     page.on("request", (request) => {
@@ -156,7 +158,7 @@ test.describe("Nudges", () => {
     await page.goto("/nudges");
     const card = page
       .getByRole("listitem")
-      .filter({ has: page.getByLabel("Subject") })
+      .filter({ has: page.getByRole("group", { name: "Tone" }) })
       .first();
     const question = card.getByText(
       "Okafor & Reyes is in Portugal. Write reminders in Portuguese?",

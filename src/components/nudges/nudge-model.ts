@@ -1,16 +1,30 @@
-import { todayInKolkata } from "@/lib/date-math";
+import { daysBetween, todayInKolkata } from "@/lib/date-math";
 import { formatDayMonth } from "@/lib/format-date";
 import { formatDays } from "@/lib/format-days";
 import { languageInfo } from "@/lib/reminders/languages";
 import type { PaySpeed, ReminderChannel, ReminderDraft, ReminderLanguage, Tone } from "@/types";
 
 export const TONE_LABELS: Record<Tone, string> = {
+  heads_up: "Heads-up",
   gentle: "Gentle",
   firm: "Firm",
   final: "Final",
 };
 
 type SentReminder = ReminderDraft["history"][number];
+
+// "Due today", "Due tomorrow" or "Due in 3 days", for an invoice that is not late.
+export function dueSoonLabel(dueOn: string, today: string): string {
+  const days = daysBetween(today, dueOn);
+  if (days <= 0) return "Due today";
+  return days === 1 ? "Due tomorrow" : `Due in ${days} days`;
+}
+
+// "Heads-up sent, 4 Nov" once the heads-up for the invoice has gone out, by either channel.
+export function headsUpSentNote(history: SentReminder[]): string | null {
+  const sent = history.findLast(({ tone }) => tone === "heads_up");
+  return sent ? `Heads-up sent, ${formatDayMonth(todayInKolkata(new Date(sent.sentAt)))}` : null;
+}
 
 const clock = new Intl.DateTimeFormat("en-IN", {
   hour: "numeric",
@@ -24,7 +38,8 @@ export function daysLateLabel(daysLate: number): string {
 
 export function historyLabel({ tone, sentAt, channel }: SentReminder): string {
   const how = channel === "email" ? "message sent from your email" : "reminder sent through PayPal";
-  return `${TONE_LABELS[tone]} ${how} ${formatDayMonth(todayInKolkata(new Date(sentAt)))}`;
+  const noun = tone === "heads_up" ? "Heads-up sent" : `${TONE_LABELS[tone]} ${how}`;
+  return `${noun} ${formatDayMonth(todayInKolkata(new Date(sentAt)))}`;
 }
 
 // One reminder per invoice per channel per India day, whatever the demo clock says.

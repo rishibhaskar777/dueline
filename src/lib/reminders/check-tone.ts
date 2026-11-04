@@ -39,6 +39,65 @@ const LAST_WORDS: Record<ReminderLanguage, string[]> = {
   hi: ["अंतिम अनुस्मारक", "अंतिम"],
 };
 
+// A heads-up comes before the due date, so it never speaks of lateness, an overdue invoice or a
+// deadline that has passed. English is checked in every language.
+const LATE_WORDS: Record<ReminderLanguage, string[]> = {
+  en: [
+    "overdue",
+    "late",
+    "lateness",
+    "past due",
+    "past-due",
+    "deadline",
+    "missed",
+    "behind",
+    "has passed",
+    "have passed",
+    "was due",
+  ],
+  de: [
+    "überfällig",
+    "verspätet",
+    "verspätung",
+    "zu spät",
+    "frist",
+    "versäumt",
+    "war fällig",
+    "abgelaufen",
+  ],
+  fr: ["retard", "en retard", "dépassé", "dépassée", "échue", "était due", "en souffrance"],
+  es: [
+    "retraso",
+    "atraso",
+    "atrasada",
+    "atrasado",
+    "vencida",
+    "vencido",
+    "vencía",
+    "fuera de plazo",
+  ],
+  nl: [
+    "te laat",
+    "achterstallig",
+    "verlopen",
+    "verstreken",
+    "deadline",
+    "gemist",
+    "moest betaald zijn",
+  ],
+  pt: [
+    "atraso",
+    "atrasada",
+    "atrasado",
+    "vencida",
+    "vencido",
+    "venceu",
+    "expirou",
+    "prazo vencido",
+  ],
+  hi: ["बकाया", "देर", "विलंब", "देय था", "समय सीमा", "चूक", "अतिदेय"],
+};
+
 function wordsFor(table: Record<ReminderLanguage, string[]>, language: ReminderLanguage): string[] {
   return language === "en" ? table.en : [...table.en, ...table[language]];
 }
@@ -60,6 +119,9 @@ export function contradictingPhrase(
   remindersSent: number = FINAL_AFTER_REMINDERS,
 ): string | null {
   const text = `${subject}\n${message}`;
+  if (tone === "heads_up") {
+    return find(text, wordsFor(LATE_WORDS, language)) ?? find(text, wordsFor(LAST_WORDS, language));
+  }
   // A final message may call itself the last reminder only once two reminders have been sent.
   if (tone === "gentle" || tone === "firm" || remindersSent < FINAL_AFTER_REMINDERS) {
     const early = find(text, wordsFor(LAST_WORDS, language));

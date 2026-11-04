@@ -12,6 +12,8 @@ const FORM: ProfileFormValues = {
   website: "",
   address: "",
   signOff: "Thank you",
+  sendHeadsUp: true,
+  headsUpDays: "3",
 };
 
 describe("initialsOf", () => {

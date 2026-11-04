@@ -41,10 +41,13 @@ interface NudgeDraft {
   draftError: string | null;
   sendError: string | null;
   sentAt: string | null;
+  // PayPal refused this heads-up reminder, so the card offers only the freelancer's own message.
+  paypalRefused: boolean;
   pendingRedraft: PendingRedraft | null;
   // Dueline sends one reminder per invoice per channel a day.
   sentVia: Record<ReminderChannel, boolean>;
-  // Both channels were used today, so nothing more can be sent.
+  // Both channels were used today, or the one heads-up an invoice gets has gone out, so nothing
+  // more can be sent.
   closed: boolean;
   setSubject: (subject: string) => void;
   setMessage: (message: string) => void;
@@ -245,7 +248,7 @@ export function useNudgeDraft(
   const [clientLanguage, setClientLanguage] = useState(initial.language);
   const [languageSuggestion, setLanguageSuggestion] = useState(initial.languageSuggestion);
   const { text, typed, setText } = useTypedText(initial);
-  const sender = useSendReminder(initial.history, onSent);
+  const sender = useSendReminder(initial.history, initial.paypalRefused === true, onSent);
   const shown = useShownDraft(initial, setText, sender.clearError);
   const { cancel, ...improvement } = useFirstImprovement(
     initial,
@@ -260,6 +263,8 @@ export function useNudgeDraft(
     paypal: sentTodayVia(sender.history, "paypal"),
     email: sentTodayVia(sender.history, "email"),
   };
+
+  const headsUpSent = sender.history.some(({ tone }) => tone === "heads_up");
 
   function adoptClientLanguage(language: ReminderLanguage): void {
     setLanguageSuggestion(null);
@@ -285,8 +290,9 @@ export function useNudgeDraft(
     sending: sender.sending,
     sendError: sender.sendError,
     sentAt: sender.sentAt,
+    paypalRefused: sender.paypalRefused,
     sentVia,
-    closed: sentVia.paypal && sentVia.email,
+    closed: headsUpSent || (sentVia.paypal && sentVia.email),
     setSubject: (subject) => setText({ ...typed.current, subject }),
     setMessage: (message) => setText({ ...typed.current, message }),
     send,
