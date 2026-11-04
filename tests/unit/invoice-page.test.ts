@@ -68,6 +68,7 @@ describe("the history timeline", () => {
     const kinds: Record<TimelineKind, string> = {
       reminder: "blue",
       viewed: "blue",
+      promised: "blue",
       overdue: "red",
       due: "amber",
       sent: "foreground",

@@ -1,10 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import {
-  LUT_DECLARATION,
-  mentionsLut,
-  requestMemo,
-  toPayPalInvoice,
-} from "@/lib/paypal/invoice-body";
+import { LUT_DECLARATION } from "@/lib/invoices/lut-wording";
+import { balanceDraft, planSplit } from "@/lib/invoices/split-drafts";
+import { NOTE_LIMIT, mentionsLut, requestMemo, toPayPalInvoice } from "@/lib/paypal/invoice-body";
 import { EMPTY_PROFILE, type CreateInvoiceRequest, type Profile } from "@/types";
 import { stubEnv } from "../support/env";
 
@@ -191,7 +188,44 @@ describe("toPayPalInvoice", () => {
   });
 });
 
+describe("the LUT declaration", () => {
+  it("says bond or letter of undertaking, as Rule 46 does", () => {
+    expect(LUT_DECLARATION).toBe(
+      "SUPPLY MEANT FOR EXPORT UNDER BOND OR LETTER OF UNDERTAKING WITHOUT PAYMENT OF INTEGRATED TAX",
+    );
+  });
+
+  it("keeps the longest note inside PayPal's limit, balance note and early-payment line included", () => {
+    const items = Array.from({ length: 30 }, (_, index) => ({
+      name: `${"Brand identity work package ".repeat(6)}${index}`.slice(0, 200),
+      quantity: 12,
+      unitAmount: "123456.78",
+      sac: "998314",
+    }));
+    const long = { ...draft, items, note: "n".repeat(1000), includeLutNote: true };
+    const plan = planSplit(long, 50);
+    if (!plan) throw new Error("no plan");
+    const balance = balanceDraft(long, plan, "2026-11-30", "INV-0042");
+    const note = toPayPalInvoice(balance, {
+      ...options,
+      profile,
+      discount: { percent: 20, withinDays: 30 },
+    }).detail.note;
+    expect(note?.length).toBeLessThanOrEqual(NOTE_LIMIT);
+    expect(note).toContain(LUT_DECLARATION);
+    expect(note).toContain("Includes a 20% early-payment discount");
+  });
+});
+
 describe("mentionsLut", () => {
+  it("still recognises the wording without bond that earlier invoices carry", () => {
+    expect(
+      mentionsLut(
+        "SUPPLY MEANT FOR EXPORT UNDER LETTER OF UNDERTAKING WITHOUT PAYMENT OF INTEGRATED TAX",
+      ),
+    ).toBe(true);
+  });
+
   it("recognises the declaration and the line older invoices carry", () => {
     expect(mentionsLut(`Thanks\n${LUT_DECLARATION}`)).toBe(true);
     expect(mentionsLut("Export of services under LUT, without payment of IGST")).toBe(true);

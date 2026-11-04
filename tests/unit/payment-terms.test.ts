@@ -105,10 +105,10 @@ describe("the contact name of a draft", () => {
 });
 
 describe("the notices about payment", () => {
-  it("shows the share as an amber pill with the client's words", () => {
+  it("shows the share as an amber pill, leaving the client's words to the upfront control", () => {
     expect(noticePills(null, [], upfront)).toEqual([
       {
-        text: "Client asked for 50% upfront: “Can we do 50% now and rest on delivery?”",
+        text: "Client asked for 50% upfront, set below",
         tone: "amber",
       },
     ]);
@@ -120,12 +120,29 @@ describe("the notices about payment", () => {
     ).toEqual([{ text: "Client's payment terms: net 30 (“we pay net 30”)", tone: "amber" }]);
   });
 
-  it("shows both a share and a note, quoting once", () => {
-    const pills = noticePills(null, [], { ...upfront, note: "rest on delivery" });
+  it("shows both a share and a note that adds a term, quoting once", () => {
+    const pills = noticePills(null, [], { ...upfront, note: "the rest 30 days after approval" });
     expect(pills.map(({ text }) => text)).toEqual([
-      "Client asked for 50% upfront: “Can we do 50% now and rest on delivery?”",
-      "Client's payment terms: rest on delivery",
+      "Client asked for 50% upfront, set below",
+      "Client's payment terms: the rest 30 days after approval",
     ]);
+  });
+
+  it.each(["rest on delivery", "the rest when you deliver", "balance on completion"])(
+    "leaves out a note that only restates the share: %s",
+    (note) => {
+      const pills = noticePills(null, [], { ...upfront, note });
+      expect(pills.map(({ text }) => text)).toEqual(["Client asked for 50% upfront, set below"]);
+    },
+  );
+
+  it("shows a delivery note when there is no share to restate", () => {
+    const pills = noticePills(null, [], {
+      upfrontPercent: null,
+      note: "the rest when you deliver",
+      quote: "pay the rest when you deliver",
+    });
+    expect(pills).toHaveLength(1);
   });
 
   it("comes after the privacy pill and before the warnings", () => {

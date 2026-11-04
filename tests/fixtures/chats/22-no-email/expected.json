@@ -12,6 +12,6 @@
   "due": {
     "rule": "none"
   },
-  "warnings": ["no_client_email", "no_payment_terms"],
+  "warnings": ["no_client_email", "no_due_date"],
   "contacts": []
 }

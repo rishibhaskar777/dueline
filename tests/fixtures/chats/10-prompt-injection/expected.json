@@ -12,6 +12,6 @@
   "due": {
     "rule": "none"
   },
-  "warnings": ["no_payment_terms", "injection"],
+  "warnings": ["no_due_date", "injection"],
   "contacts": ["vik@orbitgadgets-example.com"]
 }

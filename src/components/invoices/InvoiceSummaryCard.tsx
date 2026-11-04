@@ -143,18 +143,20 @@ export function InvoiceSummaryCard({ totals, pending, plan }: InvoiceSummaryCard
         )}
       </div>
 
-      <Button
-        type="submit"
-        size="lg"
-        disabled={pending}
-        className="mt-1.5 h-14 text-[17px] font-bold"
-      >
-        {pending
-          ? "Creating and sending…"
-          : plan
-            ? "Create deposit and save balance"
-            : "Create and send invoice"}
-      </Button>
+      <div className="sticky bottom-0 mt-1.5 max-lg:static">
+        <Button
+          type="submit"
+          size="lg"
+          disabled={pending}
+          className="h-14 w-full text-[17px] font-bold"
+        >
+          {pending
+            ? "Creating and sending…"
+            : plan
+              ? "Create deposit and save balance"
+              : "Create and send invoice"}
+        </Button>
+      </div>
     </section>
   );
 }

@@ -22,8 +22,7 @@ vi.mock("ai", async (importOriginal) => ({
 let store: Store;
 vi.mock("@/lib/store", () => ({ getStore: () => store }));
 
-const NO_TERMS_WARNING =
-  "No payment terms in the chat; due date set to 14 days from today. Change it if needed.";
+const NO_TERMS_WARNING = "No due date in the chat; set to 14 days from today. Change it if needed.";
 const haldenChat = readFileSync("tests/fixtures/chats/halden-logos.txt", "utf8");
 
 function modelAnswers(output: ModelDraft): void {

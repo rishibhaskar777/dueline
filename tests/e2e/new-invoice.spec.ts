@@ -51,9 +51,7 @@ test.describe("New invoice", () => {
 
     await expect(page.getByLabel("Client name")).toHaveValue("Kraftwerk Studio");
     await expect(page.getByLabel("Contact name (optional)")).toHaveValue("Lena Fischer");
-    await expect(
-      page.getByText("Client asked for 50% upfront: “Can we do 50% now and rest on delivery?”"),
-    ).toBeVisible();
+    await expect(page.getByText("Client asked for 50% upfront, set below")).toBeVisible();
     await expect(page.getByRole("checkbox", { name: /Export under LUT/ })).toBeChecked();
     await expect(page.getByText(/We hid/)).toHaveCount(0);
   });
