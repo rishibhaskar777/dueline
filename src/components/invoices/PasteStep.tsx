@@ -20,6 +20,8 @@ export interface Drafted {
   notice: string | null;
   risk: ClientRisk | null;
   paymentTerms: PaymentTerms | null;
+  // The chat as pasted, null when the invoice was not drafted from one.
+  chat: string | null;
 }
 
 interface PasteStepProps {
@@ -44,7 +46,7 @@ export function PasteStep({ onDrafted }: PasteStepProps) {
     setAiDown(false);
     try {
       const { draft, warnings, masked, risk, paymentTerms } = await extractInvoice(chat);
-      onDrafted({ draft, warnings, notice: maskedNotice(masked), risk, paymentTerms });
+      onDrafted({ draft, warnings, notice: maskedNotice(masked), risk, paymentTerms, chat });
     } catch (caught) {
       if (caught instanceof ApiClientError && caught.code === "extraction_failed") {
         onDrafted({
@@ -53,6 +55,7 @@ export function PasteStep({ onDrafted }: PasteStepProps) {
           notice: null,
           risk: null,
           paymentTerms: null,
+          chat,
         });
         return;
       }
@@ -121,6 +124,7 @@ export function PasteStep({ onDrafted }: PasteStepProps) {
                   notice: null,
                   risk: null,
                   paymentTerms: null,
+                  chat: null,
                 })
               }
             >
