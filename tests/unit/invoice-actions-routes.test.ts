@@ -7,6 +7,7 @@ import type { PayPalInvoice } from "@/lib/paypal/types";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
 import { stubEnv } from "../support/env";
+import { ecbResponse, isRatesRequest } from "../support/rates";
 import unpaidFixture from "../fixtures/paypal/invoice-unpaid.json";
 import "../support/next-server";
 
@@ -71,6 +72,11 @@ beforeEach(() => {
   paypal.recordExternalPayment.mockResolvedValue(undefined);
   paypal.loadInvoices.mockResolvedValue([]);
   vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+    const url = new URL(input instanceof Request ? input.url : String(input));
+    if (isRatesRequest(url)) return ecbResponse();
+    throw new Error(`Unexpected request to ${url.host}`);
+  });
 });
 
 afterEach(() => vi.restoreAllMocks());
