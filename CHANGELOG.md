@@ -79,6 +79,7 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Docs
 
+- Docs: architecture document rewritten with animated flow diagrams.
 - README rewritten for the PayPal AI Hackathon 2026: what Dueline does, how it uses PayPal, AI and AG Grid, how to try it and how to run it, with screenshots in `docs/images/`.
 - The extraction evaluation is regenerated with today's results. It compares amounts as numbers and names without regard to case or spacing, and its report names each item, so a difference in wording no longer reads as "12 x 65.00 against 12 x 65.00".
 

@@ -185,6 +185,8 @@ client column on narrower screens.
 
 <p align="center"><sub>The diagram plays the life of one invoice in eight steps, from a pasted chat to the rupees on Home. It loops every 24 seconds.</sub></p>
 
+The key flows, the data model, the AI safety checks and the design decisions each have their own animated diagram or table in the architecture document. [Read the full architecture](docs/architecture.md).
+
 <details>
 <summary><b>The eight steps in words</b></summary>
 
@@ -226,10 +228,10 @@ client column on narrower screens.
 
 |                  |                                                                                                      |
 | ---------------- | ---------------------------------------------------------------------------------------------------- |
-| Unit tests       | 1,730 in 146 files (Vitest)                                                                          |
-| End-to-end tests | 119 (Playwright), including axe in both themes                                                       |
+| Unit tests       | 2,193 in 181 files (Vitest)                                                                          |
+| End-to-end tests | 185 in 22 files plus the sign-in setup (Playwright), including axe in both themes                    |
 | CI               | Format, lint, typecheck, tests, build and end-to-end tests on every pull request; CodeQL; Dependabot |
-| Decisions        | [23 decision records](docs/decisions/) and an [API contract](docs/api-contract.md)                   |
+| Decisions        | [25 decision records](docs/decisions/) and an [API contract](docs/api-contract.md)                   |
 | Access           | Demo password with a signed session and sign-in limits                                               |
 | Safety           | Verified webhooks, idempotent writes, a strict Content Security Policy, no secrets in the repository |
 
