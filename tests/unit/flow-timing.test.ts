@@ -8,37 +8,37 @@ import {
   railDelay,
 } from "@/components/site/flow-timing";
 
-const RAILS = 3;
-const CARDS = 4;
-
 function secondsOf(value: string): number {
   return Number(value.replace("s", ""));
 }
 
 describe("railDelay", () => {
-  it("starts the rails at 0, 1/3 and 2/3 of the cycle", () => {
-    const delays = [0, 1, 2].map((rail) => secondsOf(railDelay(rail, RAILS)));
+  it("starts the rails at 0, 1/4 and 2/4 of the cycle, leaving the last quarter to rest", () => {
+    const delays = [0, 1, 2].map((rail) => secondsOf(railDelay(rail)));
     expect(delays[0]).toBe(0);
-    expect(delays[1]).toBeCloseTo(FLOW_CYCLE_SECONDS / 3, 3);
-    expect(delays[2]).toBeCloseTo((FLOW_CYCLE_SECONDS * 2) / 3, 3);
+    expect(delays[1]).toBeCloseTo(FLOW_CYCLE_SECONDS / 4, 3);
+    expect(delays[2]).toBeCloseTo(FLOW_CYCLE_SECONDS / 2, 3);
   });
 
   it("writes the cycle as seconds", () => {
-    expect(flowCycle()).toBe("4.8s");
-    expect(railDelay(1, RAILS)).toBe("1.6s");
+    expect(flowCycle()).toBe("5.6s");
+    expect(railDelay(1)).toBe("1.4s");
   });
 });
 
 describe("cardDelay", () => {
-  it("lights the first card at the start and the next two as each rail ends", () => {
-    expect(cardDelay(0, CARDS)).toBe(railDelay(0, RAILS));
-    expect(cardDelay(1, CARDS)).toBe(railDelay(1, RAILS));
-    expect(cardDelay(2, CARDS)).toBe(railDelay(2, RAILS));
+  it("lights the cards at 0, 1/4, 2/4 and 3/4 of the cycle", () => {
+    const delays = [0, 1, 2, 3].map((card) => secondsOf(cardDelay(card)));
+    expect(delays).toEqual([0, 1.4, 2.8, 4.2]);
   });
 
-  it("ends the last card's highlight where the cycle ends", () => {
-    const start = secondsOf(cardDelay(3, CARDS));
-    expect(start + FLOW_HIGHLIGHT_SECONDS).toBeCloseTo(FLOW_CYCLE_SECONDS, 3);
+  it("lights each card as the dot of the rail before it arrives", () => {
+    expect(cardDelay(1)).toBe(railDelay(1));
+    expect(cardDelay(2)).toBe(railDelay(2));
+  });
+
+  it("finishes the last highlight before the cycle ends", () => {
+    expect(secondsOf(cardDelay(3)) + FLOW_HIGHLIGHT_SECONDS).toBeLessThan(FLOW_CYCLE_SECONDS);
   });
 });
 

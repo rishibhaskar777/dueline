@@ -114,15 +114,54 @@ test.describe("public website", () => {
     );
   });
 
-  for (const path of ["/", "/demo", ...PAGES.map(({ path }) => path)]) {
-    test(`${path} does not scroll sideways on a phone`, async ({ page }) => {
-      await page.setViewportSize({ width: 360, height: 844 });
-      await page.goto(path);
-      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-      const overflow = await page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      );
-      expect(overflow).toBeLessThanOrEqual(0);
-    });
+  for (const width of [360, 768, 1024]) {
+    for (const path of ["/", "/demo", ...PAGES.map(({ path }) => path)]) {
+      test(`${path} does not scroll sideways at ${width} px`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 844 });
+        await page.goto(path);
+        await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+        const overflow = await page.evaluate(
+          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        );
+        expect(overflow).toBeLessThanOrEqual(0);
+      });
+    }
   }
+
+  test("the four payment cards are the same height and line up", async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await page.goto("/built-on-paypal");
+    const boxes = await page.locator(".dl-flow-card").evaluateAll((cards) =>
+      cards.map((card) => {
+        const { top, height } = card.getBoundingClientRect();
+        return { top: Math.round(top), height: Math.round(height) };
+      }),
+    );
+    expect(boxes).toHaveLength(4);
+    expect(new Set(boxes.map(({ top }) => top)).size).toBe(1);
+    expect(new Set(boxes.map(({ height }) => height)).size).toBe(1);
+  });
+
+  test("one dot crosses each rail in turn and the last quarter of the cycle rests", async ({
+    page,
+  }) => {
+    await page.goto("/built-on-paypal");
+    const at = async (seconds: number): Promise<string[]> => {
+      await page.evaluate((time) => {
+        for (const animation of document.getAnimations()) {
+          animation.pause();
+          animation.currentTime = time * 1000;
+        }
+      }, seconds);
+      return page
+        .locator(".dl-flow")
+        .evaluateAll((dots) => dots.map((dot) => getComputedStyle(dot).opacity));
+    };
+    const visible = (opacities: string[]): number[] =>
+      opacities.flatMap((opacity, rail) => (Number(opacity) > 0.5 ? [rail] : []));
+    expect(visible(await at(0.5))).toEqual([0]);
+    expect(visible(await at(2))).toEqual([1]);
+    expect(visible(await at(3.4))).toEqual([2]);
+    expect(visible(await at(5))).toEqual([]);
+  });
 });

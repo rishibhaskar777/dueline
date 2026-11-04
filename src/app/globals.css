@@ -650,21 +650,22 @@
   }
 }
 
-/* One third of the cycle is the dot's own trip along its rail; it is invisible for the rest. The
-   rails start one third apart (see flow-timing.ts), so the dots hand over like a relay. */
+/* A quarter of the cycle is the dot's own trip along its rail; it is invisible for the rest. The
+   rails start one quarter apart and the last quarter is a rest (see flow-timing.ts), so the dots hand
+   over like a relay. */
 @keyframes dl-flow {
   0% {
     left: 0%;
     opacity: 0;
     animation-timing-function: cubic-bezier(0.5, 0, 0.5, 1);
   }
-  3% {
+  2% {
     opacity: 1;
   }
-  30.333% {
+  22.5% {
     opacity: 1;
   }
-  33.333%,
+  25%,
   100% {
     left: 100%;
     opacity: 0;

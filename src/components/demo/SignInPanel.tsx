@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SignInDueDates } from "@/components/demo/SignInDueDates";
 import { Wordmark } from "@/components/layout/Wordmark";
 
 const MINI =
@@ -51,13 +52,10 @@ export function SignInPanel() {
             <span className="text-[13px] font-bold text-[#9cc4ff]">Due in 2 days</span>
           </div>
           <div className="relative mt-1.5 h-2 rounded-lg bg-white/14">
-            <span className="dl-bar absolute inset-y-0 left-0 w-[82%] rounded-lg bg-[linear-gradient(90deg,#5b9bff,#9cc4ff)]" />
-            <span className="absolute top-1/2 left-[82%] -mt-[7px] -ml-[7px] size-3.5 rounded-full bg-white shadow-[0_0_0_4px_rgba(156,196,255,0.35)]" />
+            <span className="dl-bar absolute inset-y-0 left-0 w-[88%] rounded-lg bg-[linear-gradient(90deg,#5b9bff,#9cc4ff)]" />
+            <span className="absolute top-1/2 left-[88%] -mt-[7px] -ml-[7px] size-3.5 rounded-full bg-white shadow-[0_0_0_4px_rgba(156,196,255,0.35)]" />
           </div>
-          <div className="flex justify-between text-xs opacity-65">
-            <span>Sent 20 Oct</span>
-            <span>Due 4 Nov</span>
-          </div>
+          <SignInDueDates />
         </div>
       </div>
 

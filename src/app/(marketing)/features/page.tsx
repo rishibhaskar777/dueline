@@ -83,6 +83,16 @@ const GROUPS: Group[] = [
         body: "Reminders drafted firmer for late payers. Send PayPal’s reminder, your own email, or both.",
       },
       {
+        mark: "◔",
+        title: "Heads-up before the due date",
+        body: "A friendly note a few days ahead, in your client’s language, that never mentions lateness. You choose how many days.",
+      },
+      {
+        mark: "✎",
+        title: "Promised dates",
+        body: "Note the date a client promised to pay. Reminders wait for it, and a broken promise makes the next one firm.",
+      },
+      {
         mark: "—",
         title: "The due line",
         body: "Each invoice as a line from sent to paid, so the late ones stand out at a glance.",

@@ -61,14 +61,14 @@ export default function BuiltOnPayPalPage() {
           <h2 id="flow-title">How a payment reaches Dueline</h2>
           <style>{cardHighlightKeyframes()}</style>
           <ol
-            className="flex flex-col gap-3 [--rail-gap:36px] md:grid md:grid-cols-4 md:items-center md:gap-x-(--rail-gap) lg:[--rail-gap:72px]"
+            className="flex flex-col gap-3 [--rail-gap:36px] md:grid md:grid-cols-4 md:gap-x-(--rail-gap) lg:[--rail-gap:72px]"
             style={{ "--flow-cycle": flowCycle() } as CSSProperties}
           >
             {FLOW.map((step, index) => (
               <li key={step.title} className="relative">
                 <div
-                  className="dl-flow-card flex w-full flex-col gap-1.5 rounded-[22px] bg-inner p-[18px] shadow-[inset_0_0_0_1px_var(--glass-edge)]"
-                  style={{ animationDelay: cardDelay(index, FLOW.length) }}
+                  className="dl-flow-card flex h-full w-full flex-col gap-1.5 rounded-[22px] bg-inner p-[18px] shadow-[inset_0_0_0_1px_var(--glass-edge)]"
+                  style={{ animationDelay: cardDelay(index) }}
                 >
                   <p className="font-heading text-lg font-extrabold">{step.title}</p>
                   <p className="text-sm leading-snug text-muted-foreground">{step.body}</p>
@@ -80,7 +80,7 @@ export default function BuiltOnPayPalPage() {
                   >
                     <span
                       className="dl-flow bg-blue-line"
-                      style={{ animationDelay: railDelay(index, FLOW.length - 1) }}
+                      style={{ animationDelay: railDelay(index) }}
                     />
                   </div>
                 )}

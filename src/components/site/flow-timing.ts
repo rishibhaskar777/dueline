@@ -1,7 +1,9 @@
-// The "How a payment reaches Dueline" animation is one payment travelling across the cards. A cycle is
-// split in equal parts, one per rail; every dot runs the same keyframes and starts one part later than
-// the one before. Every number below comes from these two constants.
-export const FLOW_CYCLE_SECONDS = 4.8;
+// The "How a payment reaches Dueline" animation is one payment travelling across four cards. A cycle
+// is four equal quarters: the dot crosses rail 1 in the first, rail 2 in the second and rail 3 in the
+// third, and the fourth is a rest with no dot. Card n lights up as the dot reaches it, at n quarters.
+// Every number below comes from these constants.
+export const FLOW_CYCLE_SECONDS = 5.6;
+export const FLOW_QUARTERS = 4;
 export const FLOW_HIGHLIGHT_SECONDS = 0.6;
 
 const BASE_SHADOW = "inset 0 0 0 1px var(--glass-edge)";
@@ -16,18 +18,14 @@ export function flowCycle(): string {
   return seconds(FLOW_CYCLE_SECONDS);
 }
 
-// Rail 0 runs first, rail 1 one part of the cycle later, and so on.
-export function railDelay(rail: number, rails: number): string {
-  return seconds((rail * FLOW_CYCLE_SECONDS) / rails);
+// Rail 0 runs in the first quarter, rail 1 in the second, and so on.
+export function railDelay(rail: number): string {
+  return seconds((rail * FLOW_CYCLE_SECONDS) / FLOW_QUARTERS);
 }
 
-// A card lights up as the dot reaches it: the first at the start of the cycle, the others when the
-// rail before them ends. The last card's rail ends as the cycle does, which is when the first card
-// lights up again, so the last card's highlight finishes at that moment instead of starting at it.
-export function cardDelay(card: number, cards: number): string {
-  const rails = cards - 1;
-  if (card < cards - 1) return railDelay(card, rails);
-  return seconds(FLOW_CYCLE_SECONDS - FLOW_HIGHLIGHT_SECONDS);
+// Card 0 lights at the start of the cycle and each later card when the rail before it ends.
+export function cardDelay(card: number): string {
+  return railDelay(card);
 }
 
 // Keyframes for a card's highlight: it fades in and out within FLOW_HIGHLIGHT_SECONDS of the cycle.
