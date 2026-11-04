@@ -113,6 +113,8 @@ export function buildDemoProfile(today: string): Profile {
     website: null,
     address: "12 Brigade Road, Bengaluru 560001, Karnataka",
     signOff: "Thank you",
+    sendHeadsUp: true,
+    headsUpDays: 3,
   };
 }
 
@@ -257,7 +259,7 @@ const DEMO_IDENTITY_FIELDS = [
   "signOff",
 ] as const satisfies readonly (keyof Profile)[];
 
-function isFilled(value: string | null): boolean {
+function isFilled(value: string | number | boolean | null): boolean {
   return value !== null && value !== "";
 }
 

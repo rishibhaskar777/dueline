@@ -4,6 +4,7 @@ import { daysBetween } from "@/lib/date-math";
 import { getEnv } from "@/lib/env";
 import { cancelInvoice, deleteDraftInvoice } from "@/lib/paypal/invoices";
 import { listInvoicesInFull, refreshSnapshotNow } from "@/lib/paypal/summaries";
+import { warmPayoutRates } from "@/lib/payouts/warm-rates";
 import type { PayPalInvoice } from "@/lib/paypal/types";
 import { getStore } from "@/lib/store";
 import type { DemoResetResponse } from "@/types";
@@ -83,6 +84,8 @@ export async function resetDemo(): Promise<DemoResetResponse> {
   } finally {
     await refreshSnapshotNow();
   }
+  await getStore().clearPromises();
+  await warmPayoutRates();
   const { generation, rows } = seeded;
 
   const created = rows.filter((row) => row.result === "created" || row.result === "repaired");
@@ -130,6 +133,8 @@ export async function reseedStaleDemo(): Promise<void> {
   } finally {
     await refreshSnapshotNow();
   }
+  await getStore().clearPromises();
+  await warmPayoutRates();
   const { generation, rows } = seeded;
   const failed = rows.filter((row) => row.result === "failed").length;
   console.info("Demo re-seeded", { generation, cancelled, created: rows.length - failed, failed });

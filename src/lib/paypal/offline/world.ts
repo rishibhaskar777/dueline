@@ -4,6 +4,7 @@ import { today } from "@/lib/clock";
 import { getEnv } from "@/lib/env";
 import { createFakePayPal, type FakePayPal } from "./fake-paypal";
 import { addPaidInvoices } from "./paid-story";
+import { addSavedBalance } from "./saved-balance";
 
 const world = createFakePayPal();
 
@@ -20,6 +21,7 @@ async function seed(): Promise<void> {
     throw new Error("The offline demo story could not be created.");
   }
   addPaidInvoices(world, today(), getEnv().SANDBOX_BUYER_EMAIL ?? "");
+  addSavedBalance(world, today(), getEnv().SANDBOX_BUYER_EMAIL ?? "");
 }
 
 // The one fake PayPal of this process. The first caller seeds the demo story and every other caller

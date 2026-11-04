@@ -71,15 +71,16 @@ beforeAll(() => {
 });
 
 describe("offline PayPal", () => {
-  it("seeds the demo story and the PayPal-paid invoices once, however many ask first", async () => {
+  it("seeds the demo story, the PayPal-paid invoices and a saved balance once, however many ask first", async () => {
     const [first, second] = await Promise.all([listInvoices(), listInvoices()]);
-    expect(first).toHaveLength(15);
-    expect(second).toHaveLength(15);
+    expect(first).toHaveLength(16);
+    expect(second).toHaveLength(16);
 
     const statuses = first.map((invoice) => invoice.status).sort();
     expect(statuses.filter((status) => status === "SENT")).toHaveLength(4);
     expect(statuses.filter((status) => status === "PAID")).toHaveLength(4);
     expect(statuses.filter((status) => status === "MARKED_AS_PAID")).toHaveLength(7);
+    expect(statuses.filter((status) => status === "DRAFT")).toHaveLength(1);
   });
 
   it("saves the demo profile for the freelancer", async () => {

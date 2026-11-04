@@ -43,6 +43,8 @@ export function createFakePayPal() {
     payments: [] as { id: string; paymentDate: string }[],
   };
   let counter = 0;
+  // Set by a test to see what Dueline does when PayPal refuses a reminder.
+  let refusedReminderStatus: number | null = null;
 
   function add(
     status: Status,
@@ -113,8 +115,19 @@ export function createFakePayPal() {
         recipient_view_url: `${PAYER_LINK}${id}`,
       });
     },
+    refuseReminders: (status: number | null): void => {
+      refusedReminderStatus = status;
+    },
     remindInvoice: async (id: string): Promise<void> => {
       read(id);
+      if (refusedReminderStatus !== null) {
+        throw new PayPalApiError({
+          status: refusedReminderStatus,
+          paypalName: "INVALID_REQUEST",
+          message: "The invoice cannot be reminded.",
+          debugId: "offline-refused",
+        });
+      }
       calls.reminded.push(id);
     },
     recordExternalPayment: async (

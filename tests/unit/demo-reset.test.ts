@@ -16,8 +16,10 @@ const paypal = vi.hoisted(() => ({
   deleteDraftInvoice: vi.fn(),
   listInvoicesInFull: vi.fn(),
   refreshSnapshotNow: vi.fn(),
+  warmPayoutRates: vi.fn(),
 }));
 
+vi.mock("@/lib/payouts/warm-rates", () => ({ warmPayoutRates: paypal.warmPayoutRates }));
 vi.mock("@/lib/paypal/invoices", () => ({
   nextInvoiceNumber: paypal.nextInvoiceNumber,
   createDraftInvoice: paypal.createDraftInvoice,
@@ -59,6 +61,7 @@ beforeEach(() => {
   paypal.deleteDraftInvoice.mockImplementation(fake.deleteDraftInvoice);
   paypal.listInvoicesInFull.mockImplementation(fake.listInvoicesInFull);
   paypal.refreshSnapshotNow.mockReset();
+  paypal.warmPayoutRates.mockReset();
 });
 
 afterEach(() => {
@@ -94,6 +97,25 @@ describe("POST /api/demo/reset", () => {
     expect(fake.statusOf(partly.id)).toBe("PARTIALLY_PAID");
     expect(fake.statusOf(storyOpen.id)).toBe("CANCELLED");
     expect(paypal.refreshSnapshotNow).toHaveBeenCalledTimes(1);
+  });
+
+  it("forgets the dates clients promised in the demo", async () => {
+    await store.savePromise({
+      invoiceId: "INV2-OLD",
+      promisedOn: "2026-11-05",
+      note: "",
+      createdAt: "2026-10-31T05:00:00.000Z",
+    });
+    await reset();
+    expect(await store.listPromises()).toEqual([]);
+  });
+
+  it("fetches the rates behind the new story's payment dates before it answers", async () => {
+    await reset();
+    expect(paypal.warmPayoutRates).toHaveBeenCalledTimes(1);
+    expect(paypal.warmPayoutRates.mock.invocationCallOrder[0]).toBeGreaterThan(
+      paypal.refreshSnapshotNow.mock.invocationCallOrder[0],
+    );
   });
 
   it("clears the queued reminders of the old story, and keeps the retainers", async () => {
@@ -259,6 +281,12 @@ describe("reseedStaleDemo", () => {
     expect(
       [...fake.invoices.values()].filter((i) => i.detail.memo?.includes("dueline-demo:5:")),
     ).toHaveLength(STORY_SIZE);
+  });
+
+  it("fetches the rates behind the new story's payment dates", async () => {
+    await ageGenerationTo("2026-10-24");
+    await reseedStaleDemo();
+    expect(paypal.warmPayoutRates).toHaveBeenCalledTimes(1);
   });
 
   it("clears the queued reminders when it starts a new generation", async () => {
