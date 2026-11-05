@@ -29,6 +29,8 @@ interface ExtractOptions {
   beforeModelCall?: () => Promise<void>;
   // Neither reads nor writes stored answers, so the model is asked every time.
   fresh?: boolean;
+  // Told the id of the model that answered. Not called when a stored answer or offline mode is used.
+  onModelAnswered?: (modelId: string) => void;
 }
 
 type ExtractedDraft = Omit<ExtractResponse, "risk">;
@@ -46,8 +48,8 @@ function systemPrompt(date: string): string {
     'Write each item name as an invoice line with a capital letter, like "Logo design (3 options)" or "Revision round", not "logo options". The count still goes in quantity, and unitAmount stays the price of one unit.',
     "Give each line item the exact words from the chat it came from in sourceQuote.",
     `Today's date is ${date}. Use it to resolve words like "Friday the 30th".`,
-    'dueOn is when the client must pay, as YYYY-MM-DD. Use it only when the chat states payment terms, like "pay by", "net 15" or "payment due". A date by which the client wants the work delivered ("get it to us by Friday", "deliver by", "deadline") is not a payment date. Give dueOn as null when the chat states no payment terms.',
-    'Give paymentTerms when the client asks for a payment arrangement, with quote as the exact words from the chat. Set upfrontPercent only when a percentage or a fraction of the total ("half" is 50) is to be paid before delivery, as a number from 1 to 99, otherwise null. Put any other payment term the client wrote, like "net 30" or "after approval", in note, otherwise null. Use null for paymentTerms when the chat has none.',
+    'dueOn is when the client must pay, as YYYY-MM-DD. Payment terms in days ("net 15", "payment in 15 days", "within 7 days") or a payment date ("pay by", "payment due") set dueOn: count the days from today. A date by which the client wants the work delivered ("get it to us by Friday", "deliver by", "deadline") is not a payment date. Give dueOn as null only when the chat states no payment terms.',
+    'Give paymentTerms only for a payment arrangement that is not a due date, with quote as the exact words from the chat. Set upfrontPercent only when a percentage or a fraction of the total ("half" is 50) is to be paid before delivery, as a number from 1 to 99, otherwise null. Put any other condition the client wrote, like "after approval", in note, otherwise null. Never put net terms or a number of days in paymentTerms: they are dueOn. Use null for paymentTerms when the chat has neither an upfront share nor such a condition.',
     "Email addresses and phone numbers in the chat are replaced by placeholders such as [EMAIL_1]. Give clientEmail as the placeholder, or null. Never write an address yourself.",
     "Give clientCountry as the ISO 3166-1 alpha-2 code of the country the client is in, like PT, and countryQuote as the exact words from the chat that say so, like 'we are in Lisbon'. Use null for both when the chat does not say. Never guess from the currency alone.",
     "Give currency as USD, EUR, GBP, CAD or AUD, or null if the chat does not say. Give each unitAmount as the price of one unit, like 120.00, without a currency symbol.",
@@ -96,10 +98,14 @@ export function extractionRequest(
   return { system: systemPrompt(date), prompt: chatPrompt(stripChatPrefixes(masked)) };
 }
 
-async function askModel(masked: string, date: string): Promise<ModelDraft> {
+async function askModel(
+  masked: string,
+  date: string,
+  onModelAnswered?: (modelId: string) => void,
+): Promise<ModelDraft> {
   try {
-    const { output } = await runWithFallback((call) =>
-      generateText({
+    const { output } = await runWithFallback(async (call, modelId) => {
+      const result = await generateText({
         ...call,
         ...extractionRequest(masked, date),
         output: Output.object({
@@ -107,8 +113,10 @@ async function askModel(masked: string, date: string): Promise<ModelDraft> {
           name: "invoice_draft",
           description: "Invoice details found in a chat between a freelancer and a client",
         }),
-      }),
-    );
+      });
+      onModelAnswered?.(modelId);
+      return result;
+    });
     return output;
   } catch (error) {
     if (NoObjectGeneratedError.isInstance(error)) throw new ExtractionFailedError();
@@ -133,7 +141,7 @@ export async function extractInvoiceDraft(
     guess = offlineModelDraft(contacts.masked, date, profile.yourName);
   } else if (!guess) {
     await options.beforeModelCall?.();
-    guess = await askModel(contacts.masked, date);
+    guess = await askModel(contacts.masked, date, options.onModelAnswered);
   }
 
   const { draft, warnings, paymentTerms } = checkModelDraft(guess, {
