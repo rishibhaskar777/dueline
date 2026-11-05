@@ -40,6 +40,8 @@ interface SlidingIndicatorOptions {
   resetKey?: string | null;
 }
 
+export type SlidingIndicator = ReturnType<typeof useSlidingIndicator>;
+
 // Measures the items of a tab bar or segmented control and returns the style of the pill that
 // slides under the hovered, focused, clicked or active one.
 export function useSlidingIndicator({
@@ -124,9 +126,15 @@ export function useSlidingIndicator({
       }
     : { width: 0, opacity: 0, transition: "none" };
 
+  // The spring runs past the item it settles on. Clipping the pill to the items plus the track's
+  // 0.25rem padding keeps that overshoot from widening the track's scrollable area.
+  const end = Math.max(0, ...items.map((item) => item.left + item.width));
+  const clipStyle: CSSProperties = { width: `calc(${end}px + 0.25rem)` };
+
   return {
     highlighted: target?.index ?? null,
     indicatorStyle,
+    clipStyle,
     containerProps: { onPointerLeave: () => send({ type: "pointerleave" }) },
     itemProps: (index: number) => ({
       onPointerEnter: (event: PointerEvent<HTMLElement>) =>

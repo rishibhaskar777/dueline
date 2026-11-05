@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { NAV_TABS, activeTabIndex } from "./nav-tabs";
+import { SlidingPill } from "./SlidingPill";
 import { useNudgesCount } from "./use-nudges-count";
 import { useSlidingIndicator } from "./use-sliding-indicator";
 
@@ -40,11 +41,7 @@ export function MainTabs() {
         {...slider.containerProps}
         className="relative flex snap-x snap-mandatory gap-1 rounded-full bg-hover p-1 [scrollbar-width:none] overflow-x-auto overscroll-x-contain [&::-webkit-scrollbar]:hidden"
       >
-        <span
-          aria-hidden="true"
-          style={slider.indicatorStyle}
-          className="glass-indicator pointer-events-none absolute top-1 left-0 h-11 rounded-full"
-        />
+        <SlidingPill slider={slider} className="h-11" />
         {NAV_TABS.map((tab, index) => {
           const count = index === NUDGES ? overdue : 0;
           return (
@@ -59,7 +56,7 @@ export function MainTabs() {
               {...slider.itemProps(index)}
               className={cn(
                 "relative z-10 flex h-11 shrink-0 snap-start items-center justify-center rounded-full px-[18px] text-[15px] whitespace-nowrap transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring max-lg:md:px-3",
-                index === active ? "font-bold" : "font-semibold",
+                "font-semibold",
                 index === slider.highlighted ? "text-white" : "text-foreground",
               )}
             >
