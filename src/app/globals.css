@@ -683,6 +683,15 @@
   }
 }
 
+@keyframes dl-live-text {
+  from {
+    text-shadow: 0 0 10px color-mix(in srgb, var(--paid) 18%, transparent);
+  }
+  to {
+    text-shadow: 0 0 10px color-mix(in srgb, var(--paid) 45%, transparent);
+  }
+}
+
 @keyframes dl-float-a {
   0%,
   100% {
@@ -755,6 +764,11 @@
   animation: dl-live 2s ease-out infinite;
 }
 
+.dl-live-text {
+  text-shadow: 0 0 10px color-mix(in srgb, var(--paid) 35%, transparent);
+  animation: dl-live-text 2s ease-in-out infinite alternate;
+}
+
 .dl-flow {
   position: absolute;
   top: 50%;
@@ -795,6 +809,10 @@
 
   .dl-live::before {
     display: none;
+  }
+
+  .dl-live-text {
+    animation: none;
   }
 
   .dl-float-a,
