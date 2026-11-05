@@ -132,6 +132,17 @@ describe("GET /api/reminders", () => {
     expect((await (await list()).json()).remindersLeftToday).toBe(0);
   });
 
+  it("does not count messages sent from the freelancer's own email against the limit", async () => {
+    const now = new Date().toISOString();
+    for (const invoiceId of ["a", "b", "c"]) {
+      await store.logReminder({ invoiceId, tone: "gentle", sentAt: now, channel: "email" });
+    }
+    expect((await (await list()).json()).remindersLeftToday).toBe(2);
+
+    await store.logReminder({ invoiceId: "d", tone: "gentle", sentAt: now, channel: "paypal" });
+    expect((await (await list()).json()).remindersLeftToday).toBe(1);
+  });
+
   it("reports none left after PayPal answers 429, even with fewer reminders logged", async () => {
     paypal.remindInvoice.mockRejectedValueOnce(
       new PayPalApiError({ status: 429, paypalName: "RATE_LIMIT", message: "Too many" }),

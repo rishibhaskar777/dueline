@@ -33,7 +33,7 @@ export const bankColumns: ColDef<ExportOutsideRow>[] = [
     width: 115,
   },
   { headerName: "Invoice", field: "invoiceNumber", cellRenderer: InvoiceNumberCell, width: 110 },
-  { headerName: "Client", field: "clientName", width: 170 },
+  { headerName: "Client", field: "clientName", width: 180, minWidth: 180 },
   {
     headerName: "Amount",
     valueGetter: ({ data }) => (data ? Number(data.foreign.value) : 0),

@@ -4,12 +4,18 @@ test.describe("Reset the demo", () => {
   test("seeds the story on its own dates: Activity shows old dates, no test invoice, and the print page has the address", async ({
     page,
   }) => {
+    // A dismissed tour card comes back with the reset story.
+    await page.goto("/receivables");
+    await page.getByRole("button", { name: "Dismiss" }).click();
+    await expect(page.getByRole("region", { name: "Tour the demo" })).toHaveCount(0);
+
     await page.goto("/demo-tools");
     await page.getByRole("button", { name: "Reset the demo" }).click();
     await page.getByRole("button", { name: "Yes, reset the demo" }).click();
     await expect(page.getByText(/^Demo reset:/)).toBeVisible();
 
     await page.goto("/receivables");
+    await expect(page.getByRole("region", { name: "Tour the demo" })).toBeVisible();
     const activity = page.getByRole("region", { name: "Activity" });
     await expect(activity).toContainText("sent to Tandem Health");
 

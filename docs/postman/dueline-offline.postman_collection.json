@@ -1,0 +1,456 @@
+{
+  "info": {
+    "name": "Dueline, offline mode",
+    "description": "Run Dueline with npm run dev:offline, then run the requests in order. Nothing leaves your computer: PayPal and the AI are simulated.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Sign in with the offline password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"password\":\"offline\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/demo/session",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "demo", "session"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"answers 204 and sets the demo cookie\", function () {",
+              "  if (pm.response.code !== 204) throw new Error('Expected 204 but got ' + pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"answers 200 in offline mode\", function () {",
+              "  if (pm.response.code !== 200) throw new Error('Expected 200 but got ' + pm.response.code);",
+              "  const body = pm.response.json();",
+              "  if (!(body.offline === true)) throw new Error(\"Run the app with npm run dev:offline\");",
+              "  if (!(typeof body.today === 'string')) throw new Error(\"today is a YYYY-MM-DD string\");",
+              "  pm.collectionVariables.set('today', body.today);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. List invoices",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/invoices",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "invoices"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"lists invoices, totals and the balances ready to send\", function () {",
+              "  if (pm.response.code !== 200) throw new Error('Expected 200 but got ' + pm.response.code);",
+              "  const body = pm.response.json();",
+              "  if (!(Array.isArray(body.invoices) && body.invoices.length > 0)) throw new Error(\"invoices is a non-empty array\");",
+              "  if (!(typeof body.totals.outstandingInr === 'number')) throw new Error(\"totals.outstandingInr is a number\");",
+              "  if (!(Array.isArray(body.readyToSend))) throw new Error(\"readyToSend is an array\");",
+              "  const late = body.invoices.find(function (invoice) { return invoice.dueState === 'overdue' && invoice.paidOn === null; });",
+              "  if (!(late !== undefined)) throw new Error(\"the offline story has a late invoice\");",
+              "  pm.collectionVariables.set('lateInvoiceId', late.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. The demo buyer's address",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/demo/recipient",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "demo", "recipient"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"is a PayPal sandbox buyer address\", function () {",
+              "  if (pm.response.code !== 200) throw new Error('Expected 200 but got ' + pm.response.code);",
+              "  const body = pm.response.json();",
+              "  if (!(body.email.endsWith('@personal.example.com'))) throw new Error(\"email ends with @personal.example.com\");",
+              "  pm.collectionVariables.set('buyerEmail', body.email);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Draft an invoice from the sample chat",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"chat\": \"Mike (Halden Coffee Co.): Hey Riya! We're opening the new roastery next month. Need 3 logo options and 2 rounds of changes.\\nRiya: Sure Mike, ho jayega. Logos for $120 each, revisions $45 a round?\\nMike: Can we pay half now and the rest when you deliver?\\nMike: Works for us. Can you get it to us by Friday the 30th? Send the invoice to mike@haldencoffee.example\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/invoices/extract",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "invoices", "extract"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"returns a draft with items, warnings and what was masked\", function () {",
+              "  if (pm.response.code !== 200) throw new Error('Expected 200 but got ' + pm.response.code);",
+              "  const body = pm.response.json();",
+              "  if (!(Array.isArray(body.draft.items) && body.draft.items.length > 0)) throw new Error(\"draft.items is a non-empty array\");",
+              "  if (!(Array.isArray(body.warnings))) throw new Error(\"warnings is an array\");",
+              "  if (!(body.masked.emails >= 1)) throw new Error(\"the client's email was masked before the draft\");",
+              "  if (!(body.draft.currency === 'USD')) throw new Error(\"the sample chat is in dollars\");",
+              "  pm.collectionVariables.set('draft', JSON.stringify(body.draft));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Create a deposit and its balance",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{{splitBody}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/invoices/split",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "invoices", "split"]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "function addDays(date, days) {",
+              "  const moved = new Date(date + 'T00:00:00Z');",
+              "  moved.setUTCDate(moved.getUTCDate() + days);",
+              "  return moved.toISOString().slice(0, 10);",
+              "}",
+              "const today = pm.collectionVariables.get('today');",
+              "const draft = JSON.parse(pm.collectionVariables.get('draft'));",
+              "draft.client.email = pm.collectionVariables.get('buyerEmail');",
+              "pm.variables.set('splitBody', JSON.stringify({",
+              "  draft: draft,",
+              "  requestId: pm.variables.replaceIn('{{$guid}}'),",
+              "  balanceRequestId: pm.variables.replaceIn('{{$guid}}'),",
+              "  split: { percent: 50, depositDueOn: addDays(today, 7), balanceDueOn: addDays(today, 21) },",
+              "}));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"sends the deposit and saves the balance as a draft\", function () {",
+              "  if (pm.response.code !== 200) throw new Error('Expected 200 but got ' + pm.response.code);",
+              "  const body = pm.response.json();",
+              "  if (!(body.deposit.sent === true)) throw new Error(\"the deposit was sent\");",
+              "  if (!(body.balance !== null && typeof body.balance.id === 'string')) throw new Error(\"the balance was saved\");",
+              "  if (!(body.balance.paypalStatus === 'DRAFT')) throw new Error(\"the balance is a draft\");",
+              "  pm.collectionVariables.set('balanceId', body.balance.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Send the balance",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"requestId\":\"{{$guid}}\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/invoices/{{balanceId}}/send",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "invoices", "{{balanceId}}", "send"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"sends the balance\", function () {",
+              "  if (pm.response.code !== 200) throw new Error('Expected 200 but got ' + pm.response.code);",
+              "  const body = pm.response.json();",
+              "  if (!(body.sent === true)) throw new Error(\"sent is true\");",
+              "  if (!(body.invoice.id === pm.collectionVariables.get('balanceId'))) throw new Error(\"it is the same balance invoice\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Note a promised date on a late invoice",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{{promiseBody}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/invoices/{{lateInvoiceId}}/promise",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "invoices", "{{lateInvoiceId}}", "promise"]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "function addDays(date, days) {",
+              "  const moved = new Date(date + 'T00:00:00Z');",
+              "  moved.setUTCDate(moved.getUTCDate() + days);",
+              "  return moved.toISOString().slice(0, 10);",
+              "}",
+              "const promisedOn = addDays(pm.collectionVariables.get('today'), 3);",
+              "pm.variables.set('promiseBody', JSON.stringify({ promisedOn: promisedOn, note: 'Client replied on WhatsApp' }));",
+              "pm.collectionVariables.set('promisedOn', promisedOn);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"keeps the date and the note\", function () {",
+              "  if (pm.response.code !== 200) throw new Error('Expected 200 but got ' + pm.response.code);",
+              "  const body = pm.response.json();",
+              "  if (!(body.promisedOn === pm.collectionVariables.get('promisedOn'))) throw new Error(\"promisedOn is the date that was sent\");",
+              "  if (!(body.note === 'Client replied on WhatsApp')) throw new Error(\"the note is kept\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Remove the promised date",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/invoices/{{lateInvoiceId}}/promise",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "invoices", "{{lateInvoiceId}}", "promise"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"answers 204\", function () {",
+              "  if (pm.response.code !== 204) throw new Error('Expected 204 but got ' + pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. List reminders",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/reminders",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "reminders"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"lists drafts, heads-ups and the PayPal reminders left today\", function () {",
+              "  if (pm.response.code !== 200) throw new Error('Expected 200 but got ' + pm.response.code);",
+              "  const body = pm.response.json();",
+              "  if (!(Array.isArray(body.drafts) && Array.isArray(body.headsUps))) throw new Error(\"drafts and headsUps are arrays\");",
+              "  if (!(typeof body.remindersLeftToday === 'number')) throw new Error(\"remindersLeftToday is a number\");",
+              "  if (!(body.drafts.every(function (draft) { return draft.message.length > 0; }))) throw new Error(\"every draft has a message\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. Read last month's export register",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/export-register?month={{lastMonth}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "export-register"],
+          "query": [
+            {
+              "key": "month",
+              "value": "{{lastMonth}}"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const today = pm.collectionVariables.get('today');",
+              "const year = Number(today.slice(0, 4));",
+              "const month = Number(today.slice(5, 7));",
+              "const last = month === 1 ? [year - 1, 12] : [year, month - 1];",
+              "pm.collectionVariables.set('lastMonth', last[0] + '-' + String(last[1]).padStart(2, '0'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"lists the month's payments with a rupee total\", function () {",
+              "  if (pm.response.code !== 200) throw new Error('Expected 200 but got ' + pm.response.code);",
+              "  const body = pm.response.json();",
+              "  if (!(body.month === pm.collectionVariables.get('lastMonth'))) throw new Error(\"month is the one asked for\");",
+              "  if (!(Array.isArray(body.rows) && Array.isArray(body.outsideRows))) throw new Error(\"rows and outsideRows are arrays\");",
+              "  if (!(body.totalInr === body.paypalFiraInr + body.bankInr)) throw new Error(\"totalInr is the two kinds added up\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

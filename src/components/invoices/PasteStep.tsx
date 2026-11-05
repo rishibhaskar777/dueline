@@ -26,12 +26,13 @@ export interface Drafted {
 
 interface PasteStepProps {
   onDrafted: (drafted: Drafted) => void;
+  startWithSample: boolean;
 }
 
 const PILL = "h-11 px-5 font-bold";
 
-export function PasteStep({ onDrafted }: PasteStepProps) {
-  const [chat, setChat] = useState("");
+export function PasteStep({ onDrafted, startWithSample }: PasteStepProps) {
+  const [chat, setChat] = useState(startWithSample ? SAMPLE_CHAT : "");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // When the AI cannot be asked, filling the invoice in by hand is the way on.

@@ -21,6 +21,7 @@ import {
   payTimeLine,
   sendStates,
   sentMessage,
+  type SentReminder,
 } from "./nudge-model";
 import { ReplaceEditsPrompt } from "./ReplaceEditsPrompt";
 import { SendPanel } from "./SendPanel";
@@ -36,7 +37,7 @@ interface NudgeCardProps extends Nudge {
   // PayPal's daily reminder limit is used up, so drafting stays open but sending is not.
   limitReached: boolean;
   improve: ImproveDraft;
-  onSent: () => void;
+  onSent: (sent: SentReminder) => void;
 }
 
 // A late invoice whose client has promised a date shrinks to one line until that date has passed,
@@ -128,7 +129,13 @@ function OpenNudgeCard({
             />
           </div>
         )}
-        <p className="text-[15px] text-muted-foreground">{draft.reason}</p>
+        {headsUpNote ? (
+          <p role="status" className="text-[15px] font-bold text-paid">
+            {headsUpNote}
+          </p>
+        ) : (
+          <p className="text-[15px] text-muted-foreground">{draft.reason}</p>
+        )}
         {!headsUp && (
           <PromiseControl
             invoiceId={invoice.id}
@@ -193,14 +200,6 @@ function OpenNudgeCard({
       </div>
 
       <div className="grid min-w-0 content-start gap-3.5">
-        {headsUpNote && (
-          <p
-            role="status"
-            className="rounded-xl bg-tint-green px-3.5 py-2.5 text-sm font-bold text-paid"
-          >
-            {headsUpNote}
-          </p>
-        )}
         <SendPanel title="Send PayPal reminder">
           <p className="text-sm leading-normal text-muted-foreground">
             PayPal emails its standard reminder with a Pay now button. PayPal writes the wording.

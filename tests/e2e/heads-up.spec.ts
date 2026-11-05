@@ -7,6 +7,17 @@ const dueSoonCard = (page: Page) =>
     .getByRole("listitem")
     .filter({ has: page.getByRole("heading", { name: "Northpine Studio" }) });
 
+// The send is answered here, so the shared offline story is left as it was.
+async function answerSendsWithSuccess(page: Page): Promise<void> {
+  await page.route("**/api/reminders/send", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ sentAt: new Date().toISOString() }),
+    }),
+  );
+}
+
 async function setHeadsUp(page: Page, on: boolean, days: string): Promise<void> {
   await page.goto("/profile");
   const toggle = page.getByRole("switch", { name: "Send a heads-up before the due date" });
@@ -98,6 +109,95 @@ test.describe("Heads-up before the due date", () => {
     await expect(card.getByRole("button", { name: "Send PayPal reminder" })).toHaveCount(0);
     await expect(card.getByRole("button", { name: "Copy message" })).toBeEnabled();
     await expect(card.getByRole("alert")).toHaveCount(0);
+  });
+
+  test("after Send PayPal reminder the card says it was sent, locks, and leaves Due soon", async ({
+    page,
+  }) => {
+    await answerSendsWithSuccess(page);
+    await page.goto("/nudges");
+    const card = dueSoonCard(page);
+    await card.getByRole("button", { name: "Send PayPal reminder" }).click();
+
+    await expect(card.getByText(/^Heads-up sent, \d+ \w+$/)).toBeVisible();
+    await expect(card.getByText(/no heads-up sent yet/)).toHaveCount(0);
+    await expect(card.getByRole("button", { name: "Copy message" })).toBeDisabled();
+
+    await expect(card).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: /^Due soon/ })).toHaveCount(0);
+    await expect(
+      page.getByRole("status").filter({ hasText: "moved out of Due soon" }),
+    ).toContainText("Heads-up sent to Northpine Studio");
+  });
+
+  test("a failed send leaves the card as it was, with the error, and it stays in Due soon", async ({
+    page,
+  }) => {
+    await page.route("**/api/reminders/send", (route) =>
+      route.fulfill({
+        status: 502,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: {
+            code: "paypal_error",
+            message: "PayPal could not send it. Try again.",
+            debugId: "abc",
+          },
+        }),
+      }),
+    );
+    await page.goto("/nudges");
+    const card = dueSoonCard(page);
+    await card.getByRole("button", { name: "Send PayPal reminder" }).click();
+
+    await expect(card.getByRole("alert")).toContainText("PayPal could not send it");
+    await expect(card.getByText(/^Heads-up sent/)).toHaveCount(0);
+    await expect(card.getByRole("button", { name: "Send PayPal reminder" })).toBeEnabled();
+    await expect(card.getByRole("button", { name: "Copy message" })).toBeEnabled();
+    await page.waitForTimeout(2500);
+    await expect(card).toHaveCount(1);
+    await expect(page.getByRole("heading", { name: /^Due soon/ })).toBeVisible();
+    await expect(page.getByText("moved out of Due soon")).toHaveCount(0);
+    await expect(card.getByText(/no heads-up sent yet/)).toBeVisible();
+  });
+
+  test("a heads-up sent from your own email leaves Due soon the same way", async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await answerSendsWithSuccess(page);
+    await page.goto("/nudges");
+    const card = dueSoonCard(page);
+    await card.getByRole("button", { name: "Copy message" }).click();
+    await card.getByRole("button", { name: "I sent it" }).click();
+
+    await expect(card.getByText(/^Heads-up sent, \d+ \w+$/)).toBeVisible();
+    await expect(card).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: /^Due soon/ })).toHaveCount(0);
+  });
+
+  test("messages from your own email do not use up PayPal's two reminders a day", async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await answerSendsWithSuccess(page);
+    await page.goto("/nudges");
+    const lateCards = page
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("group", { name: "Tone" }) });
+
+    for (const card of [dueSoonCard(page), lateCards.first()]) {
+      await card.getByRole("button", { name: "Copy message" }).click();
+      await card.getByRole("button", { name: "I sent it" }).click();
+      await expect(card.getByRole("status").first()).toBeVisible();
+    }
+
+    await expect(page.getByText(/PayPal reminder limit for the demo account/)).toHaveCount(0);
+    await expect(
+      lateCards.nth(1).getByRole("button", { name: "Send PayPal reminder" }),
+    ).toBeEnabled();
   });
 
   test("has no serious accessibility problems in either theme", async ({ page }) => {

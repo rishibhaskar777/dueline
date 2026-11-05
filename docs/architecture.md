@@ -6,6 +6,13 @@ paid, drafts a PayPal invoice from a pasted client chat, scores late payers and 
 reminders, and keeps the export paperwork ready for a chartered accountant. It runs on the PayPal
 sandbox, so no real money moves.
 
+> **Read This First**
+>
+> - **What it is:** an invoicing and receivables app for freelancers in India paid through PayPal.
+> - **The three ideas:** PayPal does the money, the model only proposes and code decides, and every figure can be traced.
+> - **Where to start:** [section 1](#1-system-context), then [section 4.3](#43-a-payment-reaches-dueline).
+> - **What can wait:** [section 12](#12-serving-many-freelancers) and the [appendix](#appendix) can be skipped.
+
 Three ideas shape the design.
 
 1. **PayPal does the money.** Invoices, payments, fees and payment state live in PayPal. Dueline
@@ -25,12 +32,12 @@ Three ideas shape the design.
 | **PayPal APIs**      | 14 calls: the OAuth token, 10 Invoicing v2 calls, one Payments call, Transaction Search and webhook signature verification ([section 1](#1-system-context))       |
 | **AI**               | Gemini through the AI SDK, a primary and a fallback model. Used in two places: drafting an invoice from a chat and drafting reminders ([section 6](#6-ai-safety)) |
 | **Scheduled jobs**   | One: the morning run at 06:00 India time ([section 4.6](#46-the-morning-run))                                                                                     |
-| **Tests**            | 2,193 unit tests in 181 files (Vitest). 185 end-to-end tests in 22 files, plus one sign-in setup step (Playwright, with axe)                                      |
+| **Tests**            | 2,234 unit tests in 185 files (Vitest). 210 end-to-end tests in 23 files, plus one sign-in setup step (Playwright, with axe)                                      |
 | **Decision records** | 25 ([section 13](#13-decision-records))                                                                                                                           |
 | **API**              | 54 endpoints in 46 route files, described in the [API contract](api-contract.md)                                                                                  |
 | **Live demo**        | [dueline-azure.vercel.app](https://dueline-azure.vercel.app)                                                                                                      |
 
-Counted on 4 Nov 2026 from `tests/`, `docs/decisions/`, `src/app/api` and `src/lib/paypal`.
+Counted on 5 Nov 2026 from `tests/`, `docs/decisions/`, `src/app/api` and `src/lib/paypal`.
 
 ## Contents
 
@@ -497,8 +504,10 @@ tone, score a client, compute a total or send anything. The late-payer score and
 pure function of the invoice history.
 
 **Evaluation.** `npm run ai:eval` runs the real extraction (the model, then the checks in code) over
-25 chats in `tests/fixtures/chats` and compares the result with each chat's expected answer. It is
-run by hand, never by a test or CI. The latest run is from 3 Nov 2026 with `gemini-3.5-flash-lite`.
+the 27 chats in `tests/fixtures/chats` and compares the result with each chat's expected answer. It is
+run by hand, never by a test or CI. The latest run is from 3 Nov 2026 with `gemini-3.5-flash-lite`, over the 25 chats there were then.
+It never writes to the database named in `DATABASE_URL`: its usage counters are kept in memory, and
+it only replaces the report when run with `--write`.
 The full report is [docs/evaluation/extraction.md](evaluation/extraction.md).
 
 | Check                                 | Passed   | Share |
@@ -619,12 +628,12 @@ Judges open the demo after it has been idle, so the first read matters most.
 
 | Layer         | Where                                                     | What it covers                                                                                          |
 | ------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Unit          | `tests/unit`                                              | 2,193 tests in 181 files: logic, route handlers and the models behind components                        |
-| End to end    | `tests/e2e`                                               | 185 tests in 22 files on the production build in offline mode, in Chromium, plus one sign-in setup step |
+| Unit          | `tests/unit`                                              | 2,234 tests in 185 files: logic, route handlers and the models behind components                        |
+| End to end    | `tests/e2e`                                               | 210 tests in 23 files on the production build in offline mode, in Chromium, plus one sign-in setup step |
 | Accessibility | `tests/e2e/accessibility.spec.ts`                         | An axe check of 16 screens and 4 later states, each in light and dark                                   |
 | Contrast      | `tests/unit/theme-contrast.test.ts`                       | Checks the 4.5:1 text pairs in both themes from the stylesheet's tokens                                 |
 | Policy        | `tests/unit/next-config.test.ts`, `tests/e2e/csp.spec.ts` | Every Content Security Policy directive, and no browser message about it on any screen                  |
-| AI evaluation | `scripts/ai-eval.ts`                                      | Real Gemini over 25 chats. Run by hand, never by a test or CI ([section 6](#6-ai-safety))               |
+| AI evaluation | `scripts/ai-eval.ts`                                      | Real Gemini over 27 chats. Run by hand, never by a test or CI ([section 6](#6-ai-safety))               |
 
 - **No network in unit tests.** A setup file replaces `fetch` with a function that fails at once, so a
   test that forgets to mock PayPal or Gemini fails instead of reaching them
@@ -1292,7 +1301,10 @@ in the receivables theme (the theme lives in `components/grid/ag-grid.ts`, and `
 `components/shared/` marks "PayPal" or "est." rupees) with the CA's columns first (paid on, invoice,
 client, amount, rupees, purpose code, LUT, transaction ID) and the fee and net after them, a
 "Download CSV for your CA" link, and an explainer that cites PayPal's monthly digital FIRA with a
-"Learn more" link. A loading skeleton, an empty-month panel and an error panel
+"Learn more" link. Each grid ends with a pinned totals row worked out from the rows it lists (`grid-totals.ts`, one
+line for each currency), and has an "Export grid as CSV" button that uses AG Grid's CSV export for the
+columns on screen, without the totals row (`grid-export.ts`; the CA's download above has more
+columns). A loading skeleton, an empty-month panel and an error panel
 with PayPal's debug ID stand in for the content.
 
 **Business profile and GST exports**

@@ -66,7 +66,7 @@ export function NewInvoice({ prefill }: { prefill: Prefill }) {
     );
   }
   const shown = review ?? (prefilled.kind === "ready" ? prefilled.review : null);
-  if (!shown) return <PasteStep onDrafted={onDrafted} />;
+  if (!shown) return <PasteStep onDrafted={onDrafted} startWithSample={prefill.sampleChat} />;
   return (
     <ReviewStep
       key={review ? formNumber : "prefilled"}

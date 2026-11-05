@@ -10,14 +10,16 @@ import { AiQuotaError, reserveDailyModelCall } from "@/lib/ai/quota";
 import {
   expectedExtractionSchema,
   renderEvaluation,
+  renderReadmeTable,
+  renderTotals,
   scoreExtraction,
-  tally,
   type EvaluatedChat,
   type ExtractionOutcome,
 } from "@/lib/ai/score-extraction";
 import { today } from "@/lib/clock";
 import { ConfigError, getEnv } from "@/lib/env";
 import { maskContacts } from "@/lib/privacy/mask";
+import { switchToMemoryStore } from "@/lib/store";
 import { reportFailure } from "./report-failure";
 
 const CHATS_DIR = "tests/fixtures/chats";
@@ -55,7 +57,12 @@ async function evaluate(id: string, date: string): Promise<EvaluatedChat> {
   return { id, summary: expected.summary, score: scoreExtraction(expected, outcome, date) };
 }
 
+// Run with `--write` to replace the report; without it the figures are only printed.
+const WRITE_REPORT = process.argv.includes("--write");
+
 async function main(): Promise<void> {
+  // Usage counters go to memory, never to the database named in DATABASE_URL.
+  switchToMemoryStore();
   if (!getEnv().GEMINI_API_KEY) {
     throw new ConfigError(
       "Set GEMINI_API_KEY and GEMINI_MODEL in .env.local to run the evaluation.",
@@ -83,14 +90,17 @@ async function main(): Promise<void> {
   }
 
   const model = getEnv().GEMINI_MODEL ?? "unknown";
-  await mkdir("docs/evaluation", { recursive: true });
-  await writeFile(REPORT_PATH, `${renderEvaluation({ model, date, chats })}\n`);
+  console.log(`\nRun on ${date} with ${model}, over ${chats.length} chats.\n`);
+  console.log(`Totals (the shape of ${REPORT_PATH}):\n\n${renderTotals(chats)}\n`);
+  console.log(`README AI table:\n\n${renderReadmeTable(chats)}\n`);
 
-  const totals = tally(chats.flatMap((chat) => ("score" in chat ? [chat.score] : [])));
-  for (const [check, { passed, total }] of Object.entries(totals)) {
-    console.log(`${check}: ${passed} of ${total}`);
+  if (WRITE_REPORT) {
+    await mkdir("docs/evaluation", { recursive: true });
+    await writeFile(REPORT_PATH, `${renderEvaluation({ model, date, chats })}\n`);
+    console.log(`Report written to ${REPORT_PATH}`);
+  } else {
+    console.log(`Nothing written. Run with --write to replace ${REPORT_PATH}.`);
   }
-  console.log(`Report written to ${REPORT_PATH}`);
 }
 
 main().catch(reportFailure);

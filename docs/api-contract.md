@@ -766,7 +766,9 @@ invoice that is open and not yet due says nothing yet.
   template draft.
 - **Limits.** Drafts that call the model count towards the app's 400 calls a day, and
   `POST /api/reminders/draft` allows 20 an hour per address. PayPal allows two reminders a day per
-  caller, and Dueline sends at most one per invoice per India day.
+  caller, and Dueline sends at most one per invoice per India day. That limit applies to PayPal's
+  reminders only (`channel: "paypal"`): a message recorded with `channel: "email"` never uses one
+  up, on the server or in the Nudges screen's count of what has been sent in this visit.
 - **Two channels.** PayPal's Invoicing v2 schema says a user-provided `subject` or `note` on the
   remind and send calls "will not be honored" and is replaced with a system-defined value, so the
   drafted message never reaches the client through PayPal. Nudges offers two honest actions per card.
@@ -810,7 +812,7 @@ A friendly note, written before an invoice falls due and never mentioning latene
   the `heads_up` tone ("Heads-up"). The tab bar's Nudges count stays the number of late invoices, and the
   Today queue holds late invoices only. A card has no tone control, says "Due in 3 days" and offers both
   ways out, "Send PayPal reminder" and "Send my message" (Open in Gmail, email app, Copy, Preview and "I
-  sent it"). After either, the card shows "Heads-up sent, 4 Nov" and the invoice leaves the section.
+  sent it"). After either, the card replaces its reason line with "Heads-up sent, 4 Nov" and locks its buttons, and a couple of seconds later it leaves the section in the same visit, with a polite status line ("Heads-up sent to Northpine Studio for invoice INV-0069, 4 Nov. It has moved out of Due soon."); the section's count drops and the section hides when it is empty.
 - **Drafting.** The same pipeline as a late reminder: a model draft from the invoice's facts (the contact's
   first name, the amount, the due date), the shared checks (invoice number, amounts, no links or addresses),
   the normaliser (one thank you, the profile's sign-off) and a template in each of the seven languages when
@@ -1006,6 +1008,21 @@ replaced by the item. Profile lists the items and lets the freelancer rename or 
   shortcuts.
 - **Phones.** Below 768 px the top bar puts its tabs in a second row of their own, widgets stack,
   Receivables, Clients and the export register are lists of cards, each due line row stacks the client, the line and its label, and buttons and fields are at least 44 px tall.
+- **Tour the demo.** In demo mode Receivables opens with a "Tour the demo" card, the first widget of the
+  layout, that lists the README's two-minute path with each step linking to its place:
+  `/invoices/new?sample=1` opens New invoice with the sample chat in the box (nothing is drafted until
+  Draft invoice is pressed) and `/export?month=YYYY-MM` opens the export register on that month; other
+  values are ignored. The links come from the data on Home: "Clients behind" opens the late client furthest
+  behind (the Clients list when nobody is late), the export step opens the month before today's, and
+  "Deposit and balance" opens Ready to send when a balance is waiting there and the sample chat otherwise.
+  "Dismiss" hides the widget like Customise does, in this browser only (also when the browser lets the page
+  store nothing), and signing in to the demo or resetting it shows it again. No endpoint is involved.
+- **Export grids.** The PayPal and bank grids of the export register end with a pinned totals row,
+  "Total for October 2026", worked out from the rows they list: the number of payments, the rupees and,
+  for PayPal, the amount, fee and net, one line for each currency. "Export grid as CSV" saves the columns
+  on screen with AG Grid's CSV export (`dueline-paypal-2026-10.csv`, `dueline-bank-2026-10.csv`) without
+  the totals row; "Download CSV for your CA" (`GET /api/export-register?format=csv`) has more columns.
+  No endpoint is involved.
 - **Installable.** `manifest.webmanifest` (name Dueline, navy theme colour, icons made from
   `public/icon.svg`) and an apple touch icon let a phone or browser install it. There is no service
   worker, so an installed copy still needs a connection.

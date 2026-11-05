@@ -111,12 +111,14 @@ as annotations on the test.
 ### Checking the drafting from chats
 
 ```bash
-npm run ai:eval
+npm run ai:eval            # prints the figures
+npm run ai:eval -- --write # prints them and replaces docs/evaluation/extraction.md
 ```
 
-This sends the 24 chats in `tests/fixtures/chats` to the real model (about 24 calls, counted against
-the app's daily allowance, with a pause between them), compares each answer with that chat's
-`expected.json` and writes `docs/evaluation/extraction.md`. It needs `GEMINI_API_KEY` and
+This sends the 27 chats in `tests/fixtures/chats` to the real model (about 27 calls, with a pause
+between them), compares each answer with that chat's `expected.json` and prints the totals in the
+shape of `docs/evaluation/extraction.md` and of the README's AI table. The allowance it uses is
+counted in memory, so a configured `DATABASE_URL` is never written to. It needs `GEMINI_API_KEY` and
 `GEMINI_MODEL` in `.env.local`. It is never run by `npm test` or by CI. To add a chat, make a folder
 with a `chat.txt` and an `expected.json` (see the existing ones); use made-up companies and
 `example.com` addresses.

@@ -5,6 +5,7 @@ import { ForecastWidget } from "@/components/dashboard/ForecastWidget";
 import { LateClientsWidget } from "@/components/dashboard/LateClientsWidget";
 import { MorningWidget } from "@/components/dashboard/MorningWidget";
 import { RatesWidget } from "@/components/dashboard/RatesWidget";
+import { TourWidget } from "@/components/dashboard/TourWidget";
 import { UpcomingDueWidget } from "@/components/dashboard/UpcomingDueWidget";
 import type { useDashboard } from "@/components/dashboard/use-dashboard";
 import type { InvoiceSummary } from "@/types";
@@ -38,6 +39,14 @@ export function ReceivablesWidget({
   const { state, retry } = dashboard;
 
   switch (id) {
+    case "tour":
+      return (
+        <TourWidget
+          today={today}
+          invoices={invoices}
+          hasReadyToSend={data.readyToSend.length > 0}
+        />
+      );
     case "readyToSend":
       return <ReadyToSendCard invoices={data.readyToSend} onSent={onSent} />;
     case "checklist":

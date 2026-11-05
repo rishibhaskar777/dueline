@@ -11,7 +11,7 @@ export const TONE_LABELS: Record<Tone, string> = {
   final: "Final",
 };
 
-type SentReminder = ReminderDraft["history"][number];
+export type SentReminder = ReminderDraft["history"][number];
 
 // "Due today", "Due tomorrow" or "Due in 3 days", for an invoice that is not late.
 export function dueSoonLabel(dueOn: string, today: string): string {
@@ -128,6 +128,22 @@ export function sourceNote(source: ReminderDraft["source"]): string {
 export const IMPROVING_NOTE = "Improving the draft…";
 
 export const KEPT_EDITS_NOTE = "A better draft was ready, but your edits were kept.";
+
+// PayPal's two a day apply to its own reminders only; a message the freelancer sent from their own
+// email never uses one up.
+export function paypalRemindersLeft(leftToday: number, sentHere: ReminderChannel[]): number {
+  return leftToday - sentHere.filter((channel) => channel === "paypal").length;
+}
+
+// The polite line shown once a heads-up has been sent and its card has left Due soon.
+export function headsUpLeftNotice(
+  clientName: string,
+  invoiceNumber: string,
+  sentAt: string,
+): string {
+  const day = formatDayMonth(todayInKolkata(new Date(sentAt)));
+  return `Heads-up sent to ${clientName} for invoice ${invoiceNumber}, ${day}. It has moved out of Due soon.`;
+}
 
 export const LIMIT_REACHED_NOTICE =
   "Today's PayPal reminder limit for the demo account is used up. Drafts and your own email still work; PayPal reminders resume tomorrow.";

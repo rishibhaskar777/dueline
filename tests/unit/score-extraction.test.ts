@@ -6,6 +6,8 @@ import { extractionRequest } from "@/lib/ai/extract-invoice";
 import {
   expectedExtractionSchema,
   renderEvaluation,
+  renderReadmeTable,
+  renderTotals,
   scoreExtraction,
   tally,
   type ChatScore,
@@ -309,6 +311,47 @@ describe("tally and renderEvaluation", () => {
     expect(report).toContain("| 99-not-run | not run: the allowance is used up |");
     expect(report).toContain("**13-hinglish-logo** (Hinglish)");
     expect(report).toContain("- items: expected 1 x 150.00 (");
+  });
+
+  it("prints the totals in the shape of the report, from the chats that were scored", () => {
+    const totals = renderTotals(chats);
+    expect(totals.split("\n").slice(0, 2)).toEqual([
+      "| Check | Passed | Share |",
+      "| --- | --- | --- |",
+    ]);
+    expect(totals).toContain("| Items exactly right | 1 of 2 | 50% |");
+    expect(totals).toContain("| Purpose code right | 0 of 0 | n/a |");
+    expect(totals).not.toContain("99-not-run");
+  });
+
+  it("prints the README table with its own wording and a purpose code row", () => {
+    const table = renderReadmeTable(chats);
+    const cells = table.split("\n").map((line) =>
+      line
+        .split("|")
+        .slice(1, -1)
+        .map((cell) => cell.trim()),
+    );
+    expect(cells[0]).toEqual(["Check", "Result"]);
+    expect(cells).toContainEqual(["Items exactly right", "50%"]);
+    expect(cells).toContainEqual(["Purpose code right", "n/a"]);
+    expect(cells).toContainEqual(["Prompt injection flagged", "n/a"]);
+  });
+
+  it("prints the README table in the README's own format: same header, same wording, same order", () => {
+    const readme = readFileSync("README.md", "utf8");
+    const start = readme.indexOf("| Check ");
+    const published = readme.slice(start, readme.indexOf("\n\n", start)).split("\n");
+    const printed = renderReadmeTable(chats).split("\n");
+    const label = (line: string): string => line.split("|")[1].trim();
+
+    expect(printed.slice(0, 2)).toEqual(published.slice(0, 2));
+    const printedLabels = printed.slice(2).map(label);
+    let from = 0;
+    for (const line of published.slice(2)) {
+      from = printedLabels.indexOf(label(line), from);
+      expect(from, label(line)).toBeGreaterThan(-1);
+    }
   });
 
   it("says so when nothing differed", () => {

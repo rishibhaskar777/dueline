@@ -5,6 +5,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { showTourAgain } from "@/components/dashboard/use-layout";
 import { ApiClientError, signIn } from "@/lib/api-client";
 import { safeNextPath } from "@/lib/demo-access/next-path";
 import { checkPassword } from "./password-check";
@@ -43,6 +44,7 @@ export function DemoSignIn() {
     setProblem(null);
     try {
       await signIn(password);
+      showTourAgain();
       window.location.assign(next);
     } catch (error) {
       report(messageFor(error));

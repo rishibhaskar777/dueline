@@ -4,9 +4,14 @@ const LINE_END = "\r\n";
 const FORMULA_START = /^[=+\-@\t\r]/;
 const NEEDS_QUOTES = /[",\r\n]/;
 
+// A leading quote makes a spreadsheet read a text cell as text.
+export function protectFormula(value: string): string {
+  return FORMULA_START.test(value) ? `'${value}` : value;
+}
+
 export function cell(value: string | number | null): string {
   if (value === null) return "";
-  const text = typeof value === "string" && FORMULA_START.test(value) ? `'${value}` : String(value);
+  const text = typeof value === "string" ? protectFormula(value) : String(value);
   return NEEDS_QUOTES.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
