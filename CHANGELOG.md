@@ -20,9 +20,18 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Invoice page: a balance draft is dated with the day it is sent, keeping the days to pay, before PayPal sends it; if the update fails nothing is sent.
 - Features: Deposit and balance, Currency check and Printable GST invoice.
 - Docs: README rewritten for judges, with an animated story and an animated workflow diagram (docs/media).
+- Home: a "Tour the demo" card at the top, with the README's two-minute path as eight links (the sample chat, last month's export register, the late client furthest behind and so on, all worked out from the data on Home) and a Dismiss button. It is part of Customise, is remembered per browser, and comes back after signing in to the demo or resetting it. New invoice opens with the sample chat for `?sample=1` and the export register opens on the month in `?month=YYYY-MM`.
+- Export register: the PayPal and bank grids end with a pinned totals row ("Total for October 2026": the count of payments, the rupees and, for PayPal, the amount, fee and net in each currency), and each has an "Export grid as CSV" button that uses AG Grid's CSV export for the columns on screen, without the totals row (`dueline-paypal-2026-10.csv`). The CSV for your CA is unchanged.
+- `npm run ai:eval` prints the totals in the shape of the report and of the README's AI table, with a purpose code check; `npm run ai:eval -- --write` also replaces docs/evaluation/extraction.md.
+- Docs: a Postman collection for offline mode (docs/postman) that signs in, lists invoices, drafts from the sample chat, creates a deposit and balance, sends the balance, sets and removes a promised date, lists reminders and reads the export register, with a test in each request.
+- Docs: architecture.md starts with a "Read This First" box.
 
 ### Fixed
 
+- Nudges: after "Send PayPal reminder" or "I sent it" on a Due soon card, the card replaces its reason with "Heads-up sent, 5 Nov", locks its buttons and leaves the section within the visit, with a short status line, where it kept saying "no heads-up sent yet" until the page was reloaded. The section's count drops and the section hides when it is empty.
+- Export register: from 1280 px up the PayPal grid cut dates ("14 Oct 20…"), client names, amounts and transaction IDs. No column now shrinks below the room its values need, and the transaction ID sits on two lines.
+- Nudges: messages you send from your own email no longer count against PayPal's two reminders a day, so recording two of them no longer disables "Send PayPal reminder" on the other cards.
+- `npm run ai:eval` never writes to the database named in `DATABASE_URL`: its usage counters are kept in memory.
 - New invoice: "No payment terms in the chat" was about the due date, so it now says "No due date in the chat; set to 14 days from today", and the "Client's payment terms" notice is left out when it only repeats a half upfront ("the rest when you deliver"). The upfront notice no longer quotes the chat a second time beside the control.
 - The note PayPal shows for an invoice under LUT now says "under bond or Letter of Undertaking", as Rule 46 and the printed invoice do, and a balance note is kept inside PayPal's 4,000 characters with the LUT lines. Invoices made before still count as under LUT.
 - Invoice page: "Print or save as PDF" is dark on white in the dark theme, where it was an invisible white pill.

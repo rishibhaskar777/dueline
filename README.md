@@ -41,7 +41,7 @@ who are paid by clients abroad.
 | **PayPal**               | Runs on the PayPal sandbox, so you can send and pay invoices safely          |
 | **Built**                | Entirely during the hackathon, from 29 Oct 2026 ([changelog](CHANGELOG.md))  |
 
-**A two-minute path through every feature**
+**A two-minute path through every feature** (the same steps are the "Tour the demo" card at the top of Home, each one a link)
 
 1. **Home.** Each invoice is a line from the day it was sent to the day it was paid. Late ones turn red.
 2. **Clients behind.** Open a late client to see how often they paid late and the tone Dueline suggests.
@@ -175,7 +175,9 @@ The invoice table on Home and the PayPal and bank tables in the export register 
 custom cell renderers for invoice links, status pills and the FIRC field, sorting, and a theme built
 from Dueline's own design tokens so it follows light and dark mode. Home adds quick-filter search
 and opening a row with the keyboard; the export register folds the transaction ID column into the
-client column on narrower screens.
+client column on narrower screens. Both tables end with a pinned totals row ("Total for October 2026": the
+count, the rupees and, for PayPal, the fee and net in each currency) and have an "Export grid as CSV"
+button that uses AG Grid's own CSV export, headers as on screen and without the totals row.
 
 ## Architecture
 
@@ -228,8 +230,8 @@ The key flows, the data model, the AI safety checks and the design decisions eac
 
 |                  |                                                                                                      |
 | ---------------- | ---------------------------------------------------------------------------------------------------- |
-| Unit tests       | 2,193 in 181 files (Vitest)                                                                          |
-| End-to-end tests | 185 in 22 files plus the sign-in setup (Playwright), including axe in both themes                    |
+| Unit tests       | 2,234 in 185 files (Vitest)                                                                          |
+| End-to-end tests | 210 in 23 files plus the sign-in setup (Playwright), including axe in both themes                    |
 | CI               | Format, lint, typecheck, tests, build and end-to-end tests on every pull request; CodeQL; Dependabot |
 | Decisions        | [25 decision records](docs/decisions/) and an [API contract](docs/api-contract.md)                   |
 | Access           | Demo password with a signed session and sign-in limits                                               |
@@ -246,7 +248,9 @@ npm ci
 npm run dev:offline
 ```
 
-Open http://localhost:3000 and sign in with the password `offline`.
+Open http://localhost:3000 and sign in with the password `offline`. To call the API from Postman instead,
+import [docs/postman/dueline-offline.postman_collection.json](docs/postman/dueline-offline.postman_collection.json)
+and run its requests in order.
 
 **Full sandbox mode.**
 
