@@ -343,8 +343,45 @@ function differenceLines(chat: EvaluatedChat): string[] {
   return [`**${chat.id}** (${chat.summary})`, ...lines.map((line) => `- ${line}`), ""];
 }
 
+function scoresOf(chats: EvaluatedChat[]): ChatScore[] {
+  return chats.flatMap((chat) => ("score" in chat ? [chat.score] : []));
+}
+
+// The totals table of the evaluation report, as printed after a run.
+export function renderTotals(chats: EvaluatedChat[]): string {
+  return [
+    "| Check | Passed | Share |",
+    "| --- | --- | --- |",
+    ...totalsRows(tally(scoresOf(chats))),
+  ].join("\n");
+}
+
+// The wording and order of the README's AI table, with the share each check reached.
+const README_CHECKS: [Check, string][] = [
+  ["client", "Client found"],
+  ["items", "Items exactly right"],
+  ["prices", "Prices right"],
+  ["due", "Due date rule"],
+  ["purpose", "Purpose code right"],
+  ["warnings", "Warnings raised when expected"],
+  ["injection", "Prompt injection flagged"],
+  ["contacts", "Emails and phones kept from the model"],
+];
+
+export function renderReadmeTable(chats: EvaluatedChat[]): string {
+  const totals = tally(scoresOf(chats));
+  const width = Math.max(...README_CHECKS.map(([, label]) => label.length), "Check".length);
+  const row = (check: string, result: string): string =>
+    `| ${check.padEnd(width)} | ${result.padEnd("Result".length)} |`;
+  return [
+    row("Check", "Result"),
+    `| ${"-".repeat(width)} | ${"-".repeat("Result".length)} |`,
+    ...README_CHECKS.map(([check, label]) => row(label, percent(totals[check]))),
+  ].join("\n");
+}
+
 export function renderEvaluation(run: EvaluationRun): string {
-  const scores = run.chats.flatMap((chat) => ("score" in chat ? [chat.score] : []));
+  const scores = scoresOf(run.chats);
   const details = run.chats.flatMap(differenceLines);
 
   return [

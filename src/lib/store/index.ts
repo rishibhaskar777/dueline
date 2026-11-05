@@ -19,3 +19,9 @@ export function getStore(): Store {
   }
   return instance;
 }
+
+// For scripts that must not touch the configured database, such as the accuracy evaluation, which
+// would otherwise write its usage counters to it.
+export function switchToMemoryStore(): void {
+  instance = createMemoryStore();
+}
