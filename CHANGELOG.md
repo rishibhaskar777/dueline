@@ -28,6 +28,8 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- New invoice: payment terms in days or a date in the chat ("net 15", "payment in 15 days", "due on 2026-12-05") now always set the due date, even when the AI files them as a payment term; a payment term that only restates them is dropped. The 14-day default applies only when the chat states nothing.
+- `npm run ai:eval` scores "Item lines right" (quantity, price and currency per line, any order) apart from "Item names as in the example", and the report names the model that answered each chat.
 - Nudges: after "Send PayPal reminder" or "I sent it" on a Due soon card, the card replaces its reason with "Heads-up sent, 5 Nov", locks its buttons and leaves the section within the visit, with a short status line, where it kept saying "no heads-up sent yet" until the page was reloaded. The section's count drops and the section hides when it is empty.
 - Export register: from 1280 px up the PayPal grid cut dates ("14 Oct 20…"), client names, amounts and transaction IDs. No column now shrinks below the room its values need, and the transaction ID sits on two lines.
 - Nudges: messages you send from your own email no longer count against PayPal's two reminders a day, so recording two of them no longer disables "Send PayPal reminder" on the other cards.

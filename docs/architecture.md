@@ -508,7 +508,7 @@ the 27 chats in `tests/fixtures/chats` and compares the result with each chat's 
 run by hand, never by a test or CI. The latest run is from 3 Nov 2026 with `gemini-3.5-flash-lite`, over the 25 chats there were then.
 It never writes to the database named in `DATABASE_URL`: its usage counters are kept in memory, and
 it only replaces the report when run with `--write`.
-The full report is [docs/evaluation/extraction.md](evaluation/extraction.md).
+The report scores item lines (quantity, price and currency, in any order) apart from item names, and names the model that answered each chat, since the fallback model answers when the first is busy. Payment terms in days or a date set the due date in code ([`ai/due-terms.ts`](../src/lib/ai/due-terms.ts)) whenever the model gives none, so a model that files them as a payment term cannot lose them. The full report is [docs/evaluation/extraction.md](evaluation/extraction.md).
 
 | Check                                 | Passed   | Share |
 | ------------------------------------- | -------- | ----- |

@@ -10,7 +10,7 @@ import {
 import { maskContacts } from "@/lib/privacy/mask";
 import { createMemoryStore } from "@/lib/store/memory-store";
 import type { Store } from "@/lib/store/store";
-import { haldenGuess, haldenGuessWithTerms, noObjectError } from "../support/ai";
+import { apiCallError, haldenGuess, haldenGuessWithTerms, noObjectError } from "../support/ai";
 import { EMPTY_PROFILE } from "@/types";
 import { stubEnv } from "../support/env";
 
@@ -50,6 +50,36 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe("extractInvoiceDraft", () => {
+  it("tells the caller which model answered, the fallback after a busy first one", async () => {
+    const answered: string[] = [];
+    const onModelAnswered = (id: string): void => void answered.push(id);
+    modelAnswers(haldenGuess);
+    await extractInvoiceDraft(haldenChat, { fresh: true, onModelAnswered });
+
+    vi.mocked(generateText)
+      .mockRejectedValueOnce(apiCallError(429))
+      .mockResolvedValueOnce({ output: haldenGuess } as unknown as Awaited<
+        ReturnType<typeof generateText>
+      >);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    await extractInvoiceDraft(haldenChat, { fresh: true, onModelAnswered });
+    expect(answered).toEqual(["primary-model", "fallback-model"]);
+  });
+
+  it("does not name a model when a stored answer is reused", async () => {
+    modelAnswers(haldenGuess);
+    await extractInvoiceDraft(haldenChat);
+    const onModelAnswered = vi.fn();
+    await extractInvoiceDraft(haldenChat, { onModelAnswered });
+    expect(onModelAnswered).not.toHaveBeenCalled();
+  });
+
+  it("sends a prompt that puts net terms in the due date and not in the payment terms", () => {
+    const { system } = extractionRequest("Terms: net 15", "2026-10-28");
+    expect(system).toContain('Payment terms in days ("net 15"');
+    expect(system).toContain("Never put net terms or a number of days in paymentTerms");
+  });
+
   it("turns the Halden chat into a checked draft with the 14-day default due date", async () => {
     modelAnswers(haldenGuess);
     const result = await extractInvoiceDraft(haldenChat);

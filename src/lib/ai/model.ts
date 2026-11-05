@@ -81,14 +81,17 @@ function logFailure(modelId: string, error: unknown): void {
   });
 }
 
-export async function runWithFallback<T>(task: (call: ModelCall) => Promise<T>): Promise<T> {
+// The task is also told the id of the model it is running on, so a caller can record which one answered.
+export async function runWithFallback<T>(
+  task: (call: ModelCall, modelId: string) => Promise<T>,
+): Promise<T> {
   const models = getAiModels();
   if (!models) throw new AiUnavailableError("GEMINI_API_KEY is not set.");
 
   const candidates = models.fallback ? [models.primary, models.fallback] : [models.primary];
   for (const [index, candidate] of candidates.entries()) {
     try {
-      return await task(modelCallFor(candidate));
+      return await task(modelCallFor(candidate), candidate.id);
     } catch (error) {
       // Anything that is not a provider failure, such as NoObjectGeneratedError, is not retried.
       if (!isProviderFailure(error)) throw error;
