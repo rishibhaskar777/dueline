@@ -35,7 +35,9 @@ export function InvoiceTable({ invoices, today, onOpen }: InvoiceTableProps) {
   const counts = useMemo(() => countByStatus(invoices), [invoices]);
   const options = STATUS_FILTERS.map(({ value, label }) => ({
     value,
-    label: `${label} ${counts[value]}`,
+    label,
+    count: counts[value],
+    alert: value === "overdue",
   }));
   const context = useMemo<GridContext>(() => ({ today }), [today]);
   const rows = useMemo(() => sortForTable(filterByStatus(invoices, filter)), [invoices, filter]);
@@ -43,13 +45,14 @@ export function InvoiceTable({ invoices, today, onOpen }: InvoiceTableProps) {
   return (
     <section
       aria-labelledby="invoices-title"
-      className="surface flex flex-col gap-[18px] p-[26px] [--h2-size:26px] [--h2-tracking:-0.5px]"
+      className="surface flex flex-col gap-[18px] p-[26px] max-md:px-5 [--h2-size:26px] [--h2-tracking:-0.5px]"
     >
       <div className="flex flex-wrap items-center justify-between gap-3.5">
         <h2 id="invoices-title">Invoices</h2>
-        <div className="max-md:w-full max-md:[&>div]:flex max-md:[&>div]:w-full max-md:[&_button]:flex-auto max-md:[&_button]:px-1 max-md:[&_button]:text-[13px]">
+        <div className="max-md:w-full max-md:[&>div]:flex max-md:[&>div]:w-full max-md:[&>div]:gap-0 max-md:[&_button]:flex-auto max-md:[&_button]:px-0.5 max-md:[&_button]:text-xs">
           <Segmented
             label="Filter by status"
+            countNoun="invoice"
             options={options}
             value={filter}
             onChange={setFilter}

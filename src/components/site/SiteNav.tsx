@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef } from "react";
+import { SlidingPill } from "@/components/layout/SlidingPill";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useSlidingIndicator } from "@/components/layout/use-sliding-indicator";
 import { Wordmark } from "@/components/layout/Wordmark";
@@ -40,11 +41,7 @@ export function SiteNav() {
             {...slider.containerProps}
             className="relative flex gap-1 rounded-full bg-hover p-1 [scrollbar-width:none] max-lg:overflow-x-auto max-lg:overscroll-x-contain [&::-webkit-scrollbar]:hidden"
           >
-            <span
-              aria-hidden="true"
-              style={slider.indicatorStyle}
-              className="glass-indicator pointer-events-none absolute top-1 left-0 h-11 rounded-full"
-            />
+            <SlidingPill slider={slider} className="h-11" />
             {SITE_LINKS.map((link, index) => (
               <Link
                 key={link.href}
@@ -56,7 +53,7 @@ export function SiteNav() {
                 {...slider.itemProps(index)}
                 className={cn(
                   "relative z-10 flex h-11 shrink-0 items-center justify-center rounded-full px-[18px] text-[15px] whitespace-nowrap transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-                  index === active ? "font-bold" : "font-semibold",
+                  "font-semibold",
                   index === slider.highlighted ? "text-white" : "text-foreground",
                 )}
               >
