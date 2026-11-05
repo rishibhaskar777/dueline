@@ -24,6 +24,7 @@ async function Form({ searchParams }: Pick<PageProps<"/invoices/new">, "searchPa
         clientName: name.success ? name.data : null,
         duplicateId: duplicate && duplicate.length <= 100 ? duplicate : null,
         repeatId: repeat.success ? repeat.data : null,
+        sampleChat: single(query.sample) === "1",
       }}
     />
   );

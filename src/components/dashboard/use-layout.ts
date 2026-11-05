@@ -6,6 +6,7 @@ import {
   LAYOUT_STORAGE_KEY,
   parseLayout,
   resetLayout,
+  setWidgetVisible,
   type Layout,
 } from "./dashboard-layout";
 
@@ -50,6 +51,11 @@ function save(layout: Layout): void {
     unsaved = layout;
   }
   listeners.forEach((listener) => listener());
+}
+
+// A fresh demo session or a reset of the demo brings the tour card back, if it was dismissed.
+export function showTourAgain(): void {
+  save(setWidgetVisible(getSnapshot(), "tour", true));
 }
 
 interface LayoutControls {

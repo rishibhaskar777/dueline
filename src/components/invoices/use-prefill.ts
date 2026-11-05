@@ -15,6 +15,8 @@ export interface Prefill {
   clientName: string | null;
   duplicateId: string | null;
   repeatId: string | null;
+  // Opens the paste step with the sample chat in the box; nothing is drafted until the button is pressed.
+  sampleChat: boolean;
 }
 
 interface PrefilledReview {

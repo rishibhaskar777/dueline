@@ -6,6 +6,7 @@ import {
   resetLayout,
   setWidgetVisible,
   widgetSize,
+  widgetTitle,
   WIDGETS,
 } from "@/components/dashboard/dashboard-layout";
 
@@ -63,14 +64,14 @@ describe("parseLayout", () => {
 
 describe("moveWidget, setWidgetVisible and resetLayout", () => {
   it("moves a widget up or down one place", () => {
-    expect(ids(moveWidget(DEFAULT_LAYOUT, "dueLine", -1)).slice(0, 5)).toEqual([
+    expect(ids(moveWidget(DEFAULT_LAYOUT, "dueLine", -1)).slice(1, 6)).toEqual([
       "morning",
       "readyToSend",
       "checklist",
       "dueLine",
       "totals",
     ]);
-    expect(ids(moveWidget(DEFAULT_LAYOUT, "totals", 1)).slice(0, 5)).toEqual([
+    expect(ids(moveWidget(DEFAULT_LAYOUT, "totals", 1)).slice(1, 6)).toEqual([
       "morning",
       "readyToSend",
       "checklist",
@@ -80,7 +81,7 @@ describe("moveWidget, setWidgetVisible and resetLayout", () => {
   });
 
   it("does not move the first widget up or the last down", () => {
-    expect(moveWidget(DEFAULT_LAYOUT, "morning", -1)).toBe(DEFAULT_LAYOUT);
+    expect(moveWidget(DEFAULT_LAYOUT, "tour", -1)).toBe(DEFAULT_LAYOUT);
     expect(moveWidget(DEFAULT_LAYOUT, "rates", 1)).toBe(DEFAULT_LAYOUT);
   });
 
@@ -103,8 +104,8 @@ describe("moveWidget, setWidgetVisible and resetLayout", () => {
 });
 
 describe("the This morning card", () => {
-  it("is the first widget of the default layout, shown", () => {
-    expect(DEFAULT_LAYOUT[0]).toEqual({ id: "morning", visible: true });
+  it("is the first widget of the default layout after the tour, shown", () => {
+    expect(DEFAULT_LAYOUT[1]).toEqual({ id: "morning", visible: true });
   });
 
   it("is added, shown, to a layout saved before it existed", () => {
@@ -113,6 +114,20 @@ describe("the This morning card", () => {
       id: "morning",
       visible: true,
     });
+  });
+});
+
+describe("the Tour the demo card", () => {
+  it("is the first widget of the default layout, shown", () => {
+    expect(DEFAULT_LAYOUT[0]).toEqual({ id: "tour", visible: true });
+    expect(widgetTitle("tour")).toBe("Tour the demo");
+  });
+
+  it("is dismissed like any widget, and a saved layout without it gets it appended, shown", () => {
+    const dismissed = setWidgetVisible(DEFAULT_LAYOUT, "tour", false);
+    expect(parseLayout(JSON.stringify(dismissed))[0]).toEqual({ id: "tour", visible: false });
+    const old = JSON.stringify([{ id: "totals", visible: true }]);
+    expect(parseLayout(old).find(({ id }) => id === "tour")).toEqual({ id: "tour", visible: true });
   });
 });
 
@@ -144,7 +159,8 @@ describe("the default layout", () => {
   });
 
   it("orders the widgets as designed", () => {
-    expect(ids(DEFAULT_LAYOUT).slice(0, 10)).toEqual([
+    expect(ids(DEFAULT_LAYOUT).slice(0, 11)).toEqual([
+      "tour",
       "morning",
       "readyToSend",
       "checklist",

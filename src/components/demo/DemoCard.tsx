@@ -4,6 +4,7 @@ import { useState } from "react";
 import { RotateCcw } from "lucide-react";
 import { IconTile } from "@/components/shared/IconTile";
 import { Button } from "@/components/ui/button";
+import { showTourAgain } from "@/components/dashboard/use-layout";
 import { resetDemo } from "@/lib/api-client";
 import { ResultStrip } from "./ResultStrip";
 import { describeReset } from "./reset-summary";
@@ -31,6 +32,7 @@ export function DemoCard() {
     setOutcome(null);
     try {
       const result = await resetDemo();
+      showTourAgain();
       setOutcome({ text: describeReset(result), failed: result.failed > 0 });
     } catch (error) {
       const text = error instanceof Error ? error.message : "Could not reset the demo.";

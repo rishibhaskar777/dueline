@@ -1,6 +1,7 @@
 // columns and rows are the widget's size on the six-column grid from the lg breakpoint up; shown is
 // whether the default layout includes it.
 export const WIDGETS = [
+  { id: "tour", title: "Tour the demo", columns: 6, rows: 1, shown: true },
   { id: "morning", title: "This morning", columns: 6, rows: 1, shown: true },
   { id: "readyToSend", title: "Ready to send", columns: 6, rows: 1, shown: true },
   { id: "checklist", title: "Getting started", columns: 6, rows: 1, shown: true },
