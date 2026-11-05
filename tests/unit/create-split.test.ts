@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDepositAndBalance } from "@/lib/invoices/create-split";
 import { InvalidActionError } from "@/lib/invoices/errors";
 import { RecipientNotAllowedError } from "@/lib/demo-guard";
@@ -95,6 +95,9 @@ beforeEach(() => {
   });
   paypal.findInvoiceByMemo.mockResolvedValue(undefined);
 });
+
+// A test that fails before it restores the clock must not leave a frozen one for the next test.
+afterEach(() => vi.useRealTimers());
 
 describe("createDepositAndBalance", () => {
   it("sends the deposit and saves the balance as an unsent draft, linked by one id", async () => {
@@ -200,7 +203,7 @@ describe("a double click and a retry after a timeout", () => {
   });
 
   it("finds the balance PayPal made before a timeout instead of making a second one", async () => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-11-04T05:00:00Z"));
     const makeDraft = paypal.createDraftInvoice.getMockImplementation();
     if (!makeDraft) throw new Error("no implementation");
@@ -227,7 +230,6 @@ describe("a double click and a retry after a timeout", () => {
 
     expect(second.balance).toMatchObject({ id: "INV2-1", paypalStatus: "DRAFT" });
     expect(created).toHaveLength(2);
-    vi.useRealTimers();
   });
 
   it("sends nothing to an address that is not a sandbox buyer", async () => {
