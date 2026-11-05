@@ -243,6 +243,43 @@ describe("sendReminder for a message sent from the freelancer's email", () => {
     expect(await store.countRemindersSince("2000-01-01T00:00:00Z")).toBe(1);
   });
 
+  it("is recorded even when PayPal's two reminders for the day are used up", async () => {
+    for (const invoiceId of ["INV2-OTHER-1", "INV2-OTHER-2"]) {
+      await store.logReminder({
+        invoiceId,
+        tone: "gentle",
+        sentAt: new Date().toISOString(),
+        channel: "paypal",
+      });
+    }
+    await expect(sendReminder(request)).rejects.toBeInstanceOf(ReminderLimitError);
+
+    await expect(sendReminder(emailRequest)).resolves.toHaveProperty("sentAt");
+    expect(paypal.remindInvoice).not.toHaveBeenCalled();
+  });
+
+  it("is recorded after PayPal itself refused with its limit", async () => {
+    paypal.remindInvoice.mockRejectedValueOnce(rejection(429));
+    await expect(sendReminder(request)).rejects.toBeInstanceOf(ReminderLimitError);
+
+    await expect(
+      sendReminder({ ...emailRequest, requestId: otherRequestId }),
+    ).resolves.toHaveProperty("sentAt");
+  });
+
+  it("never blocks a PayPal reminder, however many were recorded for other invoices", async () => {
+    for (const invoiceId of ["INV2-OTHER-1", "INV2-OTHER-2", "INV2-OTHER-3"]) {
+      await store.logReminder({
+        invoiceId,
+        tone: "gentle",
+        sentAt: new Date().toISOString(),
+        channel: "email",
+      });
+    }
+    await expect(sendReminder(request)).resolves.toHaveProperty("sentAt");
+    expect(paypal.remindInvoice).toHaveBeenCalledTimes(1);
+  });
+
   it("still refuses a paid invoice", async () => {
     paypal.getInvoice.mockResolvedValue(paidFixture);
     await expect(sendReminder(emailRequest)).rejects.toThrow("This invoice is already paid.");

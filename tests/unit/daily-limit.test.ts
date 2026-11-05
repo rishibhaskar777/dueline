@@ -42,6 +42,25 @@ describe("remindersLeftToday", () => {
     expect(await remindersLeftToday(store, NOON)).toBe(0);
   });
 
+  it("does not count messages the freelancer sent from their own email", async () => {
+    for (const invoiceId of ["a", "b", "c"]) {
+      await store.logReminder({
+        invoiceId,
+        tone: "gentle",
+        sentAt: NOON.toISOString(),
+        channel: "email",
+      });
+    }
+    expect(await remindersLeftToday(store, NOON)).toBe(PAYPAL_REMINDERS_PER_DAY);
+    await store.logReminder({
+      invoiceId: "d",
+      tone: "gentle",
+      sentAt: NOON.toISOString(),
+      channel: "paypal",
+    });
+    expect(await remindersLeftToday(store, NOON)).toBe(PAYPAL_REMINDERS_PER_DAY - 1);
+  });
+
   it("counts the India day, which starts at 18:30 UTC the evening before", async () => {
     await store.logReminder({
       invoiceId: "a",
