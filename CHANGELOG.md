@@ -28,6 +28,8 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Home: pointing at "Paid" in the status filter no longer makes the filter scroll or the row around it shake. The sliding pill is now clipped to the track, so its spring cannot run past the end, and every item keeps one weight so choosing an item does not resize the track. The app tabs and the site menu get the same fix.
+- Home: the counts in the status filter are small badges after each label ("Overdue 2") instead of part of the word, with the name "Overdue, 2 invoices" for screen readers. On a phone the four items still fit on one line.
 - Nudges: after "Send PayPal reminder" or "I sent it" on a Due soon card, the card replaces its reason with "Heads-up sent, 5 Nov", locks its buttons and leaves the section within the visit, with a short status line, where it kept saying "no heads-up sent yet" until the page was reloaded. The section's count drops and the section hides when it is empty.
 - Export register: from 1280 px up the PayPal grid cut dates ("14 Oct 20…"), client names, amounts and transaction IDs. No column now shrinks below the room its values need, and the transaction ID sits on two lines.
 - Nudges: messages you send from your own email no longer count against PayPal's two reminders a day, so recording two of them no longer disables "Send PayPal reminder" on the other cards.

@@ -40,7 +40,7 @@ export async function turnUpfrontOff(page: Page): Promise<void> {
 
 // Linux runners draw text wider than Windows does. Forcing a wide face on everything lets a layout
 // that only just fits here fail here too.
-const WIDE_FONT_STYLE = '* { font-family: Verdana, "DejaVu Sans", sans-serif !important; }';
+export const WIDE_FONT_STYLE = '* { font-family: Verdana, "DejaVu Sans", sans-serif !important; }';
 
 async function pageOverflow(page: Page): Promise<number> {
   return page.evaluate(
