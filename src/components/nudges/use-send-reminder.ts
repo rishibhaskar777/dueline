@@ -3,6 +3,7 @@
 import { useRef, useState, type RefObject } from "react";
 import { ApiClientError, sendReminder } from "@/lib/api-client";
 import type { ReminderChannel, ReminderDraft } from "@/types";
+import type { SentReminder } from "./nudge-model";
 
 export function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : "Something went wrong. Try again in a moment.";
@@ -46,7 +47,7 @@ function isPayPalHeadsUpRefusal(
 export function useSendReminder(
   initialHistory: ReminderDraft["history"],
   initialPayPalRefused: boolean,
-  onSent: () => void,
+  onSent: (sent: SentReminder) => void,
 ): SendState {
   const [history, setHistory] = useState(initialHistory);
   const [sending, setSending] = useState(false);
@@ -70,7 +71,7 @@ export function useSendReminder(
         requestId,
       });
       setSentAt(sent.sentAt);
-      onSent();
+      onSent({ tone: draft.tone, channel, sentAt: sent.sentAt });
       setHistory((previous) => [...previous, { tone: draft.tone, sentAt: sent.sentAt, channel }]);
     } catch (error) {
       started.current = false;

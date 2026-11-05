@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   daysLateLabel,
   hasEdits,
+  headsUpLeftNotice,
   historyLabel,
+  paypalRemindersLeft,
   replaceEditsQuestion,
   sentMessage,
   sourceNote,
@@ -78,5 +80,24 @@ describe("nudge model", () => {
         "Replace your edits with a Firm draft in German?",
       );
     });
+  });
+
+  describe("PayPal's daily reminder limit", () => {
+    it("is used up only by reminders sent through PayPal", () => {
+      expect(paypalRemindersLeft(2, [])).toBe(2);
+      expect(paypalRemindersLeft(2, ["paypal"])).toBe(1);
+      expect(paypalRemindersLeft(2, ["paypal", "paypal"])).toBe(0);
+    });
+
+    it("is not used up by messages sent from the freelancer's own email", () => {
+      expect(paypalRemindersLeft(2, ["email", "email", "email"])).toBe(2);
+      expect(paypalRemindersLeft(1, ["email", "paypal", "email"])).toBe(0);
+    });
+  });
+
+  it("tells the freelancer a heads-up has moved out of Due soon", () => {
+    expect(headsUpLeftNotice("Northpine Studio", "INV-0069", "2026-11-05T05:30:00Z")).toBe(
+      "Heads-up sent to Northpine Studio for invoice INV-0069, 5 Nov. It has moved out of Due soon.",
+    );
   });
 });

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { draftReminder } from "@/lib/api-client";
 import type { ReminderChannel, ReminderDraft, ReminderLanguage, Tone } from "@/types";
-import { hasEdits, improvedOutcome, sentTodayVia } from "./nudge-model";
+import { hasEdits, improvedOutcome, sentTodayVia, type SentReminder } from "./nudge-model";
 import { messageOf, useSendReminder } from "./use-send-reminder";
 
 export type ImproveDraft = (
@@ -243,7 +243,7 @@ function useRedraftFlow(
 export function useNudgeDraft(
   initial: ReminderDraft,
   improve: ImproveDraft,
-  onSent: () => void,
+  onSent: (sent: SentReminder) => void,
 ): NudgeDraft {
   const [clientLanguage, setClientLanguage] = useState(initial.language);
   const [languageSuggestion, setLanguageSuggestion] = useState(initial.languageSuggestion);
