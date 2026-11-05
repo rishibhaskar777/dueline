@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { AgGridReact } from "ag-grid-react";
+import type { RowHeightParams } from "ag-grid-community";
+import { useCallback, useMemo, useRef } from "react";
 import { tableGridTheme } from "@/components/grid/ag-grid";
 import { useIsPhone } from "@/components/shared/use-phone";
 import { formatDate } from "@/lib/format-date";
@@ -9,9 +11,14 @@ import { formatMoney, formatRupees } from "@/lib/money/format";
 import type { ExportOutsideRow } from "@/types";
 import { BankReferenceInput } from "./BankReferenceInput";
 import { bankColumns } from "./bank-columns";
+import { exportGridCsv, gridCsvFileName } from "./grid-export";
+import { GridExport } from "./GridExport";
+import { bankGridTotals, totalsRowHeight } from "./grid-totals";
+import { withTotalsRow } from "./totals-row";
 
 const defaultColDef = { sortable: true, resizable: true, suppressMovable: true };
 const autoSizeStrategy = { type: "fitGridWidth" } as const;
+const TOTALS_MARKER = [{}];
 
 function BankCards({ rows }: { rows: ExportOutsideRow[] }) {
   return (
@@ -46,8 +53,16 @@ function BankCards({ rows }: { rows: ExportOutsideRow[] }) {
 
 // Payments recorded as bank transfers have no PayPal FIRA. The bank's FIRC or e-BRC is their proof, so
 // the number is kept here and goes into the CSV for the CA.
-export function BankTransfers({ rows }: { rows: ExportOutsideRow[] }) {
+export function BankTransfers({ rows, month }: { rows: ExportOutsideRow[]; month: string }) {
   const phone = useIsPhone();
+  const grid = useRef<AgGridReact<ExportOutsideRow>>(null);
+  const totals = useMemo(() => bankGridTotals(rows, month), [rows, month]);
+  const columns = useMemo(() => withTotalsRow(bankColumns, totals), [totals]);
+  const rowHeight = useCallback(
+    ({ node }: RowHeightParams<ExportOutsideRow>) =>
+      node.rowPinned ? totalsRowHeight(totals) : undefined,
+    [totals],
+  );
   if (rows.length === 0) return null;
 
   return (
@@ -62,13 +77,25 @@ export function BankTransfers({ rows }: { rows: ExportOutsideRow[] }) {
           undoes.
         </p>
       </div>
+      {!phone && (
+        <GridExport
+          id="bank-export-hint"
+          onExport={() => {
+            const api = grid.current?.api;
+            if (api) exportGridCsv(api, gridCsvFileName("bank", month));
+          }}
+        />
+      )}
       {phone ? (
         <BankCards rows={rows} />
       ) : (
         <AgGridReact<ExportOutsideRow>
+          ref={grid}
           theme={tableGridTheme}
           rowData={rows}
-          columnDefs={bankColumns}
+          pinnedBottomRowData={TOTALS_MARKER}
+          columnDefs={columns}
+          getRowHeight={rowHeight}
           defaultColDef={defaultColDef}
           autoSizeStrategy={autoSizeStrategy}
           getRowId={({ data }) => data.invoiceId}

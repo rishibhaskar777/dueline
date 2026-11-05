@@ -68,14 +68,14 @@ function RegisterBody({ month, state, onRetry }: RegisterBodyProps) {
     <>
       <RegisterSummary register={register} />
       <FiraStrip />
-      {register.rows.length > 0 && <RegisterTable rows={register.rows} />}
-      <BankTransfers rows={register.outsideRows} />
+      {register.rows.length > 0 && <RegisterTable rows={register.rows} month={register.month} />}
+      <BankTransfers rows={register.outsideRows} month={register.month} />
     </>
   );
 }
 
-export function ExportRegisterView() {
-  const { month, currentMonth, state, note, setMonth, retry } = useExportRegister();
+export function ExportRegisterView({ initialMonth }: { initialMonth: string | null }) {
+  const { month, currentMonth, state, note, setMonth, retry } = useExportRegister(initialMonth);
   const noRows =
     state.kind === "ready" &&
     state.register.rows.length === 0 &&

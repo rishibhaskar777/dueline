@@ -24,10 +24,11 @@ export interface ExportRegisterData {
   retry: () => void;
 }
 
-export function useExportRegister(): ExportRegisterData {
+// `initialMonth` is a month the address asked for; the month picker moves on from there.
+export function useExportRegister(initialMonth: string | null): ExportRegisterData {
   const [attempt, setAttempt] = useState(0);
   const [clock, setClock] = useState<Clock>(null);
-  const [picked, setPicked] = useState<string | null>(null);
+  const [picked, setPicked] = useState<string | null>(initialMonth);
   const [fallback, setFallback] = useState<string | null>(null);
   const [settled, setSettled] = useState<Settled | null>(null);
 
