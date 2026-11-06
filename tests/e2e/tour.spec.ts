@@ -114,6 +114,8 @@ test.describe("Tour the demo", () => {
     for (const theme of ["light", "dark"] as const) {
       await openInTheme(page, theme, "/receivables");
       await expect(tour(page)).toBeVisible();
+      // AG Grid builds its header's ARIA after the text shows; axe must wait for it.
+      await expect(page.getByRole("columnheader", { name: "Invoice" })).toBeVisible();
       await expectNoSeriousViolations(page, `Home with the tour card, ${theme}`);
     }
   });

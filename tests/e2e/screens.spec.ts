@@ -3,10 +3,9 @@ import { expectNoSeriousViolations, expectNoSidewaysScroll, turnUpfrontOff } fro
 
 async function overdueCountFromFilter(page: Page): Promise<number> {
   const button = page.getByRole("group", { name: "Filter by status" }).getByRole("button", {
-    name: /^Overdue \d+$/,
+    name: /^Overdue, \d+ invoices?$/,
   });
-  const text = (await button.textContent()) ?? "";
-  return Number(/(\d+)$/.exec(text)?.[1]);
+  return Number(await button.getByText(/^\d+$/).textContent());
 }
 
 test.describe("Receivables table", () => {
@@ -57,16 +56,16 @@ test.describe("Receivables table", () => {
   test("the filter is one group of buttons that changes the rows", async ({ page }) => {
     await page.goto("/receivables");
     const filter = page.getByRole("group", { name: "Filter by status" });
-    const all = filter.getByRole("button", { name: /^All \d+$/ });
+    const all = filter.getByRole("button", { name: /^All, \d+ invoices?$/ });
     await expect(all).toHaveAttribute("aria-pressed", "true");
     const grid = page.locator(".ag-root-wrapper").last();
     const before = await grid.locator(".ag-row").count();
 
-    const paid = filter.getByRole("button", { name: /^Paid \d+$/ });
+    const paid = filter.getByRole("button", { name: /^Paid, \d+ invoices?$/ });
     await paid.click();
     await expect(paid).toHaveAttribute("aria-pressed", "true");
     await expect(all).toHaveAttribute("aria-pressed", "false");
-    const expected = Number(/(\d+)$/.exec((await paid.textContent()) ?? "")?.[1]);
+    const expected = Number(await paid.getByText(/^\d+$/).textContent());
     await expect(grid.locator(".ag-row")).toHaveCount(expected);
     expect(expected).toBeLessThan(before);
   });

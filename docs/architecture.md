@@ -1474,7 +1474,11 @@ where `backdrop-filter` is missing) and the page background's classes. `Backdrop
 background once from the root layout, and its colours switch with the `.dark` class. Fonts are Outfit
 and Figtree through `next/font/google`. `useSlidingIndicator` and `pickIndicator` place the pill under
 the hovered, focused, clicked or active item; `Segmented` and the main tabs (`MainTabs`, in the sticky `AppBar` with `AccountMenu`) use them
-([decision 0023](decisions/0023-visual-redesign.md)).
+([decision 0023](decisions/0023-visual-redesign.md)). `SlidingPill` draws the pill inside a clip box as wide as
+the items, so the spring's overshoot is cut at the track's edge instead of making the track scroll, and every
+item keeps one font weight so choosing one never resizes the track. A `Segmented` option can carry a `count`,
+drawn as a badge after its label; the button's name reads "Overdue, 2 invoices" and the badge is hidden from
+assistive technology.
 
 **The public website**
 

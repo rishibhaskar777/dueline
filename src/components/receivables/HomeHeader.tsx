@@ -46,9 +46,7 @@ function DateLine({ health }: { health: HealthResponse | null }) {
       <span
         className={cn(
           "inline-flex items-center gap-2 align-middle font-semibold",
-          connected
-            ? "rounded-full bg-[color-mix(in_srgb,var(--paid)_9%,transparent)] px-2.5 py-1 text-paid shadow-[0_0_14px_color-mix(in_srgb,var(--paid)_16%,transparent)]"
-            : "text-late",
+          connected ? "dl-live-text text-paid" : "text-late",
         )}
       >
         <LiveDot tone={connected ? "live" : "error"} />
