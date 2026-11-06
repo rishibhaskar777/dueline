@@ -232,8 +232,8 @@ The key flows, the data model, the AI safety checks and the design decisions eac
 
 |                  |                                                                                                      |
 | ---------------- | ---------------------------------------------------------------------------------------------------- |
-| Unit tests       | 2,234 in 185 files (Vitest)                                                                          |
-| End-to-end tests | 210 in 23 files plus the sign-in setup (Playwright), including axe in both themes                    |
+| Unit tests       | 2,298 in 188 files (Vitest)                                                                          |
+| End-to-end tests | 224 in 24 files plus the sign-in setup (Playwright), including axe in both themes                    |
 | CI               | Format, lint, typecheck, tests, build and end-to-end tests on every pull request; CodeQL; Dependabot |
 | Decisions        | [25 decision records](docs/decisions/) and an [API contract](docs/api-contract.md)                   |
 | Access           | Demo password with a signed session and sign-in limits                                               |
