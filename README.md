@@ -147,13 +147,15 @@ a person approves. It never sends anything on its own.
 - Every item must quote the chat word for word, and every price must appear in the chat.
 - Quantities, prices, totals and dates are checked in code. Anything unclear becomes a warning to fix, never a guess.
 - Text in the chat that tries to instruct the model is flagged as a prompt injection.
-- Accuracy on 25 test chats, run with `npm run ai:eval` ([full results](docs/evaluation/extraction.md)):
+- Accuracy on 27 test chats, run with `npm run ai:eval` ([full results](docs/evaluation/extraction.md)):
 
 | Check                                 | Result |
 | ------------------------------------- | ------ |
 | Client found                          | 100%   |
+| Item lines right                      | 96%    |
 | Prices right                          | 96%    |
 | Due date rule                         | 100%   |
+| Purpose code right                    | 100%   |
 | Warnings raised when expected         | 100%   |
 | Prompt injection flagged              | 100%   |
 | Emails and phones kept from the model | 100%   |
