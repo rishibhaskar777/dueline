@@ -5,6 +5,7 @@ import { currencyNotices } from "@/lib/invoices/chat-currency";
 import { isPurposeCode } from "@/lib/export/purpose-codes";
 import { fromMinorUnits, toMinorUnits } from "@/lib/money/decimal";
 import { unmask, type ContactMap } from "@/lib/privacy/mask";
+import { dueDateIn, dueDateInNote, restatesDueTerms } from "./due-terms";
 import {
   currencySchema,
   type CurrencyCode,
@@ -20,7 +21,12 @@ export const modelDraftSchema = z.object({
   clientCountry: z.string().nullable(),
   countryQuote: z.string().nullable(),
   currency: z.string().nullable(),
-  dueOn: z.string().nullable(),
+  dueOn: z
+    .string()
+    .nullable()
+    .describe(
+      "The date the client must pay by, YYYY-MM-DD. Payment terms in days (net 15, payment in 15 days) or a payment date belong here. Null only when the chat states none.",
+    ),
   items: z.array(
     z.object({
       name: z.string(),
@@ -35,10 +41,18 @@ export const modelDraftSchema = z.object({
   paymentTerms: z
     .object({
       upfrontPercent: z.number().nullable(),
-      note: z.string().nullable(),
+      note: z
+        .string()
+        .nullable()
+        .describe(
+          "A payment condition that is not a due date, like 'after approval'. Never net terms or a number of days: those are dueOn.",
+        ),
       quote: z.string(),
     })
-    .nullable(),
+    .nullable()
+    .describe(
+      "Only an upfront share or a condition that is not a due date. Null when the chat has neither.",
+    ),
 });
 
 export type ModelDraft = z.infer<typeof modelDraftSchema>;
@@ -234,21 +248,42 @@ function checkCountry(raw: ModelDraft, chat: string): string | undefined {
     : undefined;
 }
 
+interface ReadTerms {
+  paymentTerms: PaymentTerms | null;
+  // The date the note gives, for a model that put net terms there instead of in the due date.
+  dueFromNote: string | null;
+}
+
 // The terms are kept only when the words they came from are in the chat. The share is a whole or
 // part percent from 1 to 99, so "100%" or a nonsense number is dropped and the note, if any, stays.
-function checkPaymentTerms(raw: ModelDraft, input: CheckInput): PaymentTerms | null {
+// A note that only restates when to pay is dropped, because the due date carries it.
+function checkPaymentTerms(raw: ModelDraft, input: CheckInput): ReadTerms {
+  const none: ReadTerms = { paymentTerms: null, dueFromNote: null };
   const terms = raw.paymentTerms;
-  if (!terms) return null;
+  if (!terms) return none;
   const quote = cleanText(terms.quote, input.contacts, MAX_QUOTE_LENGTH);
-  if (quote === "" || !quoteIsInChat(quote, input.chat)) return null;
+  if (quote === "" || !quoteIsInChat(quote, input.chat)) return none;
 
   const percent = terms.upfrontPercent;
   const upfrontPercent =
     percent !== null && percent >= MIN_UPFRONT_PERCENT && percent <= MAX_UPFRONT_PERCENT
       ? percent
       : null;
-  const note = cleanText(terms.note, input.contacts, MAX_TERMS_NOTE_LENGTH) || null;
-  return upfrontPercent === null && note === null ? null : { upfrontPercent, note, quote };
+  const written = cleanText(terms.note, input.contacts, MAX_TERMS_NOTE_LENGTH);
+  const note = written !== "" && !restatesDueTerms(written, input.today) ? written : null;
+  const dueFromNote = written === "" ? null : dueDateInNote(written, input.today);
+  return {
+    paymentTerms: upfrontPercent === null && note === null ? null : { upfrontPercent, note, quote },
+    dueFromNote,
+  };
+}
+
+// The model's own date wins. Without one, the terms the chat states in days or as a date set it, so a
+// model that filed "net 15" under payment terms still gives the right due date.
+function dueText(raw: ModelDraft, input: CheckInput, dueFromNote: string | null): string | null {
+  const given = (raw.dueOn ?? "").trim();
+  if (z.iso.date().safeParse(given).success) return given;
+  return dueDateIn(input.chat, input.today) ?? dueFromNote;
 }
 
 // The person is kept only when their name is in the chat, and never when it is an email address.
@@ -272,7 +307,8 @@ export function checkModelDraft(raw: ModelDraft, input: CheckInput): CheckedDraf
 
   const items = checkItems(raw.items, input, warnings);
   const currency = checkCurrency(raw.currency, warnings);
-  const dueOn = checkDueOn(raw.dueOn, input.today, warnings);
+  const { paymentTerms, dueFromNote } = checkPaymentTerms(raw, input);
+  const dueOn = checkDueOn(dueText(raw, input, dueFromNote), input.today, warnings);
   const email = checkEmail(raw.clientEmail, contacts, warnings);
   const country = checkCountry(raw, input.chat);
   // Run here as well as on the form, so a model that read the wrong currency is always flagged.
@@ -301,6 +337,6 @@ export function checkModelDraft(raw: ModelDraft, input: CheckInput): CheckedDraf
       includeLutNote: false,
     },
     warnings,
-    paymentTerms: checkPaymentTerms(raw, input),
+    paymentTerms,
   };
 }

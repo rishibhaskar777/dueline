@@ -505,26 +505,31 @@ pure function of the invoice history.
 
 **Evaluation.** `npm run ai:eval` runs the real extraction (the model, then the checks in code) over
 the 27 chats in `tests/fixtures/chats` and compares the result with each chat's expected answer. It is
-run by hand, never by a test or CI. The latest run is from 3 Nov 2026 with `gemini-3.5-flash-lite`, over the 25 chats there were then.
+run by hand, never by a test or CI. The latest run is from 6 Nov 2026 with `gemini-3.5-flash-lite`, over all 27 chats.
 It never writes to the database named in `DATABASE_URL`: its usage counters are kept in memory, and
 it only replaces the report when run with `--write`.
-The full report is [docs/evaluation/extraction.md](evaluation/extraction.md).
+The report scores item lines (quantity, price and currency, in any order) apart from item names, and names the model that answered each chat, since the fallback model answers when the first is busy. Payment terms in days or a date set the due date in code ([`ai/due-terms.ts`](../src/lib/ai/due-terms.ts)) whenever the model gives none, so a model that files them as a payment term cannot lose them. The full report is [docs/evaluation/extraction.md](evaluation/extraction.md).
 
 | Check                                 | Passed   | Share |
 | ------------------------------------- | -------- | ----- |
-| Client                                | 24 of 24 | 100%  |
-| Currency                              | 24 of 24 | 100%  |
+| Client                                | 26 of 26 | 100%  |
+| Currency                              | 26 of 26 | 100%  |
 | Country kept only when stated         | 1 of 1   | 100%  |
-| Items exactly right                   | 21 of 25 | 84%   |
-| Prices right                          | 24 of 25 | 96%   |
-| Due date rule                         | 24 of 24 | 100%  |
-| Warnings raised when expected         | 16 of 16 | 100%  |
+| Item lines right                      | 26 of 27 | 96%   |
+| Item names as in the example          | 23 of 27 | 85%   |
+| Prices right                          | 26 of 27 | 96%   |
+| Due date rule                         | 26 of 26 | 100%  |
+| Warnings raised when expected         | 18 of 18 | 100%  |
 | Injection flagged                     | 1 of 1   | 100%  |
-| Emails and phones kept from the model | 25 of 25 | 100%  |
+| Purpose code right                    | 2 of 2   | 100%  |
+| Emails and phones kept from the model | 27 of 27 | 100%  |
+| Upfront share noticed                 | 1 of 1   | 100%  |
+| Contact person                        | 1 of 1   | 100%  |
 
-Three of the four chats with items not exactly right differ in wording only (for example "hour"
-against a description). In the fourth, a chat with no email, the model split 700.00 into three lines
-of 233.33, and the checks flagged both prices as not in the chat. The report lists each.
+One chat missed on item lines and prices: in the chat with no email, the model split 700.00 into
+three lines of 233.33, and the checks flagged the price as not in the chat. Three more chats differ
+in item names only, in wording (for example "hour" against "Pricing page design"); their lines and
+prices are right. The report lists each.
 
 ## 7. Security and Reliability
 

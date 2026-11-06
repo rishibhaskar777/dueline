@@ -6,6 +6,7 @@ import { extractionRequest } from "@/lib/ai/extract-invoice";
 import {
   expectedExtractionSchema,
   renderEvaluation,
+  renderModels,
   renderReadmeTable,
   renderTotals,
   scoreExtraction,
@@ -107,7 +108,8 @@ describe("scoreExtraction", () => {
     expect(score.passed).toEqual({
       client: true,
       currency: true,
-      items: true,
+      lines: true,
+      names: true,
       prices: true,
       due: true,
       warnings: true,
@@ -127,7 +129,8 @@ describe("scoreExtraction", () => {
       client: true,
       currency: true,
       purpose: true,
-      items: true,
+      lines: true,
+      names: true,
       prices: true,
       due: true,
       warnings: true,
@@ -141,7 +144,8 @@ describe("scoreExtraction", () => {
       client: true,
       currency: true,
       purpose: true,
-      items: true,
+      lines: true,
+      names: true,
       prices: true,
       due: true,
       warnings: true,
@@ -182,33 +186,38 @@ describe("scoreExtraction", () => {
 
   it("fails the items and prices of a draft that applied a discount nobody agreed to", () => {
     const score = scoreOf("05-discount-mentioned");
-    expect(score.passed).toMatchObject({ client: true, items: false, prices: false });
+    expect(score.passed).toMatchObject({ client: true, lines: false, names: false, prices: false });
     expect(score.misses).toContain("prices: expected prices 400.00, got 360.00");
   });
 
   it("fails the items but not the prices when only a quantity is wrong", () => {
     const score = scoreOf("13-hinglish-logo");
-    expect(score.passed).toMatchObject({ items: false, prices: true });
+    expect(score.passed).toMatchObject({ lines: false, names: false, prices: true });
     expect(score.misses[0]).toContain(
-      "expected 1 x 150.00 (logo), 2 x 30.00 (revision), got 1 x 150.00 (Logo), 1 x 30.00 (Revision)",
+      "expected 1 x 150.00 (logo), 2 x 30.00 (revision) in USD, got 1 x 150.00 (Logo), 1 x 30.00 (Revision) in USD",
     );
   });
 
   it("flags a chat that gives the AI orders even when the draft follows them", () => {
     const score = scoreOf("10-prompt-injection");
-    expect(score.passed).toMatchObject({ injection: true, items: false, prices: false });
+    expect(score.passed).toMatchObject({ injection: true, lines: false, prices: false });
   });
 
   it("counts an unsupported currency as right when it raised the warning", () => {
     expect(scoreOf("12-unsupported-currency").passed).toMatchObject({
       currency: true,
-      items: true,
+      lines: true,
       warnings: true,
     });
   });
 
   it("expects no draft at all for a chat without prices", () => {
-    expect(scoreOf("11-no-prices").passed).toEqual({ items: true, prices: true, contacts: true });
+    expect(scoreOf("11-no-prices").passed).toEqual({
+      lines: true,
+      names: true,
+      prices: true,
+      contacts: true,
+    });
   });
 
   it("checks that a missing email and a past due date raised their warnings", () => {
@@ -273,28 +282,72 @@ describe("items compared as numbers and plain words", () => {
 
   it("counts 12 x 65 as 12 x 65.00, whatever the case and spacing of the name", () => {
     const score = scoreExtraction(expected, outcome("  consulting  HOURS", "65"), TODAY);
-    expect(score.passed).toMatchObject({ items: true, prices: true });
+    expect(score.passed).toMatchObject({ lines: true, names: true, prices: true });
   });
 
-  it("names the item in the report when only the name differs", () => {
+  it("passes the lines but not the names when only the wording differs", () => {
     const score = scoreExtraction(expected, outcome("Pricing page help", "65.00"), TODAY);
-    expect(score.passed).toMatchObject({ items: false, prices: true });
-    expect(score.misses).toContain(
-      "items: expected 12 x 65.00 (Hours), got 12 x 65.00 (Pricing page help)",
-    );
+    expect(score.passed).toMatchObject({ lines: true, names: false, prices: true });
+    expect(score.misses).toEqual([
+      "names: expected 12 x 65.00 (Hours), got 12 x 65.00 (Pricing page help)",
+    ]);
+  });
+
+  it("fails the lines when a price or quantity is wrong, and lists that miss once", () => {
+    const score = scoreExtraction(expected, outcome("Hours", "60.00"), TODAY);
+    expect(score.passed).toMatchObject({ lines: false, names: false, prices: false });
+    expect(score.misses.filter((miss) => miss.startsWith("lines:"))).toHaveLength(1);
+    expect(score.misses.some((miss) => miss.startsWith("names:"))).toBe(false);
+  });
+
+  it("compares the lines in any order", () => {
+    const two = {
+      ...expectedOf("01-logo-pack"),
+      items: [
+        { nameIncludes: "logo", quantity: 3, unitAmount: "150.00" },
+        { nameIncludes: "sheet", quantity: 1, unitAmount: "90.00" },
+      ],
+    };
+    const base = outcomeFor("01-logo-pack");
+    const swapped = {
+      ...base,
+      draft: base.draft && { ...base.draft, items: [...base.draft.items].reverse() },
+    };
+    expect(scoreExtraction(two, swapped, TODAY).passed).toMatchObject({ lines: true, names: true });
+  });
+
+  it("fails the lines when the draft has another line or the wrong currency", () => {
+    const base = outcomeFor("01-logo-pack");
+    const extra = {
+      ...base,
+      draft: base.draft && {
+        ...base.draft,
+        items: [...base.draft.items, { ...base.draft.items[0], name: "Extra" }],
+      },
+    };
+    const euros = { ...base, draft: base.draft && { ...base.draft, currency: "EUR" as const } };
+    const expectedLogo = expectedOf("01-logo-pack");
+    expect(scoreExtraction(expectedLogo, extra, TODAY).passed.lines).toBe(false);
+    expect(scoreExtraction(expectedLogo, euros, TODAY).passed.lines).toBe(false);
   });
 });
 
 describe("tally and renderEvaluation", () => {
   const chats: EvaluatedChat[] = [
-    { id: "01-logo-pack", summary: "Plain job", score: scoreOf("01-logo-pack") },
-    { id: "13-hinglish-logo", summary: "Hinglish", score: scoreOf("13-hinglish-logo") },
+    { id: "01-logo-pack", summary: "Plain job", score: scoreOf("01-logo-pack"), model: "model-x" },
+    {
+      id: "13-hinglish-logo",
+      summary: "Hinglish",
+      score: scoreOf("13-hinglish-logo"),
+      model: "model-y",
+    },
     { id: "99-not-run", summary: "", error: "not run: the allowance is used up" },
   ];
 
   it("counts a check only over the chats it applies to", () => {
     const totals = tally(chats.flatMap((chat) => ("score" in chat ? [chat.score] : [])));
-    expect(totals.items).toEqual({ passed: 1, total: 2 });
+    expect(totals.lines).toEqual({ passed: 1, total: 2 });
+    expect(totals.names).toEqual({ passed: 1, total: 2 });
     expect(totals.prices).toEqual({ passed: 2, total: 2 });
     expect(totals.injection).toEqual({ passed: 0, total: 0 });
   });
@@ -302,15 +355,17 @@ describe("tally and renderEvaluation", () => {
   it("writes totals, a row per chat and what differed", () => {
     const report = renderEvaluation({ model: "model-x", date: TODAY, chats });
     expect(report).toContain("Run on 2026-11-04 with `model-x`, over 3 chats");
-    expect(report).toContain("| Items exactly right | 1 of 2 | 50% |");
+    expect(report).toContain("| Item lines right | 1 of 2 | 50% |");
     expect(report).toContain("| Injection flagged | 0 of 0 | n/a |");
     expect(report).toContain(
-      "| 01-logo-pack | pass | pass | n/a | pass | pass | pass | pass | n/a | n/a | pass | n/a | n/a |",
+      "| 01-logo-pack | model-x | pass | pass | n/a | pass | pass | pass | pass | pass | n/a | n/a | pass | n/a | n/a |",
     );
-    expect(report).toContain("| 13-hinglish-logo | pass | pass | n/a | FAIL | pass |");
+    expect(report).toContain(
+      "| 13-hinglish-logo | model-y | pass | pass | n/a | FAIL | FAIL | pass |",
+    );
     expect(report).toContain("| 99-not-run | not run: the allowance is used up |");
     expect(report).toContain("**13-hinglish-logo** (Hinglish)");
-    expect(report).toContain("- items: expected 1 x 150.00 (");
+    expect(report).toContain("- lines: expected 1 x 150.00 (");
   });
 
   it("prints the totals in the shape of the report, from the chats that were scored", () => {
@@ -319,7 +374,7 @@ describe("tally and renderEvaluation", () => {
       "| Check | Passed | Share |",
       "| --- | --- | --- |",
     ]);
-    expect(totals).toContain("| Items exactly right | 1 of 2 | 50% |");
+    expect(totals).toContain("| Item lines right | 1 of 2 | 50% |");
     expect(totals).toContain("| Purpose code right | 0 of 0 | n/a |");
     expect(totals).not.toContain("99-not-run");
   });
@@ -333,7 +388,7 @@ describe("tally and renderEvaluation", () => {
         .map((cell) => cell.trim()),
     );
     expect(cells[0]).toEqual(["Check", "Result"]);
-    expect(cells).toContainEqual(["Items exactly right", "50%"]);
+    expect(cells).toContainEqual(["Item lines right", "50%"]);
     expect(cells).toContainEqual(["Purpose code right", "n/a"]);
     expect(cells).toContainEqual(["Prompt injection flagged", "n/a"]);
   });
@@ -352,6 +407,33 @@ describe("tally and renderEvaluation", () => {
       from = printedLabels.indexOf(label(line), from);
       expect(from, label(line)).toBeGreaterThan(-1);
     }
+  });
+
+  it("lists every model that answered and how many chats each answered", () => {
+    const report = renderEvaluation({ model: "model-x", date: TODAY, chats });
+    expect(report).toContain(
+      "Answered by: model-x: 1, model-y (fallback when the first was busy): 1.",
+    );
+    expect(report).toContain("| Chat | Model | Client |");
+  });
+
+  it("puts the configured model first and counts a chat per model", () => {
+    const answered = (id: string, model: string): EvaluatedChat => ({
+      id,
+      summary: "",
+      score: scoreOf("01-logo-pack"),
+      model,
+    });
+    const many = [answered("a", "fallback"), answered("b", "main"), answered("c", "fallback")];
+    expect(renderModels("main", many)).toBe(
+      "main: 1, fallback (fallback when the first was busy): 2",
+    );
+  });
+
+  it("names no model when none answered, and leaves the line out of the report", () => {
+    expect(renderModels("model-x", [chats[2]])).toBe("");
+    const report = renderEvaluation({ model: "model-x", date: TODAY, chats: [chats[2]] });
+    expect(report).not.toContain("Answered by");
   });
 
   it("says so when nothing differed", () => {

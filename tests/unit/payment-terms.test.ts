@@ -59,12 +59,23 @@ describe("the payment terms of a draft", () => {
   });
 
   it("keeps another term the client wrote when the share is out of range", () => {
-    const terms = { upfrontPercent: 100, note: "net 15", quote: "Payment in 15 days is fine" };
+    const terms = {
+      upfrontPercent: 100,
+      note: "after approval",
+      quote: "Payment in 15 days is fine",
+    };
     expect(check({ paymentTerms: terms }).paymentTerms).toEqual({
       upfrontPercent: null,
-      note: "net 15",
+      note: "after approval",
       quote: "Payment in 15 days is fine",
     });
+  });
+
+  it("drops a note that only restates net terms, and keeps the share beside it", () => {
+    const terms = { ...upfront, note: "Payment in 15 days" };
+    expect(check({ paymentTerms: terms }).paymentTerms).toEqual({ ...upfront, note: null });
+    const alone = { upfrontPercent: null, note: "net 15", quote: "Payment in 15 days is fine" };
+    expect(check({ paymentTerms: alone }).paymentTerms).toBeNull();
   });
 
   it("does not change the draft's own due date or items", () => {

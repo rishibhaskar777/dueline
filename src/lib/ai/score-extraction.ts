@@ -64,7 +64,8 @@ const CHECKS = [
   "client",
   "currency",
   "country",
-  "items",
+  "lines",
+  "names",
   "prices",
   "due",
   "warnings",
@@ -123,7 +124,13 @@ function sameAmount(a: string, b: string): boolean {
 }
 
 // Each expected item must match one distinct item of the draft, and the draft may have no others.
-function itemsMatch(expected: ExpectedExtraction["items"], actual: InvoiceDraft["items"]): boolean {
+// The lines are the quantity and the price (the currency is the draft's, checked on its own); the
+// names are compared too only when asked.
+function itemsMatch(
+  expected: ExpectedExtraction["items"],
+  actual: InvoiceDraft["items"],
+  withNames: boolean,
+): boolean {
   if (expected.length !== actual.length) return false;
   const unused = [...actual];
   for (const want of expected) {
@@ -131,7 +138,7 @@ function itemsMatch(expected: ExpectedExtraction["items"], actual: InvoiceDraft[
       (item) =>
         item.quantity === want.quantity &&
         sameAmount(item.unitAmount, want.unitAmount) &&
-        plain(item.name).includes(plain(want.nameIncludes)),
+        (!withNames || plain(item.name).includes(plain(want.nameIncludes))),
     );
     if (found < 0) return false;
     unused.splice(found, 1);
@@ -199,11 +206,21 @@ export function scoreExtraction(
     );
   }
 
+  const wanted = listOf(expected.items.map((i) => ({ ...i, name: i.nameIncludes })));
+  // A currency that differs is a wrong invoice, so it fails the lines as well.
+  const currencyRight =
+    !hasDraft || expected.currency === null || draft?.currency === expected.currency;
+  const linesRight = itemsMatch(expected.items, items, false) && currencyRight;
   note(
-    "items",
-    itemsMatch(expected.items, items),
-    `expected ${listOf(expected.items.map((i) => ({ ...i, name: i.nameIncludes })))}, got ${listOf(items)}`,
+    "lines",
+    linesRight,
+    `expected ${wanted} in ${expected.currency ?? "any currency"}, got ${listOf(items)} in ${draft?.currency ?? "no draft"}`,
   );
+  // Names that differ on top of wrong lines add nothing to the report, so only a wording miss is listed.
+  passed.names = itemsMatch(expected.items, items, true);
+  if (linesRight && !passed.names) {
+    misses.push(`names: expected ${wanted}, got ${listOf(items)}`);
+  }
 
   const prices = (list: { unitAmount: string }[]): string =>
     list
@@ -288,10 +305,11 @@ export function tally(scores: ChatScore[]): Record<Check, Tally> {
 
 // A chat the model could not be asked about has an error and no score.
 export type EvaluatedChat = { id: string; summary: string } & (
-  { score: ChatScore } | { error: string }
+  { score: ChatScore; model?: string } | { error: string }
 );
 
 interface EvaluationRun {
+  // The model the run was set to use; any other that answered was the fallback.
   model: string;
   date: string;
   chats: EvaluatedChat[];
@@ -301,7 +319,8 @@ const LABELS: Record<Check, string> = {
   client: "Client",
   currency: "Currency",
   country: "Country kept only when stated",
-  items: "Items exactly right",
+  lines: "Item lines right",
+  names: "Item names as in the example",
   prices: "Prices right",
   due: "Due date rule",
   warnings: "Warnings raised when expected",
@@ -329,8 +348,23 @@ function totalsRows(totals: Record<Check, Tally>): string[] {
 }
 
 function chatRow(chat: EvaluatedChat): string {
-  if ("error" in chat) return `| ${chat.id} | ${chat.error} |${" |".repeat(CHECKS.length - 1)}`;
-  return `| ${chat.id} | ${CHECKS.map((check) => mark(chat.score.passed[check])).join(" | ")} |`;
+  if ("error" in chat) return `| ${chat.id} | ${chat.error} |${" |".repeat(CHECKS.length)}`;
+  const cells = CHECKS.map((check) => mark(chat.score.passed[check]));
+  return `| ${chat.id} | ${chat.model ?? "n/a"} | ${cells.join(" | ")} |`;
+}
+
+const FALLBACK_NOTE = "(fallback when the first was busy)";
+
+// Every model that answered and how many chats each answered, the configured one first.
+export function renderModels(model: string, chats: EvaluatedChat[]): string {
+  const counts = new Map<string, number>();
+  for (const chat of chats) {
+    if ("model" in chat && chat.model) counts.set(chat.model, (counts.get(chat.model) ?? 0) + 1);
+  }
+  const ordered = [...counts].sort(([a], [b]) => Number(b === model) - Number(a === model));
+  return ordered
+    .map(([id, count]) => `${id}${id === model ? "" : ` ${FALLBACK_NOTE}`}: ${count}`)
+    .join(", ");
 }
 
 function differenceLines(chat: EvaluatedChat): string[] {
@@ -359,7 +393,7 @@ export function renderTotals(chats: EvaluatedChat[]): string {
 // The wording and order of the README's AI table, with the share each check reached.
 const README_CHECKS: [Check, string][] = [
   ["client", "Client found"],
-  ["items", "Items exactly right"],
+  ["lines", "Item lines right"],
   ["prices", "Prices right"],
   ["due", "Due date rule"],
   ["purpose", "Purpose code right"],
@@ -383,11 +417,13 @@ export function renderReadmeTable(chats: EvaluatedChat[]): string {
 export function renderEvaluation(run: EvaluationRun): string {
   const scores = scoresOf(run.chats);
   const details = run.chats.flatMap(differenceLines);
+  const models = renderModels(run.model, run.chats);
 
   return [
     "# Extraction accuracy",
     "",
     `Run on ${run.date} with \`${run.model}\`, over ${run.chats.length} chats in \`tests/fixtures/chats\`.`,
+    ...(models ? [`Answered by: ${models}.`] : []),
     "Generated by `npm run ai:eval`; do not edit by hand.",
     "",
     "Each chat goes through the real extraction (the model, then Dueline's checks in code), and the",
@@ -402,8 +438,8 @@ export function renderEvaluation(run: EvaluationRun): string {
     "",
     "## Chats",
     "",
-    `| Chat | ${CHECKS.map((check) => LABELS[check]).join(" | ")} |`,
-    `| --- | ${CHECKS.map(() => "---").join(" | ")} |`,
+    `| Chat | Model | ${CHECKS.map((check) => LABELS[check]).join(" | ")} |`,
+    `| --- | --- | ${CHECKS.map(() => "---").join(" | ")} |`,
     ...run.chats.map(chatRow),
     "",
     "## Where it differed",

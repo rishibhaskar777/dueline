@@ -1,6 +1,6 @@
-import { addDays } from "@/lib/date-math";
 import { speakersOf, stripChatPrefixes } from "./chat-prefix";
 import type { ModelDraft } from "./check-draft";
+import { dueDateIn } from "./due-terms";
 
 type ModelItem = ModelDraft["items"][number];
 
@@ -149,19 +149,6 @@ function itemAt(text: string, match: RegExpExecArray): ModelItem | null {
 
   const quote = clause.replace(/[\s.,:;?!]+$/, "").trim();
   return { name: capitalised(name), quantity, unitAmount: amountOf(match), sourceQuote: quote };
-}
-
-function dueDateIn(text: string, today: string): string | null {
-  const net = /\bnet\s?(\d{1,3})\b/i.exec(text);
-  if (net) return addDays(today, Number(net[1]));
-  const within =
-    /\b(?:pay(?:ment)?|due|invoice)\b[^.\n]{0,30}\b(?:within|in)\s+(\d{1,3})\s+days\b/i.exec(text);
-  if (within) return addDays(today, Number(within[1]));
-  const stated =
-    /\b(?:pay(?:ment)?\s+(?:is\s+)?(?:due|by)|due\s+(?:on|by)|pay\s+by)\s+(\d{4}-\d{2}-\d{2})\b/i.exec(
-      text,
-    );
-  return stated?.[1] ?? null;
 }
 
 interface ClientReading {

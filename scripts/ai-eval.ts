@@ -10,6 +10,7 @@ import { AiQuotaError, reserveDailyModelCall } from "@/lib/ai/quota";
 import {
   expectedExtractionSchema,
   renderEvaluation,
+  renderModels,
   renderReadmeTable,
   renderTotals,
   scoreExtraction,
@@ -44,17 +45,21 @@ async function evaluate(id: string, date: string): Promise<EvaluatedChat> {
   const sent = `${system}\n${prompt}`;
 
   let outcome: ExtractionOutcome;
+  let model: string | undefined;
   try {
     const { draft, warnings, paymentTerms } = await extractInvoiceDraft(chat, {
       beforeModelCall: reserveDailyModelCall,
       fresh: true,
+      onModelAnswered: (modelId) => {
+        model = modelId;
+      },
     });
     outcome = { draft, warnings, paymentTerms, sent };
   } catch (error) {
     if (!(error instanceof ExtractionFailedError)) throw error;
     outcome = { draft: null, warnings: [], sent };
   }
-  return { id, summary: expected.summary, score: scoreExtraction(expected, outcome, date) };
+  return { id, summary: expected.summary, score: scoreExtraction(expected, outcome, date), model };
 }
 
 // Run with `--write` to replace the report; without it the figures are only printed.
@@ -93,6 +98,7 @@ async function main(): Promise<void> {
   console.log(`\nRun on ${date} with ${model}, over ${chats.length} chats.\n`);
   console.log(`Totals (the shape of ${REPORT_PATH}):\n\n${renderTotals(chats)}\n`);
   console.log(`README AI table:\n\n${renderReadmeTable(chats)}\n`);
+  console.log(`Answered by: ${renderModels(model, chats)}\n`);
 
   if (WRITE_REPORT) {
     await mkdir("docs/evaluation", { recursive: true });
