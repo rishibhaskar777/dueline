@@ -32,7 +32,7 @@ Three ideas shape the design.
 | **PayPal APIs**      | 14 calls: the OAuth token, 10 Invoicing v2 calls, one Payments call, Transaction Search and webhook signature verification ([section 1](#1-system-context))       |
 | **AI**               | Gemini through the AI SDK, a primary and a fallback model. Used in two places: drafting an invoice from a chat and drafting reminders ([section 6](#6-ai-safety)) |
 | **Scheduled jobs**   | One: the morning run at 06:00 India time ([section 4.6](#46-the-morning-run))                                                                                     |
-| **Tests**            | 2,234 unit tests in 185 files (Vitest). 210 end-to-end tests in 23 files, plus one sign-in setup step (Playwright, with axe)                                      |
+| **Tests**            | 2,298 unit tests in 188 files (Vitest). 224 end-to-end tests in 24 files, plus one sign-in setup step (Playwright, with axe)                                      |
 | **Decision records** | 25 ([section 13](#13-decision-records))                                                                                                                           |
 | **API**              | 54 endpoints in 46 route files, described in the [API contract](api-contract.md)                                                                                  |
 | **Live demo**        | [dueline-azure.vercel.app](https://dueline-azure.vercel.app)                                                                                                      |
@@ -633,8 +633,8 @@ Judges open the demo after it has been idle, so the first read matters most.
 
 | Layer         | Where                                                     | What it covers                                                                                          |
 | ------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Unit          | `tests/unit`                                              | 2,234 tests in 185 files: logic, route handlers and the models behind components                        |
-| End to end    | `tests/e2e`                                               | 210 tests in 23 files on the production build in offline mode, in Chromium, plus one sign-in setup step |
+| Unit          | `tests/unit`                                              | 2,298 tests in 188 files: logic, route handlers and the models behind components                        |
+| End to end    | `tests/e2e`                                               | 224 tests in 24 files on the production build in offline mode, in Chromium, plus one sign-in setup step |
 | Accessibility | `tests/e2e/accessibility.spec.ts`                         | An axe check of 16 screens and 4 later states, each in light and dark                                   |
 | Contrast      | `tests/unit/theme-contrast.test.ts`                       | Checks the 4.5:1 text pairs in both themes from the stylesheet's tokens                                 |
 | Policy        | `tests/unit/next-config.test.ts`, `tests/e2e/csp.spec.ts` | Every Content Security Policy directive, and no browser message about it on any screen                  |

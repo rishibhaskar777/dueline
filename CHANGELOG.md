@@ -68,6 +68,7 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - Docs: the extraction evaluation is rerun over 27 chats (6 Nov 2026) and the README, architecture and report show those figures; the licence names both authors.
+- Docs: test counts updated.
 - Footer: the "Built for the PayPal AI Hackathon 2026" chip is gone from the website.
 - Every green "live" dot (landing badge, sign-in chip, Home and the account menu) is one shared dot with a soft glow and a slow pulse; the pulse stops under reduced motion. On Home, "PayPal sandbox connected" is a light green pill, and a failed or pending check shows a still dot.
 - Built on PayPal: "How a payment reaches Dueline" is one payment travelling card to card, with each card lit as it arrives, instead of three dots running at once.
