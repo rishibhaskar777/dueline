@@ -7,8 +7,11 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-10
+
 ### Added
 
+- Docs: the demo video (https://youtu.be/Qaj0VPWurRg) is linked from the README.
 - Nudges: a "Due soon" section above the late invoices with a friendly heads-up for each invoice due within the profile's days (1 to 7, default 3), in a new Heads-up tone written in the client's language. It never mentions lateness, goes by PayPal's reminder or your own email, and shows "Heads-up sent, 4 Nov" afterwards. The Profile has "Send a heads-up before the due date" and "Days before".
 - A client promised a date: note the date and an optional remark on a late invoice's Nudges card or its invoice page. The card shrinks to "Promised for 10 Nov" with "Remind anyway" and the morning run drafts nothing until the day after; Home shows "Promised 10 Nov" and a marker on the due line, and a broken promise makes the next reminder firm and adds "Missed a promised date once" to the client's reason.
 - If PayPal refuses a heads-up reminder before the due date, the card says "PayPal only sends its reminder once an invoice is due. Use Send my message.", counts and logs nothing, and offers only your own message for the rest of the day.
