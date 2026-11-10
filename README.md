@@ -10,7 +10,7 @@ PayPal invoicing, AI drafting and export paperwork for freelancers in India
 who are paid by clients abroad.
 
 [![Live demo](https://img.shields.io/badge/Live_demo-dueline--azure.vercel.app-0A2A7A?style=for-the-badge)](https://dueline-azure.vercel.app)
-[![Demo video](https://img.shields.io/badge/Demo_video-3_minutes-D1322A?style=for-the-badge)](https://www.youtube.com/watch?v=VIDEO_ID)
+[![Demo video](https://img.shields.io/badge/Demo_video-3_minutes-D1322A?style=for-the-badge)](https://www.youtube.com/watch?v=Qaj0VPWurRg)
 
 [![CI](https://github.com/rishibhaskar777/dueline/actions/workflows/ci.yml/badge.svg)](https://github.com/rishibhaskar777/dueline/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-1D63F0.svg)](LICENSE)
@@ -18,7 +18,7 @@ who are paid by clients abroad.
 ![Gemini](https://img.shields.io/badge/AI-Gemini_via_AI_SDK-7C3AED.svg)
 ![AG Grid](https://img.shields.io/badge/tables-AG_Grid-E08A00.svg)
 
-**[Try the demo](#for-judges)** · **[Watch the video](https://www.youtube.com/watch?v=VIDEO_ID)** · **[How it works](#how-it-works)** · **[Architecture](#architecture)** · **[Run it locally](#run-it-yourself)**
+**[Try the demo](#for-judges)** · **[Watch the video](https://www.youtube.com/watch?v=Qaj0VPWurRg)** · **[How it works](#how-it-works)** · **[Architecture](#architecture)** · **[Run it locally](#run-it-yourself)**
 
 </div>
 
@@ -32,14 +32,14 @@ who are paid by clients abroad.
 
 ## For Judges
 
-|                          |                                                                              |
-| ------------------------ | ---------------------------------------------------------------------------- |
-| **Live demo**            | [dueline-azure.vercel.app](https://dueline-azure.vercel.app)                 |
-| **Password**             | In the testing instructions of the Devpost submission                        |
-| **No accounts or keys?** | Run the offline mode locally, password `offline` ([steps](#run-it-yourself)) |
-| **Video**                | [3-minute walkthrough on YouTube](https://www.youtube.com/watch?v=VIDEO_ID)  |
-| **PayPal**               | Runs on the PayPal sandbox, so you can send and pay invoices safely          |
-| **Built**                | Entirely during the hackathon, from 29 Oct 2026 ([changelog](CHANGELOG.md))  |
+|                          |                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------ |
+| **Live demo**            | [dueline-azure.vercel.app](https://dueline-azure.vercel.app)                   |
+| **Password**             | In the testing instructions of the Devpost submission                          |
+| **No accounts or keys?** | Run the offline mode locally, password `offline` ([steps](#run-it-yourself))   |
+| **Video**                | [3-minute walkthrough on YouTube](https://www.youtube.com/watch?v=Qaj0VPWurRg) |
+| **PayPal**               | Runs on the PayPal sandbox, so you can send and pay invoices safely            |
+| **Built**                | Entirely during the hackathon, from 29 Oct 2026 ([changelog](CHANGELOG.md))    |
 
 **A two-minute path through every feature** (the same steps are the "Tour the demo" card at the top of Home, each one a link)
 
@@ -60,7 +60,7 @@ who are paid by clients abroad.
 | Design                       | [Screens](#what-dueline-does), [design and accessibility](#design-and-accessibility)                                                                            |
 | Potential impact             | [The problem](#the-problem) and what reaches the bank on a real $1,000 invoice                                                                                  |
 | Innovation                   | The due line, rupees before sending, quote-checked AI drafts, a two-channel reminder                                                                            |
-| Presentation                 | [The 3-minute video](https://www.youtube.com/watch?v=VIDEO_ID) and the animations in this README                                                                |
+| Presentation                 | [The 3-minute video](https://www.youtube.com/watch?v=Qaj0VPWurRg) and the animations in this README                                                             |
 
 ## The Problem
 
